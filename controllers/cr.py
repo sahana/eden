@@ -11,7 +11,8 @@ if not settings.has_module(c):
 def index():
     """ Module's Home Page """
 
-    return s3db.cms_index(c, alt_function="index_alt")
+    from s3db.cms import cms_index
+    return cms_index(c, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -30,8 +31,7 @@ def shelter_type():
         School, Hospital -- see Agasti opt_camp_type.)
     """
 
-    output = s3_rest_controller()
-    return output
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def shelter_service():
@@ -40,8 +40,7 @@ def shelter_service():
         List / add shelter services (e.g. medical, housing, food, ...)
     """
 
-    output = s3_rest_controller()
-    return output
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def shelter_unit():
@@ -59,13 +58,16 @@ def shelter_unit():
             record_id = r.id
             table = s3db.cr_shelter_unit
             row = db(table.id == record_id).select(table.shelter_id,
-                                                   limitby = (0, 1)
+                                                   limitby = (0, 1),
                                                    ).first()
             shelter_id = row.shelter_id
             s3db.configure("cr_shelter_unit",
                            popup_url = URL(c="cr", f="shelter",
-                                           args=[shelter_id, "shelter_unit",
-                                                 record_id]),
+                                           args = [shelter_id,
+                                                   "shelter_unit",
+                                                   record_id,
+                                                   ],
+                                           ),
                         )
             return True
         elif r.representation in ("json", "geojson", "plain") or \
@@ -92,11 +94,10 @@ def shelter_registration():
         msg_record_created = T("Registration added"),
         msg_record_modified = T("Registration updated"),
         msg_record_deleted = T("Registration entry deleted"),
-        msg_list_empty = T("No people currently registered in shelters")
+        msg_list_empty = T("No people currently registered in shelters"),
         )
 
-    output = s3_rest_controller()
-    return output
+    return s3_rest_controller()
 
 # =============================================================================
 def shelter():
@@ -141,7 +142,7 @@ def shelter():
             query = (ftable.controller == "cr") & \
                     (ftable.function == "shelter_unit")
             layer = db(query).select(ftable.layer_id,
-                                     limitby = (0, 1)
+                                     limitby = (0, 1),
                                      ).first()
             try:
                 layer = {"active": True,
@@ -159,7 +160,7 @@ def shelter():
             s3db.configure(tablename,
                            profile_header = profile_header,
                            profile_layers = (layer,),
-                           profile_title = "%s : %s" % (s3_unicode(s3.crud_strings["cr_shelter"].title_display),
+                           profile_title = "%s : %s" % (s3_str(s3.crud_strings["cr_shelter"].title_display),
                                                         name),
                            profile_widgets = profile_widgets,
                            )
@@ -168,36 +169,33 @@ def shelter():
             if r.id:
                 table.obsolete.readable = table.obsolete.writable = True
             if r.component:
-                if r.component_name == "inv_item" or \
-                   r.component_name == "recv" or \
-                   r.component_name == "send":
+                component_name = r.component_name
+                if component_name == "inv_item" or \
+                   component_name == "recv" or \
+                   component_name == "send":
                     # Filter out items which are already in this inventory
                     from s3db.inv import inv_prep
                     inv_prep(r)
 
-                elif r.component_name == "human_resource":
+                elif component_name == "human_resource":
                     from s3db.org import org_site_staff_config
                     org_site_staff_config(r)
 
-                elif r.component_name == "rat":
-                    # Hide the Implied fields
-                    db.assess_rat.location_id.writable = False
-                    db.assess_rat.location_id.default = r.record.location_id
-                    db.assess_rat.location_id.comment = ""
-                    # Set defaults
-                    staff_id = auth.s3_logged_in_human_resource()
-                    if staff_id:
-                        db.assess_rat.staff_id.default = staff_id.id
+                elif component_name == "layout" and \
+                     r.method != "hierarchy":
+                    from s3db.org import org_site_layout_config
+                    org_site_layout_config(r.record.site_id)
 
-                elif r.component_name == "shelter_registration":
+                elif component_name == "shelter_registration":
                     if settings.get_cr_shelter_housing_unit_management():
                         # Filter housing units to units of this shelter
                         field = s3db.cr_shelter_registration.shelter_unit_id
                         dbset = db(s3db.cr_shelter_unit.shelter_id == r.id)
                         field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "cr_shelter_unit.id",
                                                                field.represent,
-                                                               sort=True,
+                                                               sort = True,
                                                                ))
+                    s3db.pr_person.pe_label.label = T("Registration Number")
                     s3.crud_strings.cr_shelter_registration = Storage(
                         label_create = T("Register Person"),
                         title_display = T("Registration Details"),
@@ -207,10 +205,10 @@ def shelter():
                         msg_record_created = T("Registration added"),
                         msg_record_modified = T("Registration updated"),
                         msg_record_deleted = T("Registration entry deleted"),
-                        msg_list_empty = T("No people currently registered in this shelter")
-                    )
+                        msg_list_empty = T("No people currently registered in this shelter"),
+                        )
 
-                elif r.component_name == "shelter_allocation":
+                elif component_name == "shelter_allocation":
                     s3.crud_strings.cr_shelter_allocation = Storage(
                         label_create = T("Allocate Group"),
                         title_display = T("Allocation Details"),
@@ -220,20 +218,31 @@ def shelter():
                         msg_record_created = T("Reservation done"),
                         msg_record_modified = T("Reservation updated"),
                         msg_record_deleted = T("Reservation entry deleted"),
-                        msg_list_empty = T("No groups currently allocated for this shelter")
-                    )
+                        msg_list_empty = T("No groups currently allocated for this shelter"),
+                        )
 
-                elif r.component_name == "req":
+                elif component_name == "req":
                     if r.method != "update" and r.method != "read":
                         # Hide fields which don't make sense in a Create form
                         # inc list_create (list_fields over-rides)
                         from s3db.inv import inv_req_create_form_mods
                         inv_req_create_form_mods(r)
 
+                #elif component_name == "rat":
+                #    # Hide the Implied fields
+                #    db.assess_rat.location_id.writable = False
+                #    db.assess_rat.location_id.default = r.record.location_id
+                #    db.assess_rat.location_id.comment = ""
+                #    # Set defaults
+                #    staff_id = auth.s3_logged_in_human_resource()
+                #    if staff_id:
+                #        db.assess_rat.staff_id.default = staff_id.id
+
         return True
     s3.prep = prep
 
-    return s3_rest_controller(rheader = s3db.cr_shelter_rheader)
+    from s3db.cr import cr_shelter_rheader
+    return s3_rest_controller(rheader = cr_shelter_rheader)
 
 # -----------------------------------------------------------------------------
 def shelter_flag():
@@ -252,7 +261,10 @@ def shelter_flag():
             hr = s3db.resource("hrm_human_resource",
                                filter = FS("status") == 1,
                                )
-            rows = hr.select(["person_id$pe_id"], limit=None, represent=False).rows
+            rows = hr.select(["person_id$pe_id"],
+                             limit = None,
+                             represent = False,
+                             ).rows
             if rows:
                 assignees.extend(row["pr_person.pe_id"] for row in rows)
 
@@ -260,7 +272,10 @@ def shelter_flag():
             teams = s3db.resource("pr_group",
                                   filter = FS("group_type") == 3,
                                   )
-            rows = teams.select(["pe_id"], limit=None, represent=False).rows
+            rows = teams.select(["pe_id"],
+                                limit = None,
+                                represent = False,
+                                ).rows
             if rows:
                 assignees.extend(row["pr_group.pe_id"] for row in rows)
 

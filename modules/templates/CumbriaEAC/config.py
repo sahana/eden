@@ -479,7 +479,7 @@ def config(settings):
                         (ttable.tag == "workflow_status")
                 tag = current.db(query).select(ttable.id,
                                                ttable.value,
-                                               limitby = (0, 1)
+                                               limitby = (0, 1),
                                                ).first()
                 if tag:
                     # Add Button
@@ -522,7 +522,7 @@ def config(settings):
             if r.controller in ("hrm", "default"):
                 hrtable = current.s3db.hrm_human_resource
                 hr = current.db(hrtable.person_id == record.id).select(hrtable.organisation_id,
-                                                                       limitby = (0, 1)
+                                                                       limitby = (0, 1),
                                                                        ).first()
                 if hr:
                     org = TR(TH("%s: " % T("Organization")),
@@ -536,7 +536,7 @@ def config(settings):
                     # Only show NoK tab if it already has data (this role cannot create)
                     table = current.s3db.pr_person_relation
                     nok = current.db(table.parent_id == record.id).select(table.id,
-                                                                          limitby = (0, 1)
+                                                                          limitby = (0, 1),
                                                                           ).first()
                     if nok:
                         tabs.insert(1, (T("Next of Kin"), "nok"))
@@ -570,7 +570,7 @@ def config(settings):
                 # Lookup ID
                 stable = s3db.cms_series
                 row = current.db(stable.name == series).select(stable.id,
-                                                               limitby = (0, 1)
+                                                               limitby = (0, 1),
                                                                ).first()
                 if row:
                     field = table.series_id
@@ -585,7 +585,7 @@ def config(settings):
                                                                   msg_record_created = T("Plan added"),
                                                                   msg_record_modified = T("Plan updated"),
                                                                   msg_record_deleted = T("Plan deleted"),
-                                                                  msg_list_empty = T("No plans currently available")
+                                                                  msg_list_empty = T("No plans currently available"),
                                                                   )
             from s3 import S3SQLCustomForm
             s3db.configure(tablename,
@@ -598,7 +598,7 @@ def config(settings):
             s3db = current.s3db
             stable = s3db.cms_series
             row = current.db(stable.name == "CEP").select(stable.id,
-                                                          limitby = (0, 1)
+                                                          limitby = (0, 1),
                                                           ).first()
             if row and row.id == r.record.series_id:
                 current.response.s3.crud_strings[tablename] = Storage(label_create = T("Create Plan"),
@@ -610,7 +610,7 @@ def config(settings):
                                                                   msg_record_created = T("Plan added"),
                                                                   msg_record_modified = T("Plan updated"),
                                                                   msg_record_deleted = T("Plan deleted"),
-                                                                  msg_list_empty = T("No plans currently available")
+                                                                  msg_list_empty = T("No plans currently available"),
                                                                   )
                 from s3 import S3SQLCustomForm
                 s3db.configure(tablename,
@@ -644,7 +644,7 @@ def config(settings):
         shelter_type_id = form_vars_get("shelter_type_id")
         ttable = current.s3db.cr_shelter_type
         shelter_type = current.db(ttable.id == shelter_type_id).select(ttable.name,
-                                                                       limitby = (0, 1)
+                                                                       limitby = (0, 1),
                                                                        ).first()
         type_name = shelter_type.name
         if type_name == "Nominated":
@@ -701,7 +701,7 @@ def config(settings):
 
         # Shelter has been Closed
         tag = db(query).select(table.id,
-                               limitby = (0 ,1)
+                               limitby = (0 ,1),
                                ).first()
         if not tag:
             # No tag, so create one
@@ -739,7 +739,7 @@ def config(settings):
                 (ttable.tag == "workflow_status")
         tag = current.db(query).select(ttable.id,
                                        ttable.value,
-                                       limitby = (0, 1)
+                                       limitby = (0, 1),
                                        ).first()
         if not tag or tag.value != "EXPORTED":
             current.session.error = T("Cannot Anonymize Data for a Shelter unless the data has been Exported!")
@@ -761,7 +761,7 @@ def config(settings):
                 (ttable.args == json.dumps(args)) & \
                 (ttable.vars == json.dumps(vars))
         task = db(query).select(ttable.id,
-                                limitby = (0, 1)
+                                limitby = (0, 1),
                                 ).first()
         if task:
             task.update_record(status = "STOPPED")
@@ -797,7 +797,7 @@ def config(settings):
         table = current.s3db.cr_shelter
         shelter = current.db(table.id == shelter_id).select(table.status,
                                                             table.site_id,
-                                                            limitby = (0, 1)
+                                                            limitby = (0, 1),
                                                             ).first()
         if not shelter:
             return "Shelter not found!"
@@ -924,7 +924,7 @@ def config(settings):
         query = (ttable.site_id == site_id) & \
                 (ttable.tag == "workflow_status")
         tag = db(query).select(ttable.id,
-                               limitby = (0, 1)
+                               limitby = (0, 1),
                                ).first()
         if tag:
             tag.update_record(value = "EXPORTED")
@@ -950,7 +950,7 @@ def config(settings):
                 (ttable.args == json.dumps(args)) & \
                 (ttable.vars == json.dumps(vars))
         task = current.db(query).select(ttable.id,
-                                        limitby = (0, 1)
+                                        limitby = (0, 1),
                                         ).first()
         if not task:
             from dateutil.relativedelta import relativedelta
@@ -964,7 +964,7 @@ def config(settings):
                                          #period = 300,  # seconds
                                          timeout = 300,  # seconds
                                          repeats = 1,    # run once
-                                         user_id = False # Don't add user_id to vars
+                                         user_id = False,# Don't add user_id to vars
                                          )
 
         ##############
@@ -1055,7 +1055,7 @@ def config(settings):
         ##############
 
         # Create the workbook
-        book = xlwt.Workbook(encoding="utf-8")
+        book = xlwt.Workbook(encoding = "utf-8")
         COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
         styles = S3XLS._styles(use_colour = True,
                                evenodd = True)
@@ -1361,7 +1361,8 @@ def config(settings):
         table.obsolete.comment = DIV(_class = "tooltip",
                                      _title = "%s|%s" % (T("Unavailable"),
                                                          T("Site is temporarily unavailable (e.g. for building works) & so should be hidden from the map"),
-                                                         ))
+                                                         ),
+                                     )
         table.location_id.widget = S3LocationSelector(levels = ("L2", "L3", "L4"),
                                                       required_levels = ("L2", "L3"),
                                                       show_address = True,
@@ -1441,7 +1442,8 @@ def config(settings):
                         "rest": T("Rest Centre"),
                         "storage": T("Storage"),
                         }
-        f.requires = IS_EMPTY_OR(IS_IN_SET(purpose_opts, zero = T("Not defined")))
+        f.requires = IS_EMPTY_OR(IS_IN_SET(purpose_opts,
+                                           zero = T("Not defined")))
         f.represent = S3Represent(options = purpose_opts)
 
         plan = components_get("plan")
@@ -1453,10 +1455,11 @@ def config(settings):
                 (ctable.deleted == False)
         plans = db(query).select(ctable.id,
                                  ctable.name,
-                                 cache = s3db.cache
+                                 cache = s3db.cache,
                                  )
         plan_opts = {str(p.id): p.name for p in plans}
-        f.requires = IS_EMPTY_OR(IS_IN_SET(plan_opts, zero = T("Unknown")))
+        f.requires = IS_EMPTY_OR(IS_IN_SET(plan_opts,
+                                           zero = T("Unknown")))
         f.represent = S3Represent(options = plan_opts)
 
         streetview = components_get("streetview")
@@ -1470,7 +1473,8 @@ def config(settings):
         f.comment = DIV(_class = "tooltip",
                         _title = "%s|%s" % (T("UPRN"),
                                             T("Unique Property Reference Number")
-                                            ))
+                                            ),
+                        )
 
         crud_form = S3SQLCustomForm("name",
                                     "status",
@@ -1656,7 +1660,7 @@ def config(settings):
                     (ltable.human_resource_id == htable.id)
             staff = db(query).select(htable.id,
                                      htable.person_id,
-                                     limitby = (0, 1)
+                                     limitby = (0, 1),
                                      ).first()
             # Remove Link
             db(ltable.id == component_id).delete()
@@ -1692,7 +1696,7 @@ def config(settings):
             query = (ltable.id == r.component_id) & \
                     (ltable.human_resource_id == htable.id)
             staff = current.db(query).select(htable.person_id,
-                                             limitby = (0, 1)
+                                             limitby = (0, 1),
                                              ).first()
             from gluon import redirect
             redirect(URL(c="hrm", f="person",
@@ -1703,34 +1707,41 @@ def config(settings):
 
         set_method("cr", "shelter",
                    method = "anonymise",
-                   action = cr_shelter_anonymise_method)
+                   action = cr_shelter_anonymise_method,
+                   )
 
         set_method("cr", "shelter",
                    component_name = "client",
                    method = "checkout",
-                   action = client_checkout)
+                   action = client_checkout,
+                   )
 
         set_method("cr", "shelter",
                    component_name = "human_resource_site",
                    method = "checkout",
-                   action = staff_checkout)
+                   action = staff_checkout,
+                   )
 
         set_method("cr", "shelter",
                    method = "clients",
-                   action = clients_count)
+                   action = clients_count,
+                   )
 
         set_method("cr", "shelter",
                    method = "export",
-                   action = cr_shelter_export)
+                   action = cr_shelter_export,
+                   )
 
         set_method("cr", "shelter",
                    method = "manage",
-                   action = shelter_manage)
+                   action = shelter_manage,
+                   )
 
         set_method("cr", "shelter",
                    component_name = "human_resource_site",
                    method = "redirect",
-                   action = staff_redirect)
+                   action = staff_redirect,
+                   )
 
         s3db.add_components("cr_shelter",
                             pr_person = {"name": "client",
@@ -1738,7 +1749,7 @@ def config(settings):
                                          "joinby": "shelter_id",
                                          "key": "person_id",
                                          "actuate": "replace",
-                                         }
+                                         },
                             )
 
         # Custom prep
@@ -1810,7 +1821,7 @@ def config(settings):
                     htable = s3db.hrm_human_resource
                     staff = db(htable.id == human_resource_id).select(htable.id,
                                                                       htable.person_id,
-                                                                      limitby = (0, 1)
+                                                                      limitby = (0, 1),
                                                                       ).first()
 
                     # Set the site_id in the Staff record
@@ -2063,7 +2074,8 @@ def config(settings):
                                                        f = "person",
                                                        args = "[id]",
                                                        ),
-                                      deletable = False)
+                                      deletable = False,
+                                      )
 
                 # Custom Action Buttons
                 s3.actions += [{"label": s3_str(T("Check-Out")),
@@ -2151,7 +2163,7 @@ def config(settings):
 
                 stable = s3db.cr_shelter
                 shelter = current.db(stable.id == shelter_id).select(stable.site_id,
-                                                                     limitby = (0, 1)
+                                                                     limitby = (0, 1),
                                                                      ).first()
                 site_id = shelter.site_id
 
@@ -2469,7 +2481,7 @@ def config(settings):
         query = (ptable.id == parent_id) & \
                 (ptable.pe_id == atable.pe_id)
         address = db(query).select(atable.location_id,
-                                   limitby = (0, 1)
+                                   limitby = (0, 1),
                                    ).first()
 
         # Set this same address for this person
@@ -2643,7 +2655,7 @@ def config(settings):
             s3.crud_strings["pr_person"] = Storage(
                 label_create = T("Register another Household Member"),
                 title_list = T("Household Members"),
-                msg_list_empty = T("No Household Members currently registered")
+                msg_list_empty = T("No Household Members currently registered"),
                 )
         else:
             s3.crud_strings["pr_person"] = Storage(
@@ -2656,7 +2668,7 @@ def config(settings):
                 msg_record_created = T("Client added"),
                 msg_record_modified = T("Client details updated"),
                 msg_record_deleted = T("Client deleted"),
-                msg_list_empty = T("No Clients currently registered")
+                msg_list_empty = T("No Clients currently registered"),
                 )
 
         ptable = s3db.pr_person
@@ -3274,7 +3286,7 @@ def config(settings):
                 query = (ltable.person_id == person_id) & \
                         (ltable.deleted != True)
                 registration = db(query).select(ltable.shelter_id,
-                                                limitby = (0, 1)
+                                                limitby = (0, 1),
                                                 ).first()
                 if registration:
                     # Registering Client Checks them in
@@ -3285,7 +3297,7 @@ def config(settings):
 
                         stable = s3db.cr_shelter
                         shelter = db(stable.id == shelter_id).select(stable.site_id,
-                                                                     limitby = (0, 1)
+                                                                     limitby = (0, 1),
                                                                      ).first()
                         site_id = shelter.site_id
 
@@ -3358,7 +3370,8 @@ def config(settings):
                                                        f = "person",
                                                        args = ["[id]"],
                                                        ),
-                                      deletable = False)
+                                      deletable = False,
+                                      )
 
             return output
         s3.postp = postp
@@ -3418,7 +3431,7 @@ class pr_Household(S3CRUD):
                 (atable.location_id == gtable.id) & \
                 (gtable.level == None)
         address = current.db(query).select(atable.location_id,
-                                           limitby = (0, 1)
+                                           limitby = (0, 1),
                                            ).first()
         if not address:
             from gluon import redirect, URL
@@ -3429,7 +3442,9 @@ class pr_Household(S3CRUD):
                          (ptable.pe_id == atable.pe_id) & \
                          (atable.location_id == address.location_id)
 
-        resource = current.s3db.resource("pr_person", filter=address_filter)
+        resource = current.s3db.resource("pr_person",
+                                         filter = address_filter,
+                                         )
 
         self.prefix = resource.prefix
         self.name = resource.name

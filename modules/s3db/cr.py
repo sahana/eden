@@ -56,9 +56,8 @@ class ShelterModel(S3Model):
     names = ("cr_shelter_type",
              "cr_shelter",
              "cr_shelter_id",
+             # @ToDo: Move these to separate classes:
              "cr_shelter_status",
-             "cr_shelter_person",
-             "cr_shelter_allocation",
              "cr_shelter_unit",
              "cr_shelter_unit_id",
              )
@@ -114,7 +113,8 @@ class ShelterModel(S3Model):
                 msg_record_created = T("Camp Type added"),
                 msg_record_modified = T("Camp Type updated"),
                 msg_record_deleted = T("Camp Type deleted"),
-                msg_list_empty = T("No Camp Types currently registered"))
+                msg_list_empty = T("No Camp Types currently registered"),
+                )
         else:
             ADD_SHELTER_TYPE = T("Create Shelter Type")
             SHELTER_TYPE_LABEL = T("Shelter Type")
@@ -127,13 +127,16 @@ class ShelterModel(S3Model):
                 msg_record_created = T("Shelter Type added"),
                 msg_record_modified = T("Shelter Type updated"),
                 msg_record_deleted = T("Shelter Type deleted"),
-                msg_list_empty = T("No Shelter Types currently registered"))
+                msg_list_empty = T("No Shelter Types currently registered"),
+                )
 
         configure(tablename,
                   deduplicate = S3Duplicate(),
                   )
 
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         shelter_type_id = S3ReusableField("shelter_type_id", "reference %s" % tablename,
                                           label = SHELTER_TYPE_LABEL,
                                           ondelete = "RESTRICT",
@@ -159,10 +162,12 @@ class ShelterModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        environment_represent = S3Represent(lookup=tablename, translate=True)
-        environment_multirepresent = S3Represent(lookup=tablename,
-		                                         translate=True,
-                                                 multiple=True
+        environment_represent = S3Represent(lookup = tablename,
+                                            translate = True,
+                                            )
+        environment_multirepresent = S3Represent(lookup = tablename,
+		                                         translate = True,
+                                                 multiple = True
                                                  )
 
         shelter_environment_id = S3ReusableField("shelter_environment_id",
@@ -173,7 +178,8 @@ class ShelterModel(S3Model):
                                                  requires = IS_EMPTY_OR(IS_ONE_OF(db,
                                                                                   "cr_shelter_environment.id",
                                                                                   environment_represent,
-                                                                                  multiple=True)),
+                                                                                  multiple = True,
+                                                                                  )),
                                                  sortby = "name",
                                                  widget = S3MultiSelectWidget()
                                                  )
@@ -196,32 +202,44 @@ class ShelterModel(S3Model):
 
         if settings.get_cr_shelter_housing_unit_management():
             if day_and_night:
-                capacity_day_comment = DIV(_class="tooltip",
-                                           _title="%s|%s|%s" % (T("Capacity (Day)"),
-                                                                T("Capacity of the shelter during the day"),
-                                                                T("Capacity evaluated adding all defined housing unit capacities")))
-                capacity_night_comment = DIV(_class="tooltip",
-                                             _title="%s|%s|%s" % (T("Capacity (Night)"),
-                                                                  T("Capacity of the shelter during the night"),
-                                                                  T("Capacity evaluated adding all defined housing unit capacities")))
+                capacity_day_comment = DIV(_class = "tooltip",
+                                           _title = "%s|%s|%s" % (T("Capacity (Day)"),
+                                                                  T("Capacity of the shelter during the day"),
+                                                                  T("Capacity evaluated adding all defined housing unit capacities"),
+                                                                  ),
+                                           )
+                capacity_night_comment = DIV(_class = "tooltip",
+                                             _title = "%s|%s|%s" % (T("Capacity (Night)"),
+                                                                    T("Capacity of the shelter during the night"),
+                                                                    T("Capacity evaluated adding all defined housing unit capacities"),
+                                                                    ),
+                                             )
             else:
-                capacity_day_comment = DIV(_class="tooltip",
-                                           _title="%s|%s|%s" % (T("Capacity"),
-                                                                T("Capacity of the shelter as a number of people"),
-                                                                T("Capacity evaluated adding all defined housing unit capacities")))
+                capacity_day_comment = DIV(_class = "tooltip",
+                                           _title = "%s|%s|%s" % (T("Capacity"),
+                                                                  T("Capacity of the shelter as a number of people"),
+                                                                  T("Capacity evaluated adding all defined housing unit capacities"),
+                                                                  ),
+                                           )
                 capacity_night_comment = None
         else:
             if day_and_night:
-                capacity_day_comment = DIV(_class="tooltip",
-                                           _title="%s|%s" % (T("Capacity (Day)"),
-                                                             T("Capacity of the shelter during the day")))
-                capacity_night_comment = DIV(_class="tooltip",
-                                             _title="%s|%s" % (T("Capacity (Night)"),
-                                                               T("Capacity of the shelter during the night")))
+                capacity_day_comment = DIV(_class = "tooltip",
+                                           _title = "%s|%s" % (T("Capacity (Day)"),
+                                                               T("Capacity of the shelter during the day"),
+                                                               ),
+                                           )
+                capacity_night_comment = DIV(_class = "tooltip",
+                                             _title = "%s|%s" % (T("Capacity (Night)"),
+                                                                 T("Capacity of the shelter during the night"),
+                                                                 ),
+                                             )
             else:
-                capacity_day_comment = DIV(_class="tooltip",
-                                           _title="%s|%s" % (T("Capacity"),
-                                                             T("Capacity of the shelter as a number of people")))
+                capacity_day_comment = DIV(_class = "tooltip",
+                                           _title = "%s|%s" % (T("Capacity"),
+                                                               T("Capacity of the shelter as a number of people"),
+                                                               ),
+                                           )
                 capacity_night_comment = None
 
         tablename = "cr_shelter"
@@ -240,32 +258,32 @@ class ShelterModel(S3Model):
                                        IS_LENGTH(64),
                                        ],
                            ),
-                     self.org_organisation_id(
-                        requires = self.org_organisation_requires(updateable=True),
-                     ),
+                     self.org_organisation_id(requires = self.org_organisation_requires(updateable = True),
+                                              ),
                      shelter_type_id(),          # e.g. NGO-operated, Government evacuation center, School, Hospital -- see Agasti opt_camp_type.)
-                     shelter_environment_id(readable = False,
-                                            writable = False,),# Enable in template if-required
+                     shelter_environment_id(# Enable in template if-required
+                                            readable = False,
+                                            writable = False,
+                                            ),
                      location_id(),
-                     self.pr_person_id(
-                        label = T("Contact Person / Camp Owner"),
-                        ),
+                     self.pr_person_id(label = T("Contact Person / Camp Owner"),
+                                       ),
                      # Alternative for person_id: simple name field
                      Field("contact_name",
                            label = T("Contact Name"),
-                           represent = lambda v, row=None: v if v else "-",
+                           represent = lambda v: v if v else current.messages["NONE"],
                            readable = False,
                            writable = False,
                            ),
                      Field("phone",
                            label = T("Phone"),
                            requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI()),
-                           represent = lambda v, row=None: v if v else "-",
+                           represent = lambda v: v if v else current.messages["NONE"],
                            ),
                      Field("email",
                            label = T("Email"),
                            requires = IS_EMPTY_OR(IS_EMAIL()),
-                           represent = lambda v, row=None: v if v else "-",
+                           represent = lambda v: v if v else current.messages["NONE"],
                            ),
                      Field("website",
                            label = T("Website"),
@@ -283,9 +301,11 @@ class ShelterModel(S3Model):
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            readable = not dynamic,
                            writable = not dynamic,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Current estimated population"),
-                                                           T("Current estimated population in shelter. Staff, Volunteers and Evacuees."))),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Current estimated population"),
+                                                             T("Current estimated population in shelter. Staff, Volunteers and Evacuees."),
+                                                             ),
+                                         ),
                            ),
                      Field("capacity_day", "integer",
                            default = 0,
@@ -329,9 +349,11 @@ class ShelterModel(S3Model):
                            label = T("Current Population (Day)") if day_and_night else T("Current Population"),
                            represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Population (Day)"),
-                                                           T("Number of people registered in the shelter for day and night"))),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Population (Day)"),
+                                                             T("Number of people registered in the shelter for day and night"),
+                                                             ),
+                                         ),
                            readable = dynamic,
                            # Automatically updated
                            writable = False
@@ -342,9 +364,11 @@ class ShelterModel(S3Model):
                            label = T("Current Population (Night)"),
                            represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Population (Night)"),
-                                                           T("Number of people registered in the shelter for the night"))),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Population (Night)"),
+                                                             T("Number of people registered in the shelter for the night"),
+                                                             ),
+                                         ),
                            readable = dynamic and day_and_night,
                            # Automatically updated
                            writable = False
@@ -491,7 +515,8 @@ class ShelterModel(S3Model):
         if settings.get_cr_shelter_people_registration():
             # Go to People check-in for this shelter after creation
             create_next = URL(c="cr", f="shelter",
-                              args=["[id]", "shelter_registration"])
+                              args = ["[id]", "shelter_registration"],
+                              )
         else:
             create_next = None
 
@@ -573,7 +598,7 @@ class ShelterModel(S3Model):
                 )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         shelter_id = S3ReusableField("shelter_id", "reference %s" % tablename,
                                      label = SHELTER_LABEL,
                                      ondelete = "RESTRICT",
@@ -581,7 +606,8 @@ class ShelterModel(S3Model):
                                      requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "cr_shelter.id",
                                                               represent,
-                                                              sort=True)),
+                                                              sort = True,
+                                                              )),
                                      comment = S3PopupLink(c = "cr",
                                                            f = "shelter",
                                                            label = ADD_SHELTER,
@@ -682,10 +708,10 @@ class ShelterModel(S3Model):
                            default = False,
                            label = T("Transitory Accommodation"),
                            represent = s3_yes_no_represent,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Transitory Accommodation"),
-                                                           T("This unit is for transitory accommodation upon arrival."),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Transitory Accommodation"),
+                                                             T("This unit is for transitory accommodation upon arrival."),
+                                                             ),
                                          ),
                            # Enable in template as required:
                            readable = False,
@@ -695,10 +721,10 @@ class ShelterModel(S3Model):
                            default = True,
                            label = T("Available Bath"),
                            represent = s3_yes_no_represent,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Bath Availability"),
-                                                           T("Integrated bath within housing unit"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Bath Availability"),
+                                                             T("Integrated bath within housing unit"),
+                                                             ),
                                          ),
                            ),
                      Field("handicap_bath", "integer",
@@ -708,19 +734,21 @@ class ShelterModel(S3Model):
                                cr_housing_unit_handicap_facilities.get(opt, messages.UNKNOWN_OPT),
                            requires = IS_EMPTY_OR(
                                        IS_IN_SET(cr_housing_unit_handicap_facilities)),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Bath Handicap Facilities"),
-                                                           T("Availability of bath handicap facilities"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Bath Handicap Facilities"),
+                                                             T("Availability of bath handicap facilities"),
+                                                             ),
                                          ),
                            ),
                      Field("shower", "boolean",
                            default = True,
                            label = T("Available Shower"),
                            represent = s3_yes_no_represent,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Shower Availability"),
-                                                           T("Integrated shower within housing unit"))),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Shower Availability"),
+                                                             T("Integrated shower within housing unit"),
+                                                             ),
+                                         ),
                            ),
                      Field("handicap_shower", "integer",
                            default = 1,
@@ -729,10 +757,10 @@ class ShelterModel(S3Model):
                                cr_housing_unit_handicap_facilities.get(opt, messages.UNKNOWN_OPT),
                            requires = IS_EMPTY_OR(
                                        IS_IN_SET(cr_housing_unit_handicap_facilities)),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Shower Handicap Facilities"),
-                                                           T("Availability of shower handicap facilities"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Shower Handicap Facilities"),
+                                                             T("Availability of shower handicap facilities"),
+                                                             ),
                                          ),
                            ),
                      Field("capacity_day", "integer",
@@ -740,10 +768,10 @@ class ShelterModel(S3Model):
                            label = T("Housing Unit Capacity (Day)") if day_and_night else T("Housing Unit Capacity"),
                            represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Housing Unit Capacity (Day)"),
-                                                           T("Capacity of the housing unit for people during the day"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Housing Unit Capacity (Day)"),
+                                                             T("Capacity of the housing unit for people during the day"),
+                                                             ),
                                          ),
                            ),
                      Field("capacity_night", "integer",
@@ -753,10 +781,10 @@ class ShelterModel(S3Model):
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            readable = day_and_night,
                            writable = day_and_night,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Housing Unit Capacity (Night)"),
-                                                           T("Capacity of the housing unit for people during the night"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Housing Unit Capacity (Night)"),
+                                                             T("Capacity of the housing unit for people during the night"),
+                                                             ),
                                          ),
                            ),
                      Field("available_capacity_day", "integer",
@@ -788,10 +816,10 @@ class ShelterModel(S3Model):
                            label = T("Current Population (Day)") if day_and_night else T("Current Population"),
                            represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Housing Unit Current Population"),
-                                                           T("Number of people registered in this housing unit for day and night"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Housing Unit Current Population"),
+                                                             T("Number of people registered in this housing unit for day and night"),
+                                                             ),
                                          ),
                            # Automatically updated
                            readable = False,
@@ -802,10 +830,10 @@ class ShelterModel(S3Model):
                            label = T("Current Population (Night)"),
                            represent = IS_INT_AMOUNT.represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Housing Unit Current Population"),
-                                                           T("Number of evacuees registered in this housing unit for the night"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Housing Unit Current Population"),
+                                                             T("Number of evacuees registered in this housing unit for the night"),
+                                                             ),
                                          ),
                            readable = day_and_night,
                            # Automatically updated
@@ -1195,7 +1223,7 @@ class ShelterInspectionModel(S3Model):
                      Field("task_priority", "integer",
                            default = 3,
                            label = T("Priority"),
-                           represent = S3Represent(options=task_priority_opts),
+                           represent = S3Represent(options = task_priority_opts),
                            requires = IS_IN_SET(task_priority_opts,
                                                 zero = None,
                                                 ),
@@ -1236,10 +1264,12 @@ class ShelterInspectionModel(S3Model):
             msg_record_modified = T("Shelter Flag updated"),
             msg_record_deleted = T("Shelter Flag deleted"),
             msg_list_empty = T("No Shelter Flags currently defined"),
-        )
+            )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         flag_id = S3ReusableField("flag_id", "reference %s" % tablename,
                                   label = T("Shelter Flag"),
                                   represent = represent,
@@ -1315,7 +1345,7 @@ class ShelterInspectionModel(S3Model):
         # ---------------------------------------------------------------------
         # Shelter Inspection <=> Flag link table
         #
-        represent = ShelterInspectionRepresent(show_link=True)
+        represent = ShelterInspectionRepresent(show_link = True)
         tablename = "cr_shelter_inspection_flag"
         define_table(tablename,
                      Field("inspection_id", "reference cr_shelter_inspection",
@@ -1335,8 +1365,7 @@ class ShelterInspectionModel(S3Model):
                      *s3_meta_fields())
 
         # List fields
-        list_fields = ["id",
-                       "inspection_id$shelter_unit_id$name",
+        list_fields = ["inspection_id$shelter_unit_id$name",
                        "inspection_id$date",
                        (T("Registered by"), "inspection_id$modified_by"),
                        (T("Defect"), "flag_id"),
@@ -1394,7 +1423,7 @@ class ShelterInspectionModel(S3Model):
                      Field("inspection_flag_id", "reference cr_shelter_inspection_flag",
                            label = T("Defects"),
                            ondelete = "CASCADE",
-                           represent = ShelterInspectionFlagRepresent(show_link=True),
+                           represent = ShelterInspectionFlagRepresent(show_link = True),
                            requires = IS_ONE_OF(db, "cr_shelter_inspection_flag.id"),
                            ),
                      self.project_task_id(ondelete = "RESTRICT",
@@ -1705,18 +1734,7 @@ class ShelterRegistrationModel(S3Model):
                      shelter_id(empty = False,
                                 ondelete = "CASCADE",
                                 ),
-                     # The comment explains how to register a new person
-                     # it should not be done in a popup
-                     person_id(
-                         comment = DIV(_class="tooltip",
-                                       _title="%s|%s" % (T("Person"),
-                                                         #  @ToDo: Generalise (this is EVASS-specific)
-                                                         T("Type the name of a registered person \
-                                                           or to add an unregistered person to this \
-                                                           shelter click on Evacuees")
-                                                         )
-                                       ),
-                         ),
+                     person_id(widget = S3AddPersonWidget(pe_label = True)),
                      self.cr_shelter_unit_id(readable = housing_unit,
                                              writable = housing_unit,
                                              ),
@@ -1761,7 +1779,8 @@ class ShelterRegistrationModel(S3Model):
         # Custom Methods
         self.set_method("cr", "shelter_registration",
                         method = "assign",
-                        action = cr_AssignUnit())
+                        action = cr_AssignUnit(),
+                        )
 
         # ---------------------------------------------------------------------
         # Shelter Registration History: history of status changes
