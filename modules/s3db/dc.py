@@ -186,7 +186,8 @@ class DataCollectionTemplateModel(S3Model):
             msg_record_created = T("Template added"),
             msg_record_modified = T("Template updated"),
             msg_record_deleted = T("Template deleted"),
-            msg_list_empty = T("No Templates currently registered"))
+            msg_list_empty = T("No Templates currently registered"),
+            )
 
         # Components
         add_components(tablename,
@@ -248,10 +249,10 @@ class DataCollectionTemplateModel(S3Model):
                                         # @ToDo: Only really needs to be unique per Template
                                         IS_NOT_IN_DB(db, "dc_question.code")
                                         ),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Code"),
-                                                           T("Unique code for the field - required if using Auto-Totals, Grids or Show Hidden"), # Also needed for Prepop
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Code"),
+                                                             T("Unique code for the field - required if using Auto-Totals, Grids or Show Hidden"), # Also needed for Prepop
+                                                             ),
                                          ),
                            ),
                      # The Dynamic Field used to store the Question/Answers
@@ -394,7 +395,8 @@ class DataCollectionTemplateModel(S3Model):
             msg_record_created = T("Question added"),
             msg_record_modified = T("Question updated"),
             msg_record_deleted = T("Question deleted"),
-            msg_list_empty = T("No Questions currently registered"))
+            msg_list_empty = T("No Questions currently registered"),
+            )
 
         # Components
         add_components(tablename,
@@ -435,7 +437,8 @@ class DataCollectionTemplateModel(S3Model):
             msg_record_created = T("Translation added"),
             msg_record_modified = T("Translation updated"),
             msg_record_deleted = T("Translation deleted"),
-            msg_list_empty = T("No Translations currently registered"))
+            msg_list_empty = T("No Translations currently registered"),
+            )
 
         configure(tablename,
                   onaccept = self.dc_question_l10n_onaccept,
@@ -476,7 +479,7 @@ class DataCollectionTemplateModel(S3Model):
             ttable = s3db.dc_template
             record = db(ttable.id == template_id).select(ttable.master,
                                                          ttable.name,
-                                                         limitby = (0, 1)
+                                                         limitby = (0, 1),
                                                          ).first()
             title = record.name
             master = record.master
@@ -557,7 +560,7 @@ class DataCollectionTemplateModel(S3Model):
         record = db(ttable.id == template_id).select(ttable.name,
                                                      ttable.layout,
                                                      ttable.table_id,
-                                                     limitby = (0, 1)
+                                                     limitby = (0, 1),
                                                      ).first()
 
         # Sync the name of the Template to that of the Dynamic Table
@@ -618,14 +621,16 @@ class DataCollectionTemplateModel(S3Model):
         # Load full record
         ttable = s3db.dc_template
         record = db(ttable.id == template_id).select(ttable.deleted_fk,
-                                                     limitby = (0, 1)
+                                                     limitby = (0, 1),
                                                      ).first()
 
         deleted_fk = json.loads(record.deleted_fk)
         table_id = deleted_fk.get("table_id")
         if table_id:
             dtable = s3db.s3_table
-            resource = s3db.resource("s3_table", filter=(dtable.id == table_id))
+            resource = s3db.resource("s3_table",
+                                     id = table_id,
+                                     )
             resource.delete()
 
     # -------------------------------------------------------------------------
@@ -663,7 +668,7 @@ class DataCollectionTemplateModel(S3Model):
                                                        ltable.name_l10n,
                                                        ltable.options_l10n,
                                                        left = left,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
 
         l10n = question["dc_question_l10n"]
@@ -689,7 +694,9 @@ class DataCollectionTemplateModel(S3Model):
 
         image = question.file
         if image:
-            mobile_settings["image"] = {"url": URL(c="default", f="download", args=image),
+            mobile_settings["image"] = {"url": URL(c="default", f="download",
+                                                   args = image,
+                                                   ),
                                         }
         else:
             pipe_image = question_settings.get("pipeImage")
@@ -701,7 +708,7 @@ class DataCollectionTemplateModel(S3Model):
                     query = (qtable.id == pipe_image["id"]) & \
                             (ftable.id == qtable.field_id)
                     from_field = db(query).select(ftable.name,
-                                                  limitby = (0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
                     mobile_settings["image"] = {"from": from_field.name,
                                                 "region": region,
@@ -709,7 +716,7 @@ class DataCollectionTemplateModel(S3Model):
                 else:
                     # Nothing special needed client-side
                     piped_question = db(qtable.id == pipe_image["id"]).select(qtable.file,
-                                                                              limitby = (0, 1)
+                                                                              limitby = (0, 1),
                                                                               ).first()
                     if piped_question:
                         mobile_settings["image"] = {"url": URL(c = "default",
@@ -775,7 +782,7 @@ class DataCollectionTemplateModel(S3Model):
                     # Read the Dyanmic Field to get the fieldname for the Mobile client
                     other_field = db(ftable.id == other_id).select(ftable.id,
                                                                    ftable.name,
-                                                                   limitby = (0, 1)
+                                                                   limitby = (0, 1),
                                                                    ).first()
                     mobile_settings["other"] = other_field.name
                     # Update the Dynamic Field with the current label
@@ -788,7 +795,7 @@ class DataCollectionTemplateModel(S3Model):
                     # Lookup the table_id
                     ttable = db.dc_template
                     template = db(ttable.id == question.template_id).select(ttable.table_id,
-                                                                            limitby = (0, 1)
+                                                                            limitby = (0, 1),
                                                                             ).first()
                     from uuid import uuid1
                     name = "f%s" % str(uuid1()).replace("-", "_")
@@ -872,7 +879,7 @@ class DataCollectionTemplateModel(S3Model):
             # Lookup the table_id
             ttable = db.dc_template
             template = db(ttable.id == question.template_id).select(ttable.table_id,
-                                                                    limitby = (0, 1)
+                                                                    limitby = (0, 1),
                                                                     ).first()
             from uuid import uuid1
             name = "f%s" % str(uuid1()).replace("-", "_")
@@ -919,7 +926,7 @@ class DataCollectionTemplateModel(S3Model):
                     (qtable.field_id == ftable.id)
             field = db(query).select(ftable.id,
                                      ftable.settings,
-                                     limitby = (0, 1)
+                                     limitby = (0, 1),
                                      ).first()
             field_settings = field.settings
             if field_settings.get("mobile") is None:
@@ -947,7 +954,7 @@ class DataCollectionTemplateModel(S3Model):
                                     qtable.options,
                                     ltable.options_l10n,
                                     ltable.language,
-                                    limitby = (0, 1)
+                                    limitby = (0, 1),
                                     ).first()
 
         if question["dc_question.field_type"] in (6, 12):
@@ -1106,18 +1113,49 @@ class DataCollectionModel(S3Model):
                        )
 
         # CRUD strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Create Data Collection Target"),
-            title_display = T("Data Collection Target Details"),
-            title_list = T("Data Collection Targets"),
-            title_update = T("Edit Data Collection Target"),
-            title_upload = T("Import Data Collection Targets"),
-            label_list_button = T("List Data Collection Targets"),
-            label_delete_button = T("Delete Data Collection Target"),
-            msg_record_created = T("Data Collection Target added"),
-            msg_record_modified = T("Data Collection Target updated"),
-            msg_record_deleted = T("Data Collection Target deleted"),
-            msg_list_empty = T("No Data Collection Targets currently registered"))
+        label = settings.get_dc_response_label()
+        if label == "Assessment":
+            crud_strings[tablename] = Storage(
+                label_create = T("Create Assessment Collection"),
+                title_display = T("Assessment Collection Details"),
+                title_list = T("Assessment Collections"),
+                title_update = T("Edit Assessment Collection"),
+                title_upload = T("Import Assessment Collections"),
+                label_list_button = T("List Assessment Collections"),
+                label_delete_button = T("Delete Assessment Collection"),
+                msg_record_created = T("Assessment Collection added"),
+                msg_record_modified = T("Assessment Collection updated"),
+                msg_record_deleted = T("Assessment Collection deleted"),
+                msg_list_empty = T("No Assessment Collections currently defined"),
+                )
+        elif label == "Survey":
+            crud_strings[tablename] = Storage(
+                label_create = T("Create Survey Target"),
+                title_display = T("Survey Target Details"),
+                title_list = T("Survey Targets"),
+                title_update = T("Edit Survey Target"),
+                title_upload = T("Import Survey Targets"),
+                label_list_button = T("List Survey Targets"),
+                label_delete_button = T("Delete Survey Target"),
+                msg_record_created = T("Survey Target added"),
+                msg_record_modified = T("Survey Target updated"),
+                msg_record_deleted = T("Survey Target deleted"),
+                msg_list_empty = T("No Survey Targets currently defined"),
+                )
+        else:
+            crud_strings[tablename] = Storage(
+                label_create = T("Create Data Collection Target"),
+                title_display = T("Data Collection Target Details"),
+                title_list = T("Data Collection Targets"),
+                title_update = T("Edit Data Collection Target"),
+                title_upload = T("Import Data Collection Targets"),
+                label_list_button = T("List Data Collection Targets"),
+                label_delete_button = T("Delete Data Collection Target"),
+                msg_record_created = T("Data Collection Target added"),
+                msg_record_modified = T("Data Collection Target updated"),
+                msg_record_deleted = T("Data Collection Target deleted"),
+                msg_list_empty = T("No Data Collection Targets currently defined"),
+                )
 
         self.set_method("dc", "target",
                         method = "results",
@@ -1178,7 +1216,6 @@ class DataCollectionModel(S3Model):
                        )
 
         # CRUD strings
-        label = settings.get_dc_response_label()
         if label == "Assessment":
             label = T("Assessment")
             crud_strings[tablename] = Storage(
@@ -1192,7 +1229,7 @@ class DataCollectionModel(S3Model):
                 msg_record_created = T("Assessment added"),
                 msg_record_modified = T("Assessment updated"),
                 msg_record_deleted = T("Assessment deleted"),
-                msg_list_empty = T("No Assessments currently registered"),
+                msg_list_empty = T("No Assessments currently defined"),
                 )
         elif label == "Survey":
             label = T("Survey")
@@ -1207,7 +1244,7 @@ class DataCollectionModel(S3Model):
                 msg_record_created = T("Survey added"),
                 msg_record_modified = T("Survey updated"),
                 msg_record_deleted = T("Survey deleted"),
-                msg_list_empty = T("No Surveys currently registered"),
+                msg_list_empty = T("No Surveys currently defined"),
                 )
         else:
             label = T("Response")
@@ -1222,7 +1259,7 @@ class DataCollectionModel(S3Model):
                 msg_record_created = T("Data Collection added"),
                 msg_record_modified = T("Data Collection updated"),
                 msg_record_deleted = T("Data Collection deleted"),
-                msg_list_empty = T("No Data Collections currently registered"),
+                msg_list_empty = T("No Data Collections currently defined"),
                 )
 
         # @todo: representation including template name, location and date
@@ -1343,14 +1380,14 @@ def dc_answer_form(r, tablename):
                 (ttable.table_id == dtable.id)
         template = db(query).select(ttable.id,
                                     ttable.layout,
-                                    limitby = (0, 1)
+                                    limitby = (0, 1),
                                     ).first()
         template_id = template.id
     else:
         # Going via Component
         template_id = r.record.template_id
         template = db(ttable.id == template_id).select(ttable.layout,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
     layout = template.layout
 
@@ -1501,7 +1538,9 @@ def dc_answer_form(r, tablename):
                 do = do_item.get("text")
             if say is None:
                 say = say_item.get("text")
-            cappend(S3SQLInlineInstruction(do=item["do"], say=item["say"]))
+            cappend(S3SQLInlineInstruction(do = item["do"],
+                                           say = item["say"],
+                                           ))
         elif item_type == "break":
             cappend(S3SQLSectionBreak())
 
@@ -1675,7 +1714,7 @@ class dc_TargetReport(S3Method):
                 (ttable.table_id == dtable.id)
         template = db(query).select(ttable.layout,
                                     dtable.name,
-                                    limitby = (0, 1)
+                                    limitby = (0, 1),
                                     ).first()
 
         # Responses (for Stats)
@@ -1846,7 +1885,7 @@ class dc_TargetReport(S3Method):
             if question.options:
                 # Graph
                 svg_id = "svg_%s" % question.id
-                table.append(TR(TD(TAG["SVG"](_id=svg_id))))
+                table.append(TR(TD(TAG["SVG"](_id = svg_id))))
                 data = []
                 data_append = data.append
                 for opt in question.options:
@@ -2032,7 +2071,7 @@ class dc_TargetXLS(S3Method):
             template = db(ttable.id == template_id).select(ttable.name,
                                                            ttable.layout,
                                                            ttable.table_id,
-                                                           limitby = (0, 1)
+                                                           limitby = (0, 1),
                                                            ).first()
             layout = template.layout
             if layout is None:
@@ -2051,7 +2090,7 @@ class dc_TargetXLS(S3Method):
                 query = (ltable.template_id == template_id) & \
                         (ltable.language == language)
                 translation = db(query).select(ltable.id,
-                                               limitby = (0, 1)
+                                               limitby = (0, 1),
                                                ).first()
                 if translation:
                     translate = True
@@ -2060,7 +2099,7 @@ class dc_TargetXLS(S3Method):
 
             # Dynamic Table
             table_row = db(s3_table.id == table_id).select(s3_table.name,
-                                                           limitby = (0, 1)
+                                                           limitby = (0, 1),
                                                            ).first()
             dtablename = table_row.name
             dtable = s3db.table(dtablename)
@@ -2292,7 +2331,9 @@ def dc_rheader(r, tabs=None):
     s3db = current.s3db
     tablename, record = s3_rheader_resource(r)
     if tablename != r.tablename:
-        resource = s3db.resource(tablename, id=record.id)
+        resource = s3db.resource(tablename,
+                                 id = record.id,
+                                 )
     else:
         resource = r.resource
 
@@ -2407,7 +2448,7 @@ def dc_rheader(r, tabs=None):
                         (etable.id == event_id)
                 event = db(query).select(etable.id,
                                          date_field,
-                                         limitby = (0, 1)
+                                         limitby = (0, 1),
                                          ).first()
 
                 def event_name(record):
@@ -2449,10 +2490,46 @@ def dc_rheader(r, tabs=None):
                     (RESPONSES, "response"),
                     )
 
-            rheader_fields = (["template_id"],
+            rheader_fields = [["template_id"],
                               ["location_id"],
                               ["date"],
-                              )
+                              ]
+
+            if current.deployment_settings.has_module("event"):
+                etable = s3db.event_event
+                ltable = s3db.event_target
+                event_id = ltable.event_id
+                date_field = etable.start_date
+                query = (ltable.target_id == record.id) & \
+                        (etable.id == event_id)
+                event = current.db(query).select(etable.id,
+                                                 date_field,
+                                                 limitby = (0, 1),
+                                                 ).first()
+
+                def event_name(record):
+                    if event:
+                        return event_id.represent(event.id)
+                    else:
+                        return ""
+
+                def event_date(record):
+                    if event:
+                        return date_field.represent(event.start_date)
+                    else:
+                        return ""
+
+                def event_days(record):
+                    if event:
+                        timedelta = record.date - event.start_date
+                        return timedelta.days
+                    else:
+                        return ""
+
+                rheader_fields.insert(0, [(event_id.label, event_name)])
+                rheader_fields.insert(1, [(date_field.label, event_date)])
+                # @ToDo: deployment_setting
+                rheader_fields.insert(2, [(T("Number of Days since Event Occurred"), event_days)])
 
         rheader = S3ResourceHeader(rheader_fields, tabs)(r,
                                                          table = resource.table,

@@ -110,8 +110,25 @@ def target():
                 f.writable = False
                 f.comment = None
 
+                if settings.has_module("event"):
+                    def response_onaccept(form):
+                        # Inherit the Event from the Target
+                        ltable = s3db.event_target
+                        link = current.db(ltable.target_id == r.id).select(ltable.event_id,
+                                                                           limitby = (0, 1),
+                                                                           ).first()
+                        if link:
+                            ltable = s3db.event_response
+                            ltable.insert(event_id = link.event_id,
+                                          response_id = form.vars.id,
+                                          )
+                    create_onaccept = response_onaccept
+                else:
+                    create_onaccept = None
+
                 # Open in native controller (cannot just set native as can't call this 'response')
                 s3db.configure("dc_response",
+                               create_onaccept = create_onaccept,
                                linkto = lambda record_id: \
                                             URL(f="respnse",
                                                 args = [record_id, "read"],
