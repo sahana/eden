@@ -890,13 +890,6 @@ class S3Config(Storage):
         """
         return self.auth.get("org_admin_to_first", False)
 
-    def get_auth_terms_of_service(self):
-        """
-            Force users to accept Terms of Service before Registering an account
-            - uses <template>/views/tos.html
-        """
-        return self.auth.get("terms_of_service", False)
-
     def get_auth_consent_tracking(self):
         """ Expose options to track user consent """
         return self.auth.get("consent_tracking", False)

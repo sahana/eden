@@ -114,7 +114,6 @@ def config(settings):
     # Terms of Service to be able to Register on the system
     # https://termsfeed.com/terms-conditions/generator/
     # uses <template>/views/tos.html
-    #settings.auth.terms_of_service = True
     # Enable options for tracking user consent
     #settings.auth.consent_tracking = True
     # Uncomment this to allow users to Login using Gmail's SMTP

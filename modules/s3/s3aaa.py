@@ -101,6 +101,7 @@ class AuthS3(Auth):
             - s3_link_to_member
             - s3_approver
             - s3_password
+            - s3_send_welcome_email
 
         - S3 custom authentication methods:
             - s3_impersonate
@@ -504,14 +505,16 @@ Thank you"""
         passfield = settings.password_field
 
         query = (utable[userfield] == username)
-        user = current.db(query).select(limitby=(0, 1)).first()
+        user = current.db(query).select(limitby = (0, 1),
+                                        ).first()
         password = utable[passfield].validate(password)[0]
         if user:
             if not user.registration_key and user[passfield] == password:
                 user = Storage(utable._filter_fields(user, id=True))
                 current.session.auth = Storage(user = user,
                                                last_visit = current.request.now,
-                                               expiration = settings.expiration)
+                                               expiration = settings.expiration,
+                                               )
                 self.user = user
                 self.s3_set_roles()
                 return user
@@ -563,7 +566,9 @@ Thank you"""
         # Username (email) is required for login, convert to lowercase
         userfield = settings.login_userfield
         old_requires = utable[userfield].requires
-        utable[userfield].requires = [IS_NOT_EMPTY(), IS_LOWER()]
+        utable[userfield].requires = [IS_NOT_EMPTY(),
+                                      IS_LOWER(),
+                                      ]
 
         # Disable min_length for password during login
         passfield = settings.password_field
@@ -601,7 +606,9 @@ Thank you"""
                     # Default Registration page
                     controller = "user"
                 register_link = A(T("Register for Account"),
-                                  _href = URL(f=controller, args="register"),
+                                  _href = URL(f = controller,
+                                              args = "register",
+                                              ),
                                   _id = "register-btn",
                                   _class = "action-lnk",
                                   )
@@ -613,14 +620,18 @@ Thank you"""
                     lost_pw_link = deployment_settings.get_auth_password_changes()
                 if lost_pw_link:
                     lost_pw_link = A(T("Lost Password"),
-                                     _href = URL(f="user", args="retrieve_password"),
+                                     _href = URL(f = "user",
+                                                 args = "retrieve_password",
+                                                 ),
                                      _class = "action-lnk",
                                      )
                     buttons.append(lost_pw_link)
 
             # Add submit button
             #if buttons:
-            submit_button = INPUT(_type="submit", _value=T("Login"))
+            submit_button = INPUT(_type = "submit",
+                                  _value = T("Login"),
+                                  )
             buttons.insert(0, submit_button)
 
             form = SQLFORM(utable,
@@ -681,8 +692,10 @@ Thank you"""
 
             accepted_form = False
             if form.accepts(request.post_vars, session,
-                            formname="login", dbio=False,
-                            onvalidation=onvalidation):
+                            formname = "login",
+                            dbio = False,
+                            onvalidation = onvalidation,
+                            ):
                 accepted_form = True
                 if userfield == "email":
                     # Check for Domains which can use Google's SMTP server for passwords
@@ -701,7 +714,8 @@ Thank you"""
 
                 # Check for username in db
                 query = (utable[userfield] == form.vars[userfield])
-                user = db(query).select(limitby=(0, 1)).first()
+                user = db(query).select(limitby = (0, 1),
+                                        ).first()
                 if user:
                     # User in db, check if registration pending or disabled
                     temp_user = user
@@ -764,12 +778,14 @@ Thank you"""
                     session.error = messages.invalid_login
                     if inline:
                         # If inline, stay on the same page
-                        next_url = URL(args=request.args,
-                                       vars=request.get_vars)
+                        next_url = URL(args = request.args,
+                                       vars = request.get_vars,
+                                       )
                     else:
                         # If not inline, return to configured login page
-                        next_url = self.url(args=request.args,
-                                            vars=request.get_vars)
+                        next_url = self.url(args = request.args,
+                                            vars = request.get_vars,
+                                            )
                     redirect(next_url)
         else:
             # Use a central authentication server
@@ -793,7 +809,7 @@ Thank you"""
                 # We need to pass through login again before going on
                 if next is DEFAULT:
                     next = request.vars._next or deployment_settings.get_auth_login_next()
-                next = "%s?_next=%s" % (URL(r=request), next)
+                next = "%s?_next=%s" % (URL(r = request), next)
                 redirect(cas.login_url(next))
 
         # Process authenticated users
@@ -814,12 +830,13 @@ Thank you"""
                     instance = db(itable.url == "https://%s" % request.env.HTTP_HOST).select(itable.id,
                                                                                              itable.deployment_id,
                                                                                              itable.configured,
-                                                                                             limitby = (0, 1)
+                                                                                             limitby = (0, 1),
                                                                                              ).first()
                     if instance and not instance.configured:
                         # Run Configuration Wizard
                         next = URL(c="setup", f="deployment",
-                                   args = [instance.deployment_id, "instance", instance.id, "wizard"])
+                                   args = [instance.deployment_id, "instance", instance.id, "wizard"],
+                                   )
 
             elif accepted_form:
                 # Check for pending consent upon login?
@@ -827,7 +844,9 @@ Thank you"""
                 if callable(pending_consent):
                     pending_consent = pending_consent()
                 if pending_consent:
-                    next = URL(c="default", f="user", args=["consent"])
+                    next = URL(c="default", f="user",
+                               args = ["consent"],
+                               )
 
             if next is DEFAULT:
                 if deployment_settings.get_auth_login_next_always():
@@ -917,10 +936,12 @@ Thank you"""
         if form.accepts(request, session,
                         formname = "change_password",
                         onvalidation = onvalidation,
-                        hideerror = settings.hideerror):
+                        hideerror = settings.hideerror,
+                        ):
 
-            if not form.vars["old_password"] == s.select(limitby = (0, 1),
-                                                         orderby_on_limitby = False
+            if not form.vars["old_password"] == s.select(utable[passfield],
+                                                         limitby = (0, 1),
+                                                         orderby_on_limitby = False,
                                                          ).first()[passfield]:
                 form.errors["old_password"] = messages.invalid_password
             else:
@@ -1011,7 +1032,8 @@ Thank you"""
             )
         if form.accepts(request, session,
                         onvalidation = onvalidation,
-                        hideerror = settings.hideerror):
+                        hideerror = settings.hideerror,
+                        ):
             user.update_record(
                 **{passfield: str(form.vars.new_password),
                    "registration_key": "",
@@ -1067,11 +1089,15 @@ Thank you"""
             utable.email.requires = [
                 IS_EMAIL(error_message=messages.invalid_email),
                 IS_IN_DB(self.db, utable.email,
-                         error_message=messages.invalid_email)]
+                         error_message = messages.invalid_email,
+                         ),
+                ]
         else:
             utable[userfield].requires = [
                 IS_IN_DB(self.db, utable[userfield],
-                         error_message=messages.invalid_username)]
+                         error_message = messages.invalid_username,
+                         ),
+                ]
         form = SQLFORM(utable,
                        fields = [userfield],
                        hidden = {"_next": next},
@@ -1086,14 +1112,16 @@ Thank you"""
             s3_addrow(form, captcha.label, captcha,
                       captcha.comment, settings.formstyle, "captcha__row")
         if form.accepts(request, session if self.csrf_prevention else None,
-                        formname="reset_password", dbio=False,
-                        onvalidation=onvalidation,
-                        hideerror=settings.hideerror):
+                        formname = "reset_password",
+                        dbio = False,
+                        onvalidation = onvalidation,
+                        hideerror = settings.hideerror,
+                        ):
             user = utable(**{userfield:form.vars.get(userfield)})
             if not user:
                 session.error = messages["invalid_%s" % userfield]
-                redirect(self.url(args=request.args),
-                         client_side=settings.client_side)
+                redirect(self.url(args = request.args),
+                         client_side = settings.client_side)
             elif user.registration_key in ("pending", "disabled", "blocked"):
                 session.warning = messages.registration_pending
                 redirect(self.url(args=request.args),
@@ -1234,7 +1262,7 @@ Thank you"""
             session.error = T("Authentication required")
             redirect(URL(c = "default", f = "user",
                          args = ["login"],
-                         vars = {"_next": URL(args=current.request.args)},
+                         vars = {"_next": URL(args = current.request.args)},
                          ))
 
         # Requires person record
@@ -1372,7 +1400,9 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
                          _value = REGISTER,
                          ),
                    A(T("Login"),
-                     _href = URL(f="user", args="login"),
+                     _href = URL(f = "user",
+                                 args = "login",
+                                 ),
                      _id = "login-btn",
                      _class = "action-lnk",
                      ),
@@ -1396,6 +1426,9 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
             # Client-side Validation
             self.s3_register_validation()
 
+        ID_LABEL_SUFFIX = SQLFORM.ID_LABEL_SUFFIX
+        ID_ROW_SUFFIX = SQLFORM.ID_ROW_SUFFIX
+
         # Insert a Password-confirmation field
         for i, row in enumerate(form[0].components):
             item = row.element("input",
@@ -1409,66 +1442,77 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
                                          _class = "req",
                                          ),
                                     _for = "password_two",
-                                    _id = field_id + SQLFORM.ID_LABEL_SUFFIX,
+                                    _id = "%s%s" % (field_id, ID_LABEL_SUFFIX),
                                     ),
                                 ),
                           INPUT(_name = "password_two",
                                 _id = field_id,
                                 _type = "password",
                                 requires = IS_EXPR("value==%s" % \
-                                    repr(request.vars.get(passfield, None)),
-                                error_message = messages.mismatched_password)
+                                                    repr(request.vars.get(passfield, None)),
+                                                   error_message = messages.mismatched_password,
+                                                   )
                                 ),
                           "",
                           formstyle,
-                          field_id + SQLFORM.ID_ROW_SUFFIX,
+                          "%s%s" % (field_id, ID_ROW_SUFFIX),
                           position = i + 1,
                           )
 
         # S3: Insert Home phone field into form
         if deployment_settings.get_auth_registration_requests_home_phone():
             for i, row in enumerate(form[0].components):
-                item = row.element("input", _name="email")
+                item = row.element("input",
+                                   _name = "email",
+                                   )
                 if item:
                     field_id = "%s_home" % utablename
                     s3_addrow(form,
                               LABEL("%s:" % T("Home Phone"),
                                     _for = "home",
-                                    _id = field_id + SQLFORM.ID_LABEL_SUFFIX,
+                                    _id = "%s%s" % (field_id, ID_LABEL_SUFFIX),
                                     ),
                               INPUT(_name = "home",
                                     _id = field_id,
                                     ),
                               "",
                               formstyle,
-                              field_id + SQLFORM.ID_ROW_SUFFIX,
+                              "%s%s" % (field_id, ID_ROW_SUFFIX),
                               position = i + 1,
                               )
 
         # S3: Insert Mobile phone field into form
         if deployment_settings.get_auth_registration_requests_mobile_phone():
             for i, row in enumerate(form[0].components):
-                item = row.element("input", _name="email")
+                item = row.element("input",
+                                   _name = "email",
+                                   )
                 if item:
                     field_id = "%s_mobile" % utablename
                     if deployment_settings.get_auth_registration_mobile_phone_mandatory():
-                        mandatory = SPAN("*", _class="req")
+                        mandatory = SPAN("*",
+                                         _class = "req",
+                                         )
                         comment = ""
                     else:
                         mandatory = ""
-                        comment = DIV(_class="tooltip",
-                                      _title="%s|%s" % (deployment_settings.get_ui_label_mobile_phone(),
-                                                        messages.help_mobile_phone))
+                        comment = DIV(_class = "tooltip",
+                                      _title = "%s|%s" % (deployment_settings.get_ui_label_mobile_phone(),
+                                                          messages.help_mobile_phone,
+                                                          ),
+                                      )
                     s3_addrow(form,
                               LABEL("%s:" % deployment_settings.get_ui_label_mobile_phone(),
                                     mandatory,
                                     _for = "mobile",
-                                    _id = field_id + SQLFORM.ID_LABEL_SUFFIX,
+                                    _id = "%s%s" % (field_id, ID_LABEL_SUFFIX),
                                     ),
-                              INPUT(_name="mobile", _id=field_id),
+                              INPUT(_name = "mobile",
+                                    _id = field_id,
+                                    ),
                               comment,
                               formstyle,
-                              field_id + SQLFORM.ID_ROW_SUFFIX,
+                              "%s%s" % (field_id, ID_ROW_SUFFIX),
                               position = i + 1,
                               )
 
@@ -1482,41 +1526,20 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
                                                                _target = "top",
                                                                _href = "http://gravatar.com",
                                                                )
-                                                 }))
+                                                 },
+                                              ),
+                          )
             field_id = "%s_image" % utablename
             widget = SQLFORM.widgets["upload"].widget(current.s3db.pr_image.image, None)
             s3_addrow(form,
                       LABEL("%s:" % label,
                             _for = "image",
-                            _id = field_id + SQLFORM.ID_LABEL_SUFFIX,
+                            _id = "%s%s" % (field_id, ID_LABEL_SUFFIX),
                             ),
                       widget,
                       comment,
                       formstyle,
-                      field_id + SQLFORM.ID_ROW_SUFFIX,
-                      )
-
-        # @ToDo: Replace with Consent Tracking
-        if deployment_settings.get_auth_terms_of_service():
-            field_id = "%s_tos" % utablename
-            label = T("I agree to the %(terms_of_service)s") % \
-                {"terms_of_service": A(T("Terms of Service"),
-                                       _href = URL(c="default", f="tos"),
-                                       _target = "_blank",
-                                       )}
-            label = XML("%s:" % label)
-            s3_addrow(form,
-                      LABEL(label,
-                            _for = "tos",
-                            _id = field_id + SQLFORM.ID_LABEL_SUFFIX,
-                            ),
-                      INPUT(_name = "tos",
-                            _id = field_id,
-                            _type = "checkbox",
-                            ),
-                      "",
-                      formstyle,
-                      field_id + SQLFORM.ID_ROW_SUFFIX,
+                      "%s%s" % (field_id, ID_ROW_SUFFIX),
                       )
 
         if settings.captcha != None:
@@ -1524,14 +1547,17 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
 
         utable.registration_key.default = key = str(uuid4())
 
-        if form.accepts(request.vars, session, formname="register",
-                        onvalidation=onvalidation):
+        if form.accepts(request.vars, session,
+                        formname = "register",
+                        onvalidation = onvalidation,
+                        ):
 
             # Save temporary user fields
             self.s3_user_register_onaccept(form)
 
             users = db(utable.id > 0).select(utable.id,
-                                             limitby = (0, 2))
+                                             limitby = (0, 2),
+                                             )
             if len(users) == 1:
                 # 1st user to register doesn't need verification/approval
                 self.s3_approve_user(form.vars)
@@ -1556,10 +1582,11 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
                    not settings.mailer.settings.server or \
                    not settings.mailer.send(to = form.vars.email,
                                             subject = messages.verify_email_subject % \
-    {"system_name": deployment_settings.get_system_name()},
+                                                {"system_name": deployment_settings.get_system_name()},
                                             message = messages.verify_email % \
-            {"url": "%s/default/user/verify_email/%s" % \
-                (current.response.s3.base_url, key)}):
+                                                {"url": "%s/default/user/verify_email/%s" % \
+                                                    (current.response.s3.base_url, key)},
+                                            ):
                     current.response.error = messages.email_verification_failed
                     return form
                 # @ToDo: Deployment Setting?
@@ -1612,24 +1639,29 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
         if not mailer or not mailer.settings.server:
             return False
 
-        reset_password_key = str(int(time.time())) + '-' + web2py_uuid()
+        reset_password_key = "%s-%s" % (int(time.time()), web2py_uuid())
         reset_password_url = "%s/default/user/reset_password?key=%s" % \
                              (current.response.s3.base_url, reset_password_key)
 
         message = self.messages.reset_password % {"url": reset_password_url}
         if mailer.send(to = user.email,
                        subject = self.messages.reset_password_subject,
-                       message = message):
+                       message = message,
+                       ):
             user.update_record(reset_password_key = reset_password_key)
             return True
 
         return False
 
     # -------------------------------------------------------------------------
-    def add_membership(self, group_id=None, user_id=None, role=None,
-                       entity=None):
+    def add_membership(self,
+                       group_id = None,
+                       user_id = None,
+                       role = None,
+                       entity = None,
+                       ):
         """
-            gives user_id membership of group_id or role
+            Gives user_id membership of group_id or role
             if user is None than user_id is that of current logged in user
             S3: extended to support Entities
         """
@@ -1642,13 +1674,17 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
         if not user_id and self.user:
             user_id = self.user.id
         membership = self.settings.table_membership
-        record = membership(user_id=user_id, group_id=group_id, pe_id=entity)
+        record = membership(user_id = user_id,
+                            group_id = group_id,
+                            pe_id = entity,
+                            )
         if record:
             return record.id
         else:
             membership_id = membership.insert(group_id = group_id,
                                               user_id = user_id,
-                                              pe_id = entity)
+                                              pe_id = entity,
+                                              )
         self.update_groups()
         self.log_event(self.messages.add_membership_log,
                        {"user_id": user_id,
@@ -1658,8 +1694,9 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
 
     # -------------------------------------------------------------------------
     def verify_email(self,
-                     next=DEFAULT,
-                     log=DEFAULT):
+                     next = DEFAULT,
+                     log = DEFAULT,
+                     ):
         """
             action user to verify the registration email, XXXXXXXXXXXXXXXX
 
@@ -1678,7 +1715,8 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
         key = request.args[-1]
         utable = settings.table_user
         query = (utable.registration_key == key)
-        user = current.db(query).select(limitby=(0, 1)).first()
+        user = current.db(query).select(limitby = (0, 1),
+                                        ).first()
         if not user:
             redirect(settings.verify_email_next)
 
@@ -1775,7 +1813,8 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
         if form.accepts(request, session,
                         formname = "profile",
                         onvalidation = onvalidation,
-                        hideerror = settings.hideerror):
+                        hideerror = settings.hideerror,
+                        ):
             #self.s3_auth_user_register_onaccept(form.vars.email, self.user.id)
             self.user.update(utable._filter_fields(form.vars))
             session.flash = messages.profile_updated
@@ -1783,7 +1822,7 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
                 self.log_event(log, self.user)
             callback(onaccept, form)
             if not next:
-                next = self.url(args=request.args)
+                next = self.url(args = request.args)
             elif isinstance(next, (list, tuple)): ### fix issue with 2.6
                 next = next[0]
             elif next and not next[0] == "/" and next[:4] != "http":
@@ -1851,13 +1890,13 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
 
         first_name = utable.first_name
         first_name.label = T("First Name") #messages.label_first_name
-        first_name.requires = IS_NOT_EMPTY(error_message=messages.is_empty)
+        first_name.requires = IS_NOT_EMPTY(error_message = messages.is_empty)
 
         last_name = utable.last_name
         last_name.label = T("Last Name") #messages.label_last_name
         if deployment_settings.get_L10n_mandatory_lastname():
             last_name.notnull = True
-            last_name.requires = IS_NOT_EMPTY(error_message=messages.is_empty)
+            last_name.requires = IS_NOT_EMPTY(error_message = messages.is_empty)
 
         userfield = settings.login_userfield
         if userfield != "email":
@@ -1871,7 +1910,8 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
                           IS_LOWER(),
                           IS_NOT_IN_DB(db,
                                        "%s.email" % utable._tablename,
-                                       error_message=messages.duplicate_email)
+                                       error_message = messages.duplicate_email,
+                                       )
                           ]
 
         language = utable.language
@@ -1968,10 +2008,11 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
                                  org_group_represent,
                                  # @ToDo: Filter org groups to just those belonging to the Org Admin's Org
                                  # @ToDo: Dynamically filter groups to just those that the selected Org is a member of
-                                 #filterby=filterby,
-                                 #filter_opts=filter_opts,
-                                 orderby="org_group.name",
-                                 sort=True)
+                                 #filterby = filterby,
+                                 #filter_opts = filter_opts,
+                                 orderby = "org_group.name",
+                                 sort = True,
+                                 )
             if deployment_settings.get_auth_registration_organisation_group_required():
                 org_group_id.requires = requires
             else:
@@ -2004,8 +2045,9 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
                     from .s3validators import IS_ONE_OF_EMPTY
                     requires = IS_ONE_OF_EMPTY(db, "org_site.site_id",
                                                site_represent,
-                                               orderby="org_site.name",
-                                               sort=True)
+                                               orderby = "org_site.name",
+                                               sort = True,
+                                               )
                     if site_required:
                         site_optional = ""
                     else:
@@ -2023,13 +2065,15 @@ $.filterOptionsS3({
                     requires = IS_ONE_OF(db, "org_site.site_id",
                                          site_represent,
                                          orderby = "org_site.name",
-                                         sort = True)
+                                         sort = True,
+                                         )
                 #from .s3widgets import S3SiteAutocompleteWidget
                 #field.widget = S3SiteAutocompleteWidget()
                 field.comment = DIV(_class = "tooltip",
                                     _title = "%s|%s" % (T("Facility"),
                                                         T("Select the default site.")
-                                                        ))
+                                                        ),
+                                    )
                 if site_required:
                     field.requires = requires
                 else:
@@ -2066,7 +2110,8 @@ $.filterOptionsS3({
                 link_user_to.comment = DIV(_class = "tooltip",
                                            _title = "%s|%s" % (link_user_to.label,
                                                                T("Will create and link your user account to the following records")
-                                                               ))
+                                                               ),
+                                           )
 
     # -------------------------------------------------------------------------
     def s3_import_prep(self, data):
@@ -2104,7 +2149,8 @@ $.filterOptionsS3({
                 if len(records) == 1:
                     # Add branch link
                     link_id = btable.insert(organisation_id = records.first().id,
-                                            branch_id = organisation_id)
+                                            branch_id = organisation_id,
+                                            )
                     onaccept = s3db.get_config("org_organisation_branch", "onaccept")
                     callback(onaccept, Storage(vars = Storage(id = link_id)))
                 elif len(records) > 1:
@@ -2118,7 +2164,8 @@ $.filterOptionsS3({
                     # @ToDo: Call onaccept?
                     # Create link
                     link_id = btable.insert(organisation_id = parent_id,
-                                            branch_id = organisation_id)
+                                            branch_id = organisation_id,
+                                            )
                     onaccept = s3db.get_config("org_organisation_branch", "onaccept")
                     callback(onaccept, Storage(vars = Storage(id = link_id)))
             return (organisation_id, record.pe_id)
@@ -2142,7 +2189,8 @@ $.filterOptionsS3({
 
             records = db(query).select(otable.id,
                                        otable.pe_id,
-                                       limitby = (0, 2))
+                                       limitby = (0, 2),
+                                       )
             if len(records) == 1:
                 record = records.first()
                 organisation_id = record.id
@@ -2159,7 +2207,8 @@ $.filterOptionsS3({
                         (ltable.deleted == False)
                 records = db(query).select(otable.id,
                                            otable.pe_id,
-                                           limitby = (0, 2))
+                                           limitby = (0, 2),
+                                           )
                 if len(records) == 1:
                     record = records.first()
                     organisation_id = record.id
@@ -2205,7 +2254,8 @@ $.filterOptionsS3({
 
             records = db(query).select(ptable.id,
                                        ptable.pe_id,
-                                       limitby = (0, 2))
+                                       limitby = (0, 2),
+                                       )
             if len(records) == 1:
                 record = records.first()
                 person_id = record.id
@@ -2262,7 +2312,7 @@ $.filterOptionsS3({
                         looked_up[pe_tablename] = {}
                     record = db(table[pe_field] == pe_value).select(table.id, # Stored for Org/Groups later
                                                                     table.pe_id,
-                                                                    limitby = (0, 1)
+                                                                    limitby = (0, 1),
                                                                     ).first()
                     if record:
                         record_id = record.id
@@ -2471,7 +2521,7 @@ $.filterOptionsS3({
         """
 
         user = form.vars
-        current.session.auth = Storage(user=user)
+        current.session.auth = Storage(user = user)
         self.s3_approve_user(user)
 
     # -------------------------------------------------------------------------
@@ -2525,7 +2575,8 @@ $.filterOptionsS3({
             field = temptable.image
             newfilename = field.store(source_file,
                                       original_filename,
-                                      field.uploadfolder)
+                                      field.uploadfolder,
+                                      )
             if isinstance(field.uploadfield, str):
                 form_vars[field.uploadfield] = source_file.read()
             record["image"] = newfilename
@@ -2636,7 +2687,7 @@ Please go to %(url)s to approve this user."""
         if "@" in approver:
             # Look up language of the user
             record = db(utable.email == approver).select(utable.language,
-                                                         limitby = (0, 1)
+                                                         limitby = (0, 1),
                                                          ).first()
             if record:
                 language = record.language
@@ -2778,7 +2829,7 @@ Please go to %(url)s to approve this user."""
             entity = s3db.pr_get_pe_id("org_organisation", organisation_id)
             gtable = settings.table_group
             ORG_ADMIN = db(gtable.uuid == "ORG_ADMIN").select(gtable.id,
-                                                              limitby=(0, 1)
+                                                              limitby = (0, 1),
                                                               ).first().id
             mtable = settings.table_membership
             query = (mtable.group_id == ORG_ADMIN) & \
@@ -2792,7 +2843,8 @@ Please go to %(url)s to approve this user."""
             # Add user as a participant of the default problem group
             table = s3db.delphi_group
             group = db(table.uuid == "DEFAULT").select(table.id,
-                                                       limitby=(0, 1)).first()
+                                                       limitby = (0, 1),
+                                                       ).first()
             if group:
                 table = s3db.delphi_membership
                 table.insert(group_id = group.id,
@@ -2807,6 +2859,7 @@ Please go to %(url)s to approve this user."""
             s3db.auth_Consent.register_consent(user_id)
 
         user_email = db(utable.id == user_id).select(utable.email,
+                                                     limitby = (0, 1),
                                                      ).first().email
         self.s3_auth_user_register_onaccept(user_email, user_id)
 
@@ -2970,7 +3023,8 @@ Please go to %(url)s to approve this user."""
             fields.append(ptable.last_name)
 
         rows = db(query).select(*fields,
-                                left=left, distinct=True)
+                                distinct=True,
+                                left = left)
 
         person_ids = [] # Collect the person IDs
 
@@ -3012,7 +3066,8 @@ Please go to %(url)s to approve this user."""
                         (ctable.contact_method == "EMAIL") & \
                         (ctable.value == user.email)
                 item = db(query).select(ctable.id,
-                                        limitby=(0, 1)).first()
+                                        limitby = (0, 1),
+                                        ).first()
                 if item is None:
                     ctable.insert(pe_id = pe_id,
                                   contact_method = "EMAIL",
@@ -3025,7 +3080,8 @@ Please go to %(url)s to approve this user."""
                             (ctable.contact_method == "SMS") & \
                             (ctable.value == tuser.mobile)
                     item = db(query).select(ctable.id,
-                                            limitby=(0, 1)).first()
+                                            limitby = (0, 1),
+                                            ).first()
                     if item is None:
                         ctable.insert(pe_id = pe_id,
                                       contact_method = "SMS",
@@ -3056,7 +3112,7 @@ Please go to %(url)s to approve this user."""
                             (ctable.value.lower() == email)
                     person = db(query).select(ptable.id,
                                               ptable.pe_id,
-                                              limitby = (0, 1)
+                                              limitby = (0, 1),
                                               ).first()
                 else:
                     # Can't find a match without an email address
@@ -3067,7 +3123,7 @@ Please go to %(url)s to approve this user."""
 
                 if person:
                     other = db(ltable.pe_id == person.pe_id).select(ltable.id,
-                                                                    limitby=(0, 1),
+                                                                    limitby = (0, 1),
                                                                     ).first()
 
                 if person and not other:
@@ -3140,12 +3196,14 @@ Please go to %(url)s to approve this user."""
                             # Default to organisation
                             realm_entity = org_pe_id
                         self.set_realm_entity(ptable, person,
-                                              entity=realm_entity,
+                                              entity = realm_entity,
                                               )
                         owner.realm_entity = realm_entity
 
                         # Insert a link
-                        ltable.insert(user_id=user.id, pe_id=pe_id)
+                        ltable.insert(user_id = user.id,
+                                      pe_id = pe_id,
+                                      )
 
                         # Add the email to pr_contact
                         ctable.insert(pe_id = pe_id,
@@ -3188,7 +3246,9 @@ Please go to %(url)s to approve this user."""
                     image = tuser.image
                     if image: # and hasattr(image, "file"):
                         itable = s3db.pr_image
-                        url = URL(c="default", f="download", args=image)
+                        url = URL(c="default", f="download",
+                                  args = image,
+                                  )
                         itable.insert(pe_id = pe_id,
                                       profile = True,
                                       image = image,
@@ -3262,7 +3322,7 @@ Please go to %(url)s to approve this user."""
         # Update if the User's Organisation has changed
         query = (ltable.user_id == user_id)
         rows = db(query).select(ltable.organisation_id,
-                                limitby = (0, 2)
+                                limitby = (0, 2),
                                 )
         if len(rows) == 1:
             # We know which record to update - this should always be 1
@@ -3275,11 +3335,12 @@ Please go to %(url)s to approve this user."""
             query = (ltable.user_id == user_id) & \
                     (ltable.organisation_id == organisation_id)
             row = db(query).select(ltable.id,
-                                   limitby = (0, 1)
+                                   limitby = (0, 1),
                                    ).first()
             if not row:
                 ltable.insert(user_id = user_id,
-                              organisation_id = organisation_id)
+                              organisation_id = organisation_id,
+                              )
 
         return organisation_id
 
@@ -3304,7 +3365,9 @@ Please go to %(url)s to approve this user."""
         stable = s3db.org_group_person_status
         query = (stable.name.lower() == "member") & \
                 (stable.deleted == False)
-        row = db(query).select(stable.id, limitby=(0, 1)).first()
+        row = db(query).select(stable.id,
+                               limitby = (0, 1),
+                               ).first()
         if row:
             status_id = row.id
         else:
@@ -3315,7 +3378,9 @@ Please go to %(url)s to approve this user."""
         query = (ltable.person_id == person_id) & \
                 (ltable.org_group_id == org_group_id) & \
                 (ltable.deleted == False)
-        row = db(query).select(ltable.id, limitby=(0, 1)).first()
+        row = db(query).select(ltable.id,
+                               limitby = (0, 1),
+                               ).first()
         if not row:
             # Make sure person record and org_group record exist
             ptable = s3db.pr_person
@@ -3375,7 +3440,9 @@ Please go to %(url)s to approve this user."""
                 (htable.type == hr_type) & \
                 (htable.status == 1) & \
                 (htable.deleted == False)
-        rows = db(query).select(htable.id, limitby=(0, 2))
+        rows = db(query).select(htable.id,
+                                limitby = (0, 2),
+                                )
 
         accepted = None
         if len(rows) == 1:
@@ -3412,7 +3479,9 @@ Please go to %(url)s to approve this user."""
                         (htable.type == hr_type) & \
                         (htable.site_id == site_id) & \
                         (htable.deleted == False)
-                row = db(query).select(htable.id, limitby=(0, 1)).first()
+                row = db(query).select(htable.id,
+                                       limitby = (0, 1),
+                                       ).first()
             else:
                 # No HR record exists at all
                 row = None
@@ -3478,7 +3547,8 @@ Please go to %(url)s to approve this user."""
                 (ptable.pe_id == ltable.pe_id) & \
                 (ltable.user_id == user_id)
         rows = db(query).select(mtable.id,
-                                limitby=(0, 2))
+                                limitby = (0, 2),
+                                )
         if len(rows) == 1:
             # Only update if there is a single member Record
             member_id = rows.first().id
@@ -3493,7 +3563,9 @@ Please go to %(url)s to approve this user."""
             person_ids = [person_id]
         query = (mtable.person_id.belongs(person_ids)) & \
                 (mtable.organisation_id == organisation_id)
-        row = db(query).select(mtable.id, limitby=(0, 1)).first()
+        row = db(query).select(mtable.id,
+                               limitby = (0, 1),
+                               ).first()
 
         if row:
             member_id = row.id
@@ -3510,7 +3582,8 @@ Please go to %(url)s to approve this user."""
                 if customise:
                     request = S3Request("member", "membership",
                                         current.request,
-                                        args = [str(member_id)])
+                                        args = [str(member_id)],
+                                        )
                     customise(request, mtablename)
 
                 self.s3_set_record_owner(mtable, member_id)
@@ -3543,7 +3616,8 @@ Please go to %(url)s to approve this user."""
             query = (table.organisation_id == organisation_id) & \
                     (table.deleted == False)
             record = db(query).select(table.approver,
-                                      limitby=(0, 1)).first()
+                                      limitby = (0, 1),
+                                      ).first()
         elif "email" in user and user["email"] and "@" in user["email"]:
             # Check for Domain: Whitelist or specific Approver
             domain = user.email.split("@", 1)[-1]
@@ -3551,7 +3625,8 @@ Please go to %(url)s to approve this user."""
                     (table.deleted == False)
             record = db(query).select(table.organisation_id,
                                       table.approver,
-                                      limitby=(0, 1)).first()
+                                      limitby = (0, 1),
+                                      ).first()
         else:
             record = None
 
@@ -3573,7 +3648,8 @@ Please go to %(url)s to approve this user."""
                         (mtable.user_id == utable.id)
                 rows = db(query).select(utable.email,
                                         utable.language,
-                                        distinct=True)
+                                        distinct = True,
+                                        )
                 approver = rows.as_list()
 
         return approver, organisation_id
@@ -3713,7 +3789,8 @@ Please go to %(url)s to approve this user."""
             query = (utable.id == user_id)
 
         if query is not None:
-            user = current.db(query).select(limitby=(0, 1)).first()
+            user = current.db(query).select(limitby = (0, 1),
+                                            ).first()
             if not user:
                 # Invalid user ID
                 raise ValueError("User not found")
@@ -3722,9 +3799,10 @@ Please go to %(url)s to approve this user."""
 
         self.user = user
         session = current.session
-        session.auth = Storage(user=user,
-                               last_visit=current.request.now,
-                               expiration=settings.expiration)
+        session.auth = Storage(user = user,
+                               last_visit = current.request.now,
+                               expiration = settings.expiration,
+                               )
         self.s3_set_roles()
 
         if user:
@@ -3855,11 +3933,11 @@ Please go to %(url)s to approve this user."""
                 s3db = current.s3db
                 table = s3db.org_organisation
                 pe_id = current.db(table.id == organisation_id).select(table.pe_id,
-                                                                       limitby=(0, 1),
                                                                        cache = s3db.cache,
+                                                                       limitby = (0, 1),
                                                                        ).first().pe_id
                 pe_ids = s3db.pr_get_descendants(pe_id,
-                                                 entity_types="org_organisation",
+                                                 entity_types = "org_organisation",
                                                  )
                 pe_ids.append(pe_id)
             else:
@@ -3902,8 +3980,9 @@ Please go to %(url)s to approve this user."""
             if ltable is not None:
                 query = (ltable.user_id == user_id)
                 row = db(query).select(ltable.pe_id,
-                                       limitby=(0, 1),
-                                       cache=s3db.cache).first()
+                                       cache = s3db.cache,
+                                       limitby = (0, 1),
+                                       ).first()
                 if row:
                     self.user["pe_id"] = row.pe_id
             else:
@@ -3914,8 +3993,10 @@ Please go to %(url)s to approve this user."""
             query = (mtable.deleted == False) & \
                     (mtable.user_id == user_id) & \
                     (mtable.group_id != None)
-            rows = db(query).select(mtable.group_id, mtable.pe_id,
-                                    cacheable=True)
+            rows = db(query).select(mtable.group_id,
+                                    mtable.pe_id,
+                                    cacheable = True,
+                                    )
 
             # Add all group_ids to session.s3.roles
             session.s3.roles.extend(row.group_id for row in rows)
@@ -4026,7 +4107,7 @@ Please go to %(url)s to approve this user."""
         uid = args.get("uid", None)
         if uid:
             record = current.db(table.uuid == uid).select(table.id,
-                                                          limitby=(0, 1)
+                                                          limitby = (0, 1),
                                                           ).first()
         else:
             record = None
@@ -4232,11 +4313,15 @@ Please go to %(url)s to approve this user."""
         sr = self.get_system_roles()
         unrestrictable = [str(sr.ADMIN),
                           str(sr.ANONYMOUS),
-                          str(sr.AUTHENTICATED)]
+                          str(sr.AUTHENTICATED),
+                          ]
         if for_pe != []:
             query &= ((mtable.pe_id == for_pe) | \
                       (mtable.group_id.belongs(unrestrictable)))
-        memberships = db(query).select()
+        memberships = db(query).select(mtable.id,
+                                       mtable.user_id,
+                                       mtable.group_id,
+                                       )
 
         # Archive the memberships
         for m in memberships:
@@ -4248,7 +4333,8 @@ Please go to %(url)s to approve this user."""
             m.update_record(deleted = True,
                             deleted_fk = deleted_fk,
                             user_id = None,
-                            group_id = None)
+                            group_id = None,
+                            )
 
         # Update roles for current user if required
         if self.user and str(user_id) == str(self.user.id):
@@ -4475,7 +4561,7 @@ Please go to %(url)s to approve this user."""
             utable = self.settings.table_user
             query = (utable.email == person_id)
             user = current.db(query).select(utable.id,
-                                            limitby=(0, 1),
+                                            limitby = (0, 1),
                                             ).first()
             if user:
                 result = user.id
@@ -4490,7 +4576,7 @@ Please go to %(url)s to approve this user."""
             else:
                 query = (ltable.pe_id == pe_id)
             link = current.db(query).select(ltable.user_id,
-                                            limitby=(0, 1),
+                                            limitby = (0, 1),
                                             ).first()
             if link:
                 result = link.user_id
@@ -4508,7 +4594,7 @@ Please go to %(url)s to approve this user."""
 
         table = current.s3db.pr_person_user
         row = current.db(table.user_id == user_id).select(table.pe_id,
-                                                          limitby=(0, 1),
+                                                          limitby = (0, 1),
                                                           ).first()
         return row.pe_id if row else None
 
@@ -4573,8 +4659,8 @@ Please go to %(url)s to approve this user."""
                 pass
             else:
                 row = current.db(query).select(htable.id,
-                                               orderby = ~htable.modified_on,
                                                limitby = (0, 1),
+                                               orderby = ~htable.modified_on,
                                                ).first()
 
         return row.id if row else None
@@ -4638,7 +4724,8 @@ Please go to %(url)s to approve this user."""
                     # Creator of Record is allowed to Edit
                     query = (table.id == record_id)
                     record = current.db(query).select(table.owned_by_user,
-                                                      limitby=(0, 1)).first()
+                                                      limitby = (0, 1),
+                                                      ).first()
                     if record and self.user.id == record.owned_by_user:
                         authorised = True
 
@@ -5039,7 +5126,7 @@ Please go to %(url)s to approve this user."""
         if fields_missing:
             fields_to_load = [table._id] + [table[f] for f in fields_in_table]
             query = (table._id == record_id)
-            row = current.db(query).select(limitby=(0, 1),
+            row = current.db(query).select(limitby = (0, 1),
                                            *fields_to_load).first()
         else:
             row = record
@@ -5105,7 +5192,7 @@ Please go to %(url)s to approve this user."""
                 else:
                     entity = 0
                 realm_entity = self.get_realm_entity(table, row,
-                                                     entity=entity)
+                                                     entity = entity)
                 data[REALM] = realm_entity
 
         self.s3_update_record_owner(table, row, update=force_update, **data)
@@ -5321,7 +5408,8 @@ Please go to %(url)s to approve this user."""
                 query = table._id == record
                 limitby = (0, 1)
             fields = [table[f] for f in tables]
-            instance_records = db(query).select(limitby=limitby, *fields)
+            instance_records = db(query).select(limitby = limitby,
+                                                *fields)
         else:
             instance_records = [record]
         if not instance_records:
@@ -5403,7 +5491,9 @@ Please go to %(url)s to approve this user."""
                 tablename = original_tablename(table)
             else:
                 tablename = table
-            s3db.configure(tablename, insertable=False)
+            s3db.configure(tablename,
+                           insertable = False,
+                           )
 
         return site_ids # Will be []
 
@@ -5440,14 +5530,16 @@ Please go to %(url)s to approve this user."""
         request = current.request
         if "update" in request.args or "create" in request.args:
             if redirect_on_error:
-                current.session.error = error_msg + " " + HINT
+                current.session.error = "%s %s" % (error_msg, HINT)
                 redirect(URL(c="default", f="index"))
         elif table is not None:
             if hasattr(table, "_tablename"):
                 tablename = original_tablename(table)
             else:
                 tablename = table
-            s3db.configure(tablename, insertable=False)
+            s3db.configure(tablename,
+                           insertable = False,
+                           )
 
         return []
 
@@ -5465,10 +5557,10 @@ Please go to %(url)s to approve this user."""
         if not current.deployment_settings.get_org_branches():
             return org_id
         return current.cache.ram(
-                    # Common key for all users of this org & vol_service_record() & hrm_training_event_realm_entity()
-                    "root_org_%s" % org_id,
-                    lambda: current.s3db.org_root_organisation(org_id),
-                    time_expire=120
+                # Common key for all users of this org & vol_service_record() & hrm_training_event_realm_entity()
+                "root_org_%s" % org_id,
+                lambda: current.s3db.org_root_organisation(org_id),
+                time_expire=120
                 )
 
     # -------------------------------------------------------------------------
@@ -5487,7 +5579,8 @@ Please go to %(url)s to approve this user."""
             table = s3db.org_organisation
             row = current.db(table.id == org_id).select(table.name,
                                                         cache = s3db.cache,
-                                                        limitby=(0, 1)).first()
+                                                        limitby = (0, 1),
+                                                        ).first()
             try:
                 return row.name
             except:
@@ -5826,7 +5919,7 @@ class S3Permission(object):
                       (table.entity == entity))
             record = current.db(query).select(table.id,
                                               table.group_id,
-                                              limitby = (0, 1)
+                                              limitby = (0, 1),
                                               ).first()
             if record:
                 if delete:
@@ -5844,7 +5937,7 @@ class S3Permission(object):
             else:
                 # Lookup the group_id
                 record = current.db(gtable.uuid == group).select(gtable.id,
-                                                                 limitby = (0, 1)
+                                                                 limitby = (0, 1),
                                                                  ).first()
                 if record:
                     acl["group_id"] = group_id
@@ -5877,7 +5970,7 @@ class S3Permission(object):
                                t = t,
                                record = record,
                                entity = entity,
-                               delete = True
+                               delete = True,
                                )
 
     # -------------------------------------------------------------------------
@@ -6241,7 +6334,7 @@ class S3Permission(object):
 
         if record is None and record_id:
             record = current.db(table._id == record_id).select(table.approved_by,
-                                                               limitby = (0, 1)
+                                                               limitby = (0, 1),
                                                                ).first()
             if not record:
                 return False
@@ -6795,7 +6888,7 @@ class S3Permission(object):
                        vars = vars,
                        anchor = anchor,
                        extension = extension,
-                       env = env
+                       env = env,
                        )
         else:
             return False
@@ -7479,7 +7572,7 @@ class S3Audit(object):
                                            table.user_id,
                                            table.old_value,
                                            table.new_value,
-                                           limitby = (0, limit)
+                                           limitby = (0, limit),
                                            )
 
         # Convert to Human-readable form
@@ -7586,9 +7679,13 @@ class S3GroupedOptionsWidget(OptionsWidget):
                     continue
                 items.sort()
                 opts = [OPTION(v, _value=k) for v, k in items]
-                select_items.append(OPTGROUP(*opts, _label=option[0]))
+                select_items.append(OPTGROUP(*opts,
+                                             _label = option[0],
+                                             ))
             else:
-                select_items.append(OPTION(option[1], _label=option[0]))
+                select_items.append(OPTION(option[1],
+                                           _label = option[0],
+                                           ))
 
         return SELECT(select_items, **attr)
 
@@ -7680,8 +7777,9 @@ class S3EntityRoleManager(S3Method):
                     # Try to load the record and check pe_id
                     table = s3db.table(tablename)
                     if table and "pe_id" in table.fields:
-                        record = current.db(table._id==record_id).select(table.pe_id,
-                                                                         limitby = (0, 1)).first()
+                        record = current.db(table._id == record_id).select(table.pe_id,
+                                                                           limitby = (0, 1),
+                                                                           ).first()
 
                 if record and record.pe_id not in realms[ORG_ADMIN]:
                     return False
@@ -7939,7 +8037,8 @@ class S3EntityRoleManager(S3Method):
 
         rows = current.db(query).select(utable.id,
                                         gtable.uuid,
-                                        mtable.pe_id)
+                                        mtable.pe_id,
+                                        )
 
         assigned_roles = OrderedDict()
         roles = self.roles
@@ -7965,9 +8064,10 @@ class S3EntityRoleManager(S3Method):
         fields = self.get_form_fields()
         form = SQLFORM.factory(*fields,
                                table_name="roles",
-                               _id="role-form",
-                               _action="",
-                               _method="POST")
+                               _id = "role-form",
+                               _action = "",
+                               _method = "POST",
+                               )
         return form
 
     # -------------------------------------------------------------------------
@@ -7982,8 +8082,9 @@ class S3EntityRoleManager(S3Method):
         requires = IS_EMPTY_OR(IS_IN_SET(self.acls))
         for module_uid, module_label in self.modules.items():
             field = Field(module_uid,
-                          label=module_label,
-                          requires=requires)
+                          label = module_label,
+                          requires = requires,
+                          )
             fields.append(field)
         return fields
 
@@ -8073,10 +8174,9 @@ class S3OrgRoleManager(S3EntityRoleManager):
         entity_id = int(self.request.record.pe_id)
 
         entity = {"id": entity_id,
-                  "name": current.s3db.pr_get_entities(
-                                          pe_ids = [entity_id],
-                                          types = self.ENTITY_TYPES,
-                                          )[entity_id],
+                  "name": current.s3db.pr_get_entities(pe_ids = [entity_id],
+                                                       types = self.ENTITY_TYPES,
+                                                       )[entity_id],
                   }
 
         return entity
@@ -8117,7 +8217,7 @@ class S3OrgRoleManager(S3EntityRoleManager):
 
         assigned_roles = super(S3OrgRoleManager, self).get_assigned_roles
 
-        return assigned_roles(entity_id=self.entity["id"])
+        return assigned_roles(entity_id = self.entity["id"])
 
     # -------------------------------------------------------------------------
     def get_form_fields(self):
@@ -8150,7 +8250,7 @@ class S3OrgRoleManager(S3EntityRoleManager):
             widget = lambda field, value: \
                             S3GroupedOptionsWidget.widget(field,
                                                           value,
-                                                          options=options,
+                                                          options = options,
                                                           )
 
             object_field = Field("foreign_object",
@@ -8172,7 +8272,7 @@ class S3PersonRoleManager(S3EntityRoleManager):
         super(S3PersonRoleManager, self).__init__(*args, **kwargs)
 
         # dictionary {id: name, ...} of pentities
-        self.objects = current.s3db.pr_get_entities(types=self.ENTITY_TYPES)
+        self.objects = current.s3db.pr_get_entities(types = self.ENTITY_TYPES)
 
     # -------------------------------------------------------------------------
     def get_context_data(self, r, **attr):
@@ -8223,7 +8323,8 @@ class S3PersonRoleManager(S3EntityRoleManager):
                 (ptable.user_id == utable.id)
         record = current.db(query).select(utable.id,
                                           utable[userfield],
-                                          limitby=(0, 1)).first()
+                                          limitby = (0, 1),
+                                          ).first()
 
         return {"id": record.id,
                 "name": record[utable[userfield]],
@@ -8247,7 +8348,7 @@ class S3PersonRoleManager(S3EntityRoleManager):
 
         assigned_roles = super(S3PersonRoleManager, self).get_assigned_roles
 
-        return assigned_roles(user_id=self.user["id"])
+        return assigned_roles(user_id = self.user["id"])
 
     # -------------------------------------------------------------------------
     def get_form_fields(self):
@@ -8262,9 +8363,9 @@ class S3PersonRoleManager(S3EntityRoleManager):
         fields = super(S3PersonRoleManager, self).get_form_fields()
 
         if not self.entity:
-            options = s3db.pr_get_entities(pe_ids=self.realm,
-                                           types=self.ENTITY_TYPES,
-                                           group=True)
+            options = s3db.pr_get_entities(pe_ids = self.realm,
+                                           types = self.ENTITY_TYPES,
+                                           group = True)
 
             nice_name = s3db.table("pr_pentity").instance_type.represent
 
@@ -8280,7 +8381,7 @@ class S3PersonRoleManager(S3EntityRoleManager):
             widget = lambda field, value: \
                      S3GroupedOptionsWidget.widget(field,
                                                    value,
-                                                   options=filtered_options,
+                                                   options = filtered_options,
                                                    )
 
             object_field = Field("foreign_object",
