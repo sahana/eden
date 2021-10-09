@@ -1280,6 +1280,59 @@ def config(settings):
         table.first_name.label = T("Forenames")
         table.last_name.label = T("Father's Surname")
 
+        auth = current.auth
+        messages = auth.messages
+        messages.lock_keys = False
+        if auth.root_org_name() == "Red Cross Society of Panama":
+            messages.welcome_email = \
+"""Estimado, estimada,
+Le damos la más cordial bienvenida al Sistema de Gestión de Recursos (RMS).
+
+Su nombre de usuarios es: su correo electrónico
+Contraseña: cruzroja (puede ser cambiando por usted cuando lo desee)
+Para acceder a la plataforma visite: https://rms.cruzroja.org
+
+Si tiene algún problema para acceder a la plataforma póngase en contacto con:
+
+Haylin Mosquera – Coordinadora de Voluntariado de la Cruz Roja Panameña – E: voluntariado@cruzroja.org.pa
+
+Saludos Cordiales
+
+EQUIPO DE SOPORTE
+RMS – Sistema de Gestión de Recursos
+
+Albrook, Calle Jorge Bolivar Alemán, Edifico 453
+Ciudad de Panamá, Panamá
+Tel: (507) 315-1388 / 315-1389
+Email: rmssoporte@cruzroja.org.pa
+www.cruzroja.org.pa / rms.cruzroja.org"""
+        else:
+            if current.session.s3.language == "es":
+                messages.welcome_email = \
+"""Estimado, estimada,
+Le damos la más cordial bienvenida al Sistema de Gestión de Recursos (RMS).
+
+Su nombre de usuarios es: su correo electrónico
+Contraseña: cruzroja (puede ser cambiando por usted cuando lo desee)
+Para acceder a la plataforma visite: https://rms.cruzroja.org
+
+Saludos Cordiales,
+Equipo de Soporte RMS"""
+            else:
+                # "en"
+                messages.welcome_email = \
+"""Dear,
+We welcome you to the Resource Management System (RMS).
+
+Your user name is: your e-mail address
+Password: redcross (can be changed by you at any time)
+To access the platform visit: https://rms.cruzroja.org
+
+Best regards,
+RMS Support Team"""
+
+        messages.lock_keys = True
+
         return attr
 
     settings.customise_auth_user_controller = customise_auth_user_controller
@@ -1627,6 +1680,8 @@ def config(settings):
     def hrm_human_resource_create_onaccept(form):
         """
             If the Staff/Volunteer is RC then create them a user account with a random password
+            - only called when created by RIT_ADMIN through the web forms (not import)
+            - only happens if an email has been set
         """
 
         db = current.db
@@ -1806,20 +1861,6 @@ Thank you"""
         auth.s3_approve_user(user, password=password)
 
     # -------------------------------------------------------------------------
-    def customise_hrm_insurance_resource(r, tablename):
-
-        table = current.s3db.hrm_insurance
-
-        table.type.default = "HEALTH"
-        table.insurance_number.label = T("Affiliate Number")
-        table.phone.label = T("Emergency Number")
-        table.insurer.label = "%s / %s" % (T("Insurance Company"),
-                                           T("Social Work or Prepaid"),
-                                           )
-
-    settings.customise_hrm_insurance_resource = customise_hrm_insurance_resource
-
-    # -------------------------------------------------------------------------
     def hrm_human_resource_onvalidation(form):
         """
             Check that the Organization ID is unique per NS
@@ -1859,8 +1900,6 @@ Thank you"""
             # Error
             form.errors["code"] = current.T("Organization ID already in use")
 
-        return
-
     # -------------------------------------------------------------------------
     def customise_hrm_human_resource_resource(r, tablename):
 
@@ -1891,36 +1930,6 @@ Thank you"""
         else:
             EXTERNAL = False
 
-        def add_language(form):
-            from gluon import LABEL, OPTION, SELECT
-            from s3 import s3_addrow
-            formstyle = settings.get_ui_formstyle()
-            language_opts = [OPTION(T("Spanish"),
-                                    _value = "es",
-                                    _selected = "selected",
-                                    ),
-                             OPTION(T("French"),
-                                    _value = "fr",
-                                    ),
-                             OPTION(T("English"),
-                                    _value = "en",
-                                    ),
-                             ]
-            s3_addrow(form,
-                      LABEL("%s:" % T("Language"),
-                            _id = "auth_user_language__label",
-                            _for = "auth_user_language",
-                            ),
-                      SELECT(_id = "auth_user_language",
-                             _name = "language",
-                             *language_opts
-                             ),
-                      "",
-                      formstyle,
-                      "auth_user_language__row",
-                      position = 3,
-                      )
-
         # Custom prep
         standard_prep = s3.prep
         def custom_prep(r):
@@ -1937,6 +1946,9 @@ Thank you"""
             auth = current.auth
             resource = r.resource
             table = r.table
+
+            has_role = auth.s3_has_role
+            has_roles = auth.s3_has_roles
 
             if EXTERNAL:
                 f = table.organisation_id
@@ -2017,9 +2029,41 @@ Thank you"""
                 if not r.id:
                     # Filter to just RC people
                     resource.add_filter(FS("organisation_id$organisation_type.name") == RED_CROSS)
-                    resource.configure(create_onaccept = hrm_human_resource_create_onaccept,
-                                       form_postp = add_language,
-                                       )
+
+                    if has_role("RIT_ADMIN", include_admin=False):
+                        # Create a User Account for the HR to manage their own profile
+                        def add_language(form):
+                            from gluon import LABEL, OPTION, SELECT
+                            from s3 import s3_addrow
+                            formstyle = settings.get_ui_formstyle()
+                            language_opts = [OPTION(T("Spanish"),
+                                                    _value = "es",
+                                                    _selected = "selected",
+                                                    ),
+                                             OPTION(T("French"),
+                                                    _value = "fr",
+                                                    ),
+                                             OPTION(T("English"),
+                                                    _value = "en",
+                                                    ),
+                                             ]
+                            s3_addrow(form,
+                                      LABEL("%s:" % T("Language"),
+                                            _id = "auth_user_language__label",
+                                            _for = "auth_user_language",
+                                            ),
+                                      SELECT(_id = "auth_user_language",
+                                             _name = "language",
+                                             *language_opts
+                                             ),
+                                      "",
+                                      formstyle,
+                                      "auth_user_language__row",
+                                      position = 3,
+                                      )
+                        resource.configure(create_onaccept = hrm_human_resource_create_onaccept,
+                                           form_postp = add_language,
+                                           )
 
                     # Custom list_fields
                     list_fields = [(T("Full Name"), "person_id"),
@@ -2041,7 +2085,7 @@ Thank you"""
                     export_formats.append(("siglist.pdf", "fa fa-list", T("Export Signature List")))
                     s3.formats["siglist.pdf"] = r.url(method = "siglist")
 
-                if auth.s3_has_roles(ID_CARD_EXPORT_ROLES):
+                if has_roles(ID_CARD_EXPORT_ROLES):
                     if r.representation == "card":
                         # Configure ID card layout
                         from .idcards import IDCardLayout
@@ -2055,8 +2099,8 @@ Thank you"""
                 settings.ui.export_formats = export_formats
 
 
-            if not auth.s3_has_role("ADMIN") and \
-                   auth.s3_has_roles(("training_coordinator", "training_assistant")):
+            if not has_role("ADMIN") and \
+                   has_roles(("training_coordinator", "training_assistant")):
                 # Filter People to just those trained by this Reference Center
                 resource.add_filter(FS("training.training_event_id$organisation_id") == auth.user.organisation_id)
 
@@ -2091,26 +2135,23 @@ Thank you"""
             return True
         s3.prep = custom_prep
 
-        # Custom postp
-        standard_postp = s3.postp
-        def custom_postp(r, output):
-            # Call standard postp
-            if callable(standard_postp):
-                output = standard_postp(r, output)
-
-            if not EXTERNAL and \
-               r.method in (None, "create") and \
-               isinstance(output, dict):
-                form = output.get("form")
-                if form:
-                    add_language(form)
-
-            return output
-        s3.postp = custom_postp
-
         return attr
 
     settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_insurance_resource(r, tablename):
+
+        table = current.s3db.hrm_insurance
+
+        table.type.default = "HEALTH"
+        table.insurance_number.label = T("Affiliate Number")
+        table.phone.label = T("Emergency Number")
+        table.insurer.label = "%s / %s" % (T("Insurance Company"),
+                                           T("Social Work or Prepaid"),
+                                           )
+
+    settings.customise_hrm_insurance_resource = customise_hrm_insurance_resource
 
     # -------------------------------------------------------------------------
     def customise_hrm_job_title_resource(r, tablename):
