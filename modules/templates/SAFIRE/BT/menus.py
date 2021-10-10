@@ -41,7 +41,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Disaster Assessments", c="dc", f="index"),
                 MM("Human Resources", c="hrm", f="staff"),
                 MM("Infrastructure", c="transport", f="index"),
-                MM("Population", c="stats", f="demographic_data"),
+                MM("Population", c="stats", f="demographic_data", m="summary"),
                 MM("Item Management", c="asset", f="index"),
                 ),
                MM("DRR", link=False)(
