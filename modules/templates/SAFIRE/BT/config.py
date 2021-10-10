@@ -173,6 +173,61 @@ def config(settings):
     settings.customise_asset_asset_controller = customise_asset_asset_controller
 
     # -------------------------------------------------------------------------
+    def customise_dc_response_resource(r, tablename):
+
+        if r.controller in ("event",
+                            "hrm", # Training Event Evaluations
+                            ):
+            return
+
+        s3db = current.s3db
+
+        template_name = r.get_vars.get("~.template_id$name")
+        if template_name:
+            ttable = s3db.dc_template
+            template = current.db(ttable.name == template_name).select(ttable.id,
+                                                                       limitby = (0, 1),
+                                                                       ).first()
+            if template:
+                f = s3db.dc_response.template_id
+                f.default = template.id
+                f.readable = f.writable = False
+
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Create %s") % template_name,
+                title_display = T("%s Details") % template_name,
+                title_list = T("%ss") % template_name,
+                title_update = T("Edit %s") % template_name,
+                #title_upload = T("Import %ss") % template_name,
+                label_list_button = T("List %ss") % template_name,
+                label_delete_button = T("Delete %s") % template_name,
+                msg_record_created = T("%s added") % template_name,
+                msg_record_modified = T("%s updated") % template_name,
+                msg_record_deleted = T("%s deleted") % template_name,
+                msg_list_empty = T("No %ss currently registered") % template_name)
+
+        from s3 import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3SQLCustomForm, S3SQLInlineLink
+
+        crud_form = S3SQLCustomForm(S3SQLInlineLink("event",
+                                                    field = "event_id",
+                                                    #label = type_label,
+                                                    multiple = False,
+                                                    ),
+                                    "template_id",
+                                    "date",
+                                    "location_id",
+                                    "organisation_id",
+                                    "person_id",
+                                    "comments",
+                                    )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
+
+    settings.customise_dc_response_resource = customise_dc_response_resource
+
+    # -------------------------------------------------------------------------
     def customise_dc_target_resource(r, tablename):
 
         if r.controller in ("event",
@@ -186,7 +241,7 @@ def config(settings):
         if template_name:
             ttable = s3db.dc_template
             template = current.db(ttable.name == template_name).select(ttable.id,
-                                                                       limitby = (0, 1)
+                                                                       limitby = (0, 1),
                                                                        ).first()
             if template:
                 f = s3db.dc_target.template_id

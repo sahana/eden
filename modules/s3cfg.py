@@ -4178,7 +4178,7 @@ class S3Config(Storage):
         """
             Whether to show the DC target tab for events
         """
-        return self.event.get("dc_target_tab", True)
+        return self.event.get("dc_target_tab", False)
 
     def get_event_dispatch_tab(self):
         """

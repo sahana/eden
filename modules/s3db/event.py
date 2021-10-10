@@ -6932,12 +6932,18 @@ def event_rheader(r):
                 tabs += [(T("Documents"), "document"),
                          (T("Photos"), "image"),
                          ]
+            s3db = current.s3db
+            crud_strings = current.response.s3.crud_strings
             if settings.get_event_impact_tab():
                 tabs.append((T("Impact"), "impact"))
             if settings.get_event_dc_target_tab():
-                tabs.append((T("Assessment Targets"), "target"))
+                s3db.dc_target # Load crud_strings
+                label = crud_strings.dc_target.title_list
+                tabs.append((label, "target"))
             if settings.get_event_dc_response_tab():
-                tabs.append((T("Assessments"), "response"))
+                s3db.dc_response # Load crud_strings
+                label = crud_strings.dc_response.title_list
+                tabs.append((label, "response"))
             if settings.get_project_event_projects():
                 tabs.append((T("Projects"), "project"))
             if settings.get_project_event_activities():
@@ -6971,7 +6977,9 @@ def event_rheader(r):
                                    table.start_date.represent(record.start_date),
                                    ),
                                 TR(closed),
-                                ), rheader_tabs)
+                                ),
+                          rheader_tabs,
+                          )
 
         elif name == "incident":
             # Incident `
@@ -7039,7 +7047,9 @@ def event_rheader(r):
                                    table.date.represent(record.date),
                                    ),
                                 TR(closed),
-                                ), rheader_tabs)
+                                ),
+                          rheader_tabs,
+                          )
 
         elif name == "scenario":
             # Scenarios Controller
@@ -7079,7 +7089,9 @@ def event_rheader(r):
                                 TR(TH("%s: " % table.comments.label),
                                    record.comments,
                                    ),
-                                ), rheader_tabs)
+                                ),
+                          rheader_tabs,
+                          )
 
         elif name == "sitrep":
             # SitRep Controller
@@ -7110,7 +7122,9 @@ def event_rheader(r):
                                 TR(TH("%s: " % table.date.label),
                                    table.date.represent(record.date),
                                    ),
-                                ), rheader_tabs)
+                                ),
+                          rheader_tabs,
+                          )
 
     return rheader
 

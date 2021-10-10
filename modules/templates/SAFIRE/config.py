@@ -416,7 +416,9 @@ def config(settings):
                                                 ).first()
                 if link:
                     from s3 import S3Represent
-                    represent = S3Represent(lookup="event_incident", show_link=True)
+                    represent = S3Represent(lookup = "event_incident",
+                                            show_link = True,
+                                            )
                     rheader = DIV(TABLE(TR(TH("%s: " % ltable.incident_id.label),
                                            represent(link.incident_id),
                                            ),
@@ -435,6 +437,8 @@ def config(settings):
                                     ))
 
             elif name == "event":
+                s3db = current.s3db
+                crud_strings = current.response.s3.crud_strings
                 if settings.get_event_label(): # == "Disaster"
                     label = T("Disaster Details")
                 else:
@@ -449,7 +453,13 @@ def config(settings):
                 if settings.get_event_impact_tab():
                     tabs.append((T("Impact"), "impact"))
                 if settings.get_event_dc_target_tab():
-                    tabs.append((T("Assessment Targets"), "target"))
+                    s3db.dc_target # Load crud_strings
+                    label = crud_strings.dc_target.title_list
+                    tabs.append((label, "target"))
+                if settings.get_event_dc_response_tab():
+                    s3db.dc_response # Load crud_strings
+                    label = crud_strings.dc_response.title_list
+                    tabs.append((label, "response"))
                 tabs += [(T("Documents"), "document"),
                          (T("Photos"), "image"),
                          ]
