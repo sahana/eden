@@ -47,7 +47,6 @@ __all__ = ("EventModel",
            "EventProjectModel",
            #"EventRequestModel",
            "EventSiteModel",
-           "EventShelterModel",
            "EventSitRepModel",
            "EventTagModel",
            "EventTaskModel",
@@ -2832,78 +2831,6 @@ class EventSiteModel(S3Model):
                        onaccept = lambda form: \
                                 set_event_from_incident(form, "event_site"),
                        super_entity = "budget_cost_item",
-                       )
-
-        # Pass names back to global scope (s3.*)
-        return {}
-
-# =============================================================================
-class EventShelterModel(S3Model):
-    """
-        Link Shelters to Events
-    """
-
-    names = ("event_event_shelter",
-             )
-
-    def model(self):
-
-        T = current.T
-
-        ondelete = "CASCADE"
-        #if current.deployment_settings.get_event_cascade_delete_incidents():
-        #    ondelete = "CASCADE"
-        #else:
-        #    ondelete = "SET NULL"
-
-        # ---------------------------------------------------------------------
-        # Shelters
-        #   Link table for cr_shelter <> event_event
-        tablename = "event_event_shelter"
-        self.define_table(tablename,
-                          self.event_event_id(ondelete = ondelete),
-                          #self.event_incident_id(ondelete = "CASCADE"),
-                          self.cr_shelter_id(empty = False,
-                                             ondelete = "CASCADE",
-                                             ),
-                          *s3_meta_fields()
-                          )
-
-        function = current.request.function
-        if function == "event":
-            current.response.s3.crud_strings[tablename] = Storage(
-                label_create = T("Add Shelter"),
-                title_display = T("Shelter Details"),
-                title_list = T("Shelters"),
-                title_update = T("Edit Shelter"),
-                label_list_button = T("List Shelters"),
-                label_delete_button = T("Remove Shelter for this Event"),
-                msg_record_created = T("Shelter added"),
-                msg_record_modified = T("Shelter updated"),
-                msg_record_deleted = T("Shelter removed"),
-                msg_list_empty = T("No Shelters currently tagged to this event")
-                )
-
-        elif function == "shelter":
-            current.response.s3.crud_strings[tablename] = Storage(
-                label_create = T("Associate Event"),
-                title_display = T("Event Details"),
-                title_list = T("Events"),
-                title_update = T("Edit Event"),
-                label_list_button = T("List Events"),
-                label_delete_button = T("Remove Event for this Shelter"),
-                msg_record_created = T("Event added"),
-                msg_record_modified = T("Event updated"),
-                msg_record_deleted = T("Event removed"),
-                msg_list_empty = T("No Events currently tagged to this Shelter")
-                )
-
-        self.configure(tablename,
-                       deduplicate = S3Duplicate(primary = ("event_id",
-                                                            #"incident_id",
-                                                            "shelter_id",
-                                                            ),
-                                                 ),
                        )
 
         # Pass names back to global scope (s3.*)

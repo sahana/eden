@@ -7,9 +7,9 @@
 
          Column headers defined in this stylesheet:
 
-         Shelter........................required.....Shelter Name
+         Shelter........................required.....Shelter Name (@ToDo: Add Facility Type to support other Site Types)
          Unit...........................required.....Shelter Unit Name
-         Transitory.....................optional.....is for transitory accomodation
+         Transitory.....................optional.....is for transitory accommodation
                                                      true|false
          Capacity Day...................optional.....capacity_day (integer)
          Capacity Night.................optional.....capacity_night (integer)
@@ -220,7 +220,7 @@
                 </xsl:if>
 
                 <!-- Link to Shelter -->
-                <reference field="shelter_id" resource="cr_shelter">
+                <reference field="site_id" resource="cr_shelter">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$ShelterName"/>
                     </xsl:attribute>

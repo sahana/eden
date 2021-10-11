@@ -7,7 +7,7 @@
 
          Column headers defined in this stylesheet:
 
-         Shelter........................required.....Shelter Name
+         Shelter........................required.....Shelter Name (@ToDo: Add Facility Type to support other Site Types)
          Unit...........................optional.....Shelter Unit Name
          Status.........................optional.....Shelter Registration Status
          Check-in Date..................optional.....Shelter Registration Check-In Date
@@ -145,7 +145,7 @@
 
         <resource name="cr_shelter_registration">
 
-            <reference field="shelter_id" resource="cr_shelter">
+            <reference field="site_id" resource="cr_shelter">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$ShelterName"/>
                 </xsl:attribute>
@@ -235,7 +235,7 @@
                     <xsl:value-of select="$ShelterUnitName"/>
                 </data>
 
-                <reference field="shelter_id" resource="cr_shelter">
+                <reference field="site_id" resource="cr_shelter">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$ShelterName"/>
                     </xsl:attribute>

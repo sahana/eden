@@ -686,8 +686,6 @@ def config(settings):
         query = (table.site_id == site_id) & \
                 (table.tag == "workflow_status")
 
-        shelter_id = form_vars_get("id")
-
         if status not in (1, 6):
             # Shelter has been Opened
 
@@ -695,7 +693,7 @@ def config(settings):
             db(query).delete()
 
             # Set this shelter into the session
-            current.session.s3.shelter_id = shelter_id
+            current.session.s3.shelter_id = form_vars_get("id")
 
             return
 
@@ -711,9 +709,9 @@ def config(settings):
                          )
 
         # Check-out all clients
-        table = s3db.cr_shelter_registration
-        query = (table.shelter_id == shelter_id) & \
-                (table.registration_status == 2) # Checked-in
+        rtable = s3db.cr_shelter_registration
+        query = (rtable.site_id == site_id) & \
+                (rtable.registration_status == 2) # Checked-in
         db(query).update(registration_status = 3, # Checked-out
                          check_out_date = current.request.now,
                          )
@@ -1373,15 +1371,12 @@ def config(settings):
         #    from s3db.gis import gis_LocationRepresent
         #    table.location_id.represent = gis_LocationRepresent(show_link = False)
 
-        # Redefine as multiple=False
-        s3db.add_components("cr_shelter",
-                            cr_shelter_service_shelter = {"joinby": "shelter_id",
-                                                          "multiple": False,
-                                                          }
-                            )
-
-        # Filtered components
         s3db.add_components("org_site",
+                            # Redefine as multiple=False
+                            cr_shelter_service_shelter = {"joinby": "site_id",
+                                                          "multiple": False,
+                                                          },
+                            # Filtered components
                             org_site_tag = ({"name": "red_bag",
                                              "joinby": "site_id",
                                              "filterby": {"tag": "red_bag"},
@@ -1644,7 +1639,7 @@ def config(settings):
 
         def clients_count(r, **attr):
             table = s3db.cr_shelter_registration
-            query = (table.shelter_id == r.id) & \
+            query = (table.site_id == r.record.site_id) & \
                     (table.registration_status == 2)
             clients = current.db(query).count()
 
@@ -1743,10 +1738,10 @@ def config(settings):
                    action = staff_redirect,
                    )
 
-        s3db.add_components("cr_shelter",
+        s3db.add_components("org_site",
                             pr_person = {"name": "client",
                                          "link": "cr_shelter_registration",
-                                         "joinby": "shelter_id",
+                                         "joinby": "site_id",
                                          "key": "person_id",
                                          "actuate": "replace",
                                          },
@@ -2148,24 +2143,24 @@ def config(settings):
                 person_id = form_vars_get("person_id")
                 shelter_id = form_vars_get("shelter_id")
 
-                # Delete old cr_shelter_registration records
-                ltable = s3db.cr_shelter_registration
-                query = (ltable.person_id == person_id) & \
-                        (ltable.id != form_vars_get("id"))
-                current.db(query).delete()
-
-                # Update Shelter Population
-                from s3db.cr import cr_update_shelter_population
-                cr_update_shelter_population(shelter_id)
-
-                # Add Site Event Log
-                check_in_date = form_vars_get("check_in_date", r.utcnow)
-
                 stable = s3db.cr_shelter
                 shelter = current.db(stable.id == shelter_id).select(stable.site_id,
                                                                      limitby = (0, 1),
                                                                      ).first()
                 site_id = shelter.site_id
+
+                # Delete old cr_shelter_registration records
+                ltable = s3db.cr_shelter_registration
+                query = (ltable.person_id == person_id) & \
+                        (ltable.site_id != site_id)
+                current.db(query).delete()
+
+                # Update Shelter Population
+                from s3db.cr import cr_update_shelter_population
+                cr_update_shelter_population(site_id)
+
+                # Add Site Event Log
+                check_in_date = form_vars_get("check_in_date", r.utcnow)
 
                 s3db.org_site_event.insert(site_id = site_id,
                                            person_id = person_id,

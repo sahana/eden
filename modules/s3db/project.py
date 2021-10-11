@@ -12032,7 +12032,8 @@ class ProjectTaskModel(S3Model):
 
         # Resolve shelter inspection flags linked to this task
         if current.deployment_settings.get_cr_shelter_inspection_tasks():
-            s3db.cr_resolve_shelter_flags(task_id)
+            from s3db.cr import cr_resolve_shelter_flags
+            cr_resolve_shelter_flags(task_id)
 
     # -------------------------------------------------------------------------
     @staticmethod

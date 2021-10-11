@@ -75,6 +75,7 @@ __all__ = ("OrganisationModel",
            "org_organisation_organisation_type_ondelete",
            "org_office_controller",
            "org_facility_controller",
+           "org_site_prep",
            "org_update_affiliations",
            "org_OrganisationRepresent",
            "org_SiteRepresent",
@@ -3430,6 +3431,7 @@ class SiteModel(S3Model):
                                               comment = comment,
                                               #default = auth.user.site_id if auth.is_logged_in() else None,
                                               label = org_site_label,
+                                              instance_types = auth.org_site_types,
                                               orderby = "org_site.name",
                                               #readable = True,
                                               represent = org_site_represent,
@@ -3576,6 +3578,19 @@ class SiteModel(S3Model):
                             # Requests
                             inv_req = site_id,
                             inv_commit = site_id,
+
+                            # Shelter
+                            cr_shelter_allocation = "site_id",
+                            cr_shelter_registration = "site_id",
+                            cr_shelter_service_shelter = "site_id",
+                            cr_shelter_service = {"link": "cr_shelter_service_shelter",
+                                                  "joinby": "site_id",
+                                                  "key": "service_id",
+                                                  },
+                            cr_shelter_status = {"name": "shelter_status",
+                                                 "joinby": "site_id",
+                                                 },
+                            cr_shelter_unit = "site_id",
 
                             # Shifts
                             #org_site_shift = site_id,
@@ -7773,7 +7788,8 @@ def org_office_controller():
                     field.readable = field.writable = False
                     # Stay within Office tab
                     s3db.configure("asset_asset",
-                                   create_next = None)
+                                   create_next = None,
+                                   )
 
             elif r.method in ("create", "update"):
                 if r.method == "update":
@@ -8089,6 +8105,39 @@ def org_facility_controller():
                                      rheader = org_rheader,
                                      )
     return output
+
+# =============================================================================
+def org_site_prep(r):
+    """
+        Function to call in the prep of every Site Instance Type's Controller
+    """
+
+    # Location Filter
+    from .gis import gis_location_filter
+    gis_location_filter(r)
+
+    if r.component:
+        component_name = r.component_name
+        if component_name == "inv_item" or \
+           component_name == "recv" or \
+           component_name == "send":
+            # Filter out items which are already in this inventory
+            from .inv import inv_prep
+            inv_prep(r)
+
+        elif component_name == "human_resource":
+            org_site_staff_config(r)
+
+        elif component_name == "layout" and \
+             r.method != "hierarchy":
+            org_site_layout_config(r.record.site_id)
+
+        elif component_name == "req":
+            if r.method != "update" and r.method != "read":
+                # Hide fields which don't make sense in a Create form
+                # inc list_create (list_fields over-rides)
+                from .inv import inv_req_create_form_mods
+                inv_req_create_form_mods(r)
 
 # =============================================================================
 # Hierarchy Manipulation

@@ -568,9 +568,11 @@ class InventoryModel(S3Model):
                                           writable = True,
                                           # Comment these to use a Dropdown & not an Autocomplete
                                           #widget = S3SiteAutocompleteWidget(),
-                                          #comment = DIV(_class="tooltip",
-                                          #              _title="%s|%s" % (WAREHOUSE,
-                                          #                                messages.AUTOCOMPLETE_HELP)),
+                                          #comment = DIV(_class = "tooltip",
+                                          #              _title = "%s|%s" % (WAREHOUSE,
+                                          #                                  messages.AUTOCOMPLETE_HELP
+                                          #                                  ).
+                                          #              ),
                                           ),
                           self.supply_item_entity_id(),
                           self.supply_item_id(ondelete = "RESTRICT",
