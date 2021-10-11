@@ -90,8 +90,7 @@ def recreq():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller()
-    return output
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def morgue():
@@ -106,24 +105,14 @@ def morgue():
 
     # Pre-processor
     def prep(r):
-        # Location Filter
-        from s3db.gis import gis_location_filter
-        gis_location_filter(r)
-
-        if r.interactive and r.id and not r.component:
-            field = r.table.obsolete
-            field.readable = field.writable = True
-
-        elif r.component_name == "layout" and \
-             r.method != "hierarchy":
-            from s3db.org import org_site_layout_config
-            org_site_layout_config(r.record.site_id)
+        # Function to call for all Site Instance Types
+        from s3db.org import org_site_prep
+        org_site_prep(r)
 
         return True
     s3.prep = prep
 
-    output = s3_rest_controller(rheader=rheader)
-    return output
+    return s3_rest_controller(rheader = rheader)
 
 # -----------------------------------------------------------------------------
 def body():
@@ -226,12 +215,11 @@ def person():
 
     rheader = lambda r: s3db.pr_rheader(r, tabs=mpr_tabs)
 
-    output = s3_rest_controller("pr", "person",
-                                main = "first_name",
-                                extra = "last_name",
-                                rheader = rheader,
-                                )
-    return output
+    return s3_rest_controller("pr", "person",
+                              main = "first_name",
+                              extra = "last_name",
+                              rheader = rheader,
+                              )
 
 # -------------------------------------------------------------------------
 def dvi_match_query(body_id):
@@ -290,6 +278,6 @@ def tooltip():
     formfield = request.vars.get("formfield", None)
     if formfield:
         response.view = "pr/ajaxtips/%s.html" % formfield
-    return dict()
+    return {}
 
 # END =========================================================================

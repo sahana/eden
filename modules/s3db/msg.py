@@ -2523,6 +2523,10 @@ class BaseStationModel(S3Model):
 
         T = current.T
 
+        messages = current.messages
+        NONE = messages["NONE"]
+        OBSOLETE = messages.OBSOLETE
+
         # ---------------------------------------------------------------------
         # Base Stations (Cell Towers)
         #
@@ -2556,6 +2560,13 @@ class BaseStationModel(S3Model):
                                  #widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
                                  ),
                           self.gis_location_id(),
+                          Field("obsolete", "boolean",
+                                default = False,
+                                label = T("Obsolete"),
+                                represent = lambda opt: OBSOLETE if opt else NONE,
+                                readable = False,
+                                writable = False,
+                                ),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -2572,7 +2583,8 @@ class BaseStationModel(S3Model):
             msg_record_created = T("Base Station added"),
             msg_record_modified = T("Base Station updated"),
             msg_record_deleted = T("Base Station deleted"),
-            msg_list_empty = T("No Base Stations currently registered"))
+            msg_list_empty = T("No Base Stations currently registered"),
+            )
 
         self.configure(tablename,
                        deduplicate = S3Duplicate(),

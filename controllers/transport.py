@@ -20,27 +20,10 @@ def airport():
 
     # Pre-processor
     def prep(r):
-        # Location Filter
-        from s3db.gis import gis_location_filter
-        gis_location_filter(r)
+        # Function to call for all Site Instance Types
+        from s3db.org import org_site_prep
+        org_site_prep(r)
 
-        if r.interactive:
-            if r.component:
-                component_name = r.component_name
-                if component_name == "human_resource":
-                    from s3db.org import org_site_staff_config
-                    org_site_staff_config(r)
-                elif component_name == "inv_item":
-                    # Filter out items which are already in this inventory
-                    from s3db.inv import inv_prep
-                    inv_prep(r)
-                elif component_name == "layout" and \
-                     r.method != "hierarchy":
-                    from s3db.org import org_site_layout_config
-                    org_site_layout_config(r.record.site_id)
-            elif r.method == "update":
-                field = r.table.obsolete
-                field.readable = field.writable = True
         return True
     s3.prep = prep
 
@@ -60,27 +43,10 @@ def border_control_point():
 
     # Pre-processor
     def prep(r):
-        # Location Filter
-        from s3db.gis import gis_location_filter
-        gis_location_filter(r)
+        # Function to call for all Site Instance Types
+        from s3db.org import org_site_prep
+        org_site_prep(r)
 
-        if r.interactive:
-            if r.component:
-                if r.component_name == "human_resource":
-                    from s3db.org import org_site_staff_config
-                    org_site_staff_config(r)
-                elif r.component_name == "inv_item":
-                    # Filter out items which are already in this inventory
-                    from s3db.inv import inv_prep
-                    inv_prep(r)
-                elif component_name == "layout" and \
-                     r.method != "hierarchy":
-                    from s3db.org import org_site_layout_config
-                    org_site_layout_config(r.record.site_id)
-            #elif r.method == "update":
-            #    field = r.table.obsolete
-            #    field.readable = field.writable = True
-        return True
     s3.prep = prep
 
     from s3db.transport import transport_rheader
@@ -99,26 +65,10 @@ def heliport():
 
     # Pre-processor
     def prep(r):
-        # Location Filter
-        from s3db.gis import gis_location_filter
-        gis_location_filter(r)
+        # Function to call for all Site Instance Types
+        from s3db.org import org_site_prep
+        org_site_prep(r)
 
-        if r.interactive:
-            if r.component:
-                if r.component_name == "human_resource":
-                    from s3db.org import org_site_staff_config
-                    org_site_staff_config(r)
-                elif r.component_name == "inv_item":
-                    # Filter out items which are already in this inventory
-                    from s3db.inv import inv_prep
-                    inv_prep(r)
-                elif component_name == "layout" and \
-                     r.method != "hierarchy":
-                    from s3db.org import org_site_layout_config
-                    org_site_layout_config(r.record.site_id)
-            elif r.method == "update":
-                field = r.table.obsolete
-                field.readable = field.writable = True
         return True
     s3.prep = prep
 
@@ -131,26 +81,10 @@ def seaport():
 
     # Pre-processor
     def prep(r):
-        # Location Filter
-        from s3db.gis import gis_location_filter
-        gis_location_filter(r)
+        # Function to call for all Site Instance Types
+        from s3db.org import org_site_prep
+        org_site_prep(r)
 
-        if r.interactive:
-            if r.component:
-                if r.component_name == "human_resource":
-                    from s3db.org import org_site_staff_config
-                    org_site_staff_config(r)
-                elif r.component_name == "inv_item":
-                    # Filter out items which are already in this inventory
-                    from s3db.inv import inv_prep
-                    inv_prep(r)
-                elif component_name == "layout" and \
-                     r.method != "hierarchy":
-                    from s3db.org import org_site_layout_config
-                    org_site_layout_config(r.record.site_id)
-            elif r.method == "update":
-                field = r.table.obsolete
-                field.readable = field.writable = True
         return True
     s3.prep = prep
 

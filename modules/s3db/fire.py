@@ -79,7 +79,8 @@ class FireZoneModel(S3Model):
             msg_record_created = T("Zone Type added"),
             msg_record_modified = T("Zone Type updated"),
             msg_record_deleted = T("Zone Type deleted"),
-            msg_list_empty = T("No Zone Types currently registered"))
+            msg_list_empty = T("No Zone Types currently registered"),
+            )
 
         zone_type_represent = S3Represent(lookup = tablename)
 
@@ -130,7 +131,8 @@ class FireZoneModel(S3Model):
             msg_record_created = T("Zone added"),
             msg_record_modified = T("Zone updated"),
             msg_record_deleted = T("Zone deleted"),
-            msg_list_empty = T("No Zones currently registered"))
+            msg_list_empty = T("No Zones currently registered"),
+            )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -241,7 +243,8 @@ class FireStationModel(S3Model):
             msg_record_modified = T("Fire Station updated"),
             msg_record_deleted = T("Fire Station deleted"),
             msg_no_match = T("No Fire Stations could be found"),
-            msg_list_empty = T("No Fire Stations currently registered"))
+            msg_list_empty = T("No Fire Stations currently registered"),
+            )
 
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()

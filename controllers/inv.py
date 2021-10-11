@@ -297,67 +297,13 @@ def warehouse():
 
     # CRUD pre-process
     def prep(r):
+        # Function to call for all Site Instance Types
+        from s3db.org import org_site_prep
+        org_site_prep(r)
 
         if r.component:
             component_name = r.component_name
-            if component_name == "inv_item":
-                # Filter out items which are already in this inventory
-                from s3db.inv import inv_prep
-                inv_prep(r)
-                # Remove the Site Name from the list_fields
-                list_fields = s3db.get_config("inv_inv_item", "list_fields")
-                try:
-                    list_fields.remove("site_id")
-                    s3db.configure("inv_inv_item",
-                                   list_fields = list_fields,
-                                   )
-                except:
-                    pass
-
-            elif component_name == "recv":
-                # Filter out items which are already in this inventory
-                from s3db.inv import inv_prep
-                inv_prep(r)
-
-                # Configure which fields in inv_recv are readable/writable
-                # depending on status
-                recvtable = s3db.inv_recv
-                if r.component_id:
-                    record = db(recvtable.id == r.component_id).select(recvtable.status,
-                                                                       limitby = (0, 1),
-                                                                       ).first()
-                    from s3db.inv import inv_recv_attr
-                    inv_recv_attr(record.status)
-                else:
-                    from s3db.inv import inv_recv_attr, inv_ship_status
-                    inv_recv_attr(inv_ship_status["IN_PROCESS"])
-                    recvtable.recv_ref.readable = False
-                    if r.method and r.method != "read":
-                        # Don't want to see in Create forms
-                        recvtable.status.readable = False
-
-            elif component_name == "send":
-                # Filter out items which are already in this inventory
-                from s3db.inv import inv_prep
-                inv_prep(r)
-
-            elif component_name == "human_resource":
-                from s3db.org import org_site_staff_config
-                org_site_staff_config(r)
-
-            elif component_name == "layout" and \
-                 r.method != "hierarchy":
-                from s3db.org import org_site_layout_config
-                org_site_layout_config(r.record.site_id)
-
-            elif component_name == "req":
-                if r.method != "update" and r.method != "read":
-                    # Hide fields which don't make sense in a Create form
-                    # inc list_create (list_fields over-rides)
-                    from s3db.inv import inv_req_create_form_mods
-                    inv_req_create_form_mods(r)
-
-            elif component_name == "asset":
+            if component_name == "asset":
                 # Default/Hide the Organisation & Site fields
                 record = r.record
                 atable = s3db.asset_asset
@@ -371,9 +317,6 @@ def warehouse():
                 s3db.configure("asset_asset",
                                create_next = None,
                                )
-
-        elif r.id:
-            r.table.obsolete.readable = r.table.obsolete.writable = True
 
         # "show_obsolete" var option can be added (btn?) later to
         # disable this filter

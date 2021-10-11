@@ -240,9 +240,11 @@ class TransportModel(S3Model):
                            ),
                      Field("security_desc", "text",
                            label = T("Security Description"),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Security Description"),
-                                                           T("Description of perimeter fencing, security guards, security lighting."))),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Security Description"),
+                                                             T("Description of perimeter fencing, security guards, security lighting."),
+                                                             ),
+                                         ),
                            # Enable in Templates as-required
                            readable = False,
                            writable = False,
@@ -297,7 +299,7 @@ class TransportModel(S3Model):
                      Field("obsolete", "boolean",
                            default = False,
                            label = T("Obsolete"),
-                           represent = S3Represent(options=obsolete_options),
+                           represent = S3Represent(options = obsolete_options),
                            readable = False,
                            writable = False,
                            ),
@@ -316,7 +318,8 @@ class TransportModel(S3Model):
             msg_record_created = T("Airport added"),
             msg_record_modified = T("Airport updated"),
             msg_record_deleted = T("Airport deleted"),
-            msg_list_empty = T("No Airports currently registered"))
+            msg_list_empty = T("No Airports currently registered"),
+            )
 
         configure(tablename,
                   list_fields = ["name",
@@ -389,7 +392,8 @@ class TransportModel(S3Model):
             msg_record_created = T("Heliport added"),
             msg_record_modified = T("Heliport updated"),
             msg_record_deleted = T("Heliport deleted"),
-            msg_list_empty = T("No Heliports currently registered"))
+            msg_list_empty = T("No Heliports currently registered"),
+            )
 
         configure(tablename,
                   #onaccept = self.transport_heliport_onaccept,
@@ -556,7 +560,7 @@ class TransportModel(S3Model):
                      Field("obsolete", "boolean",
                            default = False,
                            label = T("Obsolete"),
-                           represent = S3Represent(options=obsolete_options),
+                           represent = S3Represent(options = obsolete_options),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -573,7 +577,8 @@ class TransportModel(S3Model):
             msg_record_created = T("Seaport added"),
             msg_record_modified = T("Seaport updated"),
             msg_record_deleted = T("Seaport deleted"),
-            msg_list_empty = T("No Seaports currently registered"))
+            msg_list_empty = T("No Seaports currently registered"),
+            )
 
         configure(tablename,
                   #onaccept = self.transport_seaport_onaccept,
@@ -598,14 +603,13 @@ class TransportModel(S3Model):
                                        IS_LENGTH(64),
                                        ],
                            ),
-                     location_id(
-                        widget = S3LocationSelector(levels = [],
-                                                    show_address = False,
-                                                    show_postcode = False,
-                                                    show_latlon = True,
-                                                    show_map = True,
-                                                    ),
-                     ),
+                     location_id(widget = S3LocationSelector(levels = [],
+                                                             show_address = False,
+                                                             show_postcode = False,
+                                                             show_latlon = True,
+                                                             show_map = True,
+                                                             ),
+                                 ),
                      Field("status",
                            default = "OPEN",
                            represent = S3Represent(options = dict(border_crossing_status)),
@@ -635,7 +639,8 @@ class TransportModel(S3Model):
             msg_record_created = T("Border Crossing added"),
             msg_record_modified = T("Border Crossing updated"),
             msg_record_deleted = T("Border Crossing deleted"),
-            msg_list_empty = T("No Border Crossings currently registered"))
+            msg_list_empty = T("No Border Crossings currently registered"),
+            )
 
         # CRUD Form
         crud_form = S3SQLCustomForm("name",
@@ -808,6 +813,13 @@ class TransportModel(S3Model):
                            ),
                      Field("cond",
                            label = T("Condition"),
+                           ),
+                     Field("obsolete", "boolean",
+                           default = False,
+                           label = T("Obsolete"),
+                           represent = S3Represent(options = obsolete_options),
+                           readable = False,
+                           writable = False,
                            ),
                      s3_comments(),
                      *s3_meta_fields())

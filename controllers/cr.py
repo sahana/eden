@@ -90,8 +90,6 @@ def shelter():
                            )
 
         if r.interactive:
-            if r.id:
-                table.obsolete.readable = table.obsolete.writable = True
             if r.component:
                 component_name = r.component_name
                 if component_name == "shelter_registration":

@@ -32,35 +32,9 @@ def school():
 
     # Pre-processor
     def prep(r):
-        # Location Filter
-        from s3db.gis import gis_location_filter
-        gis_location_filter(r)
-
-        if r.interactive:
-            if r.component:
-                component_name = r.component_name
-                if component_name == "inv_item" or \
-                   component_name == "recv" or \
-                   component_name == "send":
-                    # Filter out items which are already in this inventory
-                    from s3db.inv import inv_prep
-                    inv_prep(r)
-
-                elif component_name == "human_resource":
-                    from s3db.org import org_site_staff_config
-                    org_site_staff_config(r)
-
-                elif component_name == "layout" and \
-                     r.method != "hierarchy":
-                    from s3db.org import org_site_layout_config
-                    org_site_layout_config(r.record.site_id)
-
-                elif component_name == "req":
-                    if r.method != "update" and r.method != "read":
-                        # Hide fields which don't make sense in a Create form
-                        # inc list_create (list_fields over-rides)
-                        from s3db.inv import inv_req_create_form_mods
-                        inv_req_create_form_mods(r)
+        # Function to call for all Site Instance Types
+        from s3db.org import org_site_prep
+        org_site_prep(r)
 
         return True
     s3.prep = prep

@@ -53,7 +53,6 @@ __all__ = ("WarehouseModel",
            #"inv_package_labels",
            #"inv_packing_list",
            #"inv_pick_list",
-           "inv_prep",
            "inv_recv_attr",
            "inv_recv_controller",
            "inv_recv_crud_strings",
@@ -8592,52 +8591,6 @@ def inv_pick_list(r, **attr):
     response.headers["Content-disposition"] = disposition
 
     return output.read()
-
-# =============================================================================
-def inv_prep(r):
-    """
-        Used in site REST controllers
-        - Filter out items which are already in this inventory
-        - Limit to Bins from this site
-    """
-
-    settings = current.deployment_settings
-    if not settings.get_inv_direct_stock_edits():
-        # Can't create/edit stock so no point configuring this workflow
-        return
-
-    if r.component:
-        if r.component_name == "inv_item":
-            db = current.db
-            table = db.inv_inv_item
-            # Filter out items which are already in this inventory
-            site_id = r.record.site_id
-            query = (table.site_id == site_id) & \
-                    (table.deleted == False)
-            inv_item_rows = db(query).select(table.item_id)
-            item_ids = [row.item_id for row in inv_item_rows]
-
-            # Ensure that the current item CAN be selected
-            if r.method == "update":
-                item = db(table.id == r.args[2]).select(table.item_id,
-                                                        limitby = (0, 1),
-                                                        ).first()
-                item_ids.remove(item.item_id)
-            table.item_id.requires.set_filter(not_filterby = "id",
-                                              not_filter_opts = item_ids,
-                                              )
-
-            # Limit to Bins from this site
-            from .org import org_site_layout_config
-            org_site_layout_config(site_id, table.layout_id)
-
-        #elif r.component_name == "send":
-        #    # Default to the Search tab in the location selector widget1
-        #    current.response.s3.gis.tab = "search"
-        #    #if current.request.get_vars.get("select", "sent") == "incoming":
-        #    #    # Display only incoming shipments which haven't been received yet
-        #    #    filter = (current.s3db.inv_send.status == SHIP_STATUS_SENT)
-        #    #    r.resource.add_component_filter("send", filter)
 
 # =============================================================================
 def inv_recv_attr(status):

@@ -57,36 +57,35 @@ __all__ = ("OrganisationModel",
            "FacilityModel",
            "OfficeModel",
            "OfficeTypeTagModel",
+           "org_customise_org_resource_fields",
+           "org_facility_controller",
            "org_facility_rheader",
-           "org_organisation_logo",
+           "org_logo_represent",
+           "org_office_controller",
            "org_organisation_address",
-           "org_parents",
-           "org_root_organisation",
-           "org_root_organisation_name",
-           "org_organisation_requires",
-           "org_region_options",
-           "org_rheader",
-           "org_site_layout_config",
-           "org_site_staff_config",
            "org_organisation_controller",
+           "org_organisation_list_layout",
+           "org_organisation_logo",
            "org_organisation_organisation_onaccept",
            "org_organisation_organisation_ondelete",
            "org_organisation_organisation_type_onaccept",
            "org_organisation_organisation_type_ondelete",
-           "org_office_controller",
-           "org_facility_controller",
+           "org_organisation_requires",
+           "org_parents",
+           "org_region_options",
+           "org_resource_list_layout",
+           "org_rheader",
+           "org_root_organisation",
+           "org_root_organisation_name",
+           "org_site_layout_config",
            "org_site_prep",
            "org_update_affiliations",
+           "org_update_root_organisation",
            "org_OrganisationRepresent",
            "org_SiteRepresent",
            "org_SiteCheckInMethod",
            #"org_AssignMethod",
            #"org_CapacityReport",
-           "org_logo_represent",
-           "org_customise_org_resource_fields",
-           "org_organisation_list_layout",
-           "org_resource_list_layout",
-           "org_update_root_organisation",
            )
 
 import json
@@ -7491,19 +7490,14 @@ def org_organisation_controller():
         return output
     s3.postp = postp
 
-    output = current.rest_controller("org", "organisation",
-                                     # Need to be explicit since can also come from HRM or Project controllers
-                                     csv_stylesheet = ("org", "organisation.xsl"),
-                                     csv_template = ("org", "organisation"),
-                                     # Don't allow components with components (such as document) to breakout from tabs
-                                     native = False,
-                                     rheader = org_rheader,
-                                     )
-    return output
-
-
-
-
+    return current.rest_controller("org", "organisation",
+                                   # Need to be explicit since can also come from HRM or Project controllers
+                                   csv_stylesheet = ("org", "organisation.xsl"),
+                                   csv_template = ("org", "organisation"),
+                                   # Don't allow components with components (such as document) to breakout from tabs
+                                   native = False,
+                                   rheader = org_rheader,
+                                   )
 
 # -----------------------------------------------------------------------------
 def org_organisation_organisation_onaccept(form):
@@ -7644,202 +7638,6 @@ def org_organisation_organisation_type_ondelete(row):
                                       )
 
 # =============================================================================
-def org_site_layout_config(site_id, field=None):
-    """
-        Limit a field which is reference "org_site_layout" to be from a specific site
-    """
-
-    table = current.s3db.org_site_layout
-    if field:
-        # Adjust the S3PopupLink
-        try:
-            field.comment.args = [site_id, "layout", "create"]
-        except AttributeError:
-            # Not an S3PopupLink
-            pass
-    else:
-        field = table.parent
-    field.requires.other.set_filter(filterby = "site_id",
-                                    filter_opts = [site_id],
-                                    )
-    field.widget.filter = (table.site_id == site_id)
-
-# =============================================================================
-def org_site_staff_config(r):
-    """
-        Configure the Staff tab for Sites
-    """
-
-    table = current.s3db.hrm_human_resource
-
-    settings = current.deployment_settings
-    if settings.has_module("vol"):
-        if settings.get_hrm_show_staff():
-            if settings.get_org_site_volunteers():
-                # Show the type field
-                field = table.type
-                field.label = current.T("Type")
-                field.readable = field.writable = True
-            #else:
-            #    # Filter to just Staff
-            #    r.resource.add_filter(FS("human_resource.type") == 1)
-        elif settings.get_org_site_volunteers():
-            # Default to Volunteers
-            table.type.default = 2
-
-    # Cascade the organisation_id from the site to the staff
-    field = table.organisation_id
-    field.default = r.record.organisation_id
-    field.writable = False
-    field.comment = None
-
-    # Filter out people which are already staff for this office
-    # - this only works for an IS_ONE_OF dropdown
-    # - @ToDo: Pass a flag to pr_search_ac via S3AddPersonWidget to do the same thing
-    #site_id = record.site_id
-    #try:
-    #    person_id_field = r.target()[2].person_id
-    #except:
-    #    pass
-    #else:
-    #    query = (htable.site_id == site_id) & \
-    #            (htable.deleted == False)
-    #    staff = current.db(query).select(htable.person_id)
-    #    person_ids = [row.person_id for row in staff]
-    #    try:
-    #        person_id_field.requires.set_filter(not_filterby = "id",
-    #                                            not_filter_opts = person_ids)
-    #    except:
-    #        pass
-
-# =============================================================================
-def org_office_controller():
-    """
-        Office Controller, defined in the model for use from
-        multiple controllers for unified menus
-    """
-
-    #T = current.T
-    s3db = current.s3db
-    request = current.request
-    s3 = current.response.s3
-    #settings = current.deployment_settings
-
-    # Get default organisation_id
-    req_vars = request.vars
-    organisation_id = req_vars["organisation_id"]
-    if type(organisation_id) is list:
-        req_vars["organisation_id"] = organisation_id[0]
-    organisation_id = req_vars["organisation_id"] or \
-                      current.session.s3.organisation_id or \
-                      ""
-
-    # Pre-processor
-    def prep(r):
-        # Location Filter
-        from .gis import gis_location_filter
-        gis_location_filter(r)
-
-        table = r.table
-        if organisation_id:
-            table.organisation_id.default = organisation_id
-
-        if r.representation == "plain":
-            # Map popups want less clutter
-            table.obsolete.readable = False
-
-        if r.interactive:
-            if r.component:
-                cname = r.component_name
-                if cname in ("inv_item", "recv", "send"):
-                    # Filter out items which are already in this inventory
-                    s3db.inv_prep(r)
-
-                    # Remove CRUD generated buttons in the tabs
-                    s3db.configure("inv_inv_item",
-                                   create = False,
-                                   deletable = False,
-                                   editable = False,
-                                   listadd = False,
-                                   )
-
-                elif cname == "human_resource":
-                    org_site_staff_config(r)
-
-                elif cname == "layout" and \
-                     r.method != "hierarchy":
-                    org_site_layout_config(r.record.site_id)
-
-                elif cname == "req" and r.method not in ("update", "read"):
-                    # Hide fields which don't make sense in a Create form
-                    # inc list_create (list_fields over-rides)
-                    from .inv import inv_req_create_form_mods
-                    inv_req_create_form_mods(r)
-
-                elif cname == "asset":
-                    # Default/Hide the Organisation & Site fields
-                    record = r.record
-                    atable = s3db.asset_asset
-                    field = atable.organisation_id
-                    field.default = record.organisation_id
-                    field.readable = field.writable = False
-                    field = atable.site_id
-                    field.default = record.site_id
-                    field.readable = field.writable = False
-                    # Stay within Office tab
-                    s3db.configure("asset_asset",
-                                   create_next = None,
-                                   )
-
-            elif r.method in ("create", "update"):
-                if r.method == "update":
-                    table.obsolete.readable = table.obsolete.writable = True
-                # Context from a Profile page?"
-                org_id = request.get_vars.get("(organisation)", None)
-                if org_id:
-                    field = table.organisation_id
-                    field.default = org_id
-                    field.readable = field.writable = False
-
-            elif r.id:
-                table.obsolete.readable = table.obsolete.writable = True
-
-        elif r.representation == "geojson":
-            marker_fn = s3db.get_config("org_office", "marker_fn")
-            if marker_fn:
-                # Load these models now as they'll be needed when we encode
-                s3db.table("gis_marker")
-
-        elif r.representation == "xls":
-            list_fields = r.resource.get_config("list_fields")
-            list_fields += ["location_id$lat",
-                            "location_id$lon",
-                            "location_id$inherited",
-                            ]
-
-        return True
-    s3.prep = prep
-
-    # Post-process
-    def postp(r, output):
-        if r.interactive and r.component_name == "human_resource":
-            # Modify action button to open staff instead of human_resource
-            # (Delete not overridden to keep errors within Tab)
-            read_url = URL(c="hrm", f="staff", args=["[id]"])
-            update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
-            S3CRUD.action_buttons(r, read_url=read_url,
-                                     update_url=update_url)
-        return output
-    s3.postp = postp
-
-    output = current.rest_controller("org", "office",
-                                     # Don't allow components with components (such as document) to breakout from tabs
-                                     native = False,
-                                     rheader = org_rheader,
-                                     )
-    return output
-
-# =============================================================================
 def org_facility_controller():
     """
         Facility Controller, defined in the model for use from
@@ -7852,9 +7650,8 @@ def org_facility_controller():
 
     # Pre-processor
     def prep(r):
-        # Location Filter
-        from .gis import gis_location_filter
-        gis_location_filter(r)
+        # Function to call for all Site Instance Types
+        org_site_prep(r)
 
         if r.interactive:
             if not r.component:
@@ -7868,8 +7665,7 @@ def org_facility_controller():
                     field.comment = None # Don't want to create new types here
                     if len(type_names) == 1:
                         # Strip Type from list_fields
-                        list_fields = s3db.get_config("org_facility",
-                                                      "list_fields")
+                        list_fields = s3db.get_config("org_facility", "list_fields")
                         try:
                             list_fields.remove("site_facility_type.facility_type_id")
                         except ValueError:
@@ -7894,8 +7690,6 @@ def org_facility_controller():
 
                 table = r.table
                 if r.id:
-                    field = table.obsolete
-                    field.readable = field.writable = True
                     if method == "update" and \
                        r.representation == "popup" and \
                        get_vars.get("profile") == "org_organisation":
@@ -7926,48 +7720,6 @@ def org_facility_controller():
 
                 elif method == "report":
                     table.organisation_id.represent = org_OrganisationRepresent() # show_link = False
-
-            else:
-                cname = r.component_name
-                if cname in ("inv_item", "recv", "send"):
-                    # Filter out items which are already in this inventory
-                    s3db.inv_prep(r)
-
-                    # remove CRUD-generated buttons in the tabs
-                    s3db.configure("inv_inv_item",
-                                   create = False,
-                                   deletable = False,
-                                   editable = False,
-                                   listadd = False,
-                                   )
-
-                elif cname == "human_resource":
-                    org_site_staff_config(r)
-
-                elif cname == "layout" and \
-                     r.method != "hierarchy":
-                    org_site_layout_config(r.record.site_id)
-
-                elif cname == "req" and r.method not in ("update", "read"):
-                    # Hide fields which don't make sense in a Create form
-                    # inc list_create (list_fields over-rides)
-                    from .inv import inv_req_create_form_mods
-                    inv_req_create_form_mods(r)
-
-                elif cname == "asset":
-                    # Default/Hide the Organisation & Site fields
-                    record = r.record
-                    atable = s3db.asset_asset
-                    field = atable.organisation_id
-                    field.default = record.organisation_id
-                    field.readable = field.writable = False
-                    field = atable.site_id
-                    field.default = record.site_id
-                    field.readable = field.writable = False
-                    # Stay within Facility tab
-                    s3db.configure("asset_asset",
-                                   create_next = None,
-                                   )
 
         elif r.representation == "geojson":
             # Load these models now as they'll be needed when we encode
@@ -8054,7 +7806,9 @@ def org_facility_controller():
                                           ),
                               ) for req in reqs]
                     for val in vals:
-                        append(TR(TD(val, _colspan=2)))
+                        append(TR(TD(val,
+                                     _colspan = 2,
+                                     )))
 
             # Street address
             gtable = s3db.gis_location
@@ -8090,21 +7844,129 @@ def org_facility_controller():
             email = record.email
             if email:
                 append(TR(TD(B("%s:" % ftable.email.label)),
-                          TD(A(email, _href="mailto:%s" % email))))
+                          TD(A(email,
+                               _href = "mailto:%s" % email,
+                               ))))
 
             # Website (as hyperlink)
             website = record.website
             if website:
                 append(TR(TD(B("%s:" % ftable.website.label)),
-                          TD(A(website, _href=website))))
+                          TD(A(website,
+                               _href = website,
+                               ))))
 
         return output
     s3.postp = postp
 
-    output = current.rest_controller("org", "facility",
-                                     rheader = org_rheader,
-                                     )
-    return output
+    return current.rest_controller("org", "facility",
+                                   rheader = org_rheader,
+                                   )
+
+# =============================================================================
+def org_office_controller():
+    """
+        Office Controller, defined in the model for use from
+        multiple controllers for unified menus
+    """
+
+    #T = current.T
+    s3db = current.s3db
+    request = current.request
+    s3 = current.response.s3
+    #settings = current.deployment_settings
+
+    # Get default organisation_id
+    req_vars = request.vars
+    organisation_id = req_vars["organisation_id"]
+    if type(organisation_id) is list:
+        req_vars["organisation_id"] = organisation_id[0]
+    organisation_id = req_vars["organisation_id"] or \
+                      current.session.s3.organisation_id or \
+                      ""
+
+    # Pre-processor
+    def prep(r):
+        # Function to call for all Site Instance Types
+        org_site_prep(r)
+
+        table = r.table
+        if organisation_id:
+            table.organisation_id.default = organisation_id
+
+        if r.representation == "plain":
+            # Map popups want less clutter
+            table.obsolete.readable = False
+
+        if r.interactive:
+            if r.component:
+                pass
+            elif r.method in ("create", "update"):
+                # Context from a Profile page?"
+                org_id = request.get_vars.get("(organisation)", None)
+                if org_id:
+                    field = table.organisation_id
+                    field.default = org_id
+                    field.readable = field.writable = False
+
+        elif r.representation == "geojson":
+            marker_fn = s3db.get_config("org_office", "marker_fn")
+            if marker_fn:
+                # Load these models now as they'll be needed when we encode
+                s3db.table("gis_marker")
+
+        elif r.representation == "xls":
+            list_fields = r.resource.get_config("list_fields")
+            list_fields += ["location_id$lat",
+                            "location_id$lon",
+                            "location_id$inherited",
+                            ]
+
+        return True
+    s3.prep = prep
+
+    # Post-process
+    def postp(r, output):
+        if r.interactive and r.component_name == "human_resource":
+            # Modify action button to open staff instead of human_resource
+            # (Delete not overridden to keep errors within Tab)
+            read_url = URL(c="hrm", f="staff",
+                           args = ["[id]"],
+                           )
+            update_url = URL(c="hrm", f="staff",
+                             args = ["[id]", "update"],
+                             )
+            S3CRUD.action_buttons(r, read_url = read_url,
+                                     update_url = update_url)
+        return output
+    s3.postp = postp
+
+    return current.rest_controller("org", "office",
+                                   # Don't allow components with components (such as document) to breakout from tabs
+                                   native = False,
+                                   rheader = org_rheader,
+                                   )
+
+# =============================================================================
+def org_site_layout_config(site_id, field=None):
+    """
+        Limit a field which is reference "org_site_layout" to be from a specific site
+    """
+
+    table = current.s3db.org_site_layout
+    if field:
+        # Adjust the S3PopupLink
+        try:
+            field.comment.args = [site_id, "layout", "create"]
+        except AttributeError:
+            # Not an S3PopupLink
+            pass
+    else:
+        field = table.parent
+    field.requires.other.set_filter(filterby = "site_id",
+                                    filter_opts = [site_id],
+                                    )
+    field.widget.filter = (table.site_id == site_id)
 
 # =============================================================================
 def org_site_prep(r):
@@ -8118,15 +7980,85 @@ def org_site_prep(r):
 
     if r.component:
         component_name = r.component_name
-        if component_name == "inv_item" or \
-           component_name == "recv" or \
-           component_name == "send":
+
+        if component_name == "inv_item":
+            if not current.deployment_settings.get_inv_direct_stock_edits():
+                # Can't create/edit stock so no point configuring this workflow
+                return
             # Filter out items which are already in this inventory
-            from .inv import inv_prep
-            inv_prep(r)
+            db = current.db
+            table = db.inv_inv_item
+            # Filter out items which are already in this inventory
+            site_id = r.record.site_id
+            query = (table.site_id == site_id) & \
+                    (table.deleted == False)
+            inv_item_rows = db(query).select(table.item_id)
+            item_ids = [row.item_id for row in inv_item_rows]
+
+            # Ensure that the current item CAN be selected
+            if r.method == "update":
+                item = db(table.id == r.args[2]).select(table.item_id,
+                                                        limitby = (0, 1),
+                                                        ).first()
+                item_ids.remove(item.item_id)
+            table.item_id.requires.set_filter(not_filterby = "id",
+                                              not_filter_opts = item_ids,
+                                              )
+
+            # Limit to Bins from this site
+            org_site_layout_config(site_id, table.layout_id)
+
+        #elif component_name == "send":
+        #    # Default to the Search tab in the location selector widget1
+        #    current.response.s3.gis.tab = "search"
+        #    #if current.request.get_vars.get("select", "sent") == "incoming":
+        #    #    # Display only incoming shipments which haven't been received yet
+        #    #    filter = (current.s3db.inv_send.status == SHIP_STATUS_SENT)
+        #    #    r.resource.add_component_filter("send", filter)
 
         elif component_name == "human_resource":
-            org_site_staff_config(r)
+
+            table = current.s3db.hrm_human_resource
+
+            settings = current.deployment_settings
+            if settings.has_module("vol"):
+                if settings.get_hrm_show_staff():
+                    if settings.get_org_site_volunteers():
+                        # Show the type field
+                        field = table.type
+                        field.label = current.T("Type")
+                        field.readable = field.writable = True
+                    #else:
+                    #    # Filter to just Staff
+                    #    r.resource.add_filter(FS("human_resource.type") == 1)
+                elif settings.get_org_site_volunteers():
+                    # Default to Volunteers
+                    table.type.default = 2
+
+            # Cascade the organisation_id from the site to the staff
+            field = table.organisation_id
+            field.default = r.record.organisation_id
+            field.writable = False
+            field.comment = None
+
+            # Filter out people which are already staff for this office
+            # - this only works for an IS_ONE_OF dropdown
+            # - @ToDo: Pass a flag to pr_search_ac via S3AddPersonWidget to do the same thing
+            #site_id = record.site_id
+            #try:
+            #    person_id_field = r.target()[2].person_id
+            #except:
+            #    pass
+            #else:
+            #    query = (htable.site_id == site_id) & \
+            #            (htable.deleted == False)
+            #    staff = current.db(query).select(htable.person_id)
+            #    person_ids = [row.person_id for row in staff]
+            #    try:
+            #        person_id_field.requires.set_filter(not_filterby = "id",
+            #                                            not_filter_opts = person_ids)
+            #    except:
+            #        pass
 
         elif component_name == "layout" and \
              r.method != "hierarchy":
@@ -8138,6 +8070,31 @@ def org_site_prep(r):
                 # inc list_create (list_fields over-rides)
                 from .inv import inv_req_create_form_mods
                 inv_req_create_form_mods(r)
+
+        elif component_name == "asset":
+            # Default/Hide the Organisation & Site fields
+            s3db = current.s3db
+            record = r.record
+            atable = s3db.asset_asset
+            field = atable.organisation_id
+            field.default = record.organisation_id
+            field.readable = field.writable = False
+            field = atable.site_id
+            field.default = record.site_id
+            field.readable = field.writable = False
+            # Stay within Facility tab
+            s3db.configure("asset_asset",
+                           create_next = None,
+                           )
+
+    elif r.id:
+        try:
+            field = r.table.obsolete
+        except AttributeError:
+            # Field not in Table
+            pass
+        else:
+            field.readable = field.writable = True
 
 # =============================================================================
 # Hierarchy Manipulation

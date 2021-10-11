@@ -64,37 +64,14 @@ def hospital():
 
     # Pre-processor
     def prep(r):
-        # Location Filter
-        from s3db.gis import gis_location_filter
-        gis_location_filter(r)
+        # Function to call for all Site Instance Types
+        from s3db.org import org_site_prep
+        org_site_prep(r)
 
         if r.interactive:
             if r.component:
                 cname = r.component_name
-                if cname == "inv_item" or \
-                   cname == "recv" or \
-                   cname == "send":
-                    # Filter out items which are already in this inventory
-                    from s3db.inv import inv_prep
-                    inv_prep(r)
-
-                elif cname == "human_resource":
-                    from s3db.org import org_site_staff_config
-                    org_site_staff_config(r)
-
-                elif cname == "layout" and \
-                     r.method != "hierarchy":
-                    from s3db.org import org_site_layout_config
-                    org_site_layout_config(r.record.site_id)
-
-                elif cname == "req":
-                    if r.method != "update" and r.method != "read":
-                        # Hide fields which don't make sense in a Create form
-                        # inc list_create (list_fields over-rides)
-                        from s3db.inv import inv_req_create_form_mods
-                        inv_req_create_form_mods(r)
-
-                elif cname == "status":
+                if cname == "status":
                     table = db.hms_status
                     table.facility_status.comment = DIV(_class="tooltip",
                                                         _title="%s|%s" % (T("Facility Status"),
@@ -223,8 +200,6 @@ def hospital():
                                                                           T("Please specify any problems and obstacles with the proper handling of the disease, in detail (in numbers, where appropriate). You may also add suggestions the situation could be improved.")))
             else:
                 table = r.table
-                if r.id:
-                    table.obsolete.readable = table.obsolete.writable = True
 
                 s3.formats["have"] = r.url() # .have added by JS
                 # Add comments
@@ -238,12 +213,6 @@ def hospital():
                                                    _title="%s|%s" % (T("Available Beds"),
                                                                      T("Number of vacant/available beds in this facility. Automatically updated from daily reports.")))
 
-        elif r.representation == "aadata":
-            pass
-            # Hide the Implied fields here too to make columns match
-            #db.rms_req.shelter_id.readable = False
-            #db.rms_req.organisation_id.readable = False
-
         elif r.representation == "plain":
             # Duplicates info in the other fields
             r.table.location_id.readable = False
@@ -251,8 +220,8 @@ def hospital():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller(rheader = s3db.hms_hospital_rheader)
-    return output
+    from s3db.hms import hms_hospital_rheader
+    return s3_rest_controller(rheader = hms_hospital_rheader)
 
 # -----------------------------------------------------------------------------
 def incoming():

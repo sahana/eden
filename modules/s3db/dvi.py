@@ -95,31 +95,38 @@ class DVIModel(S3Model):
                      Field("marker", length=64,
                            label = T("Marker"),
                            requires = IS_LENGTH(64),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Marker"),
-                                                           T("Number or code used to mark the place of find, e.g. flag code, grid coordinates, site reference number or similar (if available)"))),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Marker"),
+                                                             T("Number or code used to mark the place of find, e.g. flag code, grid coordinates, site reference number or similar (if available)"),
+                                                             ),
+                                         ),
                            ),
                      person_id(label = T("Finder")),
                      Field("bodies_found", "integer",
-                           label = T("Bodies found"),
-                           requires = IS_INT_IN_RANGE(1, None),
-                           represent = lambda v, row=None: IS_INT_AMOUNT.represent(v),
                            default = 0,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Number of bodies found"),
-                                                           T("Please give an estimated figure about how many bodies have been found.")))),
+                           label = T("Bodies found"),
+                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           requires = IS_INT_IN_RANGE(1, None),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Number of bodies found"),
+                                                             T("Please give an estimated figure about how many bodies have been found."),
+                                                             ),
+                                         ),
+                           ),
                      Field("bodies_recovered", "integer",
+                           default = 0,
                            label = T("Bodies recovered"),
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
-                           represent = lambda v, row=None: IS_INT_AMOUNT.represent(v),
-                           default = 0),
+                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           ),
                      Field("description", "text"),
-                     location_id(label=T("Location")),
+                     location_id(label = T("Location"),
+                                 ),
                      Field("status", "integer",
                            default = 1,
                            label = T("Task Status"),
                            requires = IS_IN_SET(task_status,
-                                                zero=None),
+                                                zero = None),
                            represent = S3Represent(options = task_status),
                            ),
                      *s3_meta_fields())
@@ -135,19 +142,20 @@ class DVIModel(S3Model):
             msg_record_created = T("Recovery Request added"),
             msg_record_modified = T("Recovery Request updated"),
             msg_record_deleted = T("Recovery Request deleted"),
-            msg_list_empty = T("No requests found"))
+            msg_list_empty = T("No requests found"),
+            )
 
         # Resource configuration
         configure(tablename,
-                  orderby = "dvi_recreq.date desc",
-                  list_fields = ["id",
-                                 "date",
+                  list_fields = ["date",
                                  "marker",
                                  "location_id",
                                  "bodies_found",
                                  "bodies_recovered",
                                  "status"
-                                 ])
+                                 ],
+                  orderby = "dvi_recreq.date desc",
+                  )
 
         # Reusable fields
         represent = S3Represent(lookup = "dvi_recreq",
@@ -155,12 +163,12 @@ class DVIModel(S3Model):
                                 labels = T("[%(marker)s] %(date)s: %(bodies_found)s bodies"),
                                 )
         dvi_recreq_id = S3ReusableField("dvi_recreq_id", "reference %s" % tablename,
+                                        label = T("Recovery Request"),
+                                        represent = represent,
                                         requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "dvi_recreq.id",
                                                               represent,
                                                               )),
-                                        represent = represent,
-                                        label = T("Recovery Request"),
                                         ondelete = "RESTRICT",
                                         )
 
@@ -221,7 +229,8 @@ class DVIModel(S3Model):
             msg_record_created = T("Morgue added"),
             msg_record_modified = T("Morgue updated"),
             msg_record_deleted = T("Morgue deleted"),
-            msg_list_empty = T("No morgues found"))
+            msg_list_empty = T("No morgues found"),
+            )
 
         # Resource Configuration
         configure(tablename,
