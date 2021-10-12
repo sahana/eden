@@ -1029,17 +1029,24 @@ class ResourceFilterQueryTests(unittest.TestCase):
 
         assertEqual = self.assertEqual
 
-        resource = current.s3db.resource("cr_shelter")
-        cr_shelter = resource.table
+        s3db = current.s3db
 
-        q = FS("shelter_environment_id").contains([1, 2])
+        multi_skill_id = s3db.hrm_multi_skill_id
+
+        table = current.db.define_table("dummy_dummy",
+                                        multi_skill_id(),
+                                        )
+
+        resource = s3db.resource("dummy_dummy")
+
+        q = FS("skill_id").contains([1, 2])
         query = q.query(resource)
-        expected = (cr_shelter.shelter_environment_id.contains([1, 2], all=True))
+        expected = (table.skill_id.contains([1, 2], all=True))
         assertEqual(str(query), str(expected))
 
-        q = FS("shelter_environment_id").anyof([1, 2])
+        q = FS("skill_id").anyof([1, 2])
         query = q.query(resource)
-        expected = (cr_shelter.shelter_environment_id.contains([1, 2], all=False))
+        expected = (table.skill_id.contains([1, 2], all=False))
         assertEqual(str(query), str(expected))
 
     # -------------------------------------------------------------------------

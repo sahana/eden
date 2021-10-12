@@ -28,10 +28,9 @@ def run_suite(*modules):
 
 if __name__ == "__main__":
 
-    run_suite(
-        "modules",
-        "s3",
-        "s3db",
-    )
+    run_suite("modules",
+              "s3",
+              "s3db",
+              )
 
 # END ========================================================================
