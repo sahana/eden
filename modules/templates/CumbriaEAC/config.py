@@ -53,6 +53,8 @@ def config(settings):
     # Uncomment to show the Print control:
     # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
     #settings.gis.print_button = True
+    # Map Popups should open in same page/tab, not a new one
+    settings.gis.popup_open_new_page = False
 
     # Use GetAddress.io to lookup Addresses from Postcode
     settings.gis.postcode_to_address = "getaddress"

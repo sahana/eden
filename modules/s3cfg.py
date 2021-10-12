@@ -1713,6 +1713,14 @@ class S3Config(Storage):
         return self.gis.get("poi_export_resources",
                             ["cr_shelter", "hms_hospital", "org_office"])
 
+    def get_gis_popup_open_new_page(self):
+        """
+            Map Popups with an Open button should open on a new page/tab or replace this one.
+            We default to new page as the Map position won't be restored with a Back.
+            - this overrides default UX which says that Users normally prefer to stay in the same page/tab.
+        """
+        return self.gis.get("popup_open_new_page", True)
+
     def get_gis_postcode_selector(self):
         """
             Display Postcode form field when selecting Locations

@@ -724,7 +724,7 @@ class S3CRUD(S3Method):
             fields = [f for f in table if f.readable]
             if r.component:
                 if record_id:
-                    record = current.db(table._id == record_id).select(limitby=(0, 1),
+                    record = current.db(table._id == record_id).select(limitby = (0, 1),
                                                                        *fields
                                                                        ).first()
                 else:
@@ -745,7 +745,8 @@ class S3CRUD(S3Method):
                                     resource = resource,
                                     record_id = record_id,
                                     readonly = True,
-                                    format = representation)
+                                    format = representation,
+                                    )
 
                 # Link to Open record
                 popup_edit_url = _config("popup_edit_url", None)
@@ -762,14 +763,17 @@ class S3CRUD(S3Method):
                     # Set popup_url to "" to have no button present
                     popup_url = _config("popup_url", None)
                     if popup_url is None:
-                        popup_url = r.url(method="read", representation="html")
+                        popup_url = r.url(method = "read",
+                                          representation = "html",
+                                          )
                     if popup_url:
                         popup_url = popup_url.replace("%5Bid%5D", str(record_id))
                         details_btn = A(T("Open"),
                                         _href = popup_url,
                                         _class = "btn",
-                                        _target = "_blank",
                                         )
+                        if current.deployment_settings.get_gis_popup_open_new_page():
+                            details_btn["_target"] = "_blank"
                         output["details_btn"] = details_btn
 
                 # Title and subtitle
