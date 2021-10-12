@@ -2009,7 +2009,9 @@ class S3CRUD(S3Method):
         output = Storage()
         if r.interactive:
 
-            _next = r.url(id="[id]", method="review")
+            _next = r.url(id = "[id]",
+                          method = "review",
+                          )
 
             if self._permitted("approve"):
 
@@ -2028,13 +2030,18 @@ class S3CRUD(S3Method):
                                     ))
 
                 edit = A(T("Edit"),
-                         _href = r.url(id = r.id, method = "update",
-                                       vars = {"_next": r.url(id=r.id, method="review")}),
+                         _href = r.url(id = r.id,
+                                       method = "update",
+                                       vars = {"_next": r.url(id = r.id,
+                                                              method = "review",
+                                                              ),
+                                               },
+                                       ),
                          _class = "action-btn",
                          )
 
                 cancel = A(T("Cancel"),
-                           _href = r.url(id=0),
+                           _href = r.url(id = 0),
                            _class = "action-lnk",
                            )
 
@@ -2049,9 +2056,11 @@ class S3CRUD(S3Method):
 
                 reviewing = False
                 if approve.accepts(r.post_vars, session, formname="approve"):
-                    resource = current.s3db.resource(r.tablename, r.id,
-                                                     approved=False,
-                                                     unapproved=True)
+                    resource = current.s3db.resource(r.tablename,
+                                                     r.id,
+                                                     approved = False,
+                                                     unapproved = True,
+                                                     )
                     try:
                         success = resource.approve()
                     except:
@@ -2072,9 +2081,11 @@ class S3CRUD(S3Method):
                     _next = r.url(id=0, method="review")
 
                 elif reject.accepts(r.post_vars, session, formname="reject"):
-                    resource = current.s3db.resource(r.tablename, r.id,
+                    resource = current.s3db.resource(r.tablename,
+                                                     r.id,
                                                      approved = False,
-                                                     unapproved = True)
+                                                     unapproved = True,
+                                                     )
                     try:
                         success = resource.reject()
                     except:
@@ -2086,7 +2097,9 @@ class S3CRUD(S3Method):
                         response.warning = T("Record could not be deleted.")
 
                     r.http = "GET"
-                    _next = r.url(id=0, method="review")
+                    _next = r.url(id = 0,
+                                  method = "review",
+                                  )
 
                 else:
                     reviewing = True
@@ -2831,24 +2844,28 @@ class S3CRUD(S3Method):
                 if method == "create":
                     if r.component:
                         default_url = r.url(method = "",
-                                            component_id= "",
+                                            component_id = "",
                                             vars = {},
                                             )
                     else:
                         config = self._config("summary")
                         if config or \
                            current.deployment_settings.get_ui_summary():
-                            default_url = r.url(method="summary", id=0)
+                            default_url = r.url(method = "summary",
+                                                id = 0,
+                                                )
                         else:
-                            default_url = r.url(method="", id=0)
+                            default_url = r.url(method = "",
+                                                id = 0,
+                                                )
                 elif method == "update" or not method:
                     if r.component:
                         default_url = r.url(method = "",
-                                            component_id= "",
+                                            component_id = "",
                                             vars = {},
                                             )
                     else:
-                        default_url = r.url(method="read")
+                        default_url = r.url(method = "read")
             if default_url:
                 script = '''$.cancelButtonS3('%s')''' % default_url
             else:

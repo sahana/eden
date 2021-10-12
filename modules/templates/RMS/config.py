@@ -1280,6 +1280,18 @@ def config(settings):
         table.first_name.label = T("Forenames")
         table.last_name.label = T("Father's Surname")
 
+        # What this does currently:
+        #(A) If the User Account creating the new account is associated with
+        #     the Panamanian RC then the Panama-specific mail is sent
+        #(B) If the current interface of the User creating the new account is
+        #    in Spanish then the Spanish mail is sent
+        #(C) Otherwise the English mail is sent
+        # What we really want (will require a little deeper customisation of Auth...pending budget):
+        #(A) If the User being created is associated with the Panamanian RC
+        #     then the Panama-specific mail is sent
+        #(B) If the User being created has their account is in Spanish then
+        #    the Spanish mail is sent
+        #(C) Otherwise the English mail is sent
         auth = current.auth
         messages = auth.messages
         messages.lock_keys = False

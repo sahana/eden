@@ -88,6 +88,7 @@ def config(settings):
     settings.security.policy = 5 # Controller, Function & Table ACLs
 
     settings.ui.auth_user_represent = "name"
+    settings.ui.default_cancel_button = True
     settings.ui.export_formats = ("xls",)
 
     settings.search.filter_manager = False
@@ -2093,11 +2094,16 @@ def config(settings):
 
                 form = output.get("form")
                 if form:
-                    # Add 2nd Submit button at top
-                    from gluon import INPUT, SQLFORM
-                    submit_btn = INPUT(_type = "submit",
-                                       _value = s3.crud.submit_button,
-                                       )
+                    # Add 2nd Submit/Cancel buttons at top
+                    from gluon import A, DIV, INPUT, SQLFORM
+                    submit_btn = DIV(INPUT(_type = "submit",
+                                           _value = s3.crud.submit_button,
+                                           ),
+                                     A(T("Cancel"),
+                                       _href = URL(args = "summary"),
+                                       _class = "s3-cancel cancel-form-btn action-lnk",
+                                       ),
+                                     )
                     submit_row = s3.crud.formstyle("submit_record_top" + SQLFORM.ID_ROW_SUFFIX, "", submit_btn, "")
                     form[0].insert(0, submit_row)
 
@@ -2698,11 +2704,11 @@ def config(settings):
                                                3: T("Checked-out"),
                                                },
                                     ),
-                    S3LocationFilter("shelter_registration.shelter_id$location_id",
+                    S3LocationFilter("shelter_registration.site_id$location_id",
                         label = T("Location"),
                         levels = ("L3", "L4"),
                         ),
-                    S3OptionsFilter("shelter_registration.shelter_id",
+                    S3OptionsFilter("shelter_registration.site_id",
                                     ),
                     S3OptionsFilter("age_group",
                                     label = T("Age"),
@@ -2725,9 +2731,9 @@ def config(settings):
                              "age_group",
                              "person_details.nationality",
                              "physical_description.ethnicity",
-                             "shelter_registration.shelter_id",
-                             "shelter_registration.shelter_id$location_id$L3",
-                             "shelter_registration.shelter_id$location_id$L4",
+                             "shelter_registration.site_id",
+                             "shelter_registration.site_id$location_id$L3",
+                             "shelter_registration.site_id$location_id$L4",
                              ]
 
             s3db.configure(tablename,
@@ -2736,7 +2742,7 @@ def config(settings):
                             rows = report_fields,
                             cols = report_fields,
                             fact = report_fields,
-                            defaults = Storage(rows = "shelter_registration.shelter_id$location_id$L3",
+                            defaults = Storage(rows = "shelter_registration.site_id$location_id$L3",
                                                cols = "age_group",
                                                fact = "count(id)",
                                                totals = True,
@@ -2786,7 +2792,7 @@ def config(settings):
                            (T("Current Address"), "current_address.location_id"),
                            (T("Permanent Address"), "permanent_address.location_id"),
                            "pe_label",
-                           "shelter_registration.shelter_id",
+                           "shelter_registration.site_id",
                            "shelter_registration.check_in_date",
                            "shelter_registration.check_out_date",
                            "nok.last_name",
@@ -3006,11 +3012,11 @@ def config(settings):
                                                3: T("Checked-out"),
                                                },
                                     ),
-                    S3LocationFilter("shelter_registration.shelter_id$location_id",
+                    S3LocationFilter("shelter_registration.site_id$location_id",
                                      label = T("Location"),
                                      levels = ("L3", "L4"),
                                      ),
-                    S3OptionsFilter("shelter_registration.shelter_id",
+                    S3OptionsFilter("shelter_registration.site_id",
                                     ),
                     S3OptionsFilter("age_group",
                                     label = T("Age"),
@@ -3045,7 +3051,7 @@ def config(settings):
                            (T("Age"), "age"),
                            ]
             if r.controller == "pr":
-                list_fields.insert(2, "shelter_registration.shelter_id")
+                list_fields.insert(2, "shelter_registration.site_id")
 
             from gluon import URL
 
@@ -3062,7 +3068,7 @@ def config(settings):
                            # rows = report_fields,
                            # cols = report_fields,
                            # fact = report_fields,
-                           # defaults = Storage(rows = "shelter_registration.shelter_id$location_id$L3",
+                           # defaults = Storage(rows = "shelter_registration.site_id$location_id$L3",
                            #                    cols = "age_group",
                            #                    fact = "count(id)",
                            #                    totals = True,
@@ -3280,35 +3286,28 @@ def config(settings):
                 ltable = s3db.cr_shelter_registration
                 query = (ltable.person_id == person_id) & \
                         (ltable.deleted != True)
-                registration = db(query).select(ltable.shelter_id,
+                registration = db(query).select(ltable.site_id,
                                                 limitby = (0, 1),
                                                 ).first()
                 if registration:
                     # Registering Client Checks them in
                     def household_check_in(form):
-
-                        shelter_id = registration.shelter_id
                         person_id = form.vars.id
-
-                        stable = s3db.cr_shelter
-                        shelter = db(stable.id == shelter_id).select(stable.site_id,
-                                                                     limitby = (0, 1),
-                                                                     ).first()
-                        site_id = shelter.site_id
+                        site_id = registration.site_id
 
                         # Add cr_shelter_registration record
                         ltable.insert(person_id = person_id,
-                                      shelter_id = shelter_id,
+                                      site_id = site_id,
                                       check_in_date = current.request.utcnow,
                                       registration_status = 2,
                                       )
 
                         # Update Shelter Population
                         from s3db.cr import cr_update_shelter_population
-                        cr_update_shelter_population(shelter_id)
+                        cr_update_shelter_population(site_id)
 
                         # Add Site Event Log
-                        s3db.org_site_event.insert(site_id = site_id,
+                        s3db.org_site_event.insert(site_id = registration.site_id,
                                                    person_id = person_id,
                                                    event = 2, # Checked-In
                                                    comments = "Client",
