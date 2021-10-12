@@ -3495,32 +3495,29 @@ class cr_ShelterReportRepresent(S3ReportRepresent):
             @returns: a JSON-serializable dict {recordID: representation}
         """
 
+        db = current.db
         s3db = current.s3db
 
-        resource = s3db.resource("cr_shelter",
-                                 id = record_ids,
-                                 )
-
-        rows = resource.select(["id", "name", "shelter_type_id"],
-                               represent = False,
-                               raw_data = True,
-                               limit = None,
-                               ).rows
+        table = s3db.cr_shelter
+        rows = db(table.id.belongs(record_ids)).select(table.id,
+                                                       table.name,
+                                                       table.shelter_type_id,
+                                                       )
 
         ttable = s3db.cr_shelter_type
-        shelter_types = current.db(ttable.deleted == False).select(ttable.id,
-                                                                   ttable.name,
-                                                                   )
+        shelter_types = db(ttable.deleted == False).select(ttable.id,
+                                                           ttable.name,
+                                                           )
         shelter_types = {row.id: row.name for row in shelter_types}
 
         output = {}
         for row in rows:
-            shelter_type_id = row["cr_shelter.shelter_type_id"]
+            shelter_type_id = row.shelter_type_id
             if shelter_type_id:
-                repr_str = "%s (%s)" % (row["cr_shelter.name"], shelter_types.get(shelter_type_id))
+                repr_str = "%s (%s)" % (row.name, shelter_types.get(shelter_type_id))
             else:
-                repr_str = row["cr_shelter.name"]
-            output[row["cr_shelter.id"]] = repr_str
+                repr_str = row.name
+            output[row.id] = repr_str
 
         return output
 
