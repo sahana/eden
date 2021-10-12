@@ -17,7 +17,9 @@ class index(S3CustomController):
 
         if auth.s3_has_role("POLICE", include_admin=False):
             # Police don't manage Shelters, they are interested in Clients
-            redirect(URL(c="pr", f="person", args="summary"))
+            redirect(URL(c="pr", f="person",
+                         args = "summary",
+                         ))
 
         output = {}
 
@@ -43,7 +45,7 @@ class index(S3CustomController):
                     (table.deleted != True)
             item = db(query).select(table.body,
                                     table.id,
-                                    limitby = (0, 1)
+                                    limitby = (0, 1),
                                     ).first()
             if item:
                 if ADMIN:
@@ -51,7 +53,8 @@ class index(S3CustomController):
                                BR(),
                                A(T("Edit"),
                                  _href = URL(c="cms", f="post",
-                                             args = [item.id, "update"]),
+                                             args = [item.id, "update"],
+                                             ),
                                  _class = "action-btn",
                                  ))
                 else:
@@ -62,10 +65,12 @@ class index(S3CustomController):
                 else:
                     _class = "action-btn"
                 item = A(T("Edit"),
-                         _href = URL(c="cms", f="post", args="create",
+                         _href = URL(c="cms", f="post",
+                                     args = "create",
                                      vars = {"module": module,
                                              "resource": resource
-                                             }),
+                                             },
+                                     ),
                          _class = "%s cms-edit" % _class,
                          )
             else:
@@ -86,7 +91,9 @@ class index(S3CustomController):
             if len(shelters) > 0:
                 facility_list = [(row.id, row.name) for row in shelters]
                 facility_list = sorted(facility_list, key=lambda fac: fac[1])
-                facility_opts = [OPTION(fac[1], _value=fac[0])
+                facility_opts = [OPTION(fac[1],
+                                        _value = fac[0],
+                                        )
                                  for fac in facility_list]
                 shelter_id = facility_list[0][0]
                 manage_facility_box = DIV(H3(T("Manage your Shelter")),
@@ -127,7 +134,7 @@ return false}})''' % (T("Please Select a Shelter")))
         else:
             # Provide a login box on front page
             auth.messages.submit_button = T("Login")
-            login_form = auth.login(inline=True)
+            login_form = auth.login(inline = True)
             login_div = DIV(H3(T("Login")),
                             P(XML(T("Registered users can %(login)s to access the system") % \
                                   {"login": B(T("login"))})))
@@ -172,7 +179,7 @@ def cr_shelter_import_prep(data):
                 (ctable.deleted != True)
 
         records = db(query).select(ctable.id,
-                                   limitby = (0, 1)
+                                   limitby = (0, 1),
                                    )
         if len(records):
             record = records.first()

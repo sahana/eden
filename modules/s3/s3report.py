@@ -1375,7 +1375,9 @@ class S3ReportRepresent(object):
         elif "name" in table.fields:
             # Extract the names and return dict {id: name}
             query = table._id.belongs(record_ids)
-            rows = current.db(query).select(table._id, table.name)
+            rows = current.db(query).select(table._id,
+                                            table.name,
+                                            )
 
             output = {}
             UNKNOWN_OPT = current.messages.UNKNOWN_OPT
@@ -1405,7 +1407,7 @@ class S3ReportRepresent(object):
             than implementing __call__ if producing a representation
             method is sufficient)
 
-            @returns: a representation method (preferrably a S3Represent)
+            @returns: a representation method (preferably an S3Represent)
         """
 
         s3db = current.s3db

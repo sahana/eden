@@ -44,7 +44,7 @@ import sys
 import uuid
 
 from copy import deepcopy
-from io import BytesIO, StringIO
+from io import BytesIO
 try:
     from lxml import etree
 except ImportError:
@@ -66,7 +66,7 @@ from .s3fields import S3Represent
 from .s3rest import S3Method, S3Request
 from .s3resource import S3Resource
 from .s3utils import s3_get_foreign_key, s3_has_foreign_key, \
-                     s3_mark_required, s3_str, s3_unicode
+                     s3_mark_required, s3_str
 from .s3validators import IS_JSONS3
 
 KNOWN_SPREADSHEET_EXTENSIONS = (".csv", ".xls", ".xlsx", ".xlsm")
@@ -82,7 +82,7 @@ class S3Importer(S3Method):
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
-            Apply CRUD methods
+            Apply method
 
             @param r: the S3Request
             @param attr: dictionary of parameters for the method handler
@@ -110,9 +110,9 @@ class S3Importer(S3Method):
             s3_rest_controller call (or the S3Request call, respectively):
 
             s3_rest_controller(module, resourcename,
-                               csv_extra_fields=[
-                                    dict(label="ColumnLabelInTheCSV",
-                                         field=field_instance)
+                               csv_extra_fields = {"label": "ColumnLabelInTheCSV",
+                                                   "field": field_instance,
+                                                   }
                                ])
 
             The Field instance "field" will be added to the upload form, and
@@ -133,7 +133,8 @@ class S3Importer(S3Method):
             request:
 
             s3_rest_controller(module, resourcename,
-                               replace_option=T("Remove existing data before import"))
+                               replace_option = T("Remove existing data before import"),
+                               )
 
             This will add the respective checkbox to the upload form.
 
@@ -142,7 +143,8 @@ class S3Importer(S3Method):
             attributes:
 
             s3_rest_controller(module, resourcename,
-                               csv_template="<resourcename>")
+                               csv_template = "<resourcename>",
+                               )
 
             This will provide a link to:
                 - static/formats/s3csv/<controller>/<resourcename>.csv
@@ -154,7 +156,7 @@ class S3Importer(S3Method):
 
         # Messages
         T = current.T
-        messages = self.messages = Messages(T)
+        self.messages = messages = Messages(T)
         messages.download_template = "Download Template"
         messages.invalid_file_format = "Invalid File Format"
         messages.unsupported_file_type = "Unsupported file type of %s"
@@ -251,7 +253,7 @@ class S3Importer(S3Method):
         # If we have an upload ID, then get upload and import job
         self.upload_id = upload_id
         query = (self.upload_table.id == upload_id)
-        self.upload_job = current.db(query).select(limitby = (0, 1)
+        self.upload_job = current.db(query).select(limitby = (0, 1),
                                                    ).first()
         if self.upload_job:
             self.job_id = self.upload_job.job_id
@@ -275,8 +277,10 @@ class S3Importer(S3Method):
                 output = self.upload(r, **attr)
         elif r.http == "POST":
             if items != None:
+                # 2nd phase
                 output = self.commit_items(upload_id, items)
             else:
+                # 1st or only phase
                 output = self.generate_job(r, **attr)
         elif r.http == "DELETE":
             if upload_id != None:
@@ -325,13 +329,14 @@ class S3Importer(S3Method):
 
         #current.log.debug("S3Importer.display()")
 
+        db = current.db
         response = current.response
         s3 = response.s3
 
-        db = current.db
+        ajax = self.ajax
         table = self.upload_table
-        output = None
-        if self.ajax:
+
+        if ajax:
             sfilename = ofilename = r.post_vars["file"].filename
             upload_id = table.insert(controller = self.controller,
                                      function = self.function,
@@ -354,86 +359,95 @@ class S3Importer(S3Method):
             if form.errors:
                 response.flash = ""
                 output = self._create_upload_dataTable()
-                output.update(form=form, title=title)
+                output.update(form = form,
+                              title = title,
+                              )
+                return output
 
             elif not sfilename or \
                  ofilename not in r.files or r.files[ofilename] is None:
                 response.flash = ""
                 response.error = self.messages.file_not_found
                 output = self._create_upload_dataTable()
-                output.update(form=form, title=title)
-            else:
-                query = (table.file == sfilename)
-                db(query).update(controller = self.controller,
-                                 function = self.function,
-                                 filename = ofilename,
-                                 user_id = current.session.auth.user.id)
-                row = db(query).select(table.id,
-                                       limitby = (0, 1)
-                                       ).first()
-                upload_id = row.id
+                output.update(form = form,
+                              title = title,
+                              )
+                return output
 
-        if not output:
-            output = {}
-            # Must commit here to separate this transaction from
-            # the trial import phase which will be rolled back.
-            db.commit()
+            query = (table.file == sfilename)
+            db(query).update(controller = self.controller,
+                             function = self.function,
+                             filename = ofilename,
+                             user_id = current.session.auth.user.id,
+                             )
+            row = db(query).select(table.id,
+                                   limitby = (0, 1),
+                                   ).first()
+            upload_id = row.id
 
-            extension = ofilename.rsplit(".", 1).pop()
-            if extension not in ("csv", "xls", "xlsx", "xlsm"):
-                if self.ajax:
-                    return {"Error": self.messages.invalid_file_format}
-                response.flash = None
-                response.error = self.messages.invalid_file_format
-                return self.upload(r, **attr)
+        extension = ofilename.rsplit(".", 1).pop()
+        if extension not in ("csv", "xls", "xlsx", "xlsm"):
+            if ajax:
+                return {"Error": self.messages.invalid_file_format}
+            response.flash = None
+            response.error = self.messages.invalid_file_format
+            return self.upload(r, **attr)
 
-            if self.ajax:
-                upload_file = r.post_vars.file.file
-            else:
-                upload_file = r.files[ofilename]
-            if extension == "xls":
-                if "xls_parser" in s3:
-                    # Survey module currently
-                    upload_file.seek(0)
-                    upload_file = s3.xls_parser(upload_file.read())
-                    extension = "csv"
+        # Must commit here to separate this transaction from
+        # the trial import phase which will be rolled back.
+        db.commit()
 
-            if upload_file is None:
-                response.flash = None
-                response.error = self.messages.file_not_found
-                return self.upload(r, **attr)
-            else:
+        if ajax:
+            upload_file = r.post_vars.file.file
+        else:
+            upload_file = r.files[ofilename]
+
+        if extension == "xls":
+            if "xls_parser" in s3:
+                # Survey module currently
                 upload_file.seek(0)
+                upload_file = s3.xls_parser(upload_file.read())
+                extension = "csv"
 
-            if "single_pass" in r.vars:
-                single_pass = r.vars["single_pass"]
-            else:
-                single_pass = None
-            self._generate_import_job(upload_id,
-                                      upload_file,
-                                      extension,
-                                      commit_job = single_pass)
-            if upload_id is None:
-                row = db(query).update(status = 2) # in error
-                if self.error != None:
-                    response.error = self.error
-                if self.warning != None:
-                    response.warning = self.warning
-                response.flash = ""
-                return self.upload(r, **attr)
-            else:
-                if single_pass:
-                    current.session.confirmation = self.messages.file_uploaded
-                    # For a single pass retain the vars from the original URL
-                    next_URL = URL(r = self.request,
-                                   f = self.function,
-                                   args = ["import"],
-                                   vars = current.request.get_vars
-                                   )
-                    redirect(next_URL)
-                s3.dataTable_vars = {"job": upload_id}
-                return self.display_job(upload_id)
-        return output
+        if upload_file is None:
+            response.flash = None
+            response.error = self.messages.file_not_found
+            return self.upload(r, **attr)
+        else:
+            upload_file.seek(0)
+
+        if "single_pass" in r.vars:
+            single_pass = r.vars["single_pass"]
+        else:
+            single_pass = None
+
+        self._generate_import_job(upload_id,
+                                  upload_file,
+                                  extension,
+                                  commit_job = single_pass,
+                                  )
+
+        if upload_id is None:
+            row = db(query).update(status = 2) # in error
+            if self.error != None:
+                response.error = self.error
+            if self.warning != None:
+                response.warning = self.warning
+            response.flash = ""
+            return self.upload(r, **attr)
+
+        if single_pass:
+            current.session.confirmation = self.messages.file_uploaded
+            # For a single pass retain the vars from the original URL
+            next_URL = URL(r = self.request,
+                           f = self.function,
+                           args = ["import"],
+                           vars = current.request.get_vars
+                           )
+            redirect(next_URL)
+
+        s3.dataTable_vars = {"job": upload_id}
+        return self.display_job(upload_id)
 
     # -------------------------------------------------------------------------
     def display_job(self, upload_id):
@@ -444,14 +458,18 @@ class S3Importer(S3Method):
         #current.log.debug("S3Importer.display_job()")
 
         db = current.db
+        messages = self.messages
         request = self.request
         table = self.upload_table
+
         job_id = self.job_id
         if job_id is None:
             # Redirect to the start page (removes all vars)
             db(table.id == upload_id).update(status = 2) # in error
-            current.session.warning = self.messages.no_records_to_import
-            redirect(URL(r=request, f=self.function, args=["import"]))
+            current.session.warning = messages.no_records_to_import
+            redirect(URL(r=request, f=self.function,
+                         args = ["import"],
+                         ))
 
         # Get the status of the upload job
         row = db(table.id == upload_id).select(table.status,
@@ -459,7 +477,7 @@ class S3Importer(S3Method):
                                                table.summary_added,
                                                table.summary_error,
                                                table.summary_ignored,
-                                               limitby = (0, 1)
+                                               limitby = (0, 1),
                                                ).first()
         status = row.status
         # completed display details
@@ -474,7 +492,9 @@ class S3Importer(S3Method):
                       row.summary_ignored,
                       )
             self._display_completed_job(result, row.modified_on)
-            redirect(URL(r=request, f=self.function, args=["import"]))
+            redirect(URL(r=request, f=self.function,
+                         args = ["import"],
+                         ))
 
         output = self._create_import_item_dataTable(upload_id, job_id)
         if request.representation == "aadata":
@@ -494,11 +514,11 @@ class S3Importer(S3Method):
             error_tip = ""
 
         rowcount = len(self._get_all_items(upload_id))
-        rheader = DIV(TABLE(TR(TH("%s: " % self.messages.job_total_records),
+        rheader = DIV(TABLE(TR(TH("%s: " % messages.job_total_records),
                                TD(rowcount,
                                   _id = "totalAvailable",
                                   ),
-                               TH("%s: " % self.messages.job_records_selected),
+                               TH("%s: " % messages.job_records_selected),
                                TD(0,
                                   _id = "totalSelected",
                                   ),
@@ -506,9 +526,9 @@ class S3Importer(S3Method):
                                ),
                             ))
 
-        output["title"] = self.messages.title_job_read
         output["rheader"] = rheader
-        output["subtitle"] = self.messages.title_job_list
+        output["subtitle"] = messages.title_job_list
+        output["title"] = messages.title_job_read
 
         return output
 
@@ -581,7 +601,8 @@ class S3Importer(S3Method):
             msg = "%s : %s %s %s" % (source,
                                      messages.commit_total_records_imported,
                                      messages.commit_total_errors,
-                                     messages.commit_total_records_ignored)
+                                     messages.commit_total_records_ignored,
+                                     )
             msg = msg % result
 
             confirmation = session.confirmation
@@ -599,18 +620,24 @@ class S3Importer(S3Method):
         """
 
         #current.log.debug("S3Importer.commit_items(%s, %s)" % (upload_id, items))
+
         # Save the import items
         self._commit_import_job(upload_id, items)
+
         # Update the upload table
         # change the status to completed
         # record the summary details
         # delete the upload file
         result = self._update_upload_job(upload_id)
+
         if self.ajax:
             return result
-        # redirect to the start page (removes all vars)
+
+        # Redirect to the start page (removes all vars)
         self._display_completed_job(result)
-        redirect(URL(r=self.request, f=self.function, args=["import"]))
+        redirect(URL(r=self.request, f=self.function,
+                     args = ["import"],
+                     ))
 
     # -------------------------------------------------------------------------
     def delete_job(self, upload_id):
@@ -895,7 +922,9 @@ class S3Importer(S3Method):
         # Get a list of the records that have an error of None
         query =  (table.job_id == job_id) & \
                  (table.tablename == self.controller_tablename)
-        rows = current.db(query).select(table.id, table.error)
+        rows = current.db(query).select(table.id,
+                                        table.error,
+                                        )
         select_list = []
         error_list = []
         for row in rows:
@@ -912,7 +941,8 @@ class S3Importer(S3Method):
             resource = self.resource
             resource.add_filter(query)
             rows = resource.select(["id", "element", "error"],
-                                   limit=None)["rows"]
+                                   limit = None,
+                                   )["rows"]
             return (upload_id, select_list, rows)
 
         # Toggle-button for item details
@@ -927,7 +957,8 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
                                  #sort_by = [[1, "asc"]],
                                  represent = represent,
                                  ajax_item_id = upload_id,
-                                 dt_bulk_select = select_list)
+                                 dt_bulk_select = select_list,
+                                 )
 
         self._use_controller_table()
 
@@ -944,6 +975,7 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
                     _value = "%s" % upload_id,
                     )
         form.append(job)
+
         return output
 
     # -------------------------------------------------------------------------
@@ -952,7 +984,8 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
                              infile,
                              file_format,
                              stylesheet = None,
-                             commit_job = False):
+                             commit_job = False,
+                             ):
         """
             This will take a s3_import_upload record and
             generate the importJob
@@ -971,21 +1004,18 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
         # ---------------------------------------------------------------------
         # CSV
         if file_format in ("csv", "comma-separated-values"):
-
             fmt = "csv"
             src = infile
 
         # ---------------------------------------------------------------------
         # XLS
         elif file_format == "xls":
-
             fmt = "xls"
             src = infile
 
         # ---------------------------------------------------------------------
         # XLSX
         elif file_format in ("xlsx", "xlsm"):
-
             fmt = "xlsx"
             src = infile
 
@@ -1026,10 +1056,10 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
         self.tablename = self.controller_tablename
 
         # Pass stylesheet arguments
-        args = Storage()
+        args = {}
         mode = request.get_vars.get("xsltmode", None)
         if mode is not None:
-            args.update(mode = mode)
+            args["mode"] = mode
 
         # Generate the import job
         resource.import_xml(src,
@@ -1046,22 +1076,23 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
                 # Error
                 self.error = resource.error
                 return None
-            else:
-                # Nothing to import
-                self.warning = self.messages.no_records_to_import
-                return None
-        else:
-            # Job created
-            db = current.db
-            job_id = job.job_id
-            errors = current.xml.collect_errors(job)
-            if errors:
-                current.response.s3.error_report = errors
-            query = (self.upload_table.id == upload_id)
-            result = db(query).update(job_id = job_id)
-            # @todo: add check that result == 1, if not we are in error
-            # Now commit the changes
-            db.commit()
+            # Nothing to import
+            self.warning = self.messages.no_records_to_import
+            return None
+
+        # Job created
+        db = current.db
+        job_id = job.job_id
+
+        errors = current.xml.collect_errors(job)
+        if errors:
+            current.response.s3.error_report = errors
+
+        result = db(self.upload_table.id == upload_id).update(job_id = job_id)
+        # @todo: add check that result == 1, if not we are in error
+
+        # Now commit the changes
+        db.commit()
 
         self.job_id = job_id
         return True
@@ -1091,12 +1122,14 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
             else:
                 stylesheet = os.path.join(xslt_path,
                                           self.controller,
-                                          self.csv_stylesheet)
+                                          self.csv_stylesheet,
+                                          )
         else:
             xslt_filename = "%s.%s" % (self.function, self.xslt_extension)
             stylesheet = os.path.join(xslt_path,
                                       self.controller,
-                                      xslt_filename)
+                                      xslt_filename,
+                                      )
 
         if os.path.exists(stylesheet) is False:
             msg = self.messages.stylesheet_not_found % stylesheet
@@ -1123,7 +1156,7 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
         table = self.upload_table
         row = db(table.id == upload_id).select(table.job_id,
                                                table.replace_option,
-                                               limitby = (0, 1)
+                                               limitby = (0, 1),
                                                ).first()
         if row is None:
             return False
@@ -1334,7 +1367,8 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
                                limit = limit,
                                count = True,
                                orderby = orderby,
-                               left = left)
+                               left = left,
+                               )
         rows = data["rows"]
 
         displayrows = data["numrows"]
@@ -1360,19 +1394,22 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
                              displayrows,
                              datatable_id,
                              draw,
-                             dt_bulk_actions = [current.T("Import")])
+                             dt_bulk_actions = [current.T("Import")],
+                             )
         else:
             # Initial HTML response
             url = "/%s/%s/%s/import.aadata?job=%s" % (request.application,
                                                       request.controller,
                                                       request.function,
-                                                      ajax_item_id)
+                                                      ajax_item_id,
+                                                      )
             items =  dt.html(totalrows,
                              displayrows,
                              datatable_id,
                              dt_ajax_url = url,
                              dt_bulk_actions = [current.T("Import")],
-                             dt_bulk_selected = dt_bulk_select)
+                             dt_bulk_selected = dt_bulk_select,
+                             )
             output = {"items":items}
 
             current.response.s3.dataTableID = [datatable_id]
@@ -1469,7 +1506,7 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
             except (TypeError, ValueError):
                 pass
             if value:
-                value = s3_unicode(value)
+                value = s3_str(value)
             else:
                 value = ""
             if f != None and value != None:
@@ -1641,18 +1678,21 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
         table = self.define_upload_table()
         table.file.upload_folder = os.path.join(request.folder,
                                                 "uploads",
-                                                #"imports"
+                                                #"imports",
                                                 )
         messages = self.messages
         table.file.comment = DIV(_class = "tooltip",
                                  _title = "%s|%s" % (messages.import_file,
-                                                     messages.import_file_comment))
+                                                     messages.import_file_comment,
+                                                     ),
+                                 )
         table.file.label = messages.import_file
         table.status.requires = IS_IN_SET(import_upload_status, zero=None)
         table.status.represent = S3Represent(options = import_upload_status)
         table.user_id.label = messages.user_name
         table.user_id.represent = current.s3db.auth_UserRepresent(show_email = False,
-                                                                  show_link = False)
+                                                                  show_link = False,
+                                                                  )
         table.created_on.default = now
         table.created_on.represent = self.date_represent
         table.modified_on.default = now
@@ -1683,7 +1723,9 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
                             Field("file", "upload",
                                   length = current.MAX_FILENAME_LENGTH,
                                   uploadfolder = os.path.join(current.request.folder,
-                                                              "uploads", "imports"),
+                                                              "uploads",
+                                                              "imports",
+                                                              ),
                                   autodelete = True),
                             Field("filename",
                                   readable = False,
@@ -1841,7 +1883,7 @@ class S3ImportItem(object):
             table = s3db.table(tablename)
             if table is None:
                 self.error = current.ERROR.BAD_RESOURCE
-                element.set(ERROR, s3_unicode(self.error))
+                element.set(ERROR, s3_str(self.error))
                 return False
         else:
             tablename = table._tablename
@@ -1860,7 +1902,8 @@ class S3ImportItem(object):
             pkeys = set(fname for fname in table.fields if table[fname].unique)
             fields = S3Resource.import_fields(table, pkeys,
                                               mandatory = self._mandatory_fields())
-            original = current.db(query).select(limitby=(0, 1), *fields).first()
+            original = current.db(query).select(limitby = (0, 1),
+                                                *fields).first()
         else:
             original = None
 
@@ -1874,7 +1917,7 @@ class S3ImportItem(object):
             self.error = current.ERROR.VALIDATION_ERROR
             self.accepted = False
             if not element.get(ERROR, False):
-                element.set(ERROR, s3_unicode(self.error))
+                element.set(ERROR, s3_str(self.error))
             return False
 
         self.data = data
@@ -1932,7 +1975,7 @@ class S3ImportItem(object):
         elif self.data:
             original = S3Resource.original(table,
                                            self.data,
-                                           mandatory=mandatory,
+                                           mandatory = mandatory,
                                            )
         else:
             original = None
@@ -1979,10 +2022,10 @@ class S3ImportItem(object):
                 # Retrieve the original
                 fields = S3Resource.import_fields(table,
                                                   data,
-                                                  mandatory=mandatory,
+                                                  mandatory = mandatory,
                                                   )
-                original = current.db(table._id == self.id) \
-                                  .select(limitby=(0, 1), *fields).first()
+                original = current.db(table._id == self.id).select(limitby = (0, 1),
+                                                                   *fields).first()
 
         # Retain the original UUID (except in synchronise_uuids mode)
         if original and not synchronise_uuids and UID in original:
@@ -2016,10 +2059,12 @@ class S3ImportItem(object):
             self.accepted = True if self.id else False
         elif self.id:
             if not self.original:
-                fields = S3Resource.import_fields(self.table, self.data,
-                                        mandatory=self._mandatory_fields())
+                fields = S3Resource.import_fields(self.table,
+                                                  self.data,
+                                                  mandatory = self._mandatory_fields(),
+                                                  )
                 query = (self.table.id == self.id)
-                self.original = current.db(query).select(limitby=(0, 1),
+                self.original = current.db(query).select(limitby = (0, 1),
                                                          *fields).first()
             if self.original:
                 self.method = METHOD["UPDATE"]
@@ -2033,11 +2078,12 @@ class S3ImportItem(object):
             self.id = 0
 
         # Authorization
-        authorize = current.auth.s3_has_permission
-        if authorize:
-            self.permitted = authorize(self.method,
-                                       tablename,
-                                       record_id=self.id)
+        has_permission = current.auth.s3_has_permission
+        if has_permission:
+            self.permitted = has_permission(self.method,
+                                            tablename,
+                                            record_id = self.id,
+                                            )
         else:
             self.permitted = True
 
@@ -2177,7 +2223,7 @@ class S3ImportItem(object):
                     form.errors[k] = "[%s] %s" % (k, form.errors[k])
                 else:
                     e = e[0]
-                e.set(ERROR, s3_unicode(form.errors[k]))
+                e.set(ERROR, s3_str(form.errors[k]))
             self.error = current.ERROR.VALIDATION_ERROR
             accepted = False
 
@@ -2248,7 +2294,7 @@ class S3ImportItem(object):
                 parent.error = VALIDATION_ERROR
                 element = parent.element
                 if not element.get(ATTRIBUTE.error, False):
-                    element.set(ATTRIBUTE.error, s3_unicode(parent.error))
+                    element.set(ATTRIBUTE.error, s3_str(parent.error))
 
             return ignore_errors
 
@@ -2272,7 +2318,8 @@ class S3ImportItem(object):
             self.error = "%s: %s, %s, %s" % (current.ERROR.NOT_PERMITTED,
                                              self.method,
                                              self.tablename,
-                                             self.id)
+                                             self.id,
+                                             )
             self.skip = True
             return ignore_errors
 
@@ -2490,10 +2537,12 @@ class S3ImportItem(object):
 
             if not self.skip and not self.conflict:
 
-                resource = s3db.resource(tablename, id=self.id)
+                resource = s3db.resource(tablename,
+                                         id = self.id,
+                                         )
                 # Use cascade=True so that the deletion can be
                 # rolled back (e.g. trial phase, subsequent failure)
-                success = resource.delete(cascade=True)
+                success = resource.delete(cascade = True)
                 if resource.error:
                     self.error = resource.error
                     self.skip = True
@@ -2523,9 +2572,9 @@ class S3ImportItem(object):
 
             if not self.skip and not self.conflict:
 
-                row = db(table[UID] == data[xml.REPLACEDBY]) \
-                                        .select(table._id, limitby=(0, 1)) \
-                                        .first()
+                row = db(table[UID] == data[xml.REPLACEDBY]).select(table._id,
+                                                                    limitby = (0, 1),
+                                                                    ).first()
                 if row:
                     original_id = row[table._id]
                     resource = s3db.resource(tablename,
@@ -2613,8 +2662,9 @@ class S3ImportItem(object):
                     # The field references something else than the
                     # primary key of this table => look it up
                     pkey, fkey = field
-                    query = (table.id == self.id)
-                    row = db(query).select(table[pkey], limitby=(0, 1)).first()
+                    row = db(table.id == self.id).select(table[pkey],
+                                                         limitby = (0, 1),
+                                                         ).first()
                     ref_id = row[pkey]
                 else:
                     # The field references the primary key of this table
@@ -2743,7 +2793,8 @@ class S3ImportItem(object):
                         fk = item.id
             if fk and pkey != "id":
                 row = db(ktable._id == fk).select(ktable[pkey],
-                                                  limitby=(0, 1)).first()
+                                                  limitby = (0, 1),
+                                                  ).first()
                 if not row:
                     fk = None
                     continue
@@ -2860,7 +2911,7 @@ class S3ImportItem(object):
         item_id = self.item_id
         db = current.db
         row = db(item_table.item_id == item_id).select(item_table.id,
-                                                       limitby = (0, 1)
+                                                       limitby = (0, 1),
                                                        ).first()
         if row:
             record_id = row.id
@@ -2979,7 +3030,8 @@ class S3ImportItem(object):
             self.table = table
             self.tablename = tablename
         original = S3Resource.original(table, self.data,
-                                       mandatory=self._mandatory_fields())
+                                       mandatory = self._mandatory_fields(),
+                                       )
         if original is not None:
             self.original = original
             self.id = original[table._id.name]
@@ -3091,7 +3143,7 @@ class S3ImportJob():
                 query = (jobtable.job_id == job_id)
             row = current.db(query).select(jobtable.job_id,
                                            jobtable.tablename,
-                                           limitby = (0, 1)
+                                           limitby = (0, 1),
                                            ).first()
             if not row:
                 raise SyntaxError("Job record not found")
@@ -3185,7 +3237,8 @@ class S3ImportJob():
 
         if not item.parse(element,
                           original = original,
-                          files = self.files):
+                          files = self.files,
+                          ):
             self.error = item.error
             item.accepted = False
             if parent is None:
@@ -3286,14 +3339,14 @@ class S3ImportJob():
                             # Load only the UUID now, parse will load any
                             # required data later
                             row = db(query).select(ctable[UID],
-                                                   limitby = (0, 1)
+                                                   limitby = (0, 1),
                                                    ).first()
                             if row:
                                 original = row[UID]
                         else:
                             # Not nice, but a rare edge-case
                             original = db(query).select(ctable.ALL,
-                                                        limitby = (0, 1)
+                                                        limitby = (0, 1),
                                                         ).first()
 
                 # Recurse
@@ -3689,7 +3742,7 @@ class S3ImportJob():
                 element = item.element
                 if element is not None:
                     if not element.get(ATTRIBUTE.error, False):
-                        element.set(ATTRIBUTE.error, s3_unicode(error))
+                        element.set(ATTRIBUTE.error, s3_str(error))
                     if not logged:
                         self.error_tree.append(deepcopy(element))
 
@@ -3778,20 +3831,22 @@ class S3ImportJob():
         self.__define_tables()
         jobtable = self.job_table
         query = jobtable.job_id == self.job_id
-        row = db(query).select(jobtable.id, limitby=(0, 1)).first()
+        row = db(query).select(jobtable.id,
+                               limitby = (0, 1),
+                               ).first()
         if row:
             record_id = row.id
         else:
             record_id = None
-        record = Storage(job_id=self.job_id)
+        record = Storage(job_id = self.job_id)
         try:
             tablename = self.table._tablename
         except AttributeError:
             pass
         else:
-            record.update(tablename=tablename)
+            record.update(tablename = tablename)
         for item in self.items.values():
-            item.store(item_table=self.item_table)
+            item.store(item_table = self.item_table)
         if record_id:
             db(jobtable.id == record_id).update(**record)
         else:
@@ -3807,19 +3862,20 @@ class S3ImportJob():
 
         if self.tree is not None:
             return self.tree
-        else:
-            xml = current.xml
-            ATTRIBUTE = xml.ATTRIBUTE
-            UID = xml.UID
-            root = etree.Element(xml.TAG.root)
-            for item in self.items.values():
-                element = item.element
-                if element is not None and not item.parent:
-                    if item.tablename == self.table._tablename or \
-                       element.get(UID, None) or \
-                       element.get(ATTRIBUTE.tuid, None):
-                        root.append(deepcopy(element))
-            return etree.ElementTree(root)
+
+        xml = current.xml
+        ATTRIBUTE = xml.ATTRIBUTE
+        UID = xml.UID
+        root = etree.Element(xml.TAG.root)
+        for item in self.items.values():
+            element = item.element
+            if element is not None and not item.parent:
+                if item.tablename == self.table._tablename or \
+                   element.get(UID, None) or \
+                   element.get(ATTRIBUTE.tuid, None):
+                    root.append(deepcopy(element))
+
+        return etree.ElementTree(root)
 
     # -------------------------------------------------------------------------
     def delete(self):
@@ -3832,12 +3888,9 @@ class S3ImportJob():
         #current.log.debug("Deleting job ID=%s" % self.job_id)
 
         self.__define_tables()
-        item_table = self.item_table
-        query = item_table.job_id == self.job_id
-        db(query).delete()
-        job_table = self.job_table
-        query = job_table.job_id == self.job_id
-        db(query).delete()
+
+        db(self.item_table.job_id == self.job_id).delete()
+        db(self.job_table.job_id == self.job_id).delete()
 
     # -------------------------------------------------------------------------
     def restore_references(self):
@@ -3860,13 +3913,15 @@ class S3ImportJob():
                     item_id = ritem["item_id"]
                     if item_id in self.items:
                         _item = self.items[item_id]
-                        entry = Storage(tablename=_item.tablename,
-                                        element=_item.element,
-                                        uid=_item.uid,
-                                        id=_item.id,
-                                        item_id=item_id)
-                        item.references.append(Storage(field=field,
-                                                       entry=entry))
+                        entry = Storage(tablename = _item.tablename,
+                                        element = _item.element,
+                                        uid = _item.uid,
+                                        id = _item.id,
+                                        item_id = item_id,
+                                        )
+                        item.references.append(Storage(field = field,
+                                                       entry = entry,
+                                                       ))
                 else:
                     _id = None
                     uid = ritem.get("uid", None)
@@ -3878,9 +3933,9 @@ class S3ImportJob():
                             continue
                         if UID not in table.fields:
                             continue
-                        query = table[UID] == uid
-                        row = db(query).select(table._id,
-                                               limitby=(0, 1)).first()
+                        row = db(table[UID] == uid).select(table._id,
+                                                           limitby = (0, 1),
+                                                           ).first()
                         if row:
                             _id = row[table._id.name]
                         else:
@@ -3889,9 +3944,11 @@ class S3ImportJob():
                                         element=None,
                                         uid = ritem["uid"],
                                         id = _id,
-                                        item_id = None)
-                        item.references.append(Storage(field=field,
-                                                       entry=entry))
+                                        item_id = None,
+                                        )
+                        item.references.append(Storage(field = field,
+                                                       entry = entry,
+                                                       ))
             item.load_references = []
             if item.load_parent is not None:
                 parent = self.items[item.load_parent]
@@ -4169,7 +4226,7 @@ class S3Duplicate(object):
             #    http://stackoverflow.com/questions/18507589/the-lower-function-on-international-characters-in-postgresql
             # => works fine on Debian servers if the locale is a .UTF-8 before
             #    the Postgres cluster is created
-            query = (field.lower() == s3_str(s3_unicode(value).lower()))
+            query = (field.lower() == s3_str(value).lower())
         else:
             query = (field == value)
 
@@ -4197,13 +4254,16 @@ class S3BulkImporter(object):
         self.alternateTables = {
             "hrm_group_membership": {"tablename": "pr_group_membership",
                                      "prefix": "pr",
-                                     "name": "group_membership"},
+                                     "name": "group_membership",
+                                     },
             "hrm_person": {"tablename": "pr_person",
                            "prefix": "pr",
-                           "name": "person"},
+                           "name": "person",
+                           },
             "member_person": {"tablename": "pr_person",
                               "prefix": "pr",
-                              "name": "person"},
+                              "name": "person",
+                              },
             }
         # Keep track of which resources have been customised so we don't do this twice
         self.customised = []
@@ -4255,21 +4315,24 @@ class S3BulkImporter(object):
                     path = os.path.join(folder,
                                         "modules",
                                         "templates",
-                                        csvPath)
+                                        csvPath,
+                                        )
                     # @todo: deprecate this block once migration completed
                     if not os.path.exists(path):
                         # Non-standard location (legacy template)?
                         path = os.path.join(folder,
                                             "private",
                                             "templates",
-                                            csvPath)
+                                            csvPath,
+                                            )
                 csv = os.path.join(path, csvFile)
 
             xslFileName = details[3].strip('" ')
             templateDir = os.path.join(folder,
                                        "static",
                                        "formats",
-                                       "s3csv")
+                                       "s3csv",
+                                       )
             # Try the module directory in the templates directory first
             xsl = os.path.join(templateDir, mod, xslFileName)
             if os.path.exists(xsl) == False:
@@ -4309,14 +4372,16 @@ class S3BulkImporter(object):
                     path = os.path.join(current.request.folder,
                                         "modules",
                                         "templates",
-                                        subfolder)
+                                        subfolder,
+                                        )
                     # @todo: deprecate this block once migration completed
                     if not os.path.exists(path):
                         # Non-standard location (legacy template)?
                         path = os.path.join(current.request.folder,
                                             "private",
                                             "templates",
-                                            subfolder)
+                                            subfolder,
+                                            )
                 filepath = os.path.join(path, filename)
 
         if len(details) >= 4:
@@ -4508,7 +4573,7 @@ class S3BulkImporter(object):
 
         table = current.s3db.table(pe_tablename)
         record = current.db(table[pe_field] == value).select(table.pe_id,
-                                                             limitby = (0, 1)
+                                                             limitby = (0, 1),
                                                              ).first()
         try:
             pe_id = record.pe_id
@@ -4864,7 +4929,7 @@ class S3BulkImporter(object):
                         (ptable.middle_name == middle_name) & \
                         (ptable.last_name == last_name)
                 person = db(query).select(ptable.pe_id,
-                                          limitby = (0, 1)
+                                          limitby = (0, 1),
                                           ).first()
                 try:
                     pe_id = person.pe_id
@@ -4898,7 +4963,9 @@ class S3BulkImporter(object):
                 else:
                     # default (usually False)
                     form_vars.profile = None
-                if form.accepts(form_vars, onvalidation=onvalidation):
+                if form.accepts(form_vars,
+                                onvalidation = onvalidation,
+                                ):
                     # Audit
                     audit("create", "pr", "image", form=form, representation="csv")
 
@@ -4933,8 +5000,8 @@ class S3BulkImporter(object):
 
             filename = "%s.ttf" % filename
 
-        fontPath = os.path.join(current.request.folder, "static", "fonts")
-        if os.path.exists(os.path.join(fontPath, filename)):
+        font_path = os.path.join(current.request.folder, "static", "fonts")
+        if os.path.exists(os.path.join(font_path, filename)):
             current.log.warning("Using cached copy of %s" % filename)
             return
 
@@ -4944,7 +5011,7 @@ class S3BulkImporter(object):
         cwd = os.getcwd()
 
         # Set the current working directory
-        os.chdir(fontPath)
+        os.chdir(font_path)
         try:
             _file = fetch(url)
         except URLError as exception:
@@ -4955,12 +5022,12 @@ class S3BulkImporter(object):
 
         if extension == "gz":
             import tarfile
-            tf = tarfile.open(fileobj = StringIO(_file))
+            tf = tarfile.open(fileobj = BytesIO(_file))
             tf.extractall()
 
         elif extension == "zip":
             import zipfile
-            zf = zipfile.ZipFile(StringIO(_file))
+            zf = zipfile.ZipFile(BytesIO(_file))
             zf.extractall()
 
         else:
@@ -5022,7 +5089,7 @@ class S3BulkImporter(object):
                 # Need to unzip
                 import zipfile
                 try:
-                    myfile = zipfile.ZipFile(StringIO(_file))
+                    myfile = zipfile.ZipFile(BytesIO(_file))
                 except zipfile.BadZipfile as exception:
                     # e.g. trying to download through a captive portal
                     current.log.error(exception)
@@ -5171,7 +5238,8 @@ class S3BulkImporter(object):
                                   "static",
                                   "formats",
                                   dataformat,
-                                  "import.xsl")
+                                  "import.xsl",
+                                  )
         try:
             xslt_file = open(stylesheet, "r")
         except IOError:

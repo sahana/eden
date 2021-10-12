@@ -8990,7 +8990,7 @@ def hrm_training_controller():
             table.month = Field.Method("month", hrm_training_month)
 
         # Can't reliably link to persons as these are imported in random order
-        # - do this postimport if desired (see RMS)
+        # - do this onimport if desired (see RMS)
         #elif method == "import":
         #    # If users accounts are created for imported participants
         #    s3db.configure("auth_user",

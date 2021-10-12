@@ -5,7 +5,7 @@ from collections import OrderedDict
 from gluon import current
 from gluon.storage import Storage
 
-from s3 import S3CRUD
+from s3 import S3CRUD, S3ReportRepresent
 
 def config(settings):
     """
@@ -605,16 +605,16 @@ def config(settings):
                                                           ).first()
             if row and row.id == r.record.series_id:
                 current.response.s3.crud_strings[tablename] = Storage(label_create = T("Create Plan"),
-                                                                  title_display = T("Plan Details"),
-                                                                  title_list = T("Community Emergency Plans"),
-                                                                  title_update = T("Edit Plan"),
-                                                                  title_upload = T("Import Plans"),
-                                                                  label_list_button = T("List Plans"),
-                                                                  msg_record_created = T("Plan added"),
-                                                                  msg_record_modified = T("Plan updated"),
-                                                                  msg_record_deleted = T("Plan deleted"),
-                                                                  msg_list_empty = T("No plans currently available"),
-                                                                  )
+                                                                      title_display = T("Plan Details"),
+                                                                      title_list = T("Community Emergency Plans"),
+                                                                      title_update = T("Edit Plan"),
+                                                                      title_upload = T("Import Plans"),
+                                                                      label_list_button = T("List Plans"),
+                                                                      msg_record_created = T("Plan added"),
+                                                                      msg_record_modified = T("Plan updated"),
+                                                                      msg_record_deleted = T("Plan deleted"),
+                                                                      msg_list_empty = T("No plans currently available"),
+                                                                      )
                 from s3 import S3SQLCustomForm
                 s3db.configure(tablename,
                                crud_form = S3SQLCustomForm("name"),
@@ -883,7 +883,7 @@ def config(settings):
             current.log.error(error)
             raise HTTP(503, body=error)
 
-        from s3 import s3_format_fullname, s3_fullname, s3_unicode
+        from s3 import s3_format_fullname, s3_fullname, s3_str
 
         date_format = settings.get_L10n_date_format()
         date_format_str = str(date_format)
@@ -1105,7 +1105,7 @@ def config(settings):
 
             gender = row["gender"]
             if gender:
-                represent = s3_unicode(gender_represent(gender))
+                represent = s3_str(gender_represent(gender))
                 current_row.write(col_index, represent, style)
                 width = len(represent) * COL_WIDTH_MULTIPLIER
                 if width > column_widths[col_index]:
@@ -1118,7 +1118,7 @@ def config(settings):
 
             date_of_birth = row["date_of_birth"]
             if date_of_birth:
-                represent = s3_unicode(date_of_birth)
+                represent = s3_str(date_of_birth)
                 date_tuple = (date_of_birth.year,
                               date_of_birth.month,
                               date_of_birth.day)
@@ -1208,7 +1208,7 @@ def config(settings):
             col_index = 0
 
             date = row["date"]
-            represent = s3_unicode(date)
+            represent = s3_str(date)
             date_tuple = (date.year,
                           date.month,
                           date.day,
@@ -1240,7 +1240,7 @@ def config(settings):
 
             event = row["event"]
             if event:
-                represent = s3_unicode(event_represent(event))
+                represent = s3_str(event_represent(event))
                 current_row.write(col_index, represent, style)
                 width = len(represent) * COL_WIDTH_MULTIPLIER
                 if width > column_widths[col_index]:
@@ -1282,7 +1282,7 @@ def config(settings):
 
             status = row["status"]
             if status:
-                represent = s3_unicode(status_represent(status))
+                represent = s3_str(status_represent(status))
                 current_row.write(col_index, represent, style)
                 width = len(represent) * COL_WIDTH_MULTIPLIER
                 if width > column_widths[col_index]:
@@ -1314,10 +1314,12 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_cr_shelter_resource(r, tablename):
 
-        from gluon import A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_LENGTH, IS_NOT_EMPTY, IS_NOT_IN_DB
+        from gluon import A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_LENGTH, \
+                                  IS_NOT_EMPTY, IS_NOT_IN_DB, IS_URL
 
         from s3 import S3Represent, S3SQLCustomForm, S3LocationSelector, \
-                       S3TextFilter, S3LocationFilter, S3OptionsFilter, S3RangeFilter
+                       S3TextFilter, S3LocationFilter, S3OptionsFilter, S3RangeFilter, \
+                       S3TagCheckboxWidget, s3_fieldmethod
 
         db = current.db
         s3db = current.s3db
@@ -1418,9 +1420,6 @@ def config(settings):
                                             ),
                             )
 
-        from gluon import IS_INT_IN_RANGE, IS_URL
-        from s3 import S3TagCheckboxWidget
-
         # Individual settings for specific tag components
         components_get = s3db.resource(tablename).components.get
 
@@ -1492,6 +1491,12 @@ def config(settings):
                                     "obsolete",
                                     )
 
+        ttable = s3db.cr_shelter_type
+        shelter_types = db(ttable.deleted == False).select(ttable.id,
+                                                           ttable.name,
+                                                           )
+        shelter_types = {row.id: row.name for row in shelter_types}
+
         cr_shelter_status_opts[1] = T("Closed (Nominated)")
         cr_shelter_status_opts[6] = T("Closed (Community)")
         filter_widgets = [
@@ -1510,6 +1515,8 @@ def config(settings):
                                  levels = ("L3", "L4"),
                                  ),
                 S3OptionsFilter("shelter_type_id",
+                                cols = 2,
+                                options = shelter_types,
                                 ),
                 S3OptionsFilter("shelter_service_shelter.service_id",
                                 ),
@@ -1539,7 +1546,20 @@ def config(settings):
                        (T("Catering"), "catering.value"),
                        ]
 
-        report_fields = ["name",
+        # Virtual Field to show Name & Type of Shelter
+        def name_and_type(row):
+            shelter = row.cr_shelter
+            shelter_type_id = shelter.shelter_type_id
+            if not shelter_type_id:
+                return shelter.name
+            return "%s (%s)" % (shelter.name, shelter_types.get(shelter_type_id))
+
+        table.name_and_type = s3_fieldmethod("name_and_type",
+                                             name_and_type,
+                                             )
+
+        report_fields = [#"name",
+                         (T("Name"), "name_and_type"),
                          "shelter_type_id",
                          "shelter_service_shelter.service_id",
                          "status",
@@ -1560,6 +1580,9 @@ def config(settings):
         s3db.configure(tablename,
                        create_next = None, # Don't redirect to People Registration after creation
                        crud_form = crud_form,
+                       extra_fields = ["name",
+                                       "shelter_type_id",
+                                       ],
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        onvalidation = cr_shelter_onvalidation,
@@ -1569,7 +1592,7 @@ def config(settings):
                         fact = report_fields,
                         defaults = Storage(rows = "location_id$L3",
                                            cols = "status",
-                                           fact = "count(name)",
+                                           fact = "count(name_and_type)",
                                            totals = True,
                                            )
                         ),
@@ -1606,13 +1629,13 @@ def config(settings):
                     value = "Client going to: %s" % value
                     return (value, None)
 
+            site_id = r.record.site_id
+
             # Add Event Log entry
             table = s3db.org_site_event
             f = table.site_id
             f.readable = f.writable = False
-            f = table.site_id
-            f.readable = f.writable = False
-            f.default = r.record.site_id
+            f.default = site_id
             f = table.person_id
             f.readable = f.writable = False
             f.default = person_id
@@ -1633,7 +1656,7 @@ def config(settings):
                                                                                        )
                 # Update Shelter Population
                 from s3db.cr import cr_update_shelter_population
-                cr_update_shelter_population(r.id)
+                cr_update_shelter_population(site_id)
                 # response.confirmation triggers the popup close (although not actually seen by user)
                 response.confirmation = T("Client checked-out successfully!")
 
@@ -1761,252 +1784,264 @@ def config(settings):
 
             if r.id:
                 shelter_name = r.record.name
-            else:
-                shelter_name = None
+
+                #if current.auth.s3_has_role("SHELTER_ADMIN"):
+                #    # Consistent Header across tabs
+                #    s3.crud_strings["cr_shelter"].title_display = T("Manage Shelter")
+                s3.crud_strings["cr_shelter"].title_display = shelter_name
+
+                cname = r.component_name
+                if cname == "human_resource_site":
+                    if not r.interactive:
+                        auth = current.auth
+                        output_format = auth.permission.format
+                        if output_format not in ("aadata", "json", "xls"):
+                            # Block Exports
+                            return False
+                        if output_format == "xls":
+                            # Add Site Event Log
+                            s3db.org_site_event.insert(site_id = r.record.site_id,
+                                                       event = 5, # Data Export
+                                                       comments = "Staff",
+                                                       )
+                            # Log in Global Log
+                            settings.security.audit_write = True
+                            from s3 import S3Audit
+                            S3Audit().__init__()
+                            s3db.s3_audit.insert(timestmp = r.utcnow,
+                                                 user_id = auth.user.id,
+                                                 method = "Data Export",
+                                                 representation = "Staff",
+                                                 )
+
+                    if r.method == "create":
+                        s3.crud_strings["cr_shelter"].title_display = T("Check-in Staff to %(shelter)s") % \
+                                                                                {"shelter": shelter_name}
+
+                    # Filtered components
+                    s3db.add_components("pr_person",
+                                        pr_person_tag = ({"name": "car",
+                                                          "joinby": "person_id",
+                                                          "filterby": {"tag": "car"},
+                                                          "multiple": False,
+                                                          },
+                                                         ),
+                                        )
+
+                    # Assigning Staff Checks them in
+                    def staff_check_in(form):
+
+                        db = current.db
+                        form_vars_get = form.vars.get
+                        human_resource_id = form_vars_get("human_resource_id")
+
+                        htable = s3db.hrm_human_resource
+                        staff = db(htable.id == human_resource_id).select(htable.id,
+                                                                          htable.person_id,
+                                                                          limitby = (0, 1),
+                                                                          ).first()
+
+                        # Set the site_id in the Staff record
+                        site_id = r.record.site_id
+                        staff.update_record(site_id = site_id)
+
+                        # Delete old hrm_human_resource_site records
+                        ltable = s3db.hrm_human_resource_site
+                        query = (ltable.human_resource_id == human_resource_id) & \
+                                (ltable.id != form_vars_get("id"))
+                        db(query).delete()
+
+                        # Add Site Event Log
+                        s3db.org_site_event.insert(site_id = site_id,
+                                                   person_id = staff.person_id,
+                                                   event = 2, # Checked-In
+                                                   comments = "Staff",
+                                                   )
+
+                    s3db.add_custom_callback("hrm_human_resource_site",
+                                             "create_onaccept",
+                                             staff_check_in,
+                                             )
+
+                elif cname == "client":
+                    # Filter out Anonymised People
+                    from s3 import FS
+                    r.resource.add_component_filter(cname, (FS("client.first_name") != ANONYMOUS))
+
+                    if not r.interactive:
+                        auth = current.auth
+                        output_format = auth.permission.format
+                        if output_format not in ("aadata", "json", "xls"):
+                            # Block Exports
+                            return False
+                        if output_format == "xls":
+                            # Add Site Event Log
+                            s3db.org_site_event.insert(site_id = r.record.site_id,
+                                                       event = 5, # Data Export
+                                                       comments = "Clients",
+                                                       )
+                            # Log in Global Log
+                            settings.security.audit_write = True
+                            from s3 import S3Audit
+                            S3Audit().__init__()
+                            s3db.s3_audit.insert(timestmp = r.utcnow,
+                                                 user_id = auth.user.id,
+                                                 method = "Data Export",
+                                                 representation = "Clients",
+                                                 )
+
+                    if r.method == "create":
+                        s3.crud_strings["cr_shelter"].title_display = T("Register Client to %(shelter)s") % \
+                                                                                {"shelter": shelter_name}
+
+                    from s3 import S3TextFilter, S3OptionsFilter, S3DateFilter
+
+                    filter_widgets = [S3TextFilter(["first_name",
+                                                    "middle_name",
+                                                    "first_name",
+                                                    "pe_label",
+                                                    "holmes.value",
+                                                    ],
+                                                   label = T("Search"),
+                                                   #_class = "filter-search",
+                                                   ),
+                                      S3OptionsFilter("shelter_registration.registration_status",
+                                                      label = T("Status"),
+                                                      options = {#1: T("Planned"),
+                                                                 2: T("Checked-in"),
+                                                                 3: T("Checked-out"),
+                                                                 },
+                                                      ),
+                                      S3OptionsFilter("age_group",
+                                                      label = T("Age"),
+                                                      hidden = True,
+                                                      ),
+                                      S3OptionsFilter("gender",
+                                                      hidden = True,
+                                                      ),
+                                      S3OptionsFilter("person_details.nationality",
+                                                      hidden = True,
+                                                      ),
+                                      S3OptionsFilter("pets.value",
+                                                      label = T("Pets"),
+                                                      hidden = True,
+                                                      ),
+                                      S3DateFilter("shelter_registration.check_in_date",
+                                                   #hide_time = True,
+                                                   hidden = True,
+                                                   ),
+                                      S3DateFilter("shelter_registration.check_out_date",
+                                                   #hide_time = True,
+                                                   hidden = True,
+                                                   ),
+                                      ]
+                    s3db.configure("pr_person",
+                                   filter_widgets = filter_widgets,
+                                   )
+
+                    # Registering Client Checks them in
+                    def client_check_in(form):
+                        form_vars_get = form.vars.get
+                        person_id = form_vars_get("person_id")
+                        site_id = r.record.site_id
+
+                        db = current.db
+
+                        # Delete old cr_shelter_registration records
+                        ltable = s3db.cr_shelter_registration
+                        query = (ltable.person_id == person_id) & \
+                                (ltable.id != form_vars_get("id"))
+                        db(query).delete()
+
+                        # Update Shelter Population
+                        from s3db.cr import cr_update_shelter_population
+                        cr_update_shelter_population(site_id)
+
+                        # Add Site Event Log
+                        ptable = s3db.pr_person
+                        person = db(ptable.id == person_id).select(ptable.pe_label,
+                                                                   limitby = (0, 1),
+                                                                   ).first()
+
+                        s3db.org_site_event.insert(site_id = site_id,
+                                                   person_id = person_id,
+                                                   event = 2, # Checked-In
+                                                   comments = "Client Ref: %s" % person.pe_label,
+                                                   )
+
+                    s3db.add_custom_callback("cr_shelter_registration",
+                                             "create_onaccept",
+                                             client_check_in,
+                                             )
+
+                elif cname == "event":
+                    from s3 import FS
+                    r.resource.add_component_filter(cname, (FS("archived") == False))
+
+                elif cname == "human_resource":
+                    # UNUSED
+                    if not r.interactive:
+                        auth = current.auth
+                        output_format = auth.permission.format
+                        if output_format not in ("aadata", "json", "xls"):
+                            # Block Exports
+                            return False
+                        if output_format == "xls":
+                            # Add Site Event Log
+                            s3db.org_site_event.insert(site_id = r.record.site_id,
+                                                       event = 5, # Data Export
+                                                       comments = "Staff",
+                                                       )
+                            # Log in Global Log
+                            settings.security.audit_write = True
+                            from s3 import S3Audit
+                            S3Audit().__init__()
+                            s3db.s3_audit.insert(timestmp = r.utcnow,
+                                                 user_id = auth.user.id,
+                                                 method = "Data Export",
+                                                 representation = "Staff",
+                                                 )
+
+                    # Filtered components
+                    s3db.add_components("pr_person",
+                                        pr_person_tag = ({"name": "car",
+                                                          "joinby": "person_id",
+                                                          "filterby": {"tag": "car"},
+                                                          "multiple": False,
+                                                          },
+                                                         ),
+                                        )
+
+                    # Override the defaulting/hiding of Organisation
+                    f = r.component.table.organisation_id
+                    f.default = None
+                    f.readable = f.writable = True
+
+                    # Adding Staff here Checks them in
+                    def staff_check_in(form):
+                        s3db.org_site_event.insert(site_id = r.record.site_id,
+                                                   person_id = form.vars.get("person_id"),
+                                                   event = 2, # Checked-In
+                                                   comments = "Staff",
+                                                   )
+                    s3db.add_custom_callback("hrm_human_resource",
+                                             "create_onaccept",
+                                             staff_check_in,
+                                             )
+                else:
+                    # No Component
+                    #s3.crud_strings["cr_shelter"].title_update = T("Manage Shelter")
+                    s3.crud_strings["cr_shelter"].title_update = shelter_name
+                    s3.js_global.append('''S3.r_id=%s''' % r.id)
+                    s3.scripts.append("/%s/static/themes/CumbriaEAC/js/shelter.js" % r.application)
+
+            elif r.method == "report":
+                # Represent Shelters by Name and Type
+                r.resource.configure(report_represent = cr_ShelterReportRepresent)
+
+            elif r.method == "import":
                 from templates.CumbriaEAC.controllers import cr_shelter_import_prep
                 s3.import_prep = cr_shelter_import_prep
-
-            #if current.auth.s3_has_role("SHELTER_ADMIN"):
-            #    # Consistent Header across tabs
-            #    s3.crud_strings["cr_shelter"].title_display = T("Manage Shelter")
-            s3.crud_strings["cr_shelter"].title_display = shelter_name
-
-            cname = r.component_name
-            if cname == "human_resource_site":
-                if not r.interactive:
-                    auth = current.auth
-                    output_format = auth.permission.format
-                    if output_format not in ("aadata", "json", "xls"):
-                        # Block Exports
-                        return False
-                    if output_format == "xls":
-                        # Add Site Event Log
-                        s3db.org_site_event.insert(site_id = r.record.site_id,
-                                                   event = 5, # Data Export
-                                                   comments = "Staff",
-                                                   )
-                        # Log in Global Log
-                        settings.security.audit_write = True
-                        from s3 import S3Audit
-                        S3Audit().__init__()
-                        s3db.s3_audit.insert(timestmp = r.utcnow,
-                                             user_id = auth.user.id,
-                                             method = "Data Export",
-                                             representation = "Staff",
-                                             )
-
-                if r.method == "create":
-                    s3.crud_strings["cr_shelter"].title_display = T("Check-in Staff to %(shelter)s") % \
-                                                                            {"shelter": shelter_name}
-
-                # Filtered components
-                s3db.add_components("pr_person",
-                                    pr_person_tag = ({"name": "car",
-                                                      "joinby": "person_id",
-                                                      "filterby": {"tag": "car"},
-                                                      "multiple": False,
-                                                      },
-                                                     ),
-                                    )
-
-                # Assigning Staff Checks them in
-                def staff_check_in(form):
-
-                    db = current.db
-                    form_vars_get = form.vars.get
-                    human_resource_id = form_vars_get("human_resource_id")
-
-                    htable = s3db.hrm_human_resource
-                    staff = db(htable.id == human_resource_id).select(htable.id,
-                                                                      htable.person_id,
-                                                                      limitby = (0, 1),
-                                                                      ).first()
-
-                    # Set the site_id in the Staff record
-                    site_id = r.record.site_id
-                    staff.update_record(site_id = site_id)
-
-                    # Delete old hrm_human_resource_site records
-                    ltable = s3db.hrm_human_resource_site
-                    query = (ltable.human_resource_id == human_resource_id) & \
-                            (ltable.id != form_vars_get("id"))
-                    db(query).delete()
-
-                    # Add Site Event Log
-                    s3db.org_site_event.insert(site_id = site_id,
-                                               person_id = staff.person_id,
-                                               event = 2, # Checked-In
-                                               comments = "Staff",
-                                               )
-
-                s3db.add_custom_callback("hrm_human_resource_site",
-                                         "create_onaccept",
-                                         staff_check_in,
-                                         )
-
-            elif cname == "client":
-                # Filter out Anonymised People
-                from s3 import FS
-                r.resource.add_component_filter(cname, (FS("client.first_name") != ANONYMOUS))
-
-                if not r.interactive:
-                    auth = current.auth
-                    output_format = auth.permission.format
-                    if output_format not in ("aadata", "json", "xls"):
-                        # Block Exports
-                        return False
-                    if output_format == "xls":
-                        # Add Site Event Log
-                        s3db.org_site_event.insert(site_id = r.record.site_id,
-                                                   event = 5, # Data Export
-                                                   comments = "Clients",
-                                                   )
-                        # Log in Global Log
-                        settings.security.audit_write = True
-                        from s3 import S3Audit
-                        S3Audit().__init__()
-                        s3db.s3_audit.insert(timestmp = r.utcnow,
-                                             user_id = auth.user.id,
-                                             method = "Data Export",
-                                             representation = "Clients",
-                                             )
-
-                if r.method == "create":
-                    s3.crud_strings["cr_shelter"].title_display = T("Register Client to %(shelter)s") % \
-                                                                            {"shelter": shelter_name}
-
-                from s3 import S3TextFilter, S3OptionsFilter, S3DateFilter
-
-                filter_widgets = [S3TextFilter(["first_name",
-                                                "middle_name",
-                                                "first_name",
-                                                "pe_label",
-                                                "holmes.value",
-                                                ],
-                                               label = T("Search"),
-                                               #_class = "filter-search",
-                                               ),
-                                  S3OptionsFilter("shelter_registration.registration_status",
-                                                  label = T("Status"),
-                                                  options = {#1: T("Planned"),
-                                                             2: T("Checked-in"),
-                                                             3: T("Checked-out"),
-                                                             },
-                                                  ),
-                                  S3OptionsFilter("age_group",
-                                                  label = T("Age"),
-                                                  hidden = True,
-                                                  ),
-                                  S3OptionsFilter("gender",
-                                                  hidden = True,
-                                                  ),
-                                  S3OptionsFilter("person_details.nationality",
-                                                  hidden = True,
-                                                  ),
-                                  S3OptionsFilter("pets.value",
-                                                  label = T("Pets"),
-                                                  hidden = True,
-                                                  ),
-                                  S3DateFilter("shelter_registration.check_in_date",
-                                               #hide_time = True,
-                                               hidden = True,
-                                               ),
-                                  S3DateFilter("shelter_registration.check_out_date",
-                                               #hide_time = True,
-                                               hidden = True,
-                                               ),
-                                  ]
-                s3db.configure("pr_person",
-                               filter_widgets = filter_widgets,
-                               )
-
-                # Registering Client Checks them in
-                def client_check_in(form):
-                    form_vars_get = form.vars.get
-                    person_id = form_vars_get("person_id")
-                    site_id = r.record.site_id
-
-                    # Delete old cr_shelter_registration records
-                    ltable = s3db.cr_shelter_registration
-                    query = (ltable.person_id == person_id) & \
-                            (ltable.id != form_vars_get("id"))
-                    current.db(query).delete()
-
-                    # Update Shelter Population
-                    from s3db.cr import cr_update_shelter_population
-                    cr_update_shelter_population(r.id)
-
-                    # Add Site Event Log
-                    s3db.org_site_event.insert(site_id = site_id,
-                                               person_id = person_id,
-                                               event = 2, # Checked-In
-                                               comments = "Client",
-                                               )
-
-                s3db.add_custom_callback("cr_shelter_registration",
-                                         "create_onaccept",
-                                         client_check_in,
-                                         )
-
-            elif cname == "event":
-                from s3 import FS
-                r.resource.add_component_filter(cname, (FS("archived") == False))
-
-            elif cname == "human_resource":
-                # UNUSED
-                if not r.interactive:
-                    auth = current.auth
-                    output_format = auth.permission.format
-                    if output_format not in ("aadata", "json", "xls"):
-                        # Block Exports
-                        return False
-                    if output_format == "xls":
-                        # Add Site Event Log
-                        s3db.org_site_event.insert(site_id = r.record.site_id,
-                                                   event = 5, # Data Export
-                                                   comments = "Staff",
-                                                   )
-                        # Log in Global Log
-                        settings.security.audit_write = True
-                        from s3 import S3Audit
-                        S3Audit().__init__()
-                        s3db.s3_audit.insert(timestmp = r.utcnow,
-                                             user_id = auth.user.id,
-                                             method = "Data Export",
-                                             representation = "Staff",
-                                             )
-
-                # Filtered components
-                s3db.add_components("pr_person",
-                                    pr_person_tag = ({"name": "car",
-                                                      "joinby": "person_id",
-                                                      "filterby": {"tag": "car"},
-                                                      "multiple": False,
-                                                      },
-                                                     ),
-                                    )
-
-                # Override the defaulting/hiding of Organisation
-                f = r.component.table.organisation_id
-                f.default = None
-                f.readable = f.writable = True
-
-                # Adding Staff here Checks them in
-                def staff_check_in(form):
-                    s3db.org_site_event.insert(site_id = r.record.site_id,
-                                               person_id = form.vars.get("person_id"),
-                                               event = 2, # Checked-In
-                                               comments = "Staff",
-                                               )
-                s3db.add_custom_callback("hrm_human_resource",
-                                         "create_onaccept",
-                                         staff_check_in,
-                                         )
-            elif r.id:
-                #s3.crud_strings["cr_shelter"].title_update = T("Manage Shelter")
-                s3.crud_strings["cr_shelter"].title_update = shelter_name
-                s3.js_global.append('''S3.r_id=%s''' % r.id)
-                s3.scripts.append("/%s/static/themes/CumbriaEAC/js/shelter.js" % r.application)
 
             return result
         s3.prep = prep
@@ -2023,11 +2058,13 @@ def config(settings):
                 #from gluon import URL
                 from s3 import s3_str#, S3CRUD
 
+                shelter_id = r.id
+
                 # Normal Action Buttons
                 S3CRUD.action_buttons(r,
                                       read_url = URL(c = "cr",
                                                      f = "shelter",
-                                                     args = [r.id,
+                                                     args = [shelter_id,
                                                              "human_resource_site",
                                                              "[id]",
                                                              "redirect",
@@ -2035,7 +2072,7 @@ def config(settings):
                                                      ),
                                       update_url = URL(c = "cr",
                                                        f = "shelter",
-                                                       args = [r.id,
+                                                       args = [shelter_id,
                                                                "human_resource_site",
                                                                "[id]",
                                                                "redirect",
@@ -2047,7 +2084,7 @@ def config(settings):
                 s3.actions += [{"label": s3_str(T("Check-Out")),
                                 "url": URL(c = "cr",
                                            f = "shelter",
-                                           args = [r.id,
+                                           args = [shelter_id,
                                                    "human_resource_site",
                                                    "[id]",
                                                    "checkout",
@@ -2139,66 +2176,49 @@ def config(settings):
         #table.check_out_date.readable = table.check_out_date.writable = False
         #table.comments.readable = table.comments.writable = False
 
-        if r.method == "import":
-
-            def create_onaccept(form):
-                """
-                    Importing Clients
-                        * updates Occupancy
-                        * adds Event Log entry
-                """
-                form_vars_get = form.vars.get
-                person_id = form_vars_get("person_id")
-                shelter_id = form_vars_get("shelter_id")
-
-                stable = s3db.cr_shelter
-                shelter = current.db(stable.id == shelter_id).select(stable.site_id,
-                                                                     limitby = (0, 1),
-                                                                     ).first()
-                site_id = shelter.site_id
-
-                # Delete old cr_shelter_registration records
-                ltable = s3db.cr_shelter_registration
-                query = (ltable.person_id == person_id) & \
-                        (ltable.site_id != site_id)
-                current.db(query).delete()
-
-                # Update Shelter Population
-                from s3db.cr import cr_update_shelter_population
-                cr_update_shelter_population(site_id)
-
-                # Add Site Event Log
-                check_in_date = form_vars_get("check_in_date", r.utcnow)
-
-                s3db.org_site_event.insert(site_id = site_id,
-                                           person_id = person_id,
-                                           event = 2, # Checked-In
-                                           date = check_in_date,
-                                           comments = "Client Import",
-                                           )
-
-            s3db.add_custom_callback("cr_shelter_registration",
-                                     "create_onaccept",
-                                     create_onaccept,
-                                     )
-
     settings.customise_cr_shelter_registration_resource = customise_cr_shelter_registration_resource
+
+    # -----------------------------------------------------------------------------
+    def cr_shelter_registration_onimport(import_info):
+        """
+            Add Site Event Log
+        """
+
+        if not import_info["records"]:
+            # Nothing imported
+            return
+
+        s3db = current.s3db
+
+        created = import_info.get("created")
+        if created:
+            registration_id = created[0]
+        else:
+            updated = import_info.get("updated")
+            if updated:
+                registration_id = updated[0]
+            else:
+                # Nothing we can do
+                return
+
+        # Lookup Site ID
+        table = s3db.cr_shelter_registration
+        registration = current.db(table.id == registration_id).select(table.site_id,
+                                                                      limitby = (0, 1),
+                                                                      ).first()
+
+        # Add Event Log Entry
+        s3db.org_site_event.insert(site_id = registration.site_id,
+                                   event = 6, # Data Import
+                                   date = current.request.utcnow,
+                                   comments = "Spreadsheet Import",
+                                   )
 
     # -----------------------------------------------------------------------------
     def customise_cr_shelter_registration_controller(**attr):
 
         s3db = current.s3db
         s3 = current.response.s3
-
-        # NoKs shouldn't deduplicate with clients!
-        s3db.configure("pr_person",
-                       deduplicate = None
-                       )
-
-        # Default to True
-        from s3.s3import import S3Importer
-        S3Importer.define_upload_table()
-        s3db.s3_import_upload.replace_option.default = True
 
         # Import pre-process
         def import_prep(data):
@@ -2230,7 +2250,7 @@ def config(settings):
                             rtable = s3db.cr_shelter_registration
                             stable = s3db.cr_shelter
                             query = (stable.name == shelter_name) & \
-                                    (rtable.shelter_id == stable.id) & \
+                                    (rtable.site_id == stable.site_id) & \
                                     (rtable.registration_status == 2)
                             rows = db(query).select(rtable.id)
                             db(rtable.id.belongs([row.id for row in rows])).update(registration_status = 3,# Checked-Out
@@ -2238,6 +2258,75 @@ def config(settings):
                                                                                    )
 
         s3.import_prep = import_prep
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.method == "import":
+                # Default to True
+                from s3 import S3Importer
+                S3Importer.define_upload_table()
+                s3db.s3_import_upload.replace_option.default = True
+
+                # Add Site Event Log
+                s3db.configure("cr_shelter_registration",
+                               onimport = cr_shelter_registration_onimport,
+                               )
+
+                # NoKs shouldn't deduplicate with clients!
+                s3db.configure("pr_person",
+                               deduplicate = None
+                               )
+
+                def create_onaccept(form):
+                    """
+                        Importing Clients
+                            * updates Occupancy
+                            * adds Event Log entry
+                    """
+                    form_vars_get = form.vars.get
+                    person_id = form_vars_get("person_id")
+                    site_id = form_vars_get("site_id")
+
+                    db = current.db
+
+                    # Delete old cr_shelter_registration records
+                    ltable = s3db.cr_shelter_registration
+                    query = (ltable.person_id == person_id) & \
+                            (ltable.site_id != site_id)
+                    db(query).delete()
+
+                    # Update Shelter Population
+                    from s3db.cr import cr_update_shelter_population
+                    cr_update_shelter_population(site_id)
+
+                    # Add Site Event Log
+                    check_in_date = form_vars_get("check_in_date", r.utcnow)
+
+                    ptable = s3db.pr_person
+                    person = db(ptable.id == person_id).select(ptable.pe_label,
+                                                               limitby = (0, 1),
+                                                               ).first()
+
+                    s3db.org_site_event.insert(site_id = site_id,
+                                               person_id = person_id,
+                                               event = 2, # Checked-In
+                                               date = check_in_date,
+                                               comments = "Client Ref: %s Imported" % person.pe_label,
+                                               )
+
+                s3db.add_custom_callback("cr_shelter_registration",
+                                         "create_onaccept",
+                                         create_onaccept,
+                                         )
+            return result
+        s3.prep = prep
 
         attr["csv_template"] = ("../../themes/CumbriaEAC/xls", "Client_Registration.xlsm")
         attr["replace_option"] = T("Checkout existing clients for this shelter before import")
@@ -2504,7 +2593,7 @@ def config(settings):
 
             import xlwt
 
-            from s3 import s3_unicode
+            from s3 import s3_str
 
             style = xlwt.XFStyle()
             style.font.bold = True
@@ -2518,9 +2607,9 @@ def config(settings):
             borders.bottom = 1
             style.borders = borders
 
-            labels = ((0, 8, s3_unicode(T("Client"))),
-                      (9, 12, s3_unicode(T("Shelter"))),
-                      (13, 17, s3_unicode(T("Next of Kin"))),
+            labels = ((0, 8, s3_str(T("Client"))),
+                      (9, 12, s3_str(T("Shelter"))),
+                      (13, 17, s3_str(T("Next of Kin"))),
                       )
 
             for start_col, end_col, label in labels:
@@ -3117,7 +3206,8 @@ def config(settings):
         # Custom Method
         s3db.set_method("pr", "person",
                         method = "household",
-                        action = pr_Household())
+                        action = pr_Household(),
+                        )
 
         # Custom prep
         standard_prep = s3.prep
@@ -3309,10 +3399,15 @@ def config(settings):
                         cr_update_shelter_population(site_id)
 
                         # Add Site Event Log
+                        ptable = s3db.pr_person
+                        person = db(ptable.id == person_id).select(ptable.pe_label,
+                                                                   limitby = (0, 1),
+                                                                   ).first()
+
                         s3db.org_site_event.insert(site_id = registration.site_id,
                                                    person_id = person_id,
                                                    event = 2, # Checked-In
-                                                   comments = "Client",
+                                                   comments = "Client Ref: %s" % person.pe_label,
                                                    )
 
                     s3db.add_custom_callback("pr_person",
@@ -3380,6 +3475,54 @@ def config(settings):
         return attr
 
     settings.customise_pr_person_controller = customise_pr_person_controller
+
+
+
+# =============================================================================
+class cr_ShelterReportRepresent(S3ReportRepresent):
+    """
+        Custom representation of shelter records in
+        pivot table reports:
+            - show as name (type)
+    """
+
+    def __call__(self, record_ids):
+        """
+            Represent record_ids (custom)
+
+            @param record_ids: shelter record IDs
+
+            @returns: a JSON-serializable dict {recordID: representation}
+        """
+
+        s3db = current.s3db
+
+        resource = s3db.resource("cr_shelter",
+                                 id = record_ids,
+                                 )
+
+        rows = resource.select(["id", "name", "shelter_type_id"],
+                               represent = False,
+                               raw_data = True,
+                               limit = None,
+                               ).rows
+
+        ttable = s3db.cr_shelter_type
+        shelter_types = current.db(ttable.deleted == False).select(ttable.id,
+                                                                   ttable.name,
+                                                                   )
+        shelter_types = {row.id: row.name for row in shelter_types}
+
+        output = {}
+        for row in rows:
+            shelter_type_id = row["cr_shelter.shelter_type_id"]
+            if shelter_type_id:
+                repr_str = "%s (%s)" % (row["cr_shelter.name"], shelter_types.get(shelter_type_id))
+            else:
+                repr_str = row["cr_shelter.name"]
+            output[row["cr_shelter.id"]] = repr_str
+
+        return output
 
 # =============================================================================
 class pr_Household(S3CRUD):

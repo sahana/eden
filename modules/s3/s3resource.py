@@ -1724,7 +1724,8 @@ class S3Resource(object):
                                    update_policy = update_policy,
                                    conflict_policy = conflict_policy,
                                    last_sync = last_sync,
-                                   onconflict = onconflict)
+                                   onconflict = onconflict,
+                                   )
         response.s3.bulk = False
 
         self.files = Storage()
@@ -1753,13 +1754,13 @@ class S3Resource(object):
 
         if success is True:
             # 2nd phase of 2-phase import
-            # Execute postimport if-defined
-            postimport = self.get_config("postimport")
-            if postimport:
+            # Execute onimport if-defined
+            onimport = self.get_config("onimport")
+            if onimport:
                 #try:
-                callback(postimport, import_info, tablename=self.tablename)
+                callback(onimport, import_info, tablename=self.tablename)
                 #except:
-                #    error = "postimport failed: %s" % postimport
+                #    error = "onimport failed: %s" % onimport
                 #    current.log.error(error)
                 #    raise RuntimeError
 

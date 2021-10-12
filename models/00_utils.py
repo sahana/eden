@@ -206,29 +206,35 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     r.customise_resource()
 
     # Configure standard method handlers
-    set_handler = r.set_handler
+    from s3 import S3Compose, S3Filter, S3GroupedItemsReport, S3HierarchyCRUD, \
+                   S3Importer, S3Map, S3Merge, S3MobileCRUD, S3Organizer, \
+                   S3OrgRoleManager, S3Profile, S3Report, S3Summary, \
+                   S3TimePlot, S3XForms, search_ac
     from s3db.cms import S3CMS
+
+    set_handler = r.set_handler
     set_handler("cms", S3CMS)
-    set_handler("compose", s3base.S3Compose)
+    set_handler("compose", S3Compose)
     # @ToDo: Make work in Component Tabs:
     set_handler("copy", lambda r, **attr: \
                                redirect(URL(args = "create",
-                                            vars = {"from_record":r.id})))
-    set_handler("deduplicate", s3base.S3Merge)
-    set_handler("filter", s3base.S3Filter)
-    set_handler("grouped", s3base.S3GroupedItemsReport)
-    set_handler("hierarchy", s3base.S3HierarchyCRUD)
-    set_handler("import", s3base.S3Importer)
-    set_handler("map", s3base.S3Map)
-    set_handler("mform", s3base.S3MobileCRUD, representation="json")
-    set_handler("organize", s3base.S3Organizer)
-    set_handler("profile", s3base.S3Profile)
-    set_handler("report", s3base.S3Report) # For HTML, JSON
-    set_handler("report", s3base.S3Report, transform=True) # For GeoJSON
-    set_handler("search_ac", s3base.search_ac)
-    set_handler("summary", s3base.S3Summary)
-    set_handler("timeplot", s3base.S3TimePlot)
-    set_handler("xform", s3base.S3XForms)
+                                            vars = {"from_record":r.id},
+                                            )))
+    set_handler("deduplicate", S3Merge)
+    set_handler("filter", S3Filter)
+    set_handler("grouped", S3GroupedItemsReport)
+    set_handler("hierarchy", S3HierarchyCRUD)
+    set_handler("import", S3Importer)
+    set_handler("map", S3Map)
+    set_handler("mform", S3MobileCRUD, representation="json")
+    set_handler("organize", S3Organizer)
+    set_handler("profile", S3Profile)
+    set_handler("report", S3Report) # For HTML, JSON
+    set_handler("report", S3Report, transform=True) # For GeoJSON
+    set_handler("search_ac", search_ac)
+    set_handler("summary", S3Summary)
+    set_handler("timeplot", S3TimePlot)
+    set_handler("xform", S3XForms)
 
     # Don't load S3PDF unless needed (very slow import with Reportlab)
     method = r.method
@@ -240,7 +246,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                     )
 
     # Plugin OrgRoleManager when appropriate
-    s3base.S3OrgRoleManager.set_method(r)
+    S3OrgRoleManager.set_method(r)
 
     # List of methods which can have custom action buttons
     # (defining here allows postp to add a custom method to the list)
@@ -320,8 +326,8 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
             # the primary key into get_vars for automatic linking
             if native and not listadd and \
                auth.s3_has_permission("create", tablename):
-                label = s3base.S3CRUD.crud_string(tablename,
-                                                  "label_create")
+                from s3 import S3CRUD
+                label = S3CRUD.crud_string(tablename, "label_create")
                 component = r.resource.components[name]
                 fkey = "%s.%s" % (name, component.fkey)
                 get_vars_copy = get_vars.copy()

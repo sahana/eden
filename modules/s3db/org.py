@@ -4085,6 +4085,8 @@ class SiteEventModel(S3Model):
     """
         Events for Sites
         - Check-In/Check-Out
+
+        Used by CumbriaEAC
     """
 
     names = ("org_site_event",
@@ -4099,6 +4101,7 @@ class SiteEventModel(S3Model):
                       3: T("Check-out"),
                       4: T("Obsolete Change"),
                       5: T("Data Export"),
+                      6: T("Data Import"),
                       }
 
         site_status_opts = self.org_site_status_opts

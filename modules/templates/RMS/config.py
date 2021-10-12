@@ -2485,7 +2485,7 @@ Thank you"""
             current.auth.s3_assign_role(link.user_id, "RIT_MEMBER")
 
     # -------------------------------------------------------------------------
-    def hrm_training_postimport(import_info):
+    def hrm_training_onimport(import_info):
         """
             Create Users for Persons created
         """
@@ -2626,7 +2626,7 @@ Thank you"""
                     #               )
                     # Create User Accounts for those Persons without them
                     s3db.configure("hrm_training",
-                                   postimport = hrm_training_postimport,
+                                   onimport = hrm_training_onimport,
                                    )
 
             return True
