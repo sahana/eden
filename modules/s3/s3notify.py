@@ -44,7 +44,7 @@ from uuid import uuid4
 from gluon import current, TABLE, THEAD, TBODY, TR, TD, TH, XML
 
 from .s3datetime import s3_decode_iso_datetime, s3_encode_iso_datetime, s3_utc
-from .s3utils import s3_str, s3_truncate, s3_unicode
+from .s3utils import s3_str, s3_truncate
 
 # =============================================================================
 class S3Notifications(object):
@@ -166,7 +166,7 @@ class S3Notifications(object):
                             query[k] = [value, v]
                     else:
                         query[k] = v
-            query_nice = s3_unicode(fstring.represent())
+            query_nice = s3_str(fstring.represent())
         else:
             query_nice = None
 

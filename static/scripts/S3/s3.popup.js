@@ -306,9 +306,11 @@ function s3_popup_refresh_caller(popupData) {
             append = [];
         } else if (isHierarchyWidget) {
             // Request hierarchy information for widget
+            // @ToDo: This is a potential race condition
             optionsURL += '&hierarchy=1&only_last=1';
         } else {
-            // Return only current record if field is autocomplete
+            // Return only latest record for autocomplete field
+            // @ToDo: This is a potential race condition
             optionsURL += '&only_last=1';
         }
     }
@@ -430,12 +432,6 @@ function s3_popup_refresh_caller(popupData) {
                 parentWindow.$('#' + caller + ' input[value="' + values[i] + '"]').prop('checked', true);
             }
         }
-
-        // IE6 needs time for DOM to settle: http://csharperimage.jeremylikness.com/2009/05/jquery-ie6-and-could-not-set-selected.html
-        //setTimeout( function() {
-                // Set the newly-created value (one with highest value)
-        //        callerWidget.val(lastOptionValue).change();
-        //    }, 1);
 
         // Clean-up
         parentWindow.S3.popup_remove();

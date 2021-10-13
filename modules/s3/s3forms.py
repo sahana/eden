@@ -92,7 +92,10 @@ class S3SQLForm(object):
                 else:
                     selector = element[0]
                     label = widget = DEFAULT
-                append(S3SQLField(selector, label=label, widget=widget))
+                append(S3SQLField(selector,
+                                  label = label,
+                                  widget = widget,
+                                  ))
             else:
                 msg = "Invalid form element: %s" % str(element)
                 if debug:
@@ -193,7 +196,9 @@ class S3SQLForm(object):
         if settings.custom_submit:
             submit = [(None,
                        settings.submit_button,
-                       settings.submit_style)]
+                       settings.submit_style,
+                       ),
+                      ]
             submit.extend(settings.custom_submit)
             buttons = []
             for name, label, _class in submit:
@@ -270,7 +275,8 @@ class S3SQLForm(object):
                                   "formstyle_table_inline",
                                   ):
             def create_subheading(represent, tablename, f, level=""):
-                return TR(TD(represent, _colspan=3,
+                return TR(TD(represent,
+                             _colspan = 3,
                              _class="subheading",
                              ),
                           _class = "subheading",
@@ -400,11 +406,14 @@ class S3SQLForm(object):
             # Audit read => this is a read method, after all
             prefix, name = from_table._tablename.split("_", 1)
             current.audit("read", prefix, name,
-                          record=from_record, representation=format)
+                          record = from_record,
+                          representation = format,
+                          )
 
             # Get original record
             query = (from_table.id == from_record)
-            row = current.db(query).select(limitby=(0, 1), *fields).first()
+            row = current.db(query).select(limitby = (0, 1),
+                                           *fields).first()
             if row:
                 if isinstance(map_fields, dict):
                     record = {f: row[map_fields[f]] for f in map_fields}
@@ -544,7 +553,8 @@ class S3SQLDefaultForm(S3SQLForm):
                        formstyle = formstyle,
                        separator = "",
                        submit_button = settings.submit_button,
-                       buttons = buttons)
+                       buttons = buttons,
+                       )
 
         # Style the Submit button, if-requested
         if settings.submit_style and not settings.custom_submit:
@@ -585,7 +595,9 @@ class S3SQLDefaultForm(S3SQLForm):
         # Audit read
         if not logged and not form.errors:
             current.audit("read", prefix, name,
-                          record=record_id, representation=format)
+                          record = record_id,
+                          representation = format,
+                          )
 
         return form
 
@@ -627,8 +639,11 @@ class S3SQLDefaultForm(S3SQLForm):
                 except Exception:
                     return record_id
 
-                query = (table[lkey] == lkey_) & (table[rkey] == rkey_)
-                row = current.db(query).select(table._id, limitby=(0, 1)).first()
+                query = (table[lkey] == lkey_) & \
+                        (table[rkey] == rkey_)
+                row = current.db(query).select(table._id,
+                                               limitby = (0, 1),
+                                               ).first()
                 if row is not None:
                     tablename = self.tablename
                     record_id = row[pkey]
@@ -690,7 +705,7 @@ class S3SQLDefaultForm(S3SQLForm):
                         formname = formname,
                         onvalidation = onvalidation,
                         keepvalues = False,
-                        hideerror = False
+                        hideerror = False,
                         ):
 
             # Undelete?
@@ -704,10 +719,13 @@ class S3SQLDefaultForm(S3SQLForm):
             name = self.name
             if record_id is None or undelete:
                 current.audit("create", prefix, name, form=form,
-                              representation=format)
+                              representation = format,
+                              )
             else:
                 current.audit("update", prefix, name, form=form,
-                              record=record_id, representation=format)
+                              record = record_id,
+                              representation = format,
+                              )
 
             form_vars = form.vars
 
@@ -738,7 +756,7 @@ class S3SQLDefaultForm(S3SQLForm):
                     update_realm = s3db.get_config(table, "update_realm")
                     if update_realm:
                         current.auth.set_realm_entity(table, form_vars,
-                                                      force_update=True)
+                                                      force_update = True)
                 # Store session vars
                 self.resource.lastid = str(form_vars.id)
                 s3_store_last_record_id(tablename, form_vars.id)
@@ -803,7 +821,10 @@ class S3SQLCustomForm(S3SQLForm):
             else:
                 selector = element[0]
                 label = widget = DEFAULT
-            self.elements.insert(index, S3SQLField(selector, label=label, widget=widget))
+            self.elements.insert(index, S3SQLField(selector,
+                                                   label = label,
+                                                   widget = widget,
+                                                   ))
         else:
             msg = "Invalid form element: %s" % str(element)
             if current.deployment_settings.get_base_debug():
@@ -964,7 +985,8 @@ class S3SQLCustomForm(S3SQLForm):
         if record_id is not None:
             query = (self.table._id == record_id)
             # @ToDo: limit fields (at least not meta)
-            record = db(query).select(limitby=(0, 1)).first()
+            record = db(query).select(limitby = (0, 1),
+                                      ).first()
         self.record_id = record_id
         self.subrows = Storage()
 
@@ -1080,8 +1102,8 @@ class S3SQLCustomForm(S3SQLForm):
                                for a, n, f in fields
                                if a == alias and n in ctable)
                 slabels = s3_mark_required([ctable[n] for n in sfields],
-                                           mark_required=mark_required,
-                                           map_names=sfields)[0]
+                                           mark_required = mark_required,
+                                           map_names = sfields)[0]
                 if labels:
                     labels.update(slabels)
                 else:
@@ -1100,7 +1122,7 @@ class S3SQLCustomForm(S3SQLForm):
                                   map_fields = get_option("map_fields"),
                                   data = get_option("data"),
                                   format = format,
-                                  formfields = formfields
+                                  formfields = formfields,
                                   )
 
         # Submit buttons
@@ -1535,12 +1557,14 @@ class S3SQLCustomForm(S3SQLForm):
         if record_id is None or undelete:
             current.audit("create", prefix, name,
                           form = form,
-                          representation = format)
+                          representation = format,
+                          )
         else:
             current.audit("update", prefix, name,
                           form = form,
                           record = accept_id,
-                          representation = format)
+                          representation = format,
+                          )
 
         # Update super entity links
         s3db.update_super(table, form_vars)
@@ -1701,12 +1725,14 @@ class S3SQLFormElement(object):
         if not comments:
             if popup:
                 comment = field.comment
-                if hasattr(comment, "clone"):
-                    comment = comment.clone()
                 if hasattr(comment, "renderer") and \
-                   hasattr(comment, "inline") and \
-                   isinstance(popup, dict):
-                    comment.vars.update(popup)
+                   hasattr(comment, "inline"):
+                    if hasattr(comment, "clone"):
+                        comment = comment.clone()
+                    comment_vars = comment.vars
+                    comment_vars["caller"] = popup["caller"]
+                    if "parent" not in comment_vars:
+                        comment_vars["parent"] = popup["parent"]
                     comment.renderer = comment.inline
                 else:
                     comment = None
@@ -1739,7 +1765,8 @@ class S3SQLFormElement(object):
                   compute = field.compute,
 
                   represent = field.represent,
-                  requires = requires)
+                  requires = requires,
+                  )
 
         return f
 
@@ -3498,9 +3525,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 # Use unaliased name to avoid need to create additional controllers
                 parent = original_tablename(table).split("_", 1)[1]
                 caller = "sub_%s_%s" % (formname, idxname)
-                popup = Storage(parent = parent,
-                                caller = caller,
-                                )
+                popup = {"parent": parent,
+                         "caller": caller,
+                         }
             else:
                 popup = None
 

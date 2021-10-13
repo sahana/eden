@@ -306,10 +306,10 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
             copyable = get_config(tablename, "copyable", False)
 
             # URL to open the resource
-            open_url = r.resource.crud._linkto(r,
-                                               authorised = authorised,
-                                               update = editable,
-                                               native = native)("[id]")
+            open_url = s3base.S3CRUD._linkto(r,
+                                             authorised = authorised,
+                                             update = editable,
+                                             native = native)("[id]")
 
             # Add action buttons for Open/Delete/Copy as appropriate
             s3_action_buttons(r,

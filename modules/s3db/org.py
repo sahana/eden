@@ -750,7 +750,7 @@ class OrganisationModel(S3Model):
 
         # We want to do case-insensitive searches
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
-        value = s3_unicode(value).lower().strip()
+        value = s3_str(value).lower().strip()
 
         if not value:
             r.error(400, "Missing option! Require value")
@@ -838,9 +838,9 @@ class OrganisationModel(S3Model):
                 # the acronym, or neither (e.g. input matching the
                 # parent organisation)
                 value_len = len(value)
-                name_match = s3_unicode(name)[:value_len].lower() == value
+                name_match = s3_str(name)[:value_len].lower() == value
                 acronym_match = acronym and \
-                                s3_unicode(acronym)[:value_len].lower() == value
+                                s3_str(acronym)[:value_len].lower() == value
                 if name_match:
                     nextString = name[value_len:]
                     if nextString != "":
@@ -1140,7 +1140,8 @@ class OrganisationCapacityModel(S3Model):
                 msg_record_created = T("Assessment added"),
                 msg_record_modified = T("Assessment updated"),
                 msg_record_deleted = T("Assessment removed"),
-                msg_list_empty = T("No Assessments currently registered"))
+                msg_list_empty = T("No Assessments currently registered"),
+                )
 
         # Components
         self.add_components(tablename,
@@ -1172,7 +1173,7 @@ class OrganisationCapacityModel(S3Model):
                      Field("ranking", "integer",
                            label = T("Ranking"),
                            requires = IS_EMPTY_OR(
-                                        IS_IN_SET((1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)),
+                                        IS_INT_IN_RANGE(1, 20),
                                       ),
                            ),
                      *s3_meta_fields()
@@ -1494,7 +1495,7 @@ class OrganisationGroupPersonModel(S3Model):
                                     requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "org_group_person_status.id",
                                                           represent,
-                                                          sort=True,
+                                                          sort = True,
                                                           )),
                                     sortby = "name",
                                     )
@@ -1614,11 +1615,10 @@ class OrganisationLocationModel(S3Model):
         tablename = "org_organisation_location"
         self.define_table(tablename,
                           self.org_organisation_id(),
-                          self.gis_location_id(
-                            #represent = self.gis_LocationRepresent(sep=", "),
-                            requires = IS_LOCATION(),
-                            widget = S3LocationAutocompleteWidget()
-                          ),
+                          self.gis_location_id(#represent = self.gis_LocationRepresent(sep=", "),
+                                               requires = IS_LOCATION(),
+                                               widget = S3LocationAutocompleteWidget()
+                                               ),
                           s3_comments(),
                           *s3_meta_fields()
                           )
@@ -1984,7 +1984,7 @@ class OrganisationResourceModel(S3Model):
         self.define_table(tablename,
                           # Instance
                           super_link("data_id", "stats_data"),
-                          self.org_organisation_id(ondelete="CASCADE"),
+                          self.org_organisation_id(ondelete = "CASCADE"),
                           # Consider adding this
                           #self.super_link("site_id", "org_site",
                           #                label = current.deployment_settings.get_org_site_label(),
@@ -2004,8 +2004,9 @@ class OrganisationResourceModel(S3Model):
                           super_link("parameter_id", "stats_parameter",
                                      label = T("Resource Type"),
                                      instance_types = ("org_resource_type",),
-                                     represent = S3Represent(lookup="stats_parameter",
-                                                             translate=True),
+                                     represent = S3Represent(lookup = "stats_parameter",
+                                                             translate = True,
+                                                             ),
                                      readable = True,
                                      writable = True,
                                      empty = False,
@@ -2090,7 +2091,6 @@ class OrganisationSectorModel(S3Model):
 
     names = ("org_sector",
              "org_sector_id",
-             #"org_subsector",
              "org_sector_organisation",
              )
 
@@ -2118,6 +2118,8 @@ class OrganisationSectorModel(S3Model):
         # Sector
         # (Cluster in UN-style terminology)
         #
+        # @ToDo: Option to make this hierarchical
+        #
         tablename = "org_sector"
         define_table(tablename,
                      Field("name", length=128, notnull=True,
@@ -2132,10 +2134,10 @@ class OrganisationSectorModel(S3Model):
                            label = T("Abbreviation"),
                            requires = IS_LENGTH(64),
                            ),
-                     self.gis_location_id(
-                        requires = IS_EMPTY_OR(IS_LOCATION()),
-                        widget = S3LocationAutocompleteWidget(),
-                     ),
+                     # @ToDo: Move this to Link Table
+                     self.gis_location_id(requires = IS_EMPTY_OR(IS_LOCATION()),
+                                          widget = S3LocationAutocompleteWidget(),
+                                          ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -2186,7 +2188,9 @@ class OrganisationSectorModel(S3Model):
                                                    tooltip = tooltip,
                                                    )
 
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         sector_id = S3ReusableField("sector_id", "reference %s" % tablename,
                                     label = SECTOR,
                                     ondelete = "SET NULL",
@@ -2194,9 +2198,9 @@ class OrganisationSectorModel(S3Model):
                                     requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "org_sector.id",
                                                           represent,
-                                                          sort=True,
-                                                          filterby=filterby,
-                                                          filter_opts=filter_opts,
+                                                          sort = True,
+                                                          filterby = filterby,
+                                                          filter_opts = filter_opts,
                                                           )),
                                     sortby = "abrv",
                                     comment = sector_comment("sector_id"),
@@ -2226,69 +2230,7 @@ class OrganisationSectorModel(S3Model):
                        #                 "key": "theme_id",
                        #                 "actuate": "hide",
                        #                 },
-                       #org_subsector = "sector_id",
                        )
-
-        # =====================================================================
-        # (Cluster) Subsector
-        #
-        # tablename = "org_subsector"
-        # define_table(tablename,
-        #              sector_id(),
-        #              Field("name", length=128,
-        #                    label = T("Name"),
-        #                    requires = IS_LENGTH(128),
-        #                    ),
-        #              Field("abrv", length=64,
-        #                    notnull=True, unique=True,
-        #                    label = T("Abbreviation"),
-        #                    requires = IS_LENGTH(64),
-        #                    ),
-        #              *s3_meta_fields())
-
-        ##CRUD strings
-        # if settings.get_ui_label_cluster():
-            # SUBSECTOR = T("Cluster Subsector")
-            # crud_strings[tablename] = Storage(
-                # label_create = T("Create Cluster Subsector"),
-                # title_display = T("Cluster Subsector Details"),
-                # title_list = T("Cluster Subsectors"),
-                # title_update = T("Edit Cluster Subsector"),
-                # label_list_button = T("List Cluster Subsectors"),
-                # label_delete_button = T("Delete Cluster Subsector"),
-                # msg_record_created = T("Cluster Subsector added"),
-                # msg_record_modified = T("Cluster Subsector updated"),
-                # msg_record_deleted = T("Cluster Subsector deleted"),
-                # msg_list_empty = T("No Cluster Subsectors currently registered"))
-        # else:
-            # SUBSECTOR = T("Subsector")
-            # crud_strings[tablename] = Storage(
-                # label_create = T("Add Subsector"),
-                # title_display = T("Subsector Details"),
-                # title_list = T("Subsectors"),
-                # title_update = T("Edit Subsector"),
-                # label_list_button = T("List Subsectors"),
-                # label_delete_button = T("Delete Subsector"),
-                # msg_record_created = T("Subsector added"),
-                # msg_record_modified = T("Subsector updated"),
-                # msg_record_deleted = T("Subsector deleted"),
-                # msg_list_empty = T("No Subsectors currently registered"))
-
-        # subsector_id = S3ReusableField("subsector_id", "reference %s" % tablename,
-        #                                label = SUBSECTOR,
-        #                                ondelete = "SET NULL",
-        #                                represent = self.org_subsector_represent,
-        #                                requires = IS_EMPTY_OR(
-        #                                               IS_ONE_OF(db, "org_subsector.id",
-        #                                                         self.org_subsector_represent,
-        #                                                         sort=True)),
-        #                                sortby = "abrv",
-        #                                #comment = Script to filter the sector_subsector drop down
-        #                                )
-
-        # configure("org_subsector",
-        #           deduplicate = self.org_sector_duplicate,
-        #           )
 
         # ---------------------------------------------------------------------
         # Organizations <> Sectors Link Table
@@ -2296,15 +2238,18 @@ class OrganisationSectorModel(S3Model):
         tablename = "org_sector_organisation"
         define_table(tablename,
                      sector_id(),
-                     self.org_organisation_id(
-                         ondelete = "CASCADE",
-                         ),
+                     # When Locations moved to link table then we will need to be able to specify the location which we join on
+                     #sector_location_id(),
+                     self.org_organisation_id(ondelete = "CASCADE",
+                                              ),
                      Field("lead", "boolean",
                            label = T("Lead Organization?"),
                            represent = s3_yes_no_represent,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Lead Organization?"),
-                                                           T("If the organization is a lead for this sector."))),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Lead Organization?"),
+                                                             T("If the organization is a lead for this sector."),
+                                                             ),
+                                         ),
                            ),
                      *s3_meta_fields()
                      )
@@ -2344,9 +2289,9 @@ class OrganisationSectorModel(S3Model):
         name = data.get("name")
         table = item.table
         if abrv:
-            query = (table.abrv.lower() == s3_unicode(abrv).lower())
+            query = (table.abrv.lower() == s3_str(abrv).lower())
         elif name:
-            query = (table.name.lower() == s3_unicode(name).lower())
+            query = (table.name.lower() == s3_str(name).lower())
         else:
             return
         duplicate = current.db(query).select(table.id,
@@ -2384,33 +2329,6 @@ class OrganisationSectorModel(S3Model):
                                             ).first()
         if not record.abrv:
             db(table.id == _id).update(abrv = record.name[:64])
-
-    # -------------------------------------------------------------------------
-    #@staticmethod
-    #def org_subsector_represent(id, row=None):
-    #    """ Subsector ID representation """
-
-    #    if row:
-    #        return row.name
-    #    elif not id:
-    #        return current.messages["NONE"]
-
-    #    db = current.db
-    #    table = db.org_subsector
-    #    r = db(table.id == id).select(table.name,
-    #                                  table.sector_id,
-    #                                  limitby = (0, 1),
-    #                                  ).first()
-    #    try:
-    #        sector = db(table.id == r.sector_id).select(table.abrv,
-    #                                                    limitby = (0, 1),
-    #                                                    ).first()
-    #        if sector:
-    #            return "%s: %s" % (sector.abrv, current.T(r.name))
-    #        else:
-    #            return current.T(r.name)
-    #    except:
-    #        return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 class OrganisationServiceModel(S3Model):
@@ -3888,7 +3806,7 @@ class SiteModel(S3Model):
 
         # We want to do case-insensitive searches
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
-        value = s3_unicode(value).lower().strip()
+        value = s3_str(value).lower().strip()
 
         if not value:
             r.error(400, "Missing option! Require value")
@@ -4982,7 +4900,7 @@ class FacilityModel(S3Model):
         #address = data.get("address")
 
         table = item.table
-        query = (table.name.lower() == s3_unicode(name).lower())
+        query = (table.name.lower() == s3_str(name).lower())
         if org:
             # Either same Org or no Org defined yet
             query = query & ((table.organisation_id == org) | \
@@ -5046,7 +4964,7 @@ class FacilityModel(S3Model):
                                 gtable.L4,
                                 gtable.lat,
                                 gtable.lon,
-                                left=left,
+                                left = left,
                                 )
         features = []
         append = features.append
@@ -5118,7 +5036,8 @@ class FacilityModel(S3Model):
             filename = "facility.geojson"
         path = os.path.join(current.request.folder,
                             "static", "cache",
-                            filename)
+                            filename,
+                            )
         File = open(path, "w")
         File.write(output)
         File.close()
@@ -5145,8 +5064,7 @@ def org_facility_rheader(r, tabs=None):
         tabs.extend(inv_tabs(r))
 
     rheader_fields = [["name"], ["location_id"]]
-    rheader = S3ResourceHeader(rheader_fields, tabs)(r)
-    return rheader
+    return S3ResourceHeader(rheader_fields, tabs)(r)
 
 # =============================================================================
 class OfficeModel(S3Model):
@@ -5512,8 +5430,6 @@ class OfficeTypeTagModel(S3Model):
                           s3_comments(),
                           *s3_meta_fields())
 
-
-
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary = ("office_type_id",
                                                             "tag",
@@ -5552,7 +5468,7 @@ def org_organisation_address(row):
 
 # =============================================================================
 def org_organisation_logo(org,
-                          #type="png",
+                          #type = "png",
                           ):
     """
         Return a logo of the organisation with the given org, if one exists
@@ -7310,7 +7226,7 @@ def org_organisation_controller():
                                            )
 
                 if type_filter:
-                    type_names = [s3_unicode(name).lower().strip()
+                    type_names = [s3_str(name).lower().strip()
                                   for name in type_filter.split(",")]
                     field = s3db.org_organisation_organisation_type.organisation_type_id
                     field.comment = None # Don't want to create new types here
@@ -7662,7 +7578,7 @@ def org_facility_controller():
                 get_vars = r.get_vars
                 type_filter = get_vars.get("facility_type.name", None)
                 if type_filter:
-                    type_names = [s3_unicode(name).lower().strip()
+                    type_names = [s3_str(name).lower().strip()
                                   for name in type_filter.split(",")]
                     field = s3db.org_site_facility_type.facility_type_id
                     field.comment = None # Don't want to create new types here
@@ -8634,7 +8550,7 @@ class org_OrganisationDuplicate(object):
         table = item.table
 
         # Search by name
-        lower_name = s3_unicode(name).lower()
+        lower_name = s3_str(name).lower()
         query = (table.name.lower() == lower_name) & \
                 (table.deleted == False)
         rows = db(query).select(table.id, table.name)

@@ -48,7 +48,7 @@ from gluon.storage import Storage
 
 from s3dal import Field, Row
 from .s3fields import S3RepresentLazy
-from .s3utils import s3_get_foreign_key, s3_str, s3_unicode, S3TypeConverter
+from .s3utils import s3_get_foreign_key, s3_str, S3TypeConverter
 
 ogetattr = object.__getattribute__
 
@@ -650,7 +650,7 @@ class S3ResourceField(object):
         self.field = lf.field
 
         self.virtual = False
-        self.represent = s3_unicode
+        self.represent = s3_str
         self.requires = None
 
         if self.field is not None:
@@ -805,7 +805,7 @@ class S3ResourceField(object):
                 else:
                     return renderer(value)
             else:
-                return s3_unicode(value)
+                return s3_str(value)
         else:
             return value
 
@@ -1555,7 +1555,7 @@ class S3ResourceQuery(object):
             if current.deployment_settings.get_database_airegex():
                 q = S3AIRegex.like(l, r)
             else:
-                q = l.like(s3_unicode(r))
+                q = l.like(s3_str(r))
         elif op == self.INTERSECTS:
             q = self._query_intersects(l, r)
         elif op == self.LT:
@@ -2385,7 +2385,7 @@ class S3URLQuery(object):
             w = ""
             quote = False
             ignore_quote = False
-            for c in s3_unicode(item):
+            for c in s3_str(item):
                 if c == '"' and not ignore_quote:
                     w += c
                     quote = not quote
@@ -2426,11 +2426,11 @@ class S3URLQuery(object):
         v = cls.parse_value(value)
 
         # Auto-lowercase, escape, and replace wildcards
-        like = lambda s: s3_str(s3_unicode(s).lower() \
-                                             .replace("%", "\\%") \
-                                             .replace("_", "\\_") \
-                                             .replace("?", "_") \
-                                             .replace("*", "%"))
+        like = lambda s: s3_str(s3_str(s).lower() \
+                                         .replace("%", "\\%") \
+                                         .replace("_", "\\_") \
+                                         .replace("?", "_") \
+                                         .replace("*", "%"))
 
         q = None
 
@@ -2550,7 +2550,7 @@ class S3AIRegex(object):
         ESCAPE = cls.ESCAPE
 
         escaped = False
-        for character in s3_unicode(string):
+        for character in s3_str(string):
 
             if character != u"\u0130": # "İ".lower() gives two characters!!
                 character = character.lower()

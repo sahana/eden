@@ -1044,14 +1044,13 @@ def allowance():
 
             # Provide some meaningful details of the failing
             # person record to facilitate correction of the source:
-            from s3 import s3_unicode
             person_details = []
             append = person_details.append
             data = item.data
             for f in ("pe_label", "last_name", "first_name", "date_of_birth"):
                 value = data.get(f)
                 if value:
-                    append(s3_unicode(value))
+                    append(s3_str(value))
             error = "Person not found: %s" % ", ".join(person_details)
             item.error = error
             item.element.set(current.xml.ATTRIBUTE["error"], error)

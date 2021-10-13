@@ -1254,7 +1254,7 @@ class S3DateTimeParser(object):
         import pyparsing as pp
         self.ParseException = pp.ParseException
 
-        from .s3utils import s3_unicode
+        from .s3utils import s3_str
 
         # Get the rules
         rules = self.rules
@@ -1271,7 +1271,7 @@ class S3DateTimeParser(object):
                 result.append(pp.Suppress(pp.Literal(s)))
 
         rule = False
-        for c in s3_unicode(dtfmt):
+        for c in s3_str(dtfmt):
             if rule and c in rules:
                 # Close previous sequence
                 sequence.pop()
@@ -1525,7 +1525,7 @@ class S3DateTimeFormatter(object):
         T = current.T
         calendar = self.calendar
 
-        from .s3utils import s3_unicode
+        from .s3utils import s3_str
 
         rules = {"d": "%02d" % d,
                  "b": T(calendar.MONTH_ABBR[m - 1]),
@@ -1550,13 +1550,13 @@ class S3DateTimeFormatter(object):
                 result.append(s)
 
         rule = False
-        for c in s3_unicode(dtfmt):
+        for c in s3_str(dtfmt):
             if rule and c in rules:
                 # Close previous sequence
                 sequence.pop()
                 close(sequence)
                 # Append control rule
-                result.append(s3_unicode(rules[c]))
+                result.append(s3_str(rules[c]))
                 # Start new sequence
                 sequence = []
                 # Close rule

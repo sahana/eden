@@ -1244,7 +1244,7 @@ class S3CRUD(S3Method):
                 filter_submit_url = attr.get("filter_submit_url")
                 if not filter_submit_url:
                     get_vars_ = self._remove_filters(get_vars)
-                    filter_submit_url = r.url(vars=get_vars_)
+                    filter_submit_url = r.url(vars = get_vars_)
 
                 # Where to retrieve updated filter options from:
                 filter_ajax_url = attr.get("filter_ajax_url")
@@ -2670,9 +2670,8 @@ class S3CRUD(S3Method):
             s3.actions.append(link)
 
     # -------------------------------------------------------------------------
-    @classmethod
-    def action_buttons(cls,
-                       r,
+    @staticmethod
+    def action_buttons(r,
                        deletable = True,
                        editable = None,
                        copyable = False,
@@ -2700,7 +2699,6 @@ class S3CRUD(S3Method):
                    they will appear AFTER the standard action buttons
         """
 
-        s3crud = S3CRUD
         s3 = current.response.s3
         labels = s3.crud_labels
 
@@ -2718,7 +2716,7 @@ class S3CRUD(S3Method):
             table = r.table
             args = ["[id]"]
 
-        get_vars = cls._linkto_vars(r)
+        get_vars = S3CRUD._linkto_vars(r)
 
         settings = current.deployment_settings
 
@@ -2749,7 +2747,7 @@ class S3CRUD(S3Method):
                 update_url = iframe_safe(URL(args = args + ["update"], #.popup to use modals
                                              vars = get_vars,
                                              ))
-            s3crud.action_button(labels.UPDATE, update_url,
+            S3CRUD.action_button(labels.UPDATE, update_url,
                                  # To use modals
                                  #_class = "action-btn s3_modal"
                                  _class = "action-btn edit",
@@ -2764,13 +2762,12 @@ class S3CRUD(S3Method):
                 read_url = iframe_safe(URL(args = args + method, #.popup to use modals
                                            vars = get_vars,
                                            ))
-            s3crud.action_button(labels.READ, read_url,
+            S3CRUD.action_button(labels.READ, read_url,
                                  # To use modals
                                  #_class = "action-btn s3_modal"
                                  _class = "action-btn read",
                                  icon = "file",
-                                 **target
-                                 )
+                                 **target)
 
         # Delete-action
         if deletable and has_permission("delete", table):
@@ -2793,14 +2790,14 @@ class S3CRUD(S3Method):
                     row_id = row.get("id", None)
                     if row_id:
                         rappend(str(row_id))
-                s3crud.action_button(labels.DELETE, delete_url,
+                S3CRUD.action_button(labels.DELETE, delete_url,
                                      _class = "delete-btn",
                                      icon = icon,
                                      restrict = restrict,
                                      **target
                                      )
             else:
-                s3crud.action_button(labels.DELETE, delete_url,
+                S3CRUD.action_button(labels.DELETE, delete_url,
                                      _class = "delete-btn",
                                      icon = icon,
                                      **target
@@ -2810,7 +2807,7 @@ class S3CRUD(S3Method):
         if copyable and has_permission("create", table):
             if not copy_url:
                 copy_url = iframe_safe(URL(args = args + ["copy"]))
-            s3crud.action_button(labels.COPY,
+            S3CRUD.action_button(labels.COPY,
                                  copy_url,
                                  icon = "icon-copy",
                                  **target
@@ -2818,7 +2815,7 @@ class S3CRUD(S3Method):
 
         # Append custom actions
         if custom_actions:
-            s3.actions = s3.actions + custom_actions
+            s3.actions += custom_actions
 
     # -------------------------------------------------------------------------
     def _default_cancel_button(self, r):
@@ -3131,10 +3128,10 @@ class S3CRUD(S3Method):
                         callback(onaccept, _form, tablename=component)
                     else:
                         form.errors[key] = current.T("Could not create record.")
-        return
 
     # -------------------------------------------------------------------------
-    def _linkto(self, r, authorised=None, update=None, native=False):
+    @staticmethod
+    def _linkto(r, authorised=None, update=None, native=False):
         """
             Returns a linker function for the record ID column in list views
 
@@ -3185,7 +3182,7 @@ class S3CRUD(S3Method):
                 except TypeError:
                     url = linkto % record_id
             else:
-                get_vars = self._linkto_vars(r)
+                get_vars = S3CRUD._linkto_vars(r)
 
                 if r.component:
                     if r.link and not r.actuate_link():
@@ -3283,7 +3280,6 @@ class S3CRUD(S3Method):
         if settings.custom_submit:
             custom_submit.extend(settings.custom_submit)
         settings.custom_submit = custom_submit
-        return
 
     # -------------------------------------------------------------------------
     @classmethod

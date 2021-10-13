@@ -60,7 +60,7 @@ from .s3data import S3DataTable, S3DataList
 from .s3datetime import s3_format_datetime
 from .s3fields import s3_all_meta_field_names
 from .s3query import FS, S3ResourceField, S3ResourceQuery, S3Joins, S3URLQuery
-from .s3utils import s3_get_last_record_id, s3_has_foreign_key, s3_remove_last_record_id, s3_str, s3_unicode
+from .s3utils import s3_get_last_record_id, s3_has_foreign_key, s3_remove_last_record_id, s3_str
 from .s3validators import IS_ONE_OF
 from .s3xml import S3XMLFormat
 
@@ -872,7 +872,8 @@ class S3Resource(object):
               duplicate_id,
               replace = None,
               update = None,
-              main = True):
+              main = True,
+              ):
         """ Merge two records, see also S3RecordMerger.merge """
 
         from .s3merge import S3RecordMerger
@@ -880,7 +881,8 @@ class S3Resource(object):
                                           duplicate_id,
                                           replace = replace,
                                           update = update,
-                                          main = main)
+                                          main = main,
+                                          )
 
     # -------------------------------------------------------------------------
     # Exports
@@ -913,13 +915,25 @@ class S3Resource(object):
         selectors = list(fields)
 
         table = self.table
-
-        # Automatically include the record ID
         table_id = table._id
         pkey = table_id.name
-        if pkey not in selectors:
-            fields.insert(0, pkey)
-            selectors.insert(0, pkey)
+
+        include_id = self.get_config("datatable_includes_id", True)
+        if include_id:
+            # Automatically include the record ID
+            if pkey not in selectors:
+                fields.insert(0, pkey)
+                selectors.insert(0, pkey)
+        else:
+            # Ensure the record ID isn't present
+            try:
+                fields.remove(pkey)
+            except ValueError:
+                pass
+            try:
+                selectors.remove(pkey)
+            except ValueError:
+                pass
 
         # Skip representation of IDs in data tables
         id_repr = table_id.represent
@@ -950,13 +964,19 @@ class S3Resource(object):
                 query = (table[DELETED] == False)
             else:
                 query = (table_id > 0)
-            row = current.db(query).select(table_id, limitby=(0, 1)).first()
+            row = current.db(query).select(table_id,
+                                           limitby = (0, 1),
+                                           ).first()
             if not row:
                 empty = True
 
         # Generate the data table
         rfields = data.rfields
-        dt = S3DataTable(rfields, rows, orderby=orderby, empty=empty)
+        dt = S3DataTable(rfields,
+                         rows,
+                         orderby = orderby,
+                         empty = empty,
+                         )
 
         return dt, data.numrows
 
@@ -969,7 +989,8 @@ class S3Resource(object):
                  orderby = None,
                  distinct = False,
                  list_id = None,
-                 layout = None):
+                 layout = None,
+                 ):
         """
             Generate a data list of this resource
 
@@ -1821,7 +1842,8 @@ class S3Resource(object):
                                          update_policy = update_policy,
                                          conflict_policy = conflict_policy,
                                          last_sync = last_sync,
-                                         onconflict = onconflict)
+                                         onconflict = onconflict,
+                                         )
             except:
                 self.error = current.ERROR.BAD_SOURCE
                 return False
@@ -1957,7 +1979,7 @@ class S3Resource(object):
         # Commit the import job
         auth = current.auth
         auth.rollback = not commit_job
-        success = import_job.commit(ignore_errors=ignore_errors,
+        success = import_job.commit(ignore_errors = ignore_errors,
                                     log_items = self.get_config("oncommit_import_item"))
         auth.rollback = False
         self.error = import_job.error
@@ -2021,7 +2043,8 @@ class S3Resource(object):
                                         only_last = only_last,
                                         show_uids = show_uids,
                                         hierarchy = hierarchy,
-                                        as_json = as_json)
+                                        as_json = as_json,
+                                        )
                 return tree
             else:
                 # If we get here, we've been called from the back-end,
@@ -2031,7 +2054,7 @@ class S3Resource(object):
         else:
             if as_json and only_last and len(fields) == 1:
                 # Identify the field
-                default = {"option":[]}
+                default = {"option": []}
                 try:
                     field = self.table[fields[0]]
                 except AttributeError:
@@ -2098,17 +2121,20 @@ class S3Resource(object):
                     result = [item]
                 else:
                     result = []
-                return json.dumps({'option': result})
+                return json.dumps({"option": result})
 
             xml = current.xml
             tree = xml.get_options(self.table,
                                    fields = fields,
                                    show_uids = show_uids,
-                                   hierarchy = hierarchy)
+                                   hierarchy = hierarchy,
+                                   )
 
             if as_json:
-                return xml.tree2json(tree, pretty_print=False,
-                                     native=True)
+                return xml.tree2json(tree,
+                                     pretty_print = False,
+                                     native = True,
+                                     )
             else:
                 return xml.tostring(tree, pretty_print=False)
 
@@ -2270,7 +2296,8 @@ class S3Resource(object):
 
         # Try to find exactly one match by non-UID unique keys
         if query is not None:
-            original = db(query).select(limitby=(0, 2), *fields)
+            original = db(query).select(limitby = (0, 2),
+                                        *fields)
             if len(original) == 1:
                 return original.first()
 
@@ -2278,7 +2305,8 @@ class S3Resource(object):
         if UID in pvalues:
             uid = xml.import_uid(pvalues[UID])
             query = (table[UID] == uid)
-            original = db(query).select(limitby=(0, 1), *fields).first()
+            original = db(query).select(limitby = (0, 1),
+                                        *fields).first()
             if original:
                 return original
 
@@ -2925,7 +2953,7 @@ class S3Resource(object):
                     elif options is not None:
                         opts[fname] = options
                         vlist = [v for v, t in options
-                                   if s3_unicode(t).lower().find(s3_unicode(w)) != -1]
+                                   if s3_str(t).lower().find(s3_str(w)) != -1]
                         if vlist:
                             wqueries.append(field.belongs(vlist))
                 if len(wqueries):
@@ -3110,7 +3138,7 @@ class S3Resource(object):
                     fdict = {}
                     if include:
                         for v in values:
-                            vstr = s3_unicode(v) if v is not None else v
+                            vstr = s3_str(v) if v is not None else v
                             if vstr in include and vstr not in exclude:
                                 fdict[v] = None
                     else:
@@ -3782,11 +3810,11 @@ class S3AxisFilter(object):
            fieldname == rfield.fname:
             value = self.r
             if isinstance(value, (list, tuple)):
-                value = [s3_unicode(v) for v in value]
+                value = [s3_str(v) for v in value]
                 if not value:
                     value = [None]
             else:
-                value = [s3_unicode(value)]
+                value = [s3_str(value)]
             if op == "CONTAINS":
                 return value, []
             elif op == "EQ":

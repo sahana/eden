@@ -2432,10 +2432,6 @@ $.filterOptionsS3({
             js_append('''S3.auth_registration_organisation_required=1''')
             js_append('''i18n.enter_your_organisation="%s"''' % T("Enter your organization"))
 
-        if settings.get_auth_terms_of_service():
-            js_append('''S3.auth_terms_of_service=1''')
-            js_append('''i18n.tos_required="%s"''' % T("You must agree to the Terms of Service"))
-
         if request.controller != "admin":
             if settings.get_auth_registration_organisation_hidden():
                 js_append('''S3.auth_registration_hide_organisation=1''')

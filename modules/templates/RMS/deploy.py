@@ -132,7 +132,7 @@ class DeploymentModel(S3Model):
                      # @ToDo: Link to event_type via event_id link table instead of duplicating
                      self.event_type_id(),
                      Field("code", length=24,
-                           represent = lambda v: s3_unicode(v) if v else NONE,
+                           represent = lambda v: s3_str(v) if v else NONE,
                            requires = IS_LENGTH(24),
                            ),
                      Field("status", "integer",
@@ -2029,7 +2029,6 @@ def deploy_apply(r, **attr):
             # Page load
             resource.configure(deletable = False)
 
-            #dt.defaultActionButtons(resource)
             profile_url = URL(f = "human_resource",
                               args = ["[id]", "profile"],
                               )
@@ -2280,7 +2279,6 @@ def deploy_alert_select_recipients(r, **attr):
         # Page load
         resource.configure(deletable = False)
 
-        #dt.defaultActionButtons(resource)
         s3.no_formats = True
 
         # Data table (items)

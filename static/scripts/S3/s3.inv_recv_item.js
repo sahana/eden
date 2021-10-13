@@ -1,5 +1,5 @@
 /**
- * Used by the inv/recv controller when using inv_recv_req with External Shipments
+ * Used by the inv/recv controller when settings.inv_recv_req = True
  * - replace filterOptionsS3 to show item packs for Item
  * - set req_item_id based on selected Item
  */

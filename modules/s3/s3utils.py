@@ -234,9 +234,9 @@ def s3_represent_value(field,
     if not non_xml_output:
         if not xml_escape and val is not None:
             if ftype in ("string", "text"):
-                val = text = xml_encode(s3_unicode(val))
+                val = text = xml_encode(s3_str(val))
             elif ftype == "list:string":
-                val = text = [xml_encode(s3_unicode(v)) for v in val]
+                val = text = [xml_encode(s3_str(v)) for v in val]
 
     # Get text representation
     if field.represent:
@@ -252,16 +252,16 @@ def s3_represent_value(field,
         if isinstance(text, DIV):
             text = str(text)
         elif not isinstance(text, str):
-            text = s3_unicode(text)
+            text = s3_str(text)
     else:
         if val is None:
             text = NONE
         elif fname == "comments" and not extended_comments:
-            ur = s3_unicode(text)
+            ur = s3_str(text)
             if len(ur) > 48:
                 text = s3_str("%s..." % ur[:45])
         else:
-            text = s3_unicode(text)
+            text = s3_str(text)
 
     # Strip away markup from text
     if strip_markup and "<" in text:
@@ -492,7 +492,7 @@ def s3_truncate(text, length=48, nice=True):
             encode = False
         else:
             # Make sure text is multi-byte-aware before truncating it
-            text = s3_unicode(text)
+            text = s3_str(text)
             encode = True
         if nice:
             truncated = "%s..." % text[:length].rsplit(" ", 1)[0][:length-3]
@@ -521,7 +521,7 @@ def s3_datatable_truncate(string, maxlength=40):
     """
 
     # Make sure text is multi-byte-aware before truncating it
-    string = s3_unicode(string)
+    string = s3_str(string)
     if string and len(string) > maxlength:
         _class = "dt-truncate"
         return TAG[""](
@@ -742,7 +742,7 @@ def s3_comments_represent(text, show_link=True):
     """
 
     # Make sure text is multi-byte-aware before truncating it
-    text = s3_unicode(text)
+    text = s3_str(text)
     if len(text) < 80:
         return text
     elif not show_link:
@@ -771,7 +771,7 @@ def s3_phone_represent(value):
 
     if not value:
         return current.messages["NONE"]
-    return s3_str("%s%s" % (chr(8206), s3_unicode(value)))
+    return s3_str("%s%s" % (chr(8206), s3_str(value)))
 
 # =============================================================================
 def s3_url_represent(url):
@@ -1367,7 +1367,7 @@ def s3_populate_browser_compatibility(request):
         current.log.warning("pywurfl python module has not been installed, browser compatibility listing will not be populated. Download pywurfl from http://pypi.python.org/pypi/pywurfl/")
         return False
     import wurfl
-    device = wurfl.devices.select_ua(s3_unicode(request.env.http_user_agent),
+    device = wurfl.devices.select_ua(s3_str(request.env.http_user_agent),
                                      search=TwoStepAnalysis(wurfl.devices))
 
     browser = Storage()
@@ -1398,7 +1398,7 @@ def s3_filename(filename):
 
     validFilenameChars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 
-    filename = s3_unicode(filename)
+    filename = s3_str(filename)
     cleanedFilename = unicodedata.normalize("NFKD",
                                             filename).encode("ASCII", "ignore")
 
@@ -1473,9 +1473,9 @@ def s3_get_foreign_key(field, m2m=True):
     return (rtablename, key, multiple)
 
 # =============================================================================
-def s3_unicode(s, encoding="utf-8"):
+def s3_str(s, encoding="utf-8"):
     """
-        Convert an object into a str, for backwards-compatibility
+        Convert an object into a str (i.e. Unicode in Py3)
 
         @param s: the object
         @param encoding: the character encoding
@@ -1487,9 +1487,6 @@ def s3_unicode(s, encoding="utf-8"):
         return s.decode(encoding, "strict")
     else:
         return str(s)
-
-# In Python-3 this is just an alias:
-s3_str = s3_unicode
 
 # =============================================================================
 def s3_flatlist(nested):

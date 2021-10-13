@@ -191,12 +191,11 @@ def define_map(height = None,
 
             # Prepare JSON data structure
             pois = []
-            s3_unicode = s3base.s3_unicode
             for res in poi_resources:
                 poi = {"c": res["c"],
                        "f": res["f"],
-                       "l": s3_unicode(res["label"]),
-                       #"t": s3_unicode(res["tooltip"]),
+                       "l": s3_str(res["label"]),
+                       #"t": s3_str(res["tooltip"]),
                        "i": layers_lookup.get(res["layer"], None),
                        "t": res.get("type", "point"),
                        }

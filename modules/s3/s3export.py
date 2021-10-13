@@ -181,10 +181,10 @@ class S3Exporter(object):
                     else:
                         # Add tooltips as "_tooltip" to the corresponding rows
                         if isinstance(tooltips, dict):
-                            from .s3utils import s3_unicode
+                            from .s3utils import s3_str
                             for k, v in tooltips.items():
                                 if k in items:
-                                    items[k]["_tooltip"] = s3_unicode(v)
+                                    items[k]["_tooltip"] = s3_str(v)
 
             else:
                 # Resolve the tooltip field name against the resource
@@ -196,14 +196,14 @@ class S3Exporter(object):
                 else:
                     # Extract the tooltip field from each row
                     # and add it as _tooltip
-                    from .s3utils import s3_unicode
+                    from .s3utils import s3_str
                     for row in rows:
                         try:
                             value = tooltip_rfield.extract(row)
                         except KeyError:
                             break
                         if value:
-                            row["_tooltip"] = s3_unicode(value)
+                            row["_tooltip"] = s3_str(value)
 
         # Return as JSON
         response = current.response

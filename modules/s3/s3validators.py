@@ -73,7 +73,7 @@ from gluon.storage import Storage
 from gluon.validators import Validator, ValidationError
 
 from .s3datetime import S3DateTime
-from .s3utils import s3_orderby_fields, s3_str, s3_unicode
+from .s3utils import s3_orderby_fields, s3_str
 
 DEFAULT = lambda: None
 JSONERRORS = (NameError, TypeError, ValueError, AttributeError, KeyError)
@@ -92,7 +92,7 @@ def translate(text):
     return s3_str(text)
 
 def options_sorter(x, y):
-    return 1 if s3_unicode(x[1]).upper() > s3_unicode(y[1]).upper() else -1
+    return 1 if s3_str(x[1]).upper() > s3_str(y[1]).upper() else -1
 
 def validator_caller(func, value, record_id=None):
     validate = getattr(func, "validate", None)
@@ -540,7 +540,7 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
         # Strip the thousands-separator
         thousands_sep = current.deployment_settings.get_L10n_thousands_separator()
         if thousands_sep and isinstance(value, str):
-            value = s3_str(s3_unicode(value).replace(thousands_sep, ""))
+            value = s3_str(s3_str(value).replace(thousands_sep, ""))
 
         return IS_FLOAT_IN_RANGE.validate(self, value, record_id=record_id)
 
@@ -961,7 +961,7 @@ class IS_ONE_OF_EMPTY(Validator):
 
         if labels and self.sort:
             items = sorted(zip(self.theset, self.labels),
-                           key = lambda item: s3_unicode(item[1]).lower(),
+                           key = lambda item: s3_str(item[1]).lower(),
                            )
             self.theset, self.labels = zip(*items)
 
@@ -2411,7 +2411,7 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                 items = language_codes
 
         if self.sort:
-            items = sorted(items, key=lambda s: s3_unicode(s[1]).lower())
+            items = sorted(items, key=lambda s: s3_str(s[1]).lower())
         else:
             items = list(items)
 

@@ -2188,8 +2188,6 @@ def config(settings):
             # Nothing imported
             return
 
-        s3db = current.s3db
-
         created = import_info.get("created")
         if created:
             registration_id = created[0]
@@ -2200,6 +2198,8 @@ def config(settings):
             else:
                 # Nothing we can do
                 return
+
+        s3db = current.s3db
 
         # Lookup Site ID
         table = s3db.cr_shelter_registration

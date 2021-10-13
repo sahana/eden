@@ -3248,8 +3248,7 @@ Thank you"""
                             "title": T("Stock Position Report"),
                             "fields": [(T("Warehouse"), "site_id$name"),
                                        "item_id$item_category_id",
-                                       #"bin",
-                                       "layout_id",
+                                       "bin.layout_id",
                                        "item_id$name",
                                        "quantity",
                                        "pack_value",
@@ -3270,8 +3269,7 @@ Thank you"""
                             "title": T("Weight and Volume Report"),
                             "fields": [(T("Warehouse"), "site_id$name"),
                                        "item_id$item_category_id",
-                                       #"bin",
-                                       "layout_id",
+                                       "bin.layout_id",
                                        "item_id$name",
                                        "quantity",
                                        "item_id$weight",
@@ -3294,8 +3292,7 @@ Thank you"""
                             "title": T("Stock Movements Report"),
                             "fields": [(T("Warehouse"), "site_id$name"),
                                        "item_id$item_category_id",
-                                       #"bin",
-                                       "layout_id",
+                                       "bin.layout_id",
                                        "item_id$name",
                                        (T("Origin/Destination"), "sites"),
                                        (T("Documents"), "documents"),
@@ -3319,8 +3316,6 @@ Thank you"""
                             },
                          }
 
-        direct_stock_edits = settings.get_inv_direct_stock_edits()
-
         list_fields = [(T("Description"), "item_id"),
                        (T("Reference"), "item_id$code"),
                        (T("Owner"), "owner_org_id"),
@@ -3340,7 +3335,7 @@ Thank you"""
         if filter_widgets is not None:
             from s3 import S3OptionsFilter
             filter_widgets.insert(2, S3OptionsFilter("item_id",
-                                                     #label=T("Status"),
+                                                     #label = T("Status"),
                                                      hidden = True,
                                                      ))
 
@@ -3354,10 +3349,6 @@ Thank you"""
                                     }
 
         s3db.configure("inv_inv_item",
-                       create = direct_stock_edits,
-                       deletable = direct_stock_edits,
-                       editable = direct_stock_edits,
-                       listadd = direct_stock_edits,
                        grouped = stock_reports,
                        # Needed for Field.Methods
                        extra_fields = ["quantity",
@@ -6599,9 +6590,7 @@ class PrintableShipmentForm(S3Method):
 
         # Component (=inv_track_item)
         component = resource.components["track_item"]
-        body_fields = [#"bin",
-                       "layout_id",
-                       "item_id",
+        body_fields = ["item_id",
                        "item_pack_id",
                        "quantity",
                        (T("Total Volume (m3)"), "total_volume"),

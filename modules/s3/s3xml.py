@@ -51,7 +51,7 @@ from gluon.storage import Storage
 from .s3codec import S3Codec
 from .s3datetime import s3_decode_iso_datetime, s3_encode_iso_datetime, s3_utc
 from .s3fields import S3RepresentLazy
-from .s3utils import s3_get_foreign_key, s3_represent_value, s3_str, s3_strip_markup, s3_unicode, s3_validate
+from .s3utils import s3_get_foreign_key, s3_represent_value, s3_str, s3_strip_markup, s3_validate
 
 ogetattr = object.__getattribute__
 
@@ -552,7 +552,7 @@ class S3XML(S3Codec):
 
             if r.uid:
                 uids = as_json(r.uid) if r.multiple else r.uid[0]
-                attr[UID] = s3_unicode(uids)
+                attr[UID] = s3_str(uids)
 
                 # Render representation
                 if r.lazy is not None:
@@ -712,7 +712,7 @@ class S3XML(S3Codec):
                         # NB Ensure we don't double-encode unicode!
                         _attr = json.dumps(attrs, separators=(",,", "::"),
                                            ensure_ascii=False)
-                        attr[ATTRIBUTE.attributes] = "{%s}" % s3_unicode(_attr).replace('"', "||")
+                        attr[ATTRIBUTE.attributes] = "{%s}" % s3_str(_attr).replace('"', "||")
 
                 if tablename in markers:
                     _markers = markers[tablename]
@@ -852,7 +852,7 @@ class S3XML(S3Codec):
                                        separators = (",,", "::"),
                                        ensure_ascii = False,
                                        )
-                    attr[ATTRIBUTE.attributes] = "{%s}" % s3_unicode(attr_).replace('"', "||")
+                    attr[ATTRIBUTE.attributes] = "{%s}" % s3_str(attr_).replace('"', "||")
 
             if tablename in markers:
                 _markers = markers[tablename]
@@ -997,7 +997,7 @@ class S3XML(S3Codec):
         # UID
         if UID in table.fields and UID in record:
             uid = record[UID]
-            uid = s3_unicode(table[UID].formatter(uid))
+            uid = s3_str(table[UID].formatter(uid))
             if tablename != auth_group:
                 attrib[UID] = self.export_uid(uid)
             else:
@@ -1018,7 +1018,7 @@ class S3XML(S3Codec):
                     text = S3RepresentLazy(record_id, llrepr)
                     lazy.append((text, None, attrib, ATTRIBUTE.llrepr))
                 else:
-                    attrib[ATTRIBUTE.llrepr] = s3_unicode(llrepr(record_id))
+                    attrib[ATTRIBUTE.llrepr] = s3_str(llrepr(record_id))
 
         # Fields
         FIELDS_TO_ATTRIBUTES = self.FIELDS_TO_ATTRIBUTES
@@ -1051,9 +1051,9 @@ class S3XML(S3Codec):
             value = None
 
             if fieldtype in ("datetime", "date", "time"):
-                value = s3_unicode(s3_encode_iso_datetime(v))
+                value = s3_str(s3_encode_iso_datetime(v))
             elif fieldtype[:7] == "decimal":
-                value = s3_unicode(formatter(v))
+                value = s3_str(formatter(v))
 
             # Get the representation
             is_lazy = False
@@ -1070,7 +1070,7 @@ class S3XML(S3Codec):
                 elif value is not None:
                     text = value
                 else:
-                    text = s3_unicode(formatter(v))
+                    text = s3_str(formatter(v))
             else:
                 text = None
 
@@ -1079,7 +1079,7 @@ class S3XML(S3Codec):
                     if is_lazy:
                         lazy.append((text, None, attrib, f))
                     else:
-                        attrib[f] = s3_unicode(text)
+                        attrib[f] = s3_str(text)
 
             elif fieldtype == "upload":
                 if v:
@@ -1109,7 +1109,7 @@ class S3XML(S3Codec):
                     attr = data.attrib
                     attr[FIELD] = f
                     attr[FILEURL] = fileurl
-                    attr[ATTRIBUTE.filename] = s3_unicode(filename)
+                    attr[ATTRIBUTE.filename] = s3_str(filename)
 
             elif fieldtype == "password":
                 data = SubElement(elem, DATA)
@@ -1127,7 +1127,7 @@ class S3XML(S3Codec):
                 attr[FIELD] = f
                 if represent or fieldtype not in ("string", "text"):
                     if value is None:
-                        value = s3_unicode(to_json(v))
+                        value = s3_str(to_json(v))
                     attr[VALUE] = value
                 if is_lazy:
                     lazy.append((text, data, None, None))
@@ -1383,8 +1383,8 @@ class S3XML(S3Codec):
                     except ValueError:
                         # e.g. unknown url type
                         error = sys.exc_info()[1]
-                        child.set(ERROR, s3_unicode("%s: %s" % (f, error)))
-                        child.set(VALUE, s3_unicode(v))
+                        child.set(ERROR, s3_str("%s: %s" % (f, error)))
+                        child.set(VALUE, s3_str(v))
                         valid = False
                         continue
 
@@ -1480,11 +1480,11 @@ class S3XML(S3Codec):
                     except:
                         error = sys.exc_info()[1]
 
-                child.set(VALUE, s3_unicode(v))
+                child.set(VALUE, s3_str(v))
                 if error:
                     # Console just reports 'Validation error'...use this to see the actual error
                     #current.log.error("%s.%s: %s" % (table, f, error))
-                    child.set(ERROR, s3_unicode("%s: %s" % (f, error)))
+                    child.set(ERROR, s3_str("%s: %s" % (f, error)))
                     valid = False
                     continue
 
@@ -1505,7 +1505,8 @@ class S3XML(S3Codec):
                           fieldname,
                           parent = None,
                           show_uids = False,
-                          hierarchy = False):
+                          hierarchy = False,
+                          ):
         """
             Get options of a field as <select>
 
@@ -1569,7 +1570,8 @@ class S3XML(S3Codec):
                     if show_uids:
                         query = ktable[key].belongs(ids)
                         rows = current.db(query).select(ktable[key],
-                                                        ktable[UID])
+                                                        ktable[UID],
+                                                        )
                         for row in rows:
                             uids[str(row[key])] = row[UID]
                     if hierarchy:
@@ -1588,12 +1590,12 @@ class S3XML(S3Codec):
 
                 # Create <option> element
                 option = SubElement(select, OPTION)
-                option.text = s3_unicode(s3_strip_markup(text))
+                option.text = s3_str(s3_strip_markup(text))
 
                 attr = option.attrib
 
                 # Add value-attribute
-                value = s3_unicode(value)
+                value = s3_str(value)
                 attr[VALUE] = value
 
                 # Add uuid-attribute, if required
@@ -1621,7 +1623,8 @@ class S3XML(S3Codec):
                     table,
                     fields = None,
                     show_uids = False,
-                    hierarchy = False):
+                    hierarchy = False,
+                    ):
         """
             Get options of option fields in a table as <select>s
 
@@ -1725,11 +1728,11 @@ class S3XML(S3Codec):
                                   len(opts) and True or False)
                 set_attribute(ATTRIBUTE.has_options, has_options)
                 if labels:
-                    label = s3_unicode(table[f].label)
+                    label = s3_str(table[f].label)
                     set_attribute(ATTRIBUTE.label, label)
                     comment = table[f].comment
                     if comment:
-                        comment = s3_unicode(comment)
+                        comment = s3_str(comment)
                     if comment and "<" in comment:
                         comment = s3_strip_markup(comment)
                     if comment:
@@ -1924,7 +1927,7 @@ class S3XML(S3Codec):
             e = sys.exc_info()[1]
             raise HTTP(400, body=cls.json_message(False, 400, e))
 
-        native=False
+        native = False
 
         if not format:
             format = cls.TAG.root
@@ -2171,7 +2174,8 @@ class S3XML(S3Codec):
                  rows = None,
                  cols = None,
                  fields = None,
-                 header_row = True):
+                 header_row = True,
+                 ):
         """
             Convert a table in an XLS (MS Excel) sheet into an ElementTree,
             consisting of <table name="format">, <row> and
@@ -2315,7 +2319,7 @@ class S3XML(S3Codec):
                 text = ""
                 if v:
                     if t is None:
-                        text = s3_unicode(v).strip()
+                        text = s3_str(v).strip()
                     elif t == XL_CELL_TEXT:
                         text = v.strip()
                     elif t == XL_CELL_NUMBER:
@@ -2424,7 +2428,8 @@ class S3XML(S3Codec):
                   rows = None,
                   cols = None,
                   fields = None,
-                  header_row = True):
+                  header_row = True,
+                  ):
         """
             Convert a table in an XLSX (MS Excel) sheet into an ElementTree,
             consisting of <table name="format">, <row> and
@@ -2555,7 +2560,7 @@ class S3XML(S3Codec):
                     elif isinstance(v, bool):
                         text = str(v).lower()
                     else:
-                        text = s3_unicode(v).strip()
+                        text = s3_str(v).strip()
                 return text
 
             def add_col(row, name, v, hashtags=None):
@@ -2699,7 +2704,8 @@ class S3XML(S3Codec):
                  extra_data = None,
                  hashtags = None,
                  delimiter = ",",
-                 quotechar = '"'):
+                 quotechar = '"',
+                 ):
         """
             Convert a table-form CSV source into an element tree, consisting of
             <table name="format">, <row> and <col field="fieldname"> elements.
@@ -2733,13 +2739,13 @@ class S3XML(S3Codec):
 
         def add_col(row, key, value, hashtags=None):
             col = SubElement(row, COL)
-            col.set(FIELD, s3_unicode(key))
+            col.set(FIELD, s3_str(key))
             if hashtags:
                 hashtag = hashtags.get(key)
                 if hashtag and hashtag[1:]:
                     col.set(HASHTAG, hashtag)
             if value:
-                text = s3_unicode(value).strip()
+                text = s3_str(value).strip()
                 if text[:6].lower() not in ("null", "<null>"):
                     try:
                         col.text = text
@@ -2761,7 +2767,7 @@ class S3XML(S3Codec):
             for line in source:
                 if e:
                     try:
-                        s = s3_unicode(line, e)
+                        s = s3_str(line, e)
                         yield s
                     except:
                         pass
@@ -2769,7 +2775,7 @@ class S3XML(S3Codec):
                         continue
                 for encoding in encodings:
                     try:
-                        s = s3_unicode(line, encoding)
+                        s = s3_str(line, encoding)
                         yield s
                     except:
                         continue
@@ -2790,7 +2796,7 @@ class S3XML(S3Codec):
                         continue
                     if i == 0:
                         # Auto-detect hashtags
-                        items = {k: s3_unicode(v.strip())
+                        items = {k: s3_str(v.strip())
                                  for k, v in r.items() if k and v and v.strip()}
                         if all(v[0] == "#" for v in items.values()):
                             hashtags.update(items)
@@ -3010,7 +3016,6 @@ class S3XMLFormat(object):
 
         self.select = select
         self.skip = skip
-        return
 
     # -------------------------------------------------------------------------
     def transform(self, tree, **args):

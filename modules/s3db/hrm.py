@@ -1062,7 +1062,7 @@ class HRModel(S3Model):
         role_type = data_get("type", None)
 
         table = item.table
-        query = (table.name.lower() == s3_unicode(name).lower())
+        query = (table.name.lower() == s3_str(name).lower())
         if org:
             query  = query & (table.organisation_id == org)
         if role_type:
@@ -1139,7 +1139,7 @@ class HRModel(S3Model):
 
         # We want to do case-insensitive searches
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
-        value = s3_unicode(value).lower()
+        value = s3_str(value).lower()
 
         if " " in value:
             # Multiple words
@@ -3893,9 +3893,9 @@ class HRSkillModel(S3Model):
 
         table = item.table
         stable = current.s3db.hrm_skill_type
-        query = (table.name.lower() == s3_unicode(name).lower()) & \
+        query = (table.name.lower() == s3_str(name).lower()) & \
                 (table.skill_type_id == stable.id) & \
-                (stable.value.lower() == s3_unicode(skill).lower())
+                (stable.value.lower() == s3_str(skill).lower())
         duplicate = current.db(query).select(table.id,
                                              limitby = (0, 1),
                                              ).first()

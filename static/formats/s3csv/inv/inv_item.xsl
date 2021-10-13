@@ -28,7 +28,7 @@
          Quantity...............inv_inv_item.quantity
          Unit Value.............inv_inv_item.pack_value
          Currency...............inv_inv_item.currency
-         Bin....................inv_inv_item.layout_id (Split via / if need hierarchy...supports up to 3 levels)
+         Bin....................inv_inv_item_bin.layout_id (Split via / if need hierarchy...supports up to 3 levels)
          Expiry Date............inv_inv_item.expiry_date
          Supplier/Donor.........inv_inv_item.supply_org_id
          Tracking Number........inv_inv_item.tracking_no
@@ -246,12 +246,15 @@
             <data field="tracking_no"><xsl:value-of select="$tracking"/></data>
             <!-- Bin -->
             <xsl:if test="$BinName!=''">
-                <xsl:variable name="BinTUID" select="concat($FacilityTUID, '|', $BinName)"/>
-                <reference field="layout_id" resource="org_site_layout">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$BinTUID"/>
-                    </xsl:attribute>
-                </reference>
+                <resource name="inv_inv_item_bin">
+                    <xsl:variable name="BinTUID" select="concat($FacilityTUID, '|', $BinName)"/>
+                    <reference field="layout_id" resource="org_site_layout">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$BinTUID"/>
+                        </xsl:attribute>
+                    </reference>
+                    <data field="quantity"><xsl:value-of select="col[@field='Quantity']"/></data>
+                </resource>
             </xsl:if>
             <data field="expiry_date"><xsl:value-of select="$expiry"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>

@@ -119,36 +119,37 @@ class S3GroupedItemsReport(S3Method):
 
         # Get the report configuration
         report_config = self.get_report_config()
+        report_config_get = report_config.get
 
         # Resolve selectors in the report configuration
         fields = self.resolve(report_config)
 
         # Get extraction method
-        extract = report_config.get("extract")
+        extract = report_config_get("extract")
         if not callable(extract):
             extract = self.extract
 
         selectors = [s for s in fields if fields[s] is not None]
-        orderby = report_config.get("orderby_cols")
+        orderby = report_config_get("orderby_cols")
 
         # Extract the data
         items = extract(self.resource, selectors, orderby)
 
         # Group and aggregate
-        groupby = report_config.get("groupby_cols")
-        aggregate = report_config.get("aggregate_cols")
+        groupby = report_config_get("groupby_cols")
+        aggregate = report_config_get("aggregate_cols")
 
         gi = S3GroupedItems(items, groupby=groupby, aggregate=aggregate)
 
         # Report title
-        title = report_config.get("title")
+        title = report_config_get("title")
         if title is None:
             title = self.crud_string(tablename, "title_report")
 
         # Generate JSON data
-        display_cols = report_config.get("display_cols")
-        labels = report_config.get("labels")
-        represent = report_config.get("groupby_represent")
+        display_cols = report_config_get("display_cols")
+        labels = report_config_get("labels")
+        represent = report_config_get("groupby_represent")
 
         data = gi.json(fields = display_cols,
                        labels = labels,
@@ -156,7 +157,7 @@ class S3GroupedItemsReport(S3Method):
                        as_dict = representation in ("pdf", "xls"),
                        )
 
-        group_headers = report_config.get("group_headers", False)
+        group_headers = report_config_get("group_headers", False)
 
         # Widget ID
         widget_id = "groupeditems"
@@ -220,7 +221,7 @@ class S3GroupedItemsReport(S3Method):
             totals_label = report_config.get("totals_label", T("Total"))
 
             options = {"ajaxURL": ajaxurl,
-                       "totalsLabel": str(totals_label).upper(),
+                       "totalsLabel": s3_str(totals_label).upper(),
                        "renderGroupHeaders": group_headers,
                        }
 
@@ -874,7 +875,7 @@ class S3GroupedItemsTable(object):
         columns = data.get("c")
         labels = data.get("l")
 
-        header_row = TR(_class="gi-column-headers")
+        header_row = TR(_class = "gi-column-headers")
         if columns:
             for column in columns:
                 label = labels.get(column, column)
@@ -991,7 +992,7 @@ class S3GroupedItemsTable(object):
                                self.totals_label,
                                )
 
-        footer_row = TR(_class="gi-group-footer gi-level-%s" % level)
+        footer_row = TR(_class = "gi-group-footer gi-level-%s" % level)
         if not totals:
             if not self.group_headers:
                 footer_row.append(TD(value, _colspan = len(columns)))
@@ -1033,7 +1034,9 @@ class S3GroupedItemsTable(object):
 
         for column in columns:
             cells.append(TD(item.get(column, "")))
-        tbody.append(TR(cells, _class="gi-item gi-level-%s" % level))
+        tbody.append(TR(cells,
+                        _class = "gi-item gi-level-%s" % level,
+                        ))
 
     # -------------------------------------------------------------------------
     @staticmethod

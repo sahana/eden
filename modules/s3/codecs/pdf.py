@@ -44,7 +44,7 @@ from gluon.contenttype import contenttype
 from gluon.languages import lazyT
 
 from ..s3codec import S3Codec
-from ..s3utils import s3_strip_markup, s3_unicode, s3_str
+from ..s3utils import s3_strip_markup, s3_str
 
 try:
     from reportlab.graphics.shapes import Drawing, Line
@@ -125,7 +125,7 @@ def biDiText(text):
         rewritten to use the joined format.
     """
 
-    text = s3_unicode(text)
+    text = s3_str(text)
 
     if biDiImported and current.deployment_settings.get_pdf_bidi():
 

@@ -525,7 +525,7 @@ def series_export_spreadsheet(matrix, matrix_answers, logo):
         row = cell.row
         col = cell.col
         try:
-            text = s3_unicode(cell.text)
+            text = s3_str(cell.text)
         except:
             text = cell.text
         width = 16
@@ -758,7 +758,7 @@ def series_export_spreadsheet(matrix, matrix_answers, logo):
                                        cell.row + cell.mergeV,
                                        cell.col,
                                        cell.col + cell.mergeH,
-                                       s3_unicode(cell.text),
+                                       s3_str(cell.text),
                                        joined_style,
                                        )
                 except Exception as msg:
@@ -772,7 +772,7 @@ def series_export_spreadsheet(matrix, matrix_answers, logo):
             else:
                 sheet1.write(cell.row,
                              cell.col,
-                             s3_unicode(cell.text),
+                             s3_str(cell.text),
                              style,
                              )
     CELL_WIDTH = 480 # approximately 2 characters
@@ -789,7 +789,7 @@ def series_export_spreadsheet(matrix, matrix_answers, logo):
         style = merge_styles(style_list, cell.styleList)
         sheet2.write(cell.row,
                      cell.col,
-                     s3_unicode(cell.text),
+                     s3_str(cell.text),
                      style,
                      )
 
@@ -802,7 +802,7 @@ def series_export_spreadsheet(matrix, matrix_answers, logo):
         sheet2.col(i).width = 0
     sheet2.write(0,
                  26,
-                 s3_unicode(T("Please do not remove this sheet")),
+                 s3_str(T("Please do not remove this sheet")),
                  style_header,
                  )
     sheet2.col(26).width = 12000

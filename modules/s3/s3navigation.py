@@ -586,7 +586,7 @@ class S3NavigationItem(object):
         else:
             for item in self.components:
                 if not selected:
-                    selected = item.select(tag=tag)
+                    selected = item.select(tag = tag)
                 else:
                     item.deselect_all()
             if not selected and tag in self.tags:
@@ -1025,7 +1025,6 @@ class S3NavigationItem(object):
         else:
             p.components.append(self)
         self.parent = p
-        return
 
     # -------------------------------------------------------------------------
     def append(self, item=None):
@@ -1150,7 +1149,7 @@ class S3NavigationItem(object):
         if sub:
             path.extend(sub)
         if self.parent:
-            return self.parent.path(sub=path)
+            return self.parent.path(sub = path)
         else:
             return path
 

@@ -40,7 +40,7 @@ from gluon.storage import Storage
 from gluon.streamer import DEFAULT_CHUNK_SIZE
 
 from ..s3codec import S3Codec
-from ..s3utils import s3_str, s3_unicode, s3_strip_markup
+from ..s3utils import s3_str, s3_strip_markup
 
 # =============================================================================
 class S3SHP(S3Codec):
@@ -148,7 +148,7 @@ class S3SHP(S3Codec):
         header = []
         happend = header.append
         for selector in lfields:
-            h = s3_unicode(headers[selector].replace(" ", "_"))
+            h = s3_str(headers[selector].replace(" ", "_"))
             happend(h)
             if selector != "gis_location.wkt":
                 # Don't include the WKT field as an Attribute in the Shapefile
@@ -160,7 +160,7 @@ class S3SHP(S3Codec):
             row = []
             rappend = row.append
             for selector in lfields:
-                represent = s3_strip_markup(s3_unicode(item[selector]))
+                represent = s3_strip_markup(s3_str(item[selector]))
                 rappend(represent)
             oappend('"%s"' % '","'.join(row))
 

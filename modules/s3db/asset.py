@@ -1412,7 +1412,7 @@ class asset_AssetRepresent(S3Represent):
                                       # remove the .aaData extension in paginated views
                                       extension = ""
                                       ))
-        k = s3_unicode(k)
+        k = s3_str(k)
         return A(v, _href=self.linkto.replace("[id]", k) \
                                      .replace("%5Bid%5D", k))
 

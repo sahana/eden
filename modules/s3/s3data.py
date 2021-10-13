@@ -44,7 +44,7 @@ from gluon.html import *
 from gluon.storage import Storage
 
 from s3dal import Expression, S3DAL
-from .s3utils import s3_orderby_fields, s3_str, s3_unicode, s3_set_extension
+from .s3utils import s3_orderby_fields, s3_str, s3_set_extension
 
 # =============================================================================
 class S3DataTable(object):
@@ -192,8 +192,7 @@ class S3DataTable(object):
              filteredrows,
              id = None,
              draw = 1,
-             **attr
-             ):
+             **attr):
         """
             Method to render the dataTable into html
 
@@ -222,12 +221,13 @@ class S3DataTable(object):
         bulkCol = attr_get("dt_bulk_col", 0)
         if bulkCol > len(flist):
             bulkCol = len(flist)
+
         action_col = attr_get("dt_action_col", 0)
         if action_col != 0:
             if action_col == -1 or action_col >= len(flist):
-                action_col = len(flist) -1
+                action_col = len(flist) - 1
                 attr["dt_action_col"] = action_col
-            flist = flist[1:action_col+1] + [flist[0]] + flist[action_col+1:]
+            flist = flist[1:action_col + 1] + [flist[0]] + flist[action_col + 1:]
 
         # Get the details for any bulk actions. If we have at least one bulk
         # action then a column will be added, either at the start or in the
@@ -241,7 +241,9 @@ class S3DataTable(object):
         if pagination:
             real_end = self.end
             self.end = self.start + 1
+
         table = self.table(id, flist, action_col)
+
         if pagination:
             self.end = real_end
             aadata = self.aadata(totalrows,
@@ -249,8 +251,8 @@ class S3DataTable(object):
                                  id,
                                  draw,
                                  flist,
-                                 action_col=action_col,
-                                 stringify=False,
+                                 action_col = action_col,
+                                 as_json = False,
                                  **attr)
             cache = {"cacheLower": self.start,
                      "cacheUpper": self.end if filteredrows > self.end else filteredrows,
@@ -259,14 +261,12 @@ class S3DataTable(object):
         else:
             cache = None
 
-        html = self.htmlConfig(table,
-                               id,
-                               self.orderby,
-                               self.rfields,
-                               cache,
-                               **attr
-                               )
-        return html
+        return self.html_config(table,
+                                id,
+                                self.orderby,
+                                self.rfields,
+                                cache,
+                                **attr)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -305,9 +305,7 @@ class S3DataTable(object):
              displayrows,
              id,
              draw,
-             stringify = True,
-             **attr
-             ):
+             **attr):
         """
             Method to render the data into a json object
 
@@ -334,7 +332,8 @@ class S3DataTable(object):
         if action_col != 0:
             if action_col == -1 or action_col >= len(flist):
                 action_col = len(flist) - 1
-            flist = flist[1:action_col+1] + [flist[0]] + flist[action_col+1:]
+            flist = flist[1:action_col + 1] + [flist[0]] + flist[action_col + 1:]
+
         # Get the details for any bulk actions. If we have at least one bulk
         # action then a column will be added, either at the start or in the
         # column identified by dt_bulk_col
@@ -353,84 +352,11 @@ class S3DataTable(object):
                            draw,
                            flist,
                            action_col = action_col,
-                           stringify = stringify,
+                           #as_json = True,
                            **attr)
 
     # -------------------------------------------------------------------------
     # Extended API
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def getConfigData():
-        """
-            Method to extract the configuration data from S3 globals and
-            store them as an attr variable.
-            - used by Survey module
-
-            @return: dictionary of attributes which can be passed into html()
-
-            @param attr: dictionary of attributes which can be passed in
-                   dt_pageLength : The default number of records that will be shown
-                   dt_pagination: Enable pagination
-                   dt_pagingType: type of pagination, one of:
-                                        simple
-                                        simple_numbers
-                                        full
-                                        full_numbers (default)
-                                  http://datatables.net/reference/option/pagingType
-                   dt_searching: Enable or disable filtering of data.
-                   dt_group: The colum that is used to group the data
-                   dt_ajax_url: The URL to be used for the Ajax call
-                   dt_action_col: The column where the action buttons will be placed
-                   dt_bulk_actions: list of labels for the bulk actions.
-                   dt_bulk_col: The column in which the checkboxes will appear,
-                                by default it will be the column immediately
-                                before the first data item
-                   dt_bulk_selected: A list of selected items
-                   #dt_row_actions: a list of actions (each is a dict)
-                   dt_styles: dictionary of styles to be applied to a list of ids
-                              for example:
-                              {"warning" : [1,3,6,7,9],
-                               "alert" : [2,10,13]}
-        """
-
-        s3 = current.response.s3
-
-        attr = Storage()
-        if s3.datatable_ajax_source:
-            attr.dt_ajax_url = s3.datatable_ajax_source
-        # Defaults in htmlConfig() anyway:
-        #if s3.actions:
-        #    attr.dt_row_actions = s3.actions
-        if s3.dataTableBulkActions:
-            attr.dt_bulk_actions = s3.dataTableBulkActions
-        if s3.dataTable_pageLength:
-            attr.dt_pageLength = s3.dataTable_pageLength
-        attr.dt_pagination = "false" if s3.no_sspag else "true"
-        # Nothing using currently
-        #if s3.dataTable_pagingType:
-        #    attr.dt_pagingType = s3.dataTable_pagingType
-        # Nothing using currently
-        # Was used only by inv/inv_item
-        #if s3.dataTable_group:
-        #    attr.dt_group = s3.dataTable_group
-        # Nothing using currently
-        # - and not worth enabling as not used by standard CRUD
-        #if s3.dataTable_NoSearch:
-        #    attr.dt_searching = not s3.dataTable_NoSearch
-        if s3.dataTable_dom:
-            attr.dt_dom = s3.dataTable_dom
-        if s3.dataTableDisplay:
-            attr.dt_display = s3.dataTableDisplay
-        if s3.dataTableStyleDisabled or s3.dataTableStyleWarning or s3.dataTableStyleAlert:
-            attr.dt_styles = {}
-            if s3.dataTableStyleDisabled:
-                attr.dt_styles["dtdisable"] = s3.dataTableStyleDisabled
-            if s3.dataTableStyleWarning:
-                attr.dt_styles["dtwarning"] = s3.dataTableStyleWarning
-            if s3.dataTableStyleAlert:
-                attr.dt_styles["dtalert"] = s3.dataTableStyleAlert
-        return attr
-
     # -------------------------------------------------------------------------
     @staticmethod
     def export_formats(rfields = None,
@@ -551,101 +477,12 @@ class S3DataTable(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def defaultActionButtons(resource,
-                             custom_actions = None,
-                             r = None
-                             ):
-        """
-            Configure default action buttons
-
-            @param resource: the resource
-            @param r: the request, if specified, all action buttons will
-                      be linked to the controller/function of this request
-                      rather than to prefix/name of the resource
-            @param custom_actions: custom actions as list of dicts like
-                                   {"label":label, "url":url, "_class":class},
-                                   will be appended to the default actions
-
-            @ToDo: DRY with S3CRUD.action_buttons()
-        """
-
-        from .s3crud import S3CRUD
-
-        s3 = current.response.s3
-        auth = current.auth
-        actions = s3.actions = None
-
-        table = resource.table
-        has_permission = auth.s3_has_permission
-        ownership_required = auth.permission.ownership_required
-
-        labels = s3.crud_labels
-        args = ["[id]"]
-
-        # Choose controller/function to link to
-        if r is not None:
-            c = r.controller
-            f = r.function
-        else:
-            c = resource.prefix
-            f = resource.name
-
-        tablename = resource.tablename
-        get_config = current.s3db.get_config
-
-        # "Open" button
-        editable = get_config(tablename, "editable", True)
-        if editable and has_permission("update", table) and \
-           not ownership_required("update", table):
-            update_url = URL(c=c, f=f,
-                             args = args + ["update"],
-                             )
-            S3CRUD.action_button(labels.UPDATE,
-                                 update_url,
-                                 icon = "edit",
-                                 _class = "action-btn edit",
-                                 )
-        else:
-            read_url = URL(c=c, f=f,
-                           args = args,
-                           )
-            S3CRUD.action_button(labels.READ,
-                                 read_url,
-                                 icon = "file",
-                                 _class = "action-btn read",
-                                 )
-
-        # Delete button
-        # @todo: does not apply selective action (renders DELETE for
-        #        all items even if the user is only permitted to delete
-        #        some of them) => should implement "restrict", see
-        #        S3CRUD.action_buttons
-        deletable = get_config(tablename, "deletable", True)
-        if deletable and \
-           has_permission("delete", table) and \
-           not ownership_required("delete", table):
-            delete_url = URL(c=c, f=f,
-                             args = args + ["delete"],
-                             )
-            S3CRUD.action_button(labels.DELETE,
-                                 delete_url,
-                                 icon = "delete",
-                                 _class = "delete-btn",
-                                 )
-
-        # Append custom actions
-        if custom_actions:
-            actions = actions + custom_actions if actions else custom_actions
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def htmlConfig(html,
-                   id,
-                   orderby,
-                   rfields = None,
-                   cache = None,
-                   **attr
-                   ):
+    def html_config(html,
+                    id,
+                    orderby,
+                    rfields = None,
+                    cache = None,
+                    **attr):
         """
             Method to wrap the html for a dataTable in a form, add the export formats
             and the config details required by dataTables
@@ -825,7 +662,8 @@ class S3DataTable(object):
             base_url = attr_get("dt_base_url", None)
             export_formats = S3DataTable.export_formats(rfields,
                                                         permalink = permalink,
-                                                        base_url = base_url)
+                                                        base_url = base_url,
+                                                        )
             # NB These can be moved around in initComplete()
             form.append(export_formats)
 
@@ -893,7 +731,7 @@ class S3DataTable(object):
             @param id: The id of the table
             @param flist: The list of fields
             @param action_col: The column where action columns will be displayed
-                               (this is required by dataTables)
+                               (this is required with Bulk Actions)
         """
 
         data = self.data
@@ -942,6 +780,7 @@ class S3DataTable(object):
 
         if current.deployment_settings.get_ui_datatables_responsive():
             table.add_class("responsive")
+
         return table
 
     # -------------------------------------------------------------------------
@@ -951,10 +790,9 @@ class S3DataTable(object):
                id,
                draw,
                flist,
-               stringify = True,
                action_col = None,
-               **attr
-               ):
+               as_json = True,
+               **attr):
         """
             Method to render the data into a json object
 
@@ -965,6 +803,8 @@ class S3DataTable(object):
             @param draw: An unaltered copy of draw sent from the client used
                           by dataTables as a draw count.
             @param flist: The list of fields
+            @param action_col: Which column is used for Actions (only used for Bulk Actions)
+            @param as_json: Whether to output as JSON
             @param attr: dictionary of attributes which can be passed in
                    dt_action_col: The column where the action buttons will be placed
                    dt_bulk_actions: list of labels for the bulk actions.
@@ -981,8 +821,10 @@ class S3DataTable(object):
             flist = self.colnames
         start = self.start
         end = self.end
-        if action_col is None:
-            action_col = attr.get("dt_action_col", 0)
+        if "BULK" in flist:
+            if action_col is None:
+                action_col = attr.get("dt_action_col", 0)
+            action_field = flist[action_col]
         structure = {}
         aadata = []
         for i in range(start, end):
@@ -991,9 +833,9 @@ class S3DataTable(object):
             for field in flist:
                 if field == "BULK":
                     details.append("<INPUT type='checkbox' class='bulkcheckbox' data-dbid='%s'>" % \
-                                   row[flist[action_col]])
+                                   row[action_field])
                 else:
-                    details.append(s3_unicode(row[field]))
+                    details.append(s3_str(row[field]))
             aadata.append(details)
         structure["dataTable_id"] = id # Is this used anywhere? Can't see it used, so could be removed?
         structure["dataTable_filter"] = self.filterString
@@ -1003,7 +845,7 @@ class S3DataTable(object):
         structure["recordsTotal"] = totalrows
         structure["recordsFiltered"] = displayrows
         structure["draw"] = draw
-        if stringify:
+        if as_json:
             from gluon.serializers import json as jsons
             return jsons(structure)
         else:

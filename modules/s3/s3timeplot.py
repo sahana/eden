@@ -53,7 +53,7 @@ from .s3datetime import s3_decode_iso_datetime, s3_utc
 from .s3rest import S3Method
 from .s3query import FS
 from .s3report import S3Report, S3ReportForm
-from .s3utils import s3_flatlist, s3_represent_value, s3_unicode, S3MarkupStripper
+from .s3utils import s3_flatlist, s3_represent_value, s3_str, S3MarkupStripper
 
 tp_datetime = lambda *t: datetime.datetime(tzinfo = dateutil.tz.tzutc(), *t)
 
@@ -821,7 +821,7 @@ class S3TimeSeries(object):
 
             represent = rfield.represent
             if not represent:
-                represent = s3_unicode
+                represent = s3_str
 
             for value in values:
                 if value is None:
@@ -875,7 +875,7 @@ class S3TimeSeries(object):
                 def repr_method(val):
                     if val is None:
                         return "-"
-                    text = s3_unicode(val)
+                    text = s3_str(val)
                     if "<" in text:
                         stripper.feed(text)
                         return stripper.stripped() # = totally naked ;)

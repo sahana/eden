@@ -1,5 +1,5 @@
 /**
- * Used by the inv/recv controller
+ * Used by the inv/recv controller when settings.inv_recv_req = True and there are multiple Sites in the selected Requests
  * - set Sites based on selected Requests
  */
 

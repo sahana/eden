@@ -65,7 +65,7 @@ from gluon.contenttype import contenttype
 
 from .s3datetime import S3DateTime
 from .s3rest import S3Method
-from .s3utils import s3_represent_value, s3_str, s3_unicode, s3_validate
+from .s3utils import s3_represent_value, s3_str, s3_validate
 from .s3codec import S3Codec
 
 try:
@@ -4019,8 +4019,8 @@ class S3OCRImageParser(object):
                                                       field_name=field.attrib.get("name"),
                                                       field_value=comp_value)
                                 if result:
-                                    OCRText.append(s3_unicode(comp_text).strip())
-                                    OCRValue.append(s3_unicode(comp_value).strip())
+                                    OCRText.append(s3_str(comp_text).strip())
+                                    OCRValue.append(s3_str(comp_value).strip())
 
                                 linenum += 1
 
@@ -4086,7 +4086,7 @@ class S3OCRImageParser(object):
                                     linenum += 1
                                     comp_count += 1
 
-                                    OCRedValues[comp_meta] = s3_unicode(output).strip()
+                                    OCRedValues[comp_meta] = s3_str(output).strip()
 
                                 # YYYY
                                 yyyy = datetime.datetime.now().year
@@ -4197,7 +4197,7 @@ class S3OCRImageParser(object):
                                     linenum += 1
                                     comp_count += 1
 
-                                output = s3_unicode(ocrText).strip()
+                                output = s3_str(ocrText).strip()
                                 # Store OCRText
                                 if field_type in ["double", "integer"]:
                                     try:

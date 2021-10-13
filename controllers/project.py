@@ -1226,7 +1226,7 @@ def indicator():
                                                 P(record.verification),
                                                 _class="profile-header",
                                                 ),
-                           profile_title = "%s : %s" % (s3_unicode(s3.crud_strings["project_indicator"].title_display),
+                           profile_title = "%s : %s" % (s3_str(s3.crud_strings["project_indicator"].title_display),
                                                         code),
                            profile_widgets = profile_widgets,
                            )

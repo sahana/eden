@@ -30,6 +30,7 @@
 __all__ = ("WarehouseModel",
            "InventoryModel",
            "InventoryAdjustModel",
+           "InventoryBinModel",
            "InventoryCommitModel",
            "InventoryCommitItemModel",
            "InventoryKittingModel",
@@ -588,21 +589,6 @@ class InventoryModel(S3Model):
                                 requires = IS_FLOAT_AMOUNT(minimum = 0.0),
                                 writable = direct_stock_edits,
                                 ),
-                          self.org_site_layout_id(label = T("Bin"),
-                                                  # This has the URL adjusted for the right site_id in the controller & s3.inv_item.js
-                                                  comment = S3PopupLink(c = "org",
-                                                                        f = "site",
-                                                                        args = ["[id]", "layout", "create"],
-                                                                        vars = {"prefix": "inv",
-                                                                                "parent": "inv_item",
-                                                                                "child": "layout_id",
-                                                                                },
-                                                                        label = T("Create Bin"),
-                                                                        title = T("Bin"),
-                                                                        tooltip = T("If you don't see the Bin listed, you can add a new one by clicking link 'Create Bin'."),
-                                                                        _id = "inv_inv_item_layout_id-create-btn",
-                                                                        ),
-                                                  ),
                           # e.g.: Allow items to be marked as 'still on the shelf but allocated to an outgoing shipment'
                           Field("status", "integer",
                                 default = 0, # Only Items with this Status can be allocated to Outgoing Shipments
@@ -787,32 +773,45 @@ $.filterOptionsS3({
                                  )
 
         # List fields
+        list_fields = ["site_id",
+                       "item_id",
+                       "item_id$code",
+                       "item_id$item_category_id",
+                       "quantity",
+                       "bin.layout_id",
+                       "expiry_date",
+                       "owner_org_id",
+                       "supply_org_id",
+                       "status",
+                       ]
+
         if track_pack_values:
-            list_fields = ["site_id",
-                           "item_id",
-                           "item_id$code",
-                           "item_id$item_category_id",
-                           "quantity",
-                           "expiry_date",
-                           "owner_org_id",
-                           "pack_value",
-                           (T("Total Value"), "total_value"),
-                           "currency",
-                           "layout_id",
-                           "supply_org_id",
-                           "status",
-                           ]
-        else:
-            list_fields = ["site_id",
-                           "item_id",
-                           "item_id$code",
-                           "item_id$item_category_id",
-                           "quantity",
-                           "layout_id",
-                           "owner_org_id",
-                           "supply_org_id",
-                           "status",
-                           ]
+            list_fields.insert(7, "currency")
+            list_fields.insert(7, (T("Total Value"), "total_value"))
+            list_fields.insert(7, "pack_value")
+
+        crud_form = S3SQLCustomForm("site_id",
+                                    "item_id",
+                                    "item_pack_id",
+                                    "quantity",
+                                    S3SQLInlineComponent("bin",
+                                                         label = T("Bins"),
+                                                         fields = [(T("Bin"), "layout_id"),
+                                                                   (T("Quantity"), "quantity"),
+                                                                   ],
+                                                         ),
+                                    "status",
+                                    "purchase_date",
+                                    "expiry_date",
+                                    "pack_value",
+                                    "currency",
+                                    "item_source_no",
+                                    "owner_org_id",
+                                    "supply_org_id",
+                                    "source_type",
+                                    "comments",
+                                    postprocess = self.inv_item_postprocess,
+                                    )
 
         # Configuration
         self.configure(tablename,
@@ -823,6 +822,7 @@ $.filterOptionsS3({
                        insertable = direct_stock_edits,
                        context = {"location": "site_id$location_id",
                                   },
+                       crud_form = crud_form,
                        deduplicate = self.inv_item_duplicate,
                        extra_fields = ["quantity",
                                        "pack_value",
@@ -831,6 +831,7 @@ $.filterOptionsS3({
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        onaccept = self.inv_item_onaccept,
+                       onimport = self.inv_item_onimport,
                        report_options = report_options,
                        super_entity = "supply_item_entity",
                        grouped = {
@@ -858,6 +859,9 @@ $.filterOptionsS3({
 
         self.add_components(tablename,
                             inv_adj_item = "inv_item_id",
+                            inv_inv_item_bin = {"name": "bin",
+                                                "joinby": "inv_item_id",
+                                                },
                             )
 
         # ---------------------------------------------------------------------
@@ -865,55 +869,6 @@ $.filterOptionsS3({
         #
         return {"inv_item_id": inv_item_id,
                 }
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def inv_item_total_value(row):
-        """ Total value of an inventory item """
-
-        if hasattr(row, "inv_inv_item"):
-            row = row.inv_inv_item
-
-        try:
-            value = row.quantity * row.pack_value
-        except (AttributeError, TypeError):
-            # not available
-            return current.messages["NONE"]
-        else:
-            return round(value, 2)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def inv_item_onaccept(form):
-        """
-            Called when Stock is created/updated by:
-            - direct_stock_edits
-            - imports
-
-            Create/Update a Stock Card
-            Update the Free Capacity of the Warehouse
-        """
-
-        inv_item_id = form.vars.id
-
-        settings = current.deployment_settings
-
-        stock_cards = settings.get_inv_stock_cards()
-        if stock_cards:
-            comments = "Import" if current.response.s3.bulk else "Direct Stock Edit"
-            inv_stock_card_update([inv_item_id], comments = comments)
-
-        free_capacity_calculated = settings.get_inv_warehouse_free_capacity_calculated()
-        if free_capacity_calculated:
-            site_id = form.vars.get("site_id")
-            if not site_id:
-                table = current.s3db.inv_inv_item
-                record = current.db(table.id == inv_item_id).select(table.site_id,
-                                                                    limitby = (0, 1),
-                                                                    ).first()
-                site_id = record.site_id
-
-            inv_warehouse_free_capacity(site_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -935,7 +890,6 @@ $.filterOptionsS3({
         supply_org_id = data_get("supply_org_id")
         pack_value = data_get("pack_value")
         currency = data_get("currency")
-        item_layout_id = data_get("layout_id")
 
         # Must match all of these exactly
         query = (table.site_id == site_id) & \
@@ -944,8 +898,7 @@ $.filterOptionsS3({
                 (table.owner_org_id == owner_org_id) & \
                 (table.supply_org_id == supply_org_id) & \
                 (table.pack_value == pack_value) & \
-                (table.currency == currency) & \
-                (table.layout_id == item_layout_id)
+                (table.currency == currency)
 
         duplicate = current.db(query).select(table.id,
                                              table.quantity,
@@ -959,6 +912,99 @@ $.filterOptionsS3({
             # implicitly through inv_track_item), retain the stock quantity
             if "quantity" in data and data.quantity == 0:
                 item.data.quantity = duplicate.quantity
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_item_onaccept(form):
+        """
+            Called when Stock is created/updated by:
+            - direct_stock_edits
+            - imports
+
+            Update the Free Capacity of the Warehouse
+        """
+
+        if current.response.s3.bulk:
+            # Done in inv_item_onimport to reduce load
+            return
+
+        # Update the Free Capacity of the Warehouse
+        if current.deployment_settings.get_inv_warehouse_free_capacity_calculated():
+            site_id = form.vars.get("site_id")
+            if not site_id:
+                table = current.s3db.inv_inv_item
+                record = current.db(table.id == form.vars.id).select(table.site_id,
+                                                                     limitby = (0, 1),
+                                                                     ).first()
+                site_id = record.site_id
+
+            inv_warehouse_free_capacity(site_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_item_onimport(import_info):
+        """
+            Called when Stock is created/updated by:
+            - imports
+
+            Create/Update the Stock Cards
+            Update the Free Capacity of the Warehouses
+        """
+
+        if not import_info["records"]:
+            # Nothing imported
+            return
+
+        created = import_info.get("created", [])
+        updated = import_info.get("updated", [])
+        inv_item_ids = created + updated
+
+        settings = current.deployment_settings
+
+        # Update the Free Capacity of the Warehouses
+        if settings.get_inv_warehouse_free_capacity_calculated():
+            table = current.s3db.inv_inv_item
+            rows = current.db(table.id.belongs(inv_item_ids)).select(table.site_id)
+            site_ids = set([row.site_id for row in rows])
+            for site_id in site_ids:
+                inv_warehouse_free_capacity(site_id)
+
+        # Create/Update the Stock Cards
+        if settings.get_inv_stock_cards():
+            inv_stock_card_update(inv_item_ids,
+                                  comments = "Import",
+                                  )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_item_postprocess(form):
+        """
+            Called when Stock is created/updated by:
+            - direct_stock_edits
+
+            Create/Update the Stock Card
+        """
+
+        if current.deployment_settings.get_inv_stock_cards():
+            inv_stock_card_update([form.vars.id],
+                                  comments = "Direct Stock Edit",
+                                  )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_item_total_value(row):
+        """ Total value of an inventory item """
+
+        if hasattr(row, "inv_inv_item"):
+            row = row.inv_inv_item
+
+        try:
+            value = row.quantity * row.pack_value
+        except (AttributeError, TypeError):
+            # not available
+            return current.messages["NONE"]
+        else:
+            return round(value, 2)
 
 # =============================================================================
 class InventoryAdjustModel(S3Model):
@@ -1007,7 +1053,7 @@ class InventoryAdjustModel(S3Model):
                                        label = T("Actioning officer"),
                                        ondelete = "RESTRICT",
                                        default = auth.s3_logged_in_person(),
-                                       comment = self.pr_person_comment(child="adjuster_id")
+                                       comment = self.pr_person_comment(child = "adjuster_id")
                                        ),
                      # This is a component, so needs to be a super_link
                      # - can't override field name, ondelete or requires
@@ -1372,7 +1418,9 @@ class InventoryAdjustModel(S3Model):
             inv_warehouse_free_capacity(site_id)
 
         if stock_cards:
-            inv_stock_card_update(inv_item_ids, comments = "Adjustment")
+            inv_stock_card_update(inv_item_ids,
+                                  comments = "Adjustment",
+                                  )
 
         # Call on_inv_adj_close hook if-configured
         #tablename = "inv_adj"
@@ -1438,6 +1486,72 @@ class InventoryAdjustModel(S3Model):
                                     old_owner_org_id = inv_item.owner_org_id,
                                     new_owner_org_id = inv_item.owner_org_id,
                                     )
+
+# =============================================================================
+class InventoryBinModel(S3Model):
+    """
+        Link Inventory Items to Warehouse Locations (i.e. Bins)
+    """
+
+    names = ("inv_inv_item_bin",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Inventory Items <> Bins
+        #
+
+        tablename = "inv_inv_item_bin"
+        self.define_table(tablename,
+                          self.inv_item_id(),
+                          self.org_site_layout_id(label = T("Bin"),
+                                                  empty = False,
+                                                  # This has the URL adjusted for the right site_id in the controller & s3.inv_item.js
+                                                  comment = S3PopupLink(c = "org",
+                                                                        f = "site",
+                                                                        args = ["[id]", "layout", "create"],
+                                                                        vars = {"child": "layout_id",
+                                                                                # @ToDo: Restrict to site_id to reduce risk of race condition
+                                                                                #"optionsVar": "site_id",
+                                                                                #"optionsValue": "[id]",
+                                                                                },
+                                                                        label = T("Create Bin"),
+                                                                        title = T("Bin"),
+                                                                        tooltip = T("If you don't see the Bin listed, you can add a new one by clicking link 'Create Bin'."),
+                                                                        _id = "inv_inv_item_bin_layout_id-create-btn",
+                                                                        ),
+                                                  ),
+                          Field("quantity", "double", notnull=True,
+                                default = 0,
+                                label = T("Quantity"),
+                                represent = lambda v: \
+                                                IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                ),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       onvalidation = self.inv_item_bin_onvalidation,
+                       )
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_item_bin_onvalidation(form):
+        """
+            * Check  that the Bin belongs to the same Site as the Inv Item
+            * Check that the Quantity in the Bin is less than the Total Quantity
+              in the Inv Item less the Quantity in other Bins
+
+            This server-side validation is an extra check after the client-side
+            validation in s3.inv_item.js
+        """
+
+        # @ToDo
+        inv_item_bin_id = form.vars.id
 
 # =============================================================================
 class InventoryCommitModel(S3Model):
@@ -1974,7 +2088,7 @@ class InventoryKittingModel(S3Model):
                                  "date",
                                  "repacked_id",
                                  ],
-                  onvalidation = self.inv_kitting_onvalidate,
+                  onvalidation = self.inv_kitting_onvalidation,
                   )
 
         # ---------------------------------------------------------------------
@@ -2029,7 +2143,7 @@ class InventoryKittingModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def inv_kitting_onvalidate(form):
+    def inv_kitting_onvalidation(form):
         """
             Check that we have sufficient inv_item in stock to build the kits
         """
@@ -4931,6 +5045,7 @@ class InventoryStockCardModel(S3Model):
                   deletable = False,
                   editable = False,
                   insertable = False,
+                  datatable_includes_id = False,
                   list_fields = ["date",
                                  "send_id",
                                  "send_id$to_site_id",
@@ -10412,7 +10527,7 @@ def inv_rheader(r):
                      ]
         else:
             tabs += [(T("Adjustments"), "adj_item"),
-                     (T("Track Shipment"), "track_movement/"),
+                     (T("Track Shipment"), "track_item/"),
                      ]
                 
         rheader_tabs = DIV(s3_rheader_tabs(r, tabs))
@@ -10610,7 +10725,7 @@ def inv_rfooter(r, record):
         if component_id:
             ts_btn = A(T("Track Shipment"),
                        _href = URL(c = "inv",
-                                   f = "track_movement",
+                                   f = "track_item",
                                    vars = {"viewing": "inv_inv_item.%s" % component_id},
                                    ),
                        _class = "action-btn"
@@ -11230,7 +11345,7 @@ def inv_send_controller():
                 set_send_attr(SHIP_STATUS_IN_PROCESS)
                 sendtable.send_ref.readable = False
 
-            if settings.get_inv_recv_req() and \
+            if settings.get_inv_send_req() and \
                (r.method == "create" or \
                 (r.method == "update" and record.status == SHIP_STATUS_IN_PROCESS)):
                 # Filter Requests to those which are:
@@ -12357,6 +12472,7 @@ def inv_stock_card_update(inv_item_ids,
     s3db = current.s3db
 
     iitable = s3db.inv_inv_item
+    ibtable = s3db.inv_inv_item_bin
 
     len_ids = len(inv_item_ids)
     if len_ids == 1:
@@ -12366,6 +12482,8 @@ def inv_stock_card_update(inv_item_ids,
         query = (iitable.id.belongs(inv_item_ids))
         limitby = (0, len_ids)
 
+    left = ibtable.on(ibtable.inv_item_id == iitable.id)
+
     records = db(query).select(iitable.id,
                                iitable.site_id,
                                iitable.item_id,
@@ -12373,32 +12491,48 @@ def inv_stock_card_update(inv_item_ids,
                                iitable.expiry_date,
                                iitable.item_pack_id,
                                iitable.quantity,
-                               iitable.layout_id,
+                               ibtable.layout_id,
+                               ibtable.quantity,
+                               left = left,
                                limitby = limitby,
                                )
 
+    # Lookup Packs
     siptable = s3db.supply_item_pack
+    item_ids = [row["inv_inv_item.item_id"] for row in records]
+    packs = db(siptable.item_id.belongs(item_ids)).select(siptable.id,
+                                                          siptable.item_id,
+                                                          siptable.quantity,
+                                                          )
+    packs_by_id = {}
+    packs_by_item = {}
+    for row in packs:
+        pack_id = row.id
+        quantity = row.quantity
+        packs_by_id[pack_id] = quantity
+        if quantity == 1:
+            packs_by_item[row.item_id] = pack_id
+
     sctable = s3db.inv_stock_card
     sltable = s3db.inv_stock_log
 
     for record in records:
+        bin_record = record.inv_inv_item_bin
+        layout_id = bin_record.layout_id
+        record = record.inv_inv_item
         site_id = record.site_id
         item_id = record.item_id
         item_source_no = record.item_source_no
         expiry_date = record.expiry_date
 
-        # Lookup Item Packs
-        card_pack_id = None
-        packs = db(siptable.item_id == item_id).select(siptable.id,
-                                                       siptable.quantity,
-                                                       )
-        for row in packs:
-            if row.quantity == 1:
-                card_pack_id = row.id
-                break
-        packs = {row.id: row.quantity for row in packs}
+        card_pack_id = packs_by_item[item_id]
 
-        quantity = record.quantity * packs[record.item_pack_id]
+        # @ToDo: Needs more work to handle partially-binned inv_items!
+        if layout_id:
+            quantity = bin_record.quantity * packs_by_id[record.item_pack_id]
+        else:
+            # Not split into bins
+            quantity = record.quantity * packs_by_id[record.item_pack_id]
 
         # Read all matching inv_items
         query = (iitable.site_id == site_id) & \
@@ -12406,11 +12540,15 @@ def inv_stock_card_update(inv_item_ids,
                 (iitable.item_source_no == item_source_no) & \
                 (iitable.expiry_date == expiry_date) & \
                 (iitable.id != record.id)
+        if layout_id:
+            # Restrict to this Bin
+            query &= (iitable.id == ibtable.inv_item_id) & \
+                     (ibtable.layout_id == layout_id)
         matches = db(query).select(iitable.quantity,
                                    iitable.item_pack_id,
                                    )
         for row in matches:
-            quantity += (row.quantity * packs[row.item_pack_id])
+            quantity += (row.quantity * packs_by_id[row.item_pack_id])
 
         # Search for existing Stock Card
         query = (sctable.site_id == site_id) & \
@@ -12424,12 +12562,15 @@ def inv_stock_card_update(inv_item_ids,
         if exists:
             card_id = exists.id
 
-            # Lookup Latest Log Entry
-            log = db(sltable.card_id == card_id).select(sltable.date,
-                                                        sltable.balance,
-                                                        orderby = ~sltable.date,
-                                                        limitby = (0, 1),
-                                                        ).first()
+            # Lookup Latest Log Entry for this Bin
+            query = (sltable.card_id == card_id)
+            if layout_id:
+                query &= (sltable.layout_id == layout_id)
+            log = db(query).select(sltable.date,
+                                   sltable.balance,
+                                   orderby = ~sltable.date,
+                                   limitby = (0, 1),
+                                   ).first()
             if not log:
                 quantity_in = quantity
                 quantity_out = 0
@@ -12446,6 +12587,7 @@ def inv_stock_card_update(inv_item_ids,
                     quantity_in = 0
                     quantity_out = 0
         else:
+            # Create Stock Card
             card_id = sctable.insert(site_id = site_id,
                                      item_id = item_id,
                                      item_pack_id = card_pack_id,
@@ -12468,7 +12610,7 @@ def inv_stock_card_update(inv_item_ids,
                        date = current.request.utcnow,
                        send_id = send_id,
                        recv_id = recv_id,
-                       layout_id = record.layout_id,
+                       layout_id = layout_id,
                        quantity_in = quantity_in,
                        quantity_out = quantity_out,
                        balance = balance,

@@ -848,7 +848,7 @@ class LocationModel(S3Model):
             # PostgreSQL LOWER() on Windows doesn't convert it, although this seems to be a locale issue:
             # http://stackoverflow.com/questions/18507589/the-lower-function-on-international-characters-in-postgresql
             # Works fine on Debian servers if the locale is a .UTF-8 before the Postgres cluster is created
-            query = (table.name.lower() == s3_unicode(name).lower().encode("utf8")) & \
+            query = (table.name.lower() == s3_str(name).lower().encode("utf8")) & \
                     (table.level == level)
         else :
             query = (table.name.lower() == name.lower()) & \
@@ -975,7 +975,7 @@ class LocationModel(S3Model):
 
         # We want to do case-insensitive searches
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
-        value = s3_unicode(value).lower().strip()
+        value = s3_str(value).lower().strip()
 
         search_l10n = None
         translate = None
@@ -5657,7 +5657,7 @@ class gis_LocationRepresent(S3Represent):
                     else:
                         # Already inside a link with onclick-script
                         script = None
-                    represent = SPAN(s3_unicode(represent),
+                    represent = SPAN(s3_str(represent),
                                      ICON("map-marker",
                                           _title = self.lat_lon_represent(row),
                                           _onclick = script,

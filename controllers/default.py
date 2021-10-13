@@ -865,32 +865,32 @@ def organisation():
         limit = 4 * limit
 
     data = resource.select(list_fields,
-                           start=display_start,
-                           limit=limit,
-                           orderby=orderby,
-                           count=True,
-                           represent=True)
-    filteredrows = data["numrows"]
-    rfields = data["rfields"]
-    data = data["rows"]
+                           start = display_start,
+                           limit = limit,
+                           orderby = orderby,
+                           count = True,
+                           represent = True,
+                           )
 
-    dt = S3DataTable(rfields, data)
-    dt.defaultActionButtons(resource)
-    s3.no_formats = True
+    dt = S3DataTable(data["rfields"], data["rows"])
 
     if representation == "html":
+        r = s3base.S3Request("org", "organisation")
+        s3base.S3CRUD.action_buttons(r)
+        s3.no_formats = True
         items = dt.html(totalrows,
                         totalrows,
                         "org_dt",
-                        dt_ajax_url=URL(c="default",
-                                        f="organisation",
-                                        extension="aadata",
-                                        vars={"id": "org_dt"},
-                                        ),
-                        dt_pageLength=display_length,
-                        dt_pagination="true",
+                        dt_ajax_url = URL(c = "default",
+                                          f = "organisation",
+                                          extension = "aadata",
+                                          vars = {"id": "org_dt"},
+                                          ),
+                        dt_pageLength = display_length,
+                        dt_pagination = "true",
                         )
     elif representation == "aadata":
+        filteredrows = data["numrows"]
         draw = get_vars.get("draw")
         if draw:
             draw = int(draw)
@@ -930,7 +930,7 @@ def page():
                            ctable.body,
                            join = join,
                            cache = s3db.cache,
-                           limitby = (0, 1)
+                           limitby = (0, 1),
                            ).first()
     try:
         title = row.title

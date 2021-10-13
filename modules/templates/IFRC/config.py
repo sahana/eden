@@ -3869,7 +3869,7 @@ def config(settings):
         has_permission = current.auth.s3_has_permission
         table = r.table
 
-        from s3 import s3_unicode
+        from s3 import s3_str
         from gluon.html import A, DIV, H2, LABEL, P, SPAN, URL
         SUBMIT = T("Save")
         EDIT = T("Click to edit")
@@ -3877,7 +3877,7 @@ def config(settings):
         # Job title, if present
         job_title_id = record.job_title_id
         if job_title_id:
-            comments = SPAN(s3_unicode(table.job_title_id.represent(job_title_id)))
+            comments = SPAN(s3_str(table.job_title_id.represent(job_title_id)))
         else:
             comments = SPAN()
 

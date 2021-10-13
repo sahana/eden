@@ -25,7 +25,9 @@ def auth_formstyle(form, fields, *args, **kwargs):
     def render_row(row_id, label, widget, comment, hidden=False):
 
         if hasattr(widget, "element"):
-            submit = widget.element("input", _type="submit")
+            submit = widget.element("input",
+                                    _type = "submit",
+                                    )
             if submit:
                 submit.add_class("small primary button")
             elif label:

@@ -45,7 +45,7 @@ from gluon import *
 
 from ..s3datetime import s3_encode_iso_datetime
 from ..s3sync import S3SyncBaseAdapter
-from ..s3utils import s3_unicode
+from ..s3utils import s3_str
 
 # =============================================================================
 class S3SyncAdapter(S3SyncBaseAdapter):
@@ -582,7 +582,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 cls.add_details(task, wrapper, name)
             else:
                 detail = SubElement(task, name)
-                detail.text = s3_unicode(wrapper)
+                detail.text = s3_str(wrapper)
         return
 
     # -------------------------------------------------------------------------
