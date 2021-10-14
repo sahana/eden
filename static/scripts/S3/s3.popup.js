@@ -354,11 +354,11 @@ function s3_popup_refresh_caller(popupData) {
                     // InlineComponent
                     // We need to update all 3 widgets
                     if (caller.endsWith('_none')) {
-                        parentWindow.$('#' + caller.replace('_none', '_0')).parent().hierarchicalopts('addNode', parent, value, represent, true);
-                        parentWindow.$('#' + caller.replace('_none', '_default')).parent().hierarchicalopts('addNode', parent, value, represent, true);
+                        parentWindow.$('#' + caller.replace('_none', '_0')).parent().hierarchicalopts('addNode', parent, value, represent, false);
+                        parentWindow.$('#' + caller.replace('_none', '_default')).parent().hierarchicalopts('addNode', parent, value, represent, false);
                     } else if (caller.endsWith('_0')) {
-                        parentWindow.$('#' + caller.replace('_0', '_none')).parent().hierarchicalopts('addNode', parent, value, represent, true);
-                        parentWindow.$('#' + caller.replace('_0', '_default')).parent().hierarchicalopts('addNode', parent, value, represent, true);
+                        parentWindow.$('#' + caller.replace('_0', '_none')).parent().hierarchicalopts('addNode', parent, value, represent, false);
+                        parentWindow.$('#' + caller.replace('_0', '_default')).parent().hierarchicalopts('addNode', parent, value, represent, false);
                     }
                 }
             }
