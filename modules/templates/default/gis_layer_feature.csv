@@ -12,7 +12,7 @@ Needs,All Open Needs,req,need,request,"Navaid, Red",{name} (T('Needs')),"name",~
 Projects,,project,location,project,,{name} (T('Project'))<br />{location_id}<br />{multi_activity_type_id},"name,location_id,multi_activity_type_id",,,,,,,,False,,,
 Requisitions,All Open Requisitions,inv,req,request,"Navaid, Red",{req_ref} (T('Requisition'))<br />{site_id},"req_ref,site_id",~.fulfil_status__ne=2,True,,,,,,False,,,
 Seaports,All Active Seaports,transport,seaport,port,Marina,{name} (T('Seaport')),name,~.obsolete=False,,True,,,,,False,,,
-Shelters,All Active Shelters,cr,shelter,shelter,Campground,{name} (T('Shelter'))<br />T('Population') {population}<br />T('Capacity') {capacity_day},"name,population,capacity_day",~.status__ne=1,,True,,,,,False,,,
+Shelters,All Active Shelters,cr,shelter,shelter,Campground,{name} (T('Shelter'))<br />T('Population') {population_day}<br />T('Capacity') {capacity_day},"name,shelter_details.population_day,shelter_details.capacity_day",shelter_details.status__ne=1,,True,,,,,False,,,
 Staff,All Active Staff,hrm,staff,staff,"Contact, Dreadlocks",{person_id} (T('Staff'))<br />{job_title_id}<br />{organisation_id},"person_id,job_title_id,organisation_id",~.status=1,,True,True,,,,False,,,
 Stock Items,Used for Search Results,inv,inv_item,,,{item_id} (T('Stock Item'))<br />{site_id}<br />{quantity} {item_pack_id}<br />T('Expires') {expiry_date},"item_id,site_id,quantity,item_pack_id,expiry_date",,,,,,,,False,False,,
 Training Events,Used for Search Results,hrm,training_event,,,{course_id} (T('Training Event'))<br />{site_id}<br />{start_date},"course_id,site_id,start_date",,,True,,,,,False,False,,
