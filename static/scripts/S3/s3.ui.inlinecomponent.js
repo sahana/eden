@@ -739,16 +739,7 @@
             }
 
             // Construct the URL
-            var resource = data.resource,
-                component = data.component,
-                url = S3.Ap.concat('/' + data.controller + '/' + data.function + '/validate.json?master_id=' + data.master_id);
-
-            if (null !== resource && typeof resource != 'undefined') {
-                url += '&resource=' + resource;
-            }
-            if (null !== component && typeof component != 'undefined') {
-                url += '&component=' + component;
-            }
+            var url = S3.Ap.concat('/' + data.controller + '/' + data.function + '/validate.json?resource=' + data.resource + '&component=' + data.component);
 
             // Request validation of the row
             // @ToDo: Skip read-only fields (especially Virtual)
@@ -1527,6 +1518,47 @@
 
             // Fire Event for external scripts to listen to
             $(this.element).trigger('rowRemoved', oldRow);
+
+            return true;
+        },
+
+        /**
+         * Remove all rows
+         */
+        removeRows: function() {
+
+            var data = this._deserialize(),
+                formname = this.formname,
+                row,
+                rows = data.data;
+
+            for (var i = 0, len = rows.length; i < len; i++) {
+                row = rows[i];
+                row._delete = true;
+
+                // Remove the read-row for this item
+                $('#read-row-' + formname + '-' + i).remove();
+
+                // Remove all uploads for this item
+                $('input[name^="' + 'upload_' + formname + '_"][name$="_' + i + '"]').remove();
+
+                // Fire Event for external scripts to listen to
+                $(this.element).trigger('rowRemoved', row);
+            }
+
+            var edit_row = $('#edit-row-' + formname);
+            if (edit_row.hasClass('required')) {
+                // No more rows present - set the add row as required
+                $('#add-row-' + formname).addClass('required');
+                edit_row.removeClass('required');
+                // Ensure we validate this if not changed
+                this._catchSubmit();
+            }
+
+            // Update the real_input JSON with deletion of this row
+            this._serialize();
+
+            this._showHeaders();
 
             return true;
         },

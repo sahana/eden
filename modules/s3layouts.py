@@ -564,6 +564,7 @@ class S3PopupLink(S3NavigationItem):
         else:
             label = item.label
 
+        # @ToDo Ensure that if we are in an inline component, these links are different for each of the 3
         _id = item.attr._id or "%s_add" % item.function
 
         popup_link = A(label,

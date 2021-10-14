@@ -3807,7 +3807,7 @@ class S3GroupedOptionsWidget(FormWidget):
 
         # No options available?
         if not options:
-            return {"empty": current.T("no options available")}
+            return {"empty": ""}
 
         # Get the current values as list of unicode
         if not isinstance(value, (list, tuple)):
@@ -3955,7 +3955,6 @@ class S3GroupedOptionsWidget(FormWidget):
             items.append(item)
 
         group["items"] = items
-        return
 
 #==============================================================================
 class S3RadioOptionsWidget(FormWidget):

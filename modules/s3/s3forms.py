@@ -1389,7 +1389,6 @@ class S3SQLCustomForm(S3SQLForm):
         for var in master_form_vars:
             if var not in form_vars:
                 form_vars[var] = master_form_vars[var]
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2836,7 +2835,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 "fields": headers,
                 "defaults": self._filterby_defaults(),
                 "data": items,
-                "master_id": record_id,
                 }
 
         return json.dumps(data, separators=SEPARATORS)
@@ -3984,6 +3982,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         """
 
         options = self.options
+        options_get = options.get
         component, link = self.get_link()
 
         has_permission = current.auth.s3_has_permission
@@ -3997,7 +3996,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             # Render read-only
             return self.represent(value)
 
-        multiple = options.get("multiple", True)
+        multiple = options_get("multiple", True)
         options["multiple"] = multiple
 
         # Field dummy
@@ -4009,14 +4008,14 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                               )
 
         # Widget type
-        widget = options.get("widget")
+        widget = options_get("widget")
         if widget not in ("hierarchy", "cascade"):
-            requires = options.get("requires")
+            requires = options_get("requires")
             if requires is None:
                 # Get the selectable entries for the widget and construct
                 # a validator from it
                 opts = self.get_options()
-                zero = options.get("zero", XML("&nbsp"))
+                zero = options_get("zero", XML("&nbsp"))
                 if multiple or zero is not None:
                     # Drop the empty option
                     # - multiple does not need one (must de-select all instead)
@@ -4098,7 +4097,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             widget.add_class("inline-link")
 
         # Append the attached script to jquery_ready
-        script = options.get("script")
+        script = options_get("script")
         if script:
             current.response.s3.jquery_ready.append(script)
 
@@ -4117,7 +4116,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         if not required:
             return
 
-        fname = self._formname(separator="_")
+        fname = self._formname(separator = "_")
         values = form.vars.get(fname)
 
         if not values:
@@ -4141,7 +4140,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         s3db = current.s3db
 
         # Name of the real input field
-        fname = self._formname(separator="_")
+        fname = self._formname(separator = "_")
         resource = self.resource
 
         success = False
@@ -4165,10 +4164,9 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                 master = {pkey: master_id}
             else:
                 # Different pkey (e.g. super-key) => reload the master
-                query = (resource._id == master_id)
-                master = current.db(query).select(resource.table[pkey],
-                                                  limitby = (0, 1),
-                                                  ).first()
+                master = current.db(resource._id == master_id).select(resource.table[pkey],
+                                                                      limitby = (0, 1),
+                                                                      ).first()
 
             if master:
                 # Find existing links

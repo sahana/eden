@@ -3765,6 +3765,23 @@ Thank you"""
                 field.requires = IS_IN_SET(document_type_opts)
                 field.represent = S3Represent(options = document_type_opts)
 
+            elif r.get_vars.get("draft"):
+                s3.crud_strings.inv_recv.title_list = T("Outbound Shipments")
+                # Filter to just Shipments able to be Received
+                #    SHIP_STATUS_IN_PROCESS = 0
+                from s3 import s3_set_default_filter, S3OptionsFilter
+                s3_set_default_filter("~.status",
+                                      [0],
+                                      tablename = "inv_send")
+                filter_widgets = r.resource.get_config("filter_widgets")
+                filter_widgets.insert(1, S3OptionsFilter("status",
+                                                         label = T("Status"),
+                                                         cols = 3,
+                                                         #options = shipment_status,
+                                                         # Needs to be visible for default_filter to work
+                                                         #hidden = True,
+                                                         ))
+
             return result
         s3.prep = custom_prep
 

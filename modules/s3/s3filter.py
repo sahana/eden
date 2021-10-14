@@ -2402,11 +2402,9 @@ class S3OptionsFilter(S3FilterWidget):
         if options is None:
             options = []
             hide_widget = True
-            hide_noopt = ""
         else:
             options = OrderedDict(options)
             hide_widget = False
-            hide_noopt = " hide"
 
         # Any-All-Option : for many-to-many fields the user can
         # search for records containing all the options or any
@@ -2471,6 +2469,8 @@ class S3OptionsFilter(S3FilterWidget):
                                        no_opts = opts_get("no_opts", None),
                                        option_comment = opts_get("option_comment", False),
                                        )
+            # This already includes a noopts SPAN
+            noopts = ""
         else:
             # Default widget_type = "multiselect"
             widget_class = "multiselect-filter-widget"
@@ -2480,6 +2480,12 @@ class S3OptionsFilter(S3FilterWidget):
                                     noneSelectedText = opts_get("noneSelectedText", "Select"),
                                     multiple = opts_get("multiple", True),
                                     )
+            no_opts_class = "no-options-available"
+            if not hide_widget:
+                no_opts_class = "%s hide" % no_opts_class
+            noopts = SPAN(noopt,
+                          _class = no_opts_class,
+                          )
 
 
         # Add widget class and default class
@@ -2497,9 +2503,7 @@ class S3OptionsFilter(S3FilterWidget):
 
         return TAG[""](any_all,
                        widget,
-                       SPAN(noopt,
-                            _class = "no-options-available%s" % hide_noopt,
-                            ),
+                       noopts,
                        )
 
     # -------------------------------------------------------------------------
@@ -2554,6 +2558,7 @@ class S3OptionsFilter(S3FilterWidget):
 
         #attr = self.attr
         opts = self.opts
+        opts_get = opts.get
 
         # Resolve the field selector
         selector = self.field
@@ -2561,7 +2566,7 @@ class S3OptionsFilter(S3FilterWidget):
             selector = selector[0]
 
         if resource is None:
-            rname = opts.get("resource")
+            rname = opts_get("resource")
             if rname:
                 resource = current.s3db.resource(rname)
 
@@ -2657,14 +2662,14 @@ class S3OptionsFilter(S3FilterWidget):
                             query &= joins[tname]
 
                         # Filter options by location?
-                        location_filter = opts.get("location_filter")
+                        location_filter = opts_get("location_filter")
                         if location_filter and "location_id" in ktable:
                             location = current.session.s3.location_filter
                             if location:
                                 query &= (ktable.location_id == location)
 
                         # Filter options by organisation?
-                        org_filter = opts.get("org_filter")
+                        org_filter = opts_get("org_filter")
                         if org_filter and "organisation_id" in ktable:
                             root_org = current.auth.root_org()
                             if root_org:
@@ -2728,7 +2733,7 @@ class S3OptionsFilter(S3FilterWidget):
 
         # No options?
         if len(opt_keys) < 1 or len(opt_keys) == 1 and not opt_keys[0]:
-            return (ftype, None, opts.get("no_opts", NOOPT))
+            return (ftype, None, opts_get("no_opts", NOOPT))
 
         # Represent the options
         opt_list = [] # list of tuples (key, value)
@@ -2740,7 +2745,7 @@ class S3OptionsFilter(S3FilterWidget):
 
         if options is not None:
             # Custom dict of {value:label} => use this label
-            if opts.get("translate"):
+            if opts_get("translate"):
                 # Translate the labels
                 opt_list = [(opt, T(label))
                             if isinstance(label, str) else (opt, label)
@@ -2814,7 +2819,7 @@ class S3OptionsFilter(S3FilterWidget):
             opt_list = [(opt_value, s3_str(opt_value))
                         for opt_value in opt_keys if opt_value]
 
-        if opts.get("sort", True):
+        if opts_get("sort", True):
             try:
                 opt_list.sort(key = lambda item: item[1])
             except:
@@ -2847,7 +2852,7 @@ class S3OptionsFilter(S3FilterWidget):
             options.insert(0, ("", "")) # XML("&nbsp;") better?
 
         # Sort the options
-        return (ftype, options, opts.get("no_opts", NOOPT))
+        return (ftype, options, opts_get("no_opts", NOOPT))
 
     # -------------------------------------------------------------------------
     @staticmethod

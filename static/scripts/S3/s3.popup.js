@@ -189,7 +189,7 @@ function s3_popup_refresh_caller(popupData) {
         parentWindow.S3.popup_remove();
         return;
     } else {
-        s3_debug('Caller', caller);
+        s3_debug('caller', caller);
     }
 
     var personID = $_GET.person_id;
@@ -278,21 +278,21 @@ function s3_popup_refresh_caller(popupData) {
 
     // Identify the widget type (Dropdown, Checkboxes, Hierarchy or Autocomplete)
     callerWidget = parentWindow.$('#' + caller);
-    s3_debug('callerWidget', callerWidget);
 
-    var inline = (caller.substring(0, 4) == 'sub_'),
+    var append,
+        checkboxes = callerWidget.hasClass('checkboxes-widget-s3'),
+        cols,
+        inline = (caller.substring(0, 4) == 'sub_'),
         dummy = parentWindow.$('#dummy_' + caller),
-        hasDummy = (undefined !== dummy.val());
+        hasDummy = (undefined !== dummy.val()),
+        isDropdown,
+        isHierarchyWidget = callerWidget.hasClass('s3-hierarchy-input'),
+        options;
+
     s3_debug('hasDummy', hasDummy);
 
-    var checkboxes = callerWidget.hasClass('checkboxes-widget-s3'),
-        isHierarchyWidget = callerWidget.hasClass('s3-hierarchy-input'),
-        append,
-        cols,
-        options,
-        isDropdown;
-
     if (checkboxes) {
+        s3_debug('checkboxes', checkboxes);
         // The number of columns
         cols = parentWindow.$('#' + caller + ' tbody tr:first').children().length;
         append = [];
@@ -303,8 +303,10 @@ function s3_popup_refresh_caller(popupData) {
         //var dummy = parentWindow.$('input[name="item_id_search_simple_simple"]');
         //var hasDummy = (dummy.val() != undefined);
         if (isDropdown) {
+            s3_debug('isDropdown', isDropdown);
             append = [];
         } else if (isHierarchyWidget) {
+            s3_debug('isHierarchyWidget', isHierarchyWidget);
             // Request hierarchy information for widget
             // @ToDo: This is a potential race condition
             optionsURL += '&hierarchy=1&only_last=1';
@@ -348,6 +350,17 @@ function s3_popup_refresh_caller(popupData) {
                 // Add new node
                 parent = option['@parent'];
                 callerWidget.parent().hierarchicalopts('addNode', parent, value, represent, true);
+                if (caller.startsWith('sub_')) {
+                    // InlineComponent
+                    // We need to update all 3 widgets
+                    if (caller.endsWith('_none')) {
+                        parentWindow.$('#' + caller.replace('_none', '_0')).parent().hierarchicalopts('addNode', parent, value, represent, true);
+                        parentWindow.$('#' + caller.replace('_none', '_default')).parent().hierarchicalopts('addNode', parent, value, represent, true);
+                    } else if (caller.endsWith('_0')) {
+                        parentWindow.$('#' + caller.replace('_0', '_none')).parent().hierarchicalopts('addNode', parent, value, represent, true);
+                        parentWindow.$('#' + caller.replace('_0', '_default')).parent().hierarchicalopts('addNode', parent, value, represent, true);
+                    }
+                }
             }
             // Type conversion: http://www.jibbering.com/faq/faq_notes/type_convert.html#tcNumber
             var numericValue = (+value);

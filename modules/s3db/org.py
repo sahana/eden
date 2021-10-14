@@ -4174,8 +4174,9 @@ class SiteLayoutModel(S3Model):
                        #                    T("Rack"),
                        #                    T("Shelf"),
                        #                    ],
-                       # No point in seeing an Open menu item as no more details made visible by this
-                       hierarchy_method_no_open = True
+                       # No point in seeing an Open menu in HierarchyCRUD as no more details made visible by this
+                       hierarchy_method_no_open = True,
+                       onvalidation = self.org_site_layout_onvalidation,
                        )
 
         # Reusable field for other tables to reference
@@ -4203,6 +4204,57 @@ class SiteLayoutModel(S3Model):
         # Pass names back to global scope (s3.*)
         return {"org_site_layout_id": layout_id,
                 }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_site_layout_onvalidation(form):
+        """
+            Check that we have unique names per parent (or site if no parent)
+        """
+
+        if current.response.s3.bulk:
+            # Use deduplicate instead
+            return
+
+        ltable = current.s3db.org_site_layout
+
+        form_vars_get = form.vars.get
+
+        layout_id = form.record_id
+        name = form_vars_get("name")
+        parent = form_vars_get("parent", form.request_vars.get("parent", "NONE"))
+        if parent in (None, "NONE"):
+            site_id = form_vars_get("site_id", form.request_vars.get("site_id", "NONE"))
+            if layout_id:
+                # Look these up
+                layout = current.db(ltable.id == layout_id).select(ltable.parent,
+                                                                   ltable.site_id,
+                                                                   limitby = (0, 1),
+                                                                   ).first()
+                parent = layout.parent
+                if site_id == "NONE":
+                    site_id = layout.site_id
+            else:
+                parent = None
+                if site_id == "NONE":
+                    site_id = None
+        else:
+            site_id = None
+
+        if not parent and not site_id:
+            # Nothing we can do!
+            current.log.error("Cannot validate org_site_layout")
+            return
+
+        query = (ltable.parent == parent)
+        if site_id and not parent:
+            query &= (ltable.site_id == site_id)
+        if layout_id:
+            query &= (ltable.id != layout_id)
+        siblings = current.db(query).select(ltable.name)
+        names = [s.name for s in siblings]
+        if name in names:
+            form.errors["name"] = current.T("There is already a location with this Name and Parent!")
 
 # =============================================================================
 class SiteLocationModel(S3Model):
