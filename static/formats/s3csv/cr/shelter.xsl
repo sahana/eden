@@ -7,7 +7,7 @@
 
          Column headers defined in this stylesheet:
 
-         Name...........................required.....cr_shelter.name
+         Name...........................required.....cr_shelter.name (@ToDo: Add Facility Type to support other Site Types)
          Name L10n:XX...................org_site_name.name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          Organisation...................org_organisation
          Branch.........................org_organisation[_branch]
@@ -24,11 +24,11 @@
          Postcode.......................optional.....Postcode
          Lat............................optional.....Latitude
          Lon............................optional.....Longitude
-         Capacity.......................cr_shelter.capacity_day (Only one used if not separated)
-         Capacity Day...................cr_shelter.capacity_day
-         Capacity Night.................cr_shelter.capacity_night
-         Population.....................cr_shelter.population
-         Status.........................cr_shelter.status (@ToDo: Populate cr_shelter_status for historical data)
+         Capacity.......................cr_shelter_details.capacity_day (Only one used if not separated)
+         Capacity Day...................cr_shelter_details.capacity_day
+         Capacity Night.................cr_shelter_details.capacity_night
+         Population.....................cr_shelter_details.population
+         Status.........................cr_shelter_details.status
          Obsolete.......................cr_shelter.obsolete
          Comments.......................cr_shelter.comments
          KV:XX..........................Key,Value (Key = XX in column name, value = cell in row)
@@ -237,22 +237,6 @@
 
         <resource name="cr_shelter">
             <data field="name"><xsl:value-of select="$ShelterName"/></data>
-            <xsl:choose>
-                <xsl:when test="$Capacity!=''">
-                    <data field="capacity_day"><xsl:value-of select="$Capacity"/></data>
-                </xsl:when>
-                <xsl:otherwise>
-                    <xsl:if test="col[@field='Capacity Day']!=''">
-                        <data field="capacity_day"><xsl:value-of select="col[@field='Capacity Day']"/></data>
-                    </xsl:if>
-                    <xsl:if test="col[@field='Capacity Night']!=''">
-                        <data field="capacity_night"><xsl:value-of select="col[@field='Capacity Night']"/></data>
-                    </xsl:if>
-                </xsl:otherwise>
-            </xsl:choose>
-            <xsl:if test="col[@field='Population']!=''">
-                <data field="population"><xsl:value-of select="col[@field='Population']"/></data>
-            </xsl:if>
             <xsl:if test="col[@field='Obsolete']!=''">
                 <data field="obsolete"><xsl:value-of select="col[@field='Obsolete']"/></data>
             </xsl:if>
@@ -260,19 +244,40 @@
                 <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
             </xsl:if>
 
-            <xsl:choose>
-                <xsl:when test="$Status='Closed'">
-                    <data field="status">1</data>
-                </xsl:when>
-                <xsl:when test="$Status='Open'">>
-                    <data field="status">2</data>
-                </xsl:when>
-                <xsl:otherwise>
-                    <data field="status">
-                        <xsl:value-of select="$Status"/>
-                    </data>
-                </xsl:otherwise>
-            </xsl:choose>
+            <!-- Shelter Details -->
+            <resource name="cr_shelter_details">
+                <xsl:choose>
+                    <xsl:when test="$Capacity!=''">
+                        <data field="capacity_day"><xsl:value-of select="$Capacity"/></data>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:if test="col[@field='Capacity Day']!=''">
+                            <data field="capacity_day"><xsl:value-of select="col[@field='Capacity Day']"/></data>
+                        </xsl:if>
+                        <xsl:if test="col[@field='Capacity Night']!=''">
+                            <data field="capacity_night"><xsl:value-of select="col[@field='Capacity Night']"/></data>
+                        </xsl:if>
+                    </xsl:otherwise>
+                </xsl:choose>
+                <xsl:if test="col[@field='Population']!=''">
+                    <data field="population"><xsl:value-of select="col[@field='Population']"/></data>
+                </xsl:if>
+
+                <xsl:choose>
+                    <xsl:when test="$Status='Closed'">
+                        <data field="status">1</data>
+                    </xsl:when>
+                    <xsl:when test="$Status='Open'">>
+                        <data field="status">2</data>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <data field="status">
+                            <xsl:value-of select="$Status"/>
+                        </data>
+                    </xsl:otherwise>
+                </xsl:choose>
+                
+            </resource>
 
             <!-- Link to Location -->
             <xsl:if test="$country!='' or $Building!='' or $addr_street!='' or $lat!=''">
@@ -302,7 +307,7 @@
                 </xsl:attribute>
             </reference>
 
-            <!-- Link to Shelter Service -->
+            <!-- Link to Shelter Services -->
             <xsl:if test="$Service!=''">
                 <resource name="cr_shelter_service_shelter">
                     <reference field="service_id" resource="cr_shelter_service">
@@ -330,7 +335,6 @@
 
         </resource>
     </xsl:template>
-
 
     <!-- ****************************************************************** -->
     <xsl:template name="Organisation">

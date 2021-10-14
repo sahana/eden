@@ -452,7 +452,19 @@ def config(settings):
                 # The dedicated check-in pages shouldn't have an rheader to clutter things up
                 return None
 
-            status = record.status
+            site_id = record.site_id
+
+            db = current.db
+            s3db = current.s3db
+            dtable = s3db.cr_shelter_details
+
+            details = db(dtable.site_id == site_id).select(dtable.capacity_day,
+                                                           dtable.population_day,
+                                                           dtable.status,
+                                                           limitby = (0, 1),
+                                                           ).first()
+
+            status = details.status
             if status in (1, 6):
                 # Closed...cannot register Staff/Clients
                 closed = True
@@ -472,18 +484,18 @@ def config(settings):
 
             table = r.table
             location_id = table.location_id
-            status_field = table.status
+            status_field = dtable.status
             button = ""
             if closed:
                 occupancy = ""
                 # What is the Workflow Status of the Site?
-                ttable = current.s3db.org_site_tag
-                query = (ttable.site_id == record.site_id) & \
+                ttable = s3db.org_site_tag
+                query = (ttable.site_id == site_id) & \
                         (ttable.tag == "workflow_status")
-                tag = current.db(query).select(ttable.id,
-                                               ttable.value,
-                                               limitby = (0, 1),
-                                               ).first()
+                tag = db(query).select(ttable.id,
+                                       ttable.value,
+                                       limitby = (0, 1),
+                                       ).first()
                 if tag:
                     # Add Button
                     from gluon import A, URL
@@ -499,8 +511,8 @@ def config(settings):
                                    _class = "action-btn",
                                    )
             else:
-                occupancy = TR(TH("%s: " % table.population_day.label),
-                               "%s / %s" % (record.population_day, record.capacity_day),
+                occupancy = TR(TH("%s: " % dtable.population_day.label),
+                               "%s / %s" % (details.population_day, details.capacity_day),
                                )
             rheader = DIV(TABLE(#TR(TH("%s: " % table.name.label),
                                 #   record.name,
@@ -514,7 +526,8 @@ def config(settings):
                                 occupancy,
                                 button,
                                 ),
-                          rheader_tabs)
+                          rheader_tabs,
+                          )
 
         elif tablename == "pr_person":
 
@@ -624,102 +637,6 @@ def config(settings):
     settings.customise_cms_post_resource = customise_cms_post_resource
 
     # -------------------------------------------------------------------------
-    def cr_shelter_onvalidation(form):
-        """
-            Ensure that the correct closed Status is used for the Shelter Type
-        """
-
-        form_vars = form.vars
-        form_vars_get = form_vars.get
-
-        status = form_vars_get("status")
-        if str(status) not in ("1", "6"):
-            # Shelter is Open
-            obsolete = form_vars_get("obsolete")
-            if obsolete:
-                # Cannot open an Unavailable Shelter
-                form.errors.obsolete = T("Cannot open an Unavailable Shelter")
-            return
-
-        # Shelter is Closed: Ensure we use the correct one
-
-        # Look up the Shelter Type
-        shelter_type_id = form_vars_get("shelter_type_id")
-        ttable = current.s3db.cr_shelter_type
-        shelter_type = current.db(ttable.id == shelter_type_id).select(ttable.name,
-                                                                       limitby = (0, 1),
-                                                                       ).first()
-        type_name = shelter_type.name
-        if type_name == "Nominated":
-            form_vars.status = 1
-        elif type_name == "Community":
-            form_vars.status = 6
-
-    # -------------------------------------------------------------------------
-    def cr_shelter_onaccept(form):
-        """
-            When a Shelter is Opened/Closed
-                - Control Workflow Flag to track Data Exporting/Anonymising
-                - Add Shelter to Session
-            When a Shelter is Closed
-                - Check-out all Clients
-        """
-
-        record = form.record
-        if not record:
-            # Create form
-            # (NB We don't hook into update_onaccept as this would mean that the default onaccept wouldn't run)
-            return
-
-        form_vars = form.vars
-        form_vars_get = form_vars.get
-
-        status = form_vars_get("status")
-
-        if status == record.status:
-            # Status hasn't changed
-            return
-
-        # Control Workflow Flag to track Data Exporting/Anonymising
-        db = current.db
-        s3db = current.s3db
-
-        site_id = form_vars_get("site_id")
-        table = s3db.org_site_tag
-        query = (table.site_id == site_id) & \
-                (table.tag == "workflow_status")
-
-        if status not in (1, 6):
-            # Shelter has been Opened
-
-            # Clear Flag
-            db(query).delete()
-
-            # Set this shelter into the session
-            current.session.s3.shelter_id = form_vars_get("id")
-
-            return
-
-        # Shelter has been Closed
-        tag = db(query).select(table.id,
-                               limitby = (0 ,1),
-                               ).first()
-        if not tag:
-            # No tag, so create one
-            table.insert(site_id = site_id,
-                         tag = "workflow_status",
-                         value = "CLOSED",
-                         )
-
-        # Check-out all clients
-        rtable = s3db.cr_shelter_registration
-        query = (rtable.site_id == site_id) & \
-                (rtable.registration_status == 2) # Checked-in
-        db(query).update(registration_status = 3, # Checked-out
-                         check_out_date = current.request.now,
-                         )
-
-    # -------------------------------------------------------------------------
     def cr_shelter_anonymise_method(r, **attr):
         """
             Anonymise all Client data for a Shelter
@@ -727,8 +644,6 @@ def config(settings):
             - Interactive Method called manually from front-end UI
         """
 
-        shelter_id = r.id
-        shelter_name = r.record.name
         site_id = r.record.site_id
 
         db = current.db
@@ -738,15 +653,15 @@ def config(settings):
         ttable = s3db.org_site_tag
         query = (ttable.site_id == site_id) & \
                 (ttable.tag == "workflow_status")
-        tag = current.db(query).select(ttable.id,
-                                       ttable.value,
-                                       limitby = (0, 1),
-                                       ).first()
+        tag = db(query).select(ttable.id,
+                               ttable.value,
+                               limitby = (0, 1),
+                               ).first()
         if not tag or tag.value != "EXPORTED":
             current.session.error = T("Cannot Anonymize Data for a Shelter unless the data has been Exported!")
             # Redirect to Normal page
             from gluon import redirect, URL
-            redirect(URL(args = [shelter_id]))
+            redirect(URL(args = [r.id]))
 
         tag_id = tag.id
 
@@ -755,7 +670,7 @@ def config(settings):
         ttable = s3db.scheduler_task
         task_name = "settings_task"
         args = ["cr_shelter_anonymise_task"]
-        vars = {"shelter_id": shelter_id,
+        vars = {"site_id": site_id,
                 "tag_id": tag_id,
                 }
         query = (ttable.task_name == task_name) & \
@@ -774,7 +689,7 @@ def config(settings):
         s3db.s3_audit.insert(timestmp = r.utcnow,
                              user_id = current.auth.user.id,
                              method = "Data Anonymise",
-                             representation = shelter_name,
+                             representation = r.record.name,
                              )
 
         # Anonymise
@@ -786,7 +701,7 @@ def config(settings):
         redirect(URL(args = [shelter_id]))
 
     # -------------------------------------------------------------------------
-    def cr_shelter_anonymise_task(shelter_id, tag_id):
+    def cr_shelter_anonymise_task(site_id, tag_id):
         """
             Anonymise all Client data for a Shelter
             Archive Logs
@@ -795,20 +710,21 @@ def config(settings):
 
         # Check that we should still proceed
         # Is the site still closed?
-        table = current.s3db.cr_shelter
-        shelter = current.db(table.id == shelter_id).select(table.status,
-                                                            table.site_id,
-                                                            limitby = (0, 1),
-                                                            ).first()
-        if not shelter:
+        dtable = current.s3db.cr_shelter_details
+        details = current.db(stable.id == site_id).select(dtable.status,
+                                                          limitby = (0, 1),
+                                                          ).first()
+
+        try:
+            if details.status not in (1, 6):
+                return "Shelter Open, so aborting anonymise!"
+        except AttributeError:
             return "Shelter not found!"
 
-        if shelter.status not in (1, 6):
-            return "Shelter Open, so aborting anonymise!"
-
         # Anonymise
-        result = cr_shelter_anonymise(shelter.site_id, tag_id)
+        result = cr_shelter_anonymise(site_id, tag_id)
         db.commit()
+
         return result
 
     # -------------------------------------------------------------------------
@@ -859,13 +775,22 @@ def config(settings):
             Export Logs and all Client data for a Shelter to XLS
         """
 
-        shelter_id = r.id
         record = r.record
-        if record.status not in (1, 6):
+        site_id = record.site_id
+
+        db = current.db
+        s3db = current.s3db
+
+        dtable = s3db.cr_shelter_details
+        details = (dtable.site_id == site_id).select(dtable.status,
+                                                     limitby = (0, 1),
+                                                     ).first()
+
+        if details.status not in (1, 6):
             current.session.error = T("Cannot Export Data for a Shelter unless it is Closed")
             # Redirect to Normal page
             from gluon import redirect, URL
-            redirect(URL(args = [shelter_id]))
+            redirect(URL(args = [r.id]))
 
         # Export all the data for the Shelter
         from s3.codecs.xls import S3XLS
@@ -883,7 +808,7 @@ def config(settings):
             current.log.error(error)
             raise HTTP(503, body=error)
 
-        from s3 import s3_format_fullname, s3_fullname, s3_str
+        from s3 import S3Audit, S3Represent, s3_format_fullname, s3_fullname, s3_str
 
         date_format = settings.get_L10n_date_format()
         date_format_str = str(date_format)
@@ -892,8 +817,6 @@ def config(settings):
         date_format = dt_format_translate(date_format)
         datetime_format = dt_format_translate(settings.get_L10n_datetime_format())
 
-        db = current.db
-        s3db = current.s3db
         shelter_name = record.name
 
         #####
@@ -901,7 +824,6 @@ def config(settings):
         #####
 
         # Site Log
-        site_id = record.site_id
         etable = s3db.org_site_event
         etable.insert(site_id = site_id,
                       event = 5, # Data Export
@@ -910,7 +832,6 @@ def config(settings):
 
         # Global Log
         settings.security.audit_write = True
-        from s3 import S3Audit
         S3Audit().__init__()
         s3db.s3_audit.insert(timestmp = r.utcnow,
                              user_id = current.auth.user.id,
@@ -944,7 +865,7 @@ def config(settings):
         ttable = current.s3db.scheduler_task
         task_name = "settings_task"
         args = ["cr_shelter_anonymise_task"]
-        vars = {"shelter_id": shelter_id,
+        vars = {"site_id": site_id,
                 "tag_id": tag_id,
                 }
         query = (ttable.task_name == task_name) & \
@@ -958,7 +879,7 @@ def config(settings):
             start_time = r.utcnow + relativedelta(days = 30)
             current.s3task.schedule_task("settings_task",
                                          args = ["cr_shelter_anonymise_task"],
-                                         vars = {"shelter_id": shelter_id,
+                                         vars = {"site_id": site_id,
                                                  "tag_id": tag_id,
                                                  },
                                          start_time = start_time,
@@ -974,8 +895,7 @@ def config(settings):
 
         # Event Log
         event_represent = etable.event.represent
-        status_represent = lambda opt: \
-                            cr_shelter_status_opts.get(opt, current.messages.UNKNOWN_OPT)
+        status_represent = S3Represent(options = cr_shelter_status_opts)
 
         query = (etable.site_id == site_id) & \
                 (etable.archived == False)
@@ -1328,9 +1248,17 @@ def config(settings):
         messages.OBSOLETE = T("Unavailable")
         NONE = messages["NONE"]
 
+        dtable = s3db.cr_shelter_details
+
+        record = r.record
+        if record:
+            details = db(dtable.site_id == record.site_id).select(dtable.status,
+                                                                  limitby = (0, 1),
+                                                                  ).first()
+
         # Only have a single Status option visible
         shelter_status_opts = dict(cr_shelter_status_opts)
-        if r.record and r.record.status == 6:
+        if record and details.status == 6:
             del shelter_status_opts[1]
         elif r.interactive and not current.auth.override:
             del shelter_status_opts[6]
@@ -1347,7 +1275,7 @@ def config(settings):
         f.label = T("Service")
         f.requires = IS_EMPTY_OR(f.requires)
         f.comment = None # No inline Create
-        f = table.status
+        f = dtable.status
         f.default = 3 # Green
         f.requires = IS_IN_SET(shelter_status_opts)
         if r.extension == "geojson":
@@ -1359,7 +1287,7 @@ def config(settings):
         else:
             # Show the 2x Closed as 'Closed'
             f.represent = S3Represent(options = dict(cr_shelter_status_opts))
-        table.population_day.label = T("Occupancy")
+        dtable.population_day.label = T("Occupancy")
         table.obsolete.label = T("Unavailable")
         table.obsolete.comment = DIV(_class = "tooltip",
                                      _title = "%s|%s" % (T("Unavailable"),
@@ -1474,7 +1402,7 @@ def config(settings):
                         )
 
         crud_form = S3SQLCustomForm("name",
-                                    "status",
+                                    "shelter_details.status",
                                     "shelter_service_shelter.service_id",
                                     "shelter_type_id",
                                     (T("Purpose of Location"), "purpose.value"),
@@ -1483,7 +1411,7 @@ def config(settings):
                                     (T("UPRN"), "UPRN.value"),
                                     (T("Streetview"), "streetview.value"),
                                     "phone",
-                                    "capacity_day",
+                                    "shelter_details.capacity_day",
                                     (T("Red Bag Lite"), "red_bag.value"),
                                     (T("WiFi available"), "wifi.value"),
                                     (T("Catering"), "catering.value"),
@@ -1520,14 +1448,14 @@ def config(settings):
                                 ),
                 S3OptionsFilter("shelter_service_shelter.service_id",
                                 ),
-                S3OptionsFilter("status",
+                S3OptionsFilter("shelter_details.status",
                                 label = T("Status"),
                                 options = cr_shelter_status_opts,
                                 ),
-                S3RangeFilter("capacity_day",
+                S3RangeFilter("shelter_details.capacity_day",
                               label = T("Total Capacity"),
                               ),
-                S3RangeFilter("available_capacity_day",
+                S3RangeFilter("shelter_details.available_capacity_day",
                               label = T("Available Capacity"),
                               ),
                 ]
@@ -1535,9 +1463,9 @@ def config(settings):
         list_fields = ["name",
                        "shelter_type_id",
                        "shelter_service_shelter.service_id",
-                       "status",
-                       "capacity_day",
-                       "population_day",
+                       "shelter_details.status",
+                       "shelter_details.capacity_day",
+                       "shelter_details.population_day",
                        "location_id$L3",
                        "location_id$L4",
                        "location_id$addr_street",
@@ -1562,20 +1490,15 @@ def config(settings):
                          (T("Name"), "name_and_type"),
                          "shelter_type_id",
                          "shelter_service_shelter.service_id",
-                         "status",
-                         "capacity_day",
-                         "population_day",
+                         "shelter_details.status",
+                         "shelter_details.capacity_day",
+                         "shelter_details.population_day",
                          "location_id$L3",
                          "location_id$L4",
                          (T("Red Bag Lite"), "red_bag.value"),
                          (T("WiFi available"), "wifi.value"),
                          (T("Catering"), "catering.value"),
                          ]
-
-        s3db.add_custom_callback("cr_shelter",
-                                 "onaccept",
-                                 cr_shelter_onaccept,
-                                 )
 
         s3db.configure(tablename,
                        create_next = None, # Don't redirect to People Registration after creation
@@ -1585,13 +1508,12 @@ def config(settings):
                                        ],
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
-                       onvalidation = cr_shelter_onvalidation,
                        report_options = Storage(
                         rows = report_fields,
                         cols = report_fields,
                         fact = report_fields,
                         defaults = Storage(rows = "location_id$L3",
-                                           cols = "status",
+                                           cols = "shelter_details.status",
                                            fact = "count(name_and_type)",
                                            totals = True,
                                            )
@@ -1610,7 +1532,7 @@ def config(settings):
         response = current.response
 
         # Exclude Closed Shelters by default
-        s3_set_default_filter("~.status", [3, 4, 5], tablename="cr_shelter")
+        s3_set_default_filter("shelter_details.status", [3, 4, 5], tablename="cr_shelter")
 
         # Exclude Checked-out Clients by default
         s3_set_default_filter("client.shelter_registration.registration_status", [2], tablename="pr_person")
@@ -2163,6 +2085,150 @@ def config(settings):
     settings.customise_cr_shelter_controller = customise_cr_shelter_controller
 
     # -------------------------------------------------------------------------
+    def cr_shelter_details_onaccept(form):
+        """
+            When a Shelter is Opened/Closed
+                - Control Workflow Flag to track Data Exporting/Anonymising
+                - Add Shelter to Session
+            When a Shelter is Closed
+                - Check-out all Clients
+        """
+
+        record = form.record
+        if not record:
+            # Create form
+            # (NB We don't hook into update_onaccept as this would mean that the default onaccept wouldn't run)
+            return
+
+        form_vars = form.vars
+        form_vars_get = form_vars.get
+
+        status = form_vars_get("status")
+
+        if status == record.status:
+            # Status hasn't changed
+            return
+
+        # Control Workflow Flag to track Data Exporting/Anonymising
+        db = current.db
+        s3db = current.s3db
+
+        site_id = form_vars_get("site_id")
+        if not site_id:
+            dtable = s3db.cr_shelter_details
+            details = db(dtable.id == form_vars.id).select(dtable.site_id,
+                                                           limitby = (0, 1),
+                                                           ).first()
+            site_id = details.site_id
+
+        table = s3db.org_site_tag
+        query = (table.site_id == site_id) & \
+                (table.tag == "workflow_status")
+
+        if status not in (1, 6):
+            # Shelter has been Opened
+
+            # Clear Flag
+            db(query).delete()
+
+            # Set this shelter into the session
+            current.session.s3.shelter_id = form_vars_get("id")
+
+            return
+
+        # Shelter has been Closed
+        tag = db(query).select(table.id,
+                               limitby = (0 ,1),
+                               ).first()
+        if not tag:
+            # No tag, so create one
+            table.insert(site_id = site_id,
+                         tag = "workflow_status",
+                         value = "CLOSED",
+                         )
+
+        # Check-out all clients
+        rtable = s3db.cr_shelter_registration
+        query = (rtable.site_id == site_id) & \
+                (rtable.registration_status == 2) # Checked-in
+        db(query).update(registration_status = 3, # Checked-out
+                         check_out_date = current.request.now,
+                         )
+
+    # -------------------------------------------------------------------------
+    def cr_shelter_details_onvalidation(form):
+        """
+            Ensure that the correct closed Status is used for the Shelter Type
+        """
+
+        form_vars = form.vars
+        form_vars_get = form_vars.get
+
+        status = form_vars_get("status")
+        if str(status) not in ("1", "6"):
+            # Shelter is Open
+            site_id = form_vars_get("site_id")
+            if site_id:
+                stable = current.s3db.cr_shelter
+                query = (stable.site_id == site_id)
+            else:
+                s3db = current.s3db
+                stable = s3db.cr_shelter
+                dtable = s3db.cr_shelter_details
+                query = (dtable.id == form_vars.id) & \
+                        (dtable.site_id == stable.site_id)
+            shelter = current.db(query).select(stable.obsolete,
+                                               limitby = (0, 1),
+                                               ).first()
+            obsolete = shelter.obsolete
+            if obsolete:
+                # Cannot open an Unavailable Shelter
+                form.errors.obsolete = T("Cannot open an Unavailable Shelter")
+            return
+
+        # Shelter is Closed: Ensure we use the correct one
+
+        # Look up the Shelter Type
+        s3db = current.s3db
+        stable = s3db.cr_shelter
+        ttable = s3db.cr_shelter_type
+
+        site_id = form_vars_get("site_id")
+        if site_id:
+            query = (stable.site_id == site_id) & \
+                    (stable.shelter_type_id == ttable.id)
+        else:
+            dtable = s3db.cr_shelter_details
+            query = (dtable.id == form_vars.id) & \
+                    (dtable.site_id == stable.site_id) & \
+                    (stable.shelter_type_id == ttable.id)
+
+        shelter_type = current.db(query).select(ttable.name,
+                                                limitby = (0, 1),
+                                                ).first()
+        type_name = shelter_type.name
+        if type_name == "Nominated":
+            form_vars.status = 1
+        elif type_name == "Community":
+            form_vars.status = 6
+
+    # -------------------------------------------------------------------------
+    def customise_cr_shelter_details_resource(r, tablename):
+
+        s3db = current.s3db
+
+        s3db.add_custom_callback(tablename,
+                                 "onaccept",
+                                 cr_shelter_details_onaccept,
+                                 )
+
+        s3db.configure(tablename,
+                       onvalidation = cr_shelter_details_onvalidation,
+                       )
+
+    settings.customise_cr_shelter_details_resource = customise_cr_shelter_details_resource
+
+    # -------------------------------------------------------------------------
     def customise_cr_shelter_registration_resource(r, tablename):
 
         #from s3 import S3AddPersonWidget
@@ -2182,6 +2248,9 @@ def config(settings):
     def cr_shelter_registration_onimport(import_info):
         """
             Add Site Event Log
+
+            This assumes that we import data for only 1 Suite at a time
+            - which is the only option when using the custom XLS template
         """
 
         if not import_info["records"]:
@@ -3404,7 +3473,7 @@ def config(settings):
                                                                    limitby = (0, 1),
                                                                    ).first()
 
-                        s3db.org_site_event.insert(site_id = registration.site_id,
+                        s3db.org_site_event.insert(site_id = site_id,
                                                    person_id = person_id,
                                                    event = 2, # Checked-In
                                                    comments = "Client Ref: %s" % person.pe_label,
@@ -3475,8 +3544,6 @@ def config(settings):
         return attr
 
     settings.customise_pr_person_controller = customise_pr_person_controller
-
-
 
 # =============================================================================
 class cr_ShelterReportRepresent(S3ReportRepresent):

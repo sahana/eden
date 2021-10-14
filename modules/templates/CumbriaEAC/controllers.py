@@ -83,8 +83,10 @@ class index(S3CustomController):
         if system_roles.AUTHENTICATED in roles:
             # Provide a way to select the default Shelter (from those which are Open)
             stable = s3db.cr_shelter
+            dtable = s3db.cr_shelter_details
             query = (stable.deleted == False) & \
-                    (stable.status.belongs(3,4,5))
+                    (stable.site_id == dtable.site_id) & \
+                    (dtable.status.belongs(3,4,5))
             shelters = db(query).select(stable.id,
                                         stable.name,
                                         )
@@ -118,7 +120,7 @@ class index(S3CustomController):
             output["find_shelter"] = DIV(A(T("Find a Shelter to Open"),
                                            _href = URL(c="cr", f="shelter",
                                                        args = ["summary"],
-                                                       vars = {"~.status__belongs": "1,3,4,5,6",
+                                                       vars = {"shelter_details.status__belongs": "1,3,4,5,6",
                                                                },
                                                        )
                                            ),

@@ -3498,15 +3498,15 @@ class SiteModel(S3Model):
 
                             # Shelter
                             cr_shelter_allocation = "site_id",
+                            cr_shelter_details = {"joinby": "site_id",
+                                                  "multiple": False,
+                                                  },
                             cr_shelter_registration = "site_id",
                             cr_shelter_service_shelter = "site_id",
                             cr_shelter_service = {"link": "cr_shelter_service_shelter",
                                                   "joinby": "site_id",
                                                   "key": "service_id",
                                                   },
-                            cr_shelter_status = {"name": "shelter_status",
-                                                 "joinby": "site_id",
-                                                 },
                             cr_shelter_unit = "site_id",
 
                             # Shifts

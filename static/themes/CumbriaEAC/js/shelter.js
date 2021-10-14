@@ -21,7 +21,7 @@ $(document).ready(function(){
     // Prompt for confirmation when closing a Shelter
     // - this will check-out all clients
 
-    var status_field = $('#cr_shelter_status');
+    var status_field = $('#cr_shelter_sub_shelter_details_status');
 
     if (['3', '4', '5'].includes(status_field.val())) {
         // Shelter is Open, so set watch on form submission

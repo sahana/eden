@@ -30,10 +30,9 @@ def shelter():
     """
 
     tablename = "cr_shelter"
-    table = s3db.cr_shelter
 
     # Filter to just Open shelters (status=2)
-    s3base.s3_set_default_filter("~.status", [2, None], tablename=tablename)
+    s3base.s3_set_default_filter("shelter_details.status", [2, None], tablename=tablename)
 
     # Pre-processor
     def prep(r):
@@ -43,11 +42,12 @@ def shelter():
 
         method = r.method
         if method == "create":
-            table.population_day.readable = False
-            table.population_night.readable = False
+            dtable = s3db.cr_shelter_details
+            dtable.population_day.readable = False
+            dtable.population_night.readable = False
 
         elif method == "import":
-            table.organisation_id.default = None
+            s3db.cr_shelter.organisation_id.default = None
 
         elif method == "profile":
             name = r.record.name
