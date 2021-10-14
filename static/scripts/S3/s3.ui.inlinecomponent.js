@@ -187,7 +187,7 @@
                 var columns = '';
 
                 // Render the items
-                for (var i=0, len=items.length; i<len; i++) {
+                for (var i = 0, len = items.length; i < len; i++) {
                     columns += '<td>' + items[i] + '</td>';
                 }
 
@@ -739,21 +739,15 @@
             }
 
             // Construct the URL
-            var c = data.controller,
-                f = data['function'],
-                resource = data.resource,
+            var resource = data.resource,
                 component = data.component,
-                url = S3.Ap.concat('/' + c + '/' + f + '/validate.json'),
-                concat;
+                url = S3.Ap.concat('/' + data.controller + '/' + data.function + '/validate.json?master_id=' + data.master_id);
 
             if (null !== resource && typeof resource != 'undefined') {
-                url += '?resource=' + resource;
-                concat = '&';
-            } else {
-                concat = '?';
+                url += '&resource=' + resource;
             }
             if (null !== component && typeof component != 'undefined') {
-                url += concat + 'component=' + component;
+                url += '&component=' + component;
             }
 
             // Request validation of the row

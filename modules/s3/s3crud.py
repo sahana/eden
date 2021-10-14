@@ -2082,7 +2082,9 @@ class S3CRUD(S3Method):
                         response.warning = T("Record could not be approved.")
 
                     r.http = "GET"
-                    _next = r.url(id=0, method="review")
+                    _next = r.url(id = 0,
+                                  method = "review",
+                                  )
 
                 elif reject.accepts(r.post_vars, session, formname="reject"):
                     resource = current.s3db.resource(r.tablename,

@@ -1275,9 +1275,8 @@ class S3SQLCustomForm(S3SQLForm):
         # Validate components (e.g. Inline-Forms)
         for component in self.components:
             if hasattr(component, "validate"):
+                # Currently just S3SQLInlineLink
                 component.validate(form)
-
-        return
 
     # -------------------------------------------------------------------------
     def accept(self,
@@ -1437,17 +1436,20 @@ class S3SQLCustomForm(S3SQLForm):
         """
 
         if alias is None:
+            # Main Table
             return self.table._filter_fields(form.vars)
-        else:
-            subform = Storage()
-            alias_length = len(alias)
-            form_vars = form.vars
-            for k in form_vars:
-                if k[:4] == "sub_" and \
-                   k[4:4 + alias_length + 1] == "%s_" % alias:
-                    fn = k[4 + alias_length + 1:]
-                    subform[fn] = form_vars[k]
-            return subform
+
+        # Sub Table
+        subform = Storage()
+        alias_length = len(alias)
+        form_vars = form.vars
+        for k in form_vars:
+            if k[:4] == "sub_" and \
+               k[4:4 + alias_length + 1] == "%s_" % alias:
+                fn = k[4 + alias_length + 1:]
+                subform[fn] = form_vars[k]
+
+        return subform
 
     # -------------------------------------------------------------------------
     def _accept(self,
@@ -2834,6 +2836,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 "fields": headers,
                 "defaults": self._filterby_defaults(),
                 "data": items,
+                "master_id": record_id,
                 }
 
         return json.dumps(data, separators=SEPARATORS)
@@ -3185,7 +3188,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         """
 
         # Name of the real input field
-        fname = self._formname(separator="_")
+        fname = self._formname(separator = "_")
 
         options_get = self.options.get
         multiple = options_get("multiple", True)
@@ -3331,8 +3334,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         authorized = has_permission("update", tablename, record_id)
                         if not authorized:
                             continue
-                        query = (table._id == record_id)
-                        success = db(query).update(**values)
+                        success = db(table._id == record_id).update(**values)
                         values[table._id.name] = record_id
 
                         # Post-process update
@@ -3358,11 +3360,10 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     pkey = component.pkey
                     mastertable = resource.table
                     if pkey != mastertable._id.name:
-                        query = (mastertable._id == master_id)
-                        master = db(query).select(mastertable._id,
-                                                  mastertable[pkey],
-                                                  limitby = (0, 1),
-                                                  ).first()
+                        master = db(mastertable._id == master_id).select(mastertable._id,
+                                                                         mastertable[pkey],
+                                                                         limitby = (0, 1),
+                                                                         ).first()
                         if not master:
                             return False
                     else:
@@ -3388,26 +3389,24 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                 # Need to lookup the pe_id manually (bad that we need this
                                 # special case, must be a better way but this works for now)
                                 ptable = s3db.pr_person
-                                query = (ptable.id == master[pkey])
-                                person = db(query).select(ptable.pe_id,
-                                                          limitby = (0, 1),
-                                                          ).first()
-                                if person:
+                                person = db(ptable.id == master[pkey]).select(ptable.pe_id,
+                                                                              limitby = (0, 1),
+                                                                              ).first()
+                                try:
                                     values["pe_id"] = person.pe_id
-                                else:
+                                except TypeError:
                                     current.log.debug("S3Forms: Cannot find person with ID: %s" % master[pkey])
                             elif resource.tablename == "pr_person" and \
                                  fkey == "case_id" and pkey == "id":
                                 # Using dvr_case as a link between pr_person & e.g. project_activity
                                 # @ToDo: Work out generalisation & move to option if-possible
                                 ltable = component.link.table
-                                query = (ltable.person_id == master[pkey])
-                                link_record = db(query).select(ltable.id,
-                                                               limitby = (0, 1),
-                                                               ).first()
-                                if link_record:
+                                link_record = db(ltable.person_id == master[pkey]).select(ltable.id,
+                                                                                          limitby = (0, 1),
+                                                                                          ).first()
+                                try:
                                     values[fkey] = link_record[pkey]
-                                else:
+                                except TypeError:
                                     current.log.debug("S3Forms: Cannot find case for person ID: %s" % master[pkey])
 
                             else:

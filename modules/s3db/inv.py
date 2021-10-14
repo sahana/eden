@@ -1550,8 +1550,61 @@ class InventoryBinModel(S3Model):
             validation in s3.inv_item.js
         """
 
-        # @ToDo
-        inv_item_bin_id = form.vars.id
+        db = current.db
+        s3db = current.s3db
+
+        ibtable = s3db.inv_inv_item_bin
+
+        form_vars_get = form.vars.get
+        inv_item_bin_id = form.record_id # => Update, not Create
+
+        inv_item_id = form_vars_get("inv_item_id")
+        if not inv_item_id:
+            # Look to see if we're being passed this by s3.ui.inlinecomponent.js to validate.json
+            inv_item_id = current.request.get_vars.get("master_id")
+        if not inv_item_id:
+            if not inv_item_bin_id:
+                # Nothing we can do
+                current.log.debug("Unable to validate inv_inv_item_bin")
+                return
+            bin_record = db(ibtable.id == inv_item_bin_id).select(ibtable.inv_item_id,
+                                                                  limitby = (0, 1),
+                                                                  ).first()
+            inv_item_id = bin_record.inv_item_id
+
+        layout_id = form_vars_get("layout_id")
+        quantity = form_vars_get("quantity")
+
+        iitable = s3db.inv_inv_item
+        inv_record = db(iitable.id == inv_item_id).select(iitable.site_id,
+                                                          iitable.quantity,
+                                                          limitby = (0, 1),
+                                                          ).first()
+        inv_quantity = inv_record.quantity
+        if quantity > inv_quantity:
+            form.errors["quantity"] = current.T("Bin Quantity exceeds Inventory Item Quantity!")
+            return
+
+        btable = s3db.org_site_layout
+        bin_record = db(btable.id == layout_id).select(btable.site_id,
+                                                       limitby = (0, 1),
+                                                       ).first()
+        if bin_record.site_id != inv_record.site_id:
+            form.errors["layout_id"] = current.T("Bin is not from the same Site as the Inventory Item!")
+            return
+
+        query = (ibtable.inv_item_id == inv_item_id)
+        if inv_item_bin_id:
+            query &= (ibtable.id != inv_item_bin_id)
+        sum_field = ibtable.quantity.sum()
+        other_binned = db(query).select(sum_field,
+                                        limitby = (0, 1),
+                                        orderby = sum_field,
+                                        ).first()[sum_field]
+        if other_binned and \
+           (quantity > (inv_quantity - other_binned)):
+            form.errors["quantity"] = current.T("Bin Quantity exceeds unallocated Quantity of this Inventory Item!")
+            return
 
 # =============================================================================
 class InventoryCommitModel(S3Model):

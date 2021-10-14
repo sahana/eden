@@ -212,12 +212,12 @@ def inv_item():
                     # We can't update this dynamically
                     #ibtable.quantity.requires = IS_INT_IN_RANGE(0, r.record.quantity)
                     sum_field = ibtable.quantity.sum()
-                    bins = db(ibtable.inv_item_id == r.id).select(sum_field,
-                                                                  limitby = (0, 1),
-                                                                  orderby = sum_field,
-                                                                  ).first()
-                    if bins:
-                        s3.js_global.append('''S3.supply.binnedQuantity=%s''' % bins[sum_field])
+                    binned = db(ibtable.inv_item_id == r.id).select(sum_field,
+                                                                    limitby = (0, 1),
+                                                                    orderby = sum_field,
+                                                                    ).first()[sum_field]
+                    if binned:
+                        s3.js_global.append('''S3.supply.binnedQuantity=%s''' % binned)
                     f = ibtable.layout_id
                     f.widget.filter = (s3db.org_site_layout.site_id == site_id)
                     f.comment.args = [site_id, "layout", "create"]
