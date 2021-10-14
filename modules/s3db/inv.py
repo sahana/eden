@@ -12455,32 +12455,34 @@ def inv_stock_card_update(inv_item_ids,
     iitable = s3db.inv_inv_item
     ibtable = s3db.inv_inv_item_bin
 
+    # read the data for these inv_item_ids
     len_ids = len(inv_item_ids)
     if len_ids == 1:
         query = (iitable.id == inv_item_ids[0])
-        limitby = (0, 1)
+        #limitby = (0, 1)
     else:
         query = (iitable.id.belongs(inv_item_ids))
-        limitby = (0, len_ids)
+        #limitby = (0, len_ids)
 
     left = ibtable.on(ibtable.inv_item_id == iitable.id)
 
-    records = db(query).select(iitable.id,
-                               iitable.site_id,
-                               iitable.item_id,
-                               iitable.item_source_no,
-                               iitable.expiry_date,
-                               iitable.item_pack_id,
-                               iitable.quantity,
-                               ibtable.layout_id,
-                               ibtable.quantity,
-                               left = left,
-                               limitby = limitby,
-                               )
+    rows = db(query).select(iitable.id,
+                            iitable.site_id,
+                            iitable.item_id,
+                            iitable.item_source_no,
+                            iitable.expiry_date,
+                            iitable.item_pack_id,
+                            iitable.quantity,
+                            ibtable.layout_id,
+                            ibtable.quantity,
+                            left = left,
+                            # Can't limitby as we don't know how many we split to for the left
+                            #limitby = limitby,
+                            )
 
     # Lookup Packs
     siptable = s3db.supply_item_pack
-    item_ids = [row["inv_inv_item.item_id"] for row in records]
+    item_ids = [row["inv_inv_item.item_id"] for row in rows]
     packs = db(siptable.item_id.belongs(item_ids)).select(siptable.id,
                                                           siptable.item_id,
                                                           siptable.quantity,
@@ -12492,44 +12494,28 @@ def inv_stock_card_update(inv_item_ids,
         quantity = row.quantity
         packs_by_id[pack_id] = quantity
         if quantity == 1:
+            # The Pack used by the Card
             packs_by_item[row.item_id] = pack_id
+
+    # Group by inv_item_id
+    inv_items = {}
+    for row in rows:
+        inv_item_id = row["inv_inv_item.id"]
+        if inv_item_id in inv_items:
+            inv_items[inv_item_id].append(row)
+        else:
+            inv_items[inv_item_id] = [row]
 
     sctable = s3db.inv_stock_card
     sltable = s3db.inv_stock_log
 
-    for record in records:
-        bin_record = record.inv_inv_item_bin
-        layout_id = bin_record.layout_id
-        record = record.inv_inv_item
-        site_id = record.site_id
-        item_id = record.item_id
-        item_source_no = record.item_source_no
-        expiry_date = record.expiry_date
-
-        card_pack_id = packs_by_item[item_id]
-
-        # @ToDo: Needs more work to handle partially-binned inv_items!
-        if layout_id:
-            quantity = bin_record.quantity * packs_by_id[record.item_pack_id]
-        else:
-            # Not split into bins
-            quantity = record.quantity * packs_by_id[record.item_pack_id]
-
-        # Read all matching inv_items
-        query = (iitable.site_id == site_id) & \
-                (iitable.item_id == item_id) & \
-                (iitable.item_source_no == item_source_no) & \
-                (iitable.expiry_date == expiry_date) & \
-                (iitable.id != record.id)
-        if layout_id:
-            # Restrict to this Bin
-            query &= (iitable.id == ibtable.inv_item_id) & \
-                     (ibtable.layout_id == layout_id)
-        matches = db(query).select(iitable.quantity,
-                                   iitable.item_pack_id,
-                                   )
-        for row in matches:
-            quantity += (row.quantity * packs_by_id[row.item_pack_id])
+    for inv_item_id in inv_items:
+        bins = inv_items[inv_item_id]
+        inv_item = bins[0].inv_inv_item
+        site_id = inv_item.site_id
+        item_id = inv_item.item_id
+        item_source_no = inv_item.item_source_no
+        expiry_date = inv_item.expiry_date
 
         # Search for existing Stock Card
         query = (sctable.site_id == site_id) & \
@@ -12542,61 +12528,121 @@ def inv_stock_card_update(inv_item_ids,
                                   ).first()
         if exists:
             card_id = exists.id
-
-            # Lookup Latest Log Entry for this Bin
-            query = (sltable.card_id == card_id)
-            if layout_id:
-                query &= (sltable.layout_id == layout_id)
-            log = db(query).select(sltable.date,
-                                   sltable.balance,
-                                   orderby = ~sltable.date,
-                                   limitby = (0, 1),
-                                   ).first()
-            if not log:
-                quantity_in = quantity
-                quantity_out = 0
-            else:
-                old_balance = log.balance
-                if quantity > old_balance:
-                    quantity_in = quantity - old_balance
-                    quantity_out = 0
-                elif quantity < old_balance:
-                    quantity_in = 0
-                    quantity_out = old_balance - quantity
-                else:
-                    # quantity == balance some other change
-                    quantity_in = 0
-                    quantity_out = 0
         else:
             # Create Stock Card
             card_id = sctable.insert(site_id = site_id,
                                      item_id = item_id,
-                                     item_pack_id = card_pack_id,
+                                     item_pack_id = packs_by_item[item_id],
                                      item_source_no = item_source_no,
                                      expiry_date = expiry_date,
                                      )
             onaccept = s3db.get_config("inv_stock_card", "create_onaccept")
             if onaccept:
+                # Generate the Stock Card No.
                 onaccept(Storage(vars = Storage(id = card_id,
                                                 site_id = site_id,
                                                 )
                                  ))
-            quantity_in = quantity
             quantity_out = 0
 
-        balance = quantity
+        pack_quantity = packs_by_id[inv_item.item_pack_id]
+        inv_quantity = inv_item.quantity
+        binned_quantity = sum([row["inv_inv_item_bin.quantity"] for row in bins if row["inv_inv_item_bin.quantity"] is not None])
 
-        # Add Log Entry
-        sltable.insert(card_id = card_id,
-                       date = current.request.utcnow,
-                       send_id = send_id,
-                       recv_id = recv_id,
-                       layout_id = layout_id,
-                       quantity_in = quantity_in,
-                       quantity_out = quantity_out,
-                       balance = balance,
-                       comments = comments,
-                       )
+        if inv_quantity > binned_quantity:
+            # We have some unbinned
+            bins.append(Storage(inv_inv_item_bin = Storage(layout_id = None)))
+
+        # Read all matching inv_items
+        query = (iitable.site_id == site_id) & \
+                (iitable.item_id == item_id) & \
+                (iitable.item_source_no == item_source_no) & \
+                (iitable.expiry_date == expiry_date) & \
+                (iitable.id != inv_item.id)
+
+        for row in bins:
+            bin_record = row.inv_inv_item_bin
+            layout_id = bin_record.layout_id
+            if layout_id:
+                quantity = bin_record.quantity * pack_quantity
+
+                # Need to match with all others in this bin
+                match_query = query & (ibtable.inv_item_id == iitable.id) & \
+                                      (ibtable.layout_id == layout_id)
+                matches = db(match_query).select(iitable.item_pack_id,
+                                                 ibtable.quantity,
+                                                 )
+                for match in matches:
+                    quantity += (match["inv_inv_item_bin.quantity"] * packs_by_id[match["inv_inv_item.item_pack_id"]])
+
+            else:
+                # Unbinned
+                quantity = (inv_quantity - binned_quantity) * pack_quantity
+
+                # Need to match with all other unbinned
+                matches = db(query).select(iitable.id,
+                                           iitable.quantity,
+                                           iitable.item_pack_id,
+                                           ibtable.quantity,
+                                           left = left,
+                                           )
+                # Group by inv_item_id
+                match_inv_items = {}
+                for match in matches:
+                    inv_item_id = match["inv_inv_item.id"]
+                    if inv_item_id in match_inv_items:
+                        match_inv_items[inv_item_id].append(match)
+                    else:
+                        match_inv_items[inv_item_id] = [match]
+
+                for inv_item_id in match_inv_items:
+                    match_bins = match_inv_items[inv_item_id]
+                    match_inv_item = match_bins[0].inv_inv_item
+                    match_pack_quantity = packs_by_id[match_inv_item.item_pack_id]
+                    match_quantity = match_inv_item.quantity
+                    match_binned_quantity = sum([match["inv_inv_item_bin.quantity"] for match in match_bins if match["inv_inv_item_bin.quantity"] is not None])
+                    quantity += ((match_quantity - match_binned_quantity) * match_pack_quantity)
+
+            if exists:
+                # Lookup Latest Log Entry for this Bin
+                log_query = (sltable.card_id == card_id) & \
+                            (sltable.layout_id == layout_id)
+                log = db(log_query).select(sltable.date,
+                                           sltable.balance,
+                                           orderby = ~sltable.date,
+                                           limitby = (0, 1),
+                                           ).first()
+                if not log:
+                    quantity_in = quantity
+                    quantity_out = 0
+                else:
+                    old_balance = log.balance
+                    if quantity > old_balance:
+                        quantity_in = quantity - old_balance
+                        quantity_out = 0
+                    elif quantity < old_balance:
+                        quantity_in = 0
+                        quantity_out = old_balance - quantity
+                    else:
+                        # quantity == balance some other change
+                        quantity_in = 0
+                        quantity_out = 0
+            else:
+                quantity_in = quantity
+
+            balance = quantity
+
+            # Add Log Entry
+            sltable.insert(card_id = card_id,
+                           date = current.request.utcnow,
+                           send_id = send_id,
+                           recv_id = recv_id,
+                           layout_id = layout_id,
+                           quantity_in = quantity_in,
+                           quantity_out = quantity_out,
+                           balance = balance,
+                           comments = comments,
+                           )
 
 # =============================================================================
 def inv_track_item_deleting(record_id):

@@ -4238,13 +4238,12 @@ class SiteLayoutModel(S3Model):
                 parent = None
                 if site_id == "NONE":
                     site_id = None
+            if not parent and not site_id:
+                # Nothing we can do!
+                current.log.error("Cannot validate org_site_layout")
+                return
         else:
             site_id = None
-
-        if not parent and not site_id:
-            # Nothing we can do!
-            current.log.error("Cannot validate org_site_layout")
-            return
 
         query = (ltable.parent == parent)
         if site_id and not parent:
