@@ -513,17 +513,15 @@ def do_js(minimize,
     # Build JS for OL6 maps
     #
     cwd = os.getcwd()
-    # Assume ol-rollup at same level as eden
-    # https://github.com/openlayers/ol-rollup
-    # format: 'es'
-    rollup_dir = os.path.join("..", "..", "..", "..", "ol-rollup")
+    rollup_dir = os.path.join("..", "..", "..", "private", "ol-rollup")
     try:
         os.chdir(rollup_dir)
     except FileNotFoundError:
         info("Unable to build olgm as ol-rollup not found")
     else:
+        os.system("npm install")
         os.system("npm run-script build")
-        output_dir = os.path.join("..", request.application, "static", "scripts", "gis")
+        output_dir = os.path.join("..", "..", "static", "scripts", "gis")
         move_to("olgm.min.js", output_dir)
     finally:
         # Restore CWD

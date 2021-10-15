@@ -1,3 +1,6 @@
 [submodule "private/eden_deploy"]
 	path = private/eden_deploy
 	url = https://github.com/sahana/eden_deploy
+[submodule "private/ol-rollup"]
+	path = private/ol-rollup
+	url = https://github.com/sahana/ol-rollup
