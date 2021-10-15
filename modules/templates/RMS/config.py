@@ -4058,6 +4058,18 @@ Thank you"""
     settings.customise_inv_warehouse_resource = customise_inv_warehouse_resource
 
     # -------------------------------------------------------------------------
+    def customise_inv_warehouse_controller(**attr):
+
+        if current.auth.s3_has_role("ADMIN"):
+            # ADMIN is allowed to Edit Inventory bypassing the need to use Adjustments
+            # - seems wrong to me as Adjustments aren't that heavy, but has been requested
+            settings.inv.direct_stock_edits = True
+
+        return attr
+
+    settings.customise_inv_warehouse_controller = customise_inv_warehouse_controller
+
+    # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
 
         #root_org = current.auth.root_org_name()

@@ -30,6 +30,7 @@
 __all__ = ("WarehouseModel",
            "InventoryModel",
            "InventoryAdjustModel",
+           "InventoryAdjustBinModel",
            "InventoryBinModel",
            "InventoryCommitModel",
            "InventoryCommitItemModel",
@@ -1074,6 +1075,8 @@ class InventoryAdjustModel(S3Model):
         organisation_id = self.org_organisation_id
         org_site_represent = self.org_site_represent
 
+        add_components = self.add_components
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
@@ -1133,16 +1136,16 @@ class InventoryAdjustModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        self.configure(tablename,
-                       super_entity = "doc_entity",
-                       create_onaccept = self.inv_adj_create_onaccept,
-                       create_next = URL(args = ["[id]", "adj_item"]),
-                       )
+        configure(tablename,
+                  super_entity = "doc_entity",
+                  create_onaccept = self.inv_adj_create_onaccept,
+                  create_next = URL(args = ["[id]", "adj_item"]),
+                  )
 
         # Components
-        self.add_components(tablename,
-                            inv_adj_item = "adj_id",
-                            )
+        add_components(tablename,
+                       inv_adj_item = "adj_id",
+                       )
 
         self.set_method("inv", "adj",
                         method = "close",
@@ -1264,21 +1267,6 @@ class InventoryAdjustModel(S3Model):
                      s3_date("expiry_date",
                              label = T("Expiry Date"),
                              ),
-                     self.org_site_layout_id(label = T("Bin"),
-                                             # This has the URL adjusted for the right site_id using org_site_layout_config()
-                                             comment = S3PopupLink(c = "org",
-                                                                   f = "site",
-                                                                   args = ["[id]", "layout", "create"],
-                                                                   vars = {"prefix": "inv",
-                                                                           "parent": "adj_item",
-                                                                           "child": "layout_id",
-                                                                           },
-                                                                   label = T("Create Bin"),
-                                                                   title = T("Bin"),
-                                                                   tooltip = T("If you don't see the Bin listed, you can add a new one by clicking link 'Create Bin'."),
-                                                                   _id = "inv_adj_item_layout_id-create-btn",
-                                                                   ),
-                                             ),
                      # Organisation that owned this item before
                      organisation_id("old_owner_org_id",
                                      label = T("Current Owned By (Organization/Branch)"),
@@ -1294,6 +1282,40 @@ class InventoryAdjustModel(S3Model):
                      adj_id(),
                      s3_comments(),
                      *s3_meta_fields())
+
+        crud_form = S3SQLCustomForm("item_id",
+                                    "item_pack_id",
+                                    "old_quantity",
+                                    "new_quantity",
+                                    "reason",
+                                    "old_pack_value",
+                                    "new_pack_value",
+                                    "currency",
+                                    "old_status",
+                                    "new_status",
+                                    "expiry_date",
+                                    S3SQLInlineComponent("bin",
+                                                         label = T("Bins"),
+                                                         fields = [(T("Bin"), "layout_id"),
+                                                                   (T("Quantity"), "quantity"),
+                                                                   ],
+                                                         ),
+                                    "old_owner_org_id",
+                                    "new_owner_org_id",
+                                    "comments",
+                                    )
+
+        configure(tablename,
+                  crud_form = crud_form,
+                  deletable = False,
+                  )
+
+        # Components
+        add_components(tablename,
+                       inv_adj_item_bin = {"name": "bin",
+                                           "joinby": "adj_item_id",
+                                           },
+                       )
 
         # Reusable Field
         inv_adj_item_represent = inv_AdjItemRepresent()
@@ -1318,10 +1340,10 @@ class InventoryAdjustModel(S3Model):
             title_list = T("Items in Stock"),
             title_update = T("Adjust Item Quantity"),
             label_list_button = T("List Items in Stock"),
-            #label_delete_button = T("Remove Item from Stock"), # This should be forbidden - set qty to zero instead
+            #label_delete_button = T("Remove Item from Stock"), # This is forbidden - set qty to zero instead
             msg_record_created = T("Item added to stock adjustment"),
             msg_record_modified = T("Item quantity adjusted"),
-            #msg_record_deleted = T("Item removed from Stock"), # This should be forbidden - set qty to zero instead
+            #msg_record_deleted = T("Item removed from Stock"), # This is forbidden - set qty to zero instead
             msg_list_empty = T("No items currently in stock"),
             )
 
@@ -1369,7 +1391,8 @@ class InventoryAdjustModel(S3Model):
 
         # Check Permissions
         if not auth.s3_has_permission("update", "inv_adj",
-                                      record_id = adj_id):
+                                      record_id = adj_id,
+                                      ):
             r.unauthorised()
 
         db = current.db
@@ -1384,41 +1407,71 @@ class InventoryAdjustModel(S3Model):
         if adj_record.status != 0:
             r.error(409, current.T("This adjustment has already been closed."))
 
-        aitable = s3db.inv_adj_item
-        inv_item_table = s3db.inv_inv_item
-        get_realm_entity = auth.get_realm_entity
         site_id = adj_record.site_id
 
-        settings = current.deployment_settings
-        stock_cards = settings.get_inv_stock_cards()
-        if stock_cards:
-            inv_item_ids = []
-            iiappend = inv_item_ids.append
+        adj_bin_table = s3db.inv_adj_item_bin
+        adj_item_table = s3db.inv_adj_item
+        inv_bin_table = s3db.inv_inv_item_bin
+        inv_item_table = s3db.inv_inv_item
 
         # Go through all the adj_items
-        query = (aitable.adj_id == adj_id) & \
-                (aitable.deleted == False)
-        adj_items = db(query).select(aitable.id,
-                                     aitable.inv_item_id,
-                                     aitable.item_id,
-                                     aitable.item_pack_id,
-                                     aitable.currency,
-                                     aitable.layout_id,
-                                     aitable.old_pack_value,
-                                     aitable.expiry_date,
-                                     aitable.new_quantity,
-                                     aitable.old_owner_org_id,
-                                     aitable.new_owner_org_id,
-                                     aitable.new_status,
-                                     )
-        for adj_item in adj_items:
+        left = adj_bin_table.on(adj_bin_table.adj_item_id == adj_item_table.id)
+        rows = db(adj_item_table.adj_id == adj_id).select(adj_item_table.id,
+                                                          adj_item_table.inv_item_id,
+                                                          adj_item_table.item_id,
+                                                          adj_item_table.item_pack_id,
+                                                          adj_item_table.currency,
+                                                          adj_item_table.old_pack_value,
+                                                          adj_item_table.expiry_date,
+                                                          adj_item_table.new_quantity,
+                                                          adj_item_table.old_owner_org_id,
+                                                          adj_item_table.new_owner_org_id,
+                                                          adj_item_table.new_status,
+                                                          adj_bin_table.layout_id,
+                                                          adj_bin_table.quantity,
+                                                          left = left,
+                                                          )
+
+        # Group by adj_item_id & collect inv_item_ids for bulk lookup of bins
+        adj_items = {}
+        inv_item_ids = []
+        iiappend = inv_item_ids.append
+        for row in rows:
+            adj_item = row.inv_adj_item
+            inv_item_id = adj_item.inv_item_id
+            if inv_item_id:
+                iiappend(inv_item_id)
+            adj_item_id = adj_item.id
+            if adj_item_id in adj_items:
+                adj_items[adj_item_id].append(row)
+            else:
+                adj_items[adj_item_id] = [row]
+
+        # Bulk Lookup all existing Inv Bins
+        rows = db(inv_bin_table.id.belongs(set(inv_item_ids))).select(inv_bin_table.id,
+                                                                      inv_bin_table.inv_item_id,
+                                                                      inv_bin_table.layout_id,
+                                                                      )
+        # Group by inv_item_id
+        inv_bins = {}
+        for row in rows:
+            inv_item_id = row.inv_item_id
+            if inv_item_id in inv_bins:
+                inv_bins[inv_item_id].append(row)
+            else:
+                inv_bins[inv_item_id] = [row]
+
+        get_realm_entity = auth.get_realm_entity
+
+        for adj_item_id in adj_items:
+            bins = adj_items[adj_item_id]
+            adj_item = bins[0].inv_adj_item
             if adj_item.inv_item_id is None:
                 # Create a new stock item
                 inv_item = {"site_id": site_id,
                             "item_id": adj_item.item_id,
                             "item_pack_id": adj_item.item_pack_id,
                             "currency": adj_item.currency,
-                            "layout_id": adj_item.layout_id,
                             "pack_value": adj_item.old_pack_value,
                             "expiry_date": adj_item.expiry_date,
                             "quantity": adj_item.new_quantity,
@@ -1426,30 +1479,64 @@ class InventoryAdjustModel(S3Model):
                             }
                 inv_item_id = inv_item_table.insert(**inv_item)
 
+                # Add the Bins
+                for row in bins:
+                    inv_bin_table.insert(inv_item_id = inv_item_id,
+                                         layout_id = row.layout_id,
+                                         quantity = row.quantity,
+                                         )
+
                 # Apply the realm entity
                 inv_item["id"] = inv_item_id
                 realm_entity = get_realm_entity(inv_item_table, inv_item)
                 db(inv_item_table.id == inv_item_id).update(realm_entity = realm_entity)
 
                 # Add the inventory item id to the adjustment record
-                db(aitable.id == adj_item.id).update(inv_item_id = inv_item_id)
+                db(adj_item_table.id == adj_item.id).update(inv_item_id = inv_item_id)
 
             elif adj_item.new_quantity is not None:
                 # Update the existing stock item
                 inv_item_id = adj_item.inv_item_id
                 db(inv_item_table.id == inv_item_id).update(item_pack_id = adj_item.item_pack_id,
-                                                            layout_id = adj_item.layout_id,
                                                             pack_value = adj_item.old_pack_value,
                                                             expiry_date = adj_item.expiry_date,
                                                             quantity = adj_item.new_quantity,
                                                             owner_org_id = adj_item.new_owner_org_id,
                                                             status = adj_item.new_status,
                                                             )
-            if stock_cards:
-                iiappend(inv_item_id)
+                # Update the Bins
+                old_bins = inv_bins[inv_item_id]
+                new_layout_ids = [row["inv_adj_item_bin.layout_id"] for row in bins]
+
+                bins_to_delete = {}
+                bins_to_update = {}
+                for row in old_bins:
+                    layout_id = row.layout_id
+                    if layout_id in new_layout_ids:
+                        bins_to_update[layout_id] = row.id
+                    else:
+                        bins_to_delete[layout_id] = row.id
+
+                for row in bins:
+                    bin_record = row.inv_adj_item_bin
+                    layout_id = bin_record.layout_id
+                    if layout_id in bins_to_update:
+                        # Update link
+                        db(inv_bin_table.id == bins_to_update[layout_id]).update(quantity = bin_record.quantity)
+                    elif layout_id in bins_to_delete:
+                        # Remove link
+                        db(inv_bin_table.id == bins_to_delete[layout_id]).delete()
+                    else:
+                        # Create new link
+                        inv_bin_table.insert(inv_item_id = inv_item_id,
+                                             layout_id = layout_id,
+                                             quantity = bin_record.quantity,
+                                             )
 
         # Change the status of the adj record to Complete
         db(atable.id == adj_id).update(status = 1)
+
+        settings = current.deployment_settings
 
         # Go to the Inventory of the Site which has adjusted these items
         (prefix, resourcename, instance_id) = s3db.get_instance(s3db.org_site,
@@ -1459,7 +1546,7 @@ class InventoryAdjustModel(S3Model):
             # Update the Free Capacity for this Warehouse
             inv_warehouse_free_capacity(site_id)
 
-        if stock_cards:
+        if settings.get_inv_stock_cards():
             inv_stock_card_update(inv_item_ids,
                                   comments = "Adjustment",
                                   )
@@ -1487,47 +1574,132 @@ class InventoryAdjustModel(S3Model):
            created. If needed, extra adj_item records can be created later.
         """
 
-        record_id = form.vars.id
         db = current.db
-        inv_item_table = db.inv_inv_item
-        adjitemtable = db.inv_adj_item
-        adjtable = db.inv_adj
-        adj_rec = adjtable[record_id]
-        if adj_rec.category == 1:
-            site_id = form.vars.site_id
-            # Only get inv. item with a positive quantity
-            query = (inv_item_table.site_id == site_id) & \
-                    (inv_item_table.quantity > 0) & \
-                    (inv_item_table.deleted == False)
-            rows = db(query).select(inv_item_table.id,
-                                    inv_item_table.item_id,
-                                    inv_item_table.item_pack_id,
-                                    inv_item_table.quantity,
-                                    inv_item_table.currency,
-                                    inv_item_table.status,
-                                    inv_item_table.pack_value,
-                                    inv_item_table.expiry_date,
-                                    inv_item_table.layout_id,
-                                    inv_item_table.owner_org_id,
-                                    )
-            for inv_item in rows:
-                # add an adjustment item record
-                adjitemtable.insert(reason = 0,
-                                    adj_id = record_id,
-                                    inv_item_id = inv_item.id, # original source inv_item
-                                    item_id = inv_item.item_id, # the supply item
-                                    item_pack_id = inv_item.item_pack_id,
-                                    old_quantity = inv_item.quantity,
-                                    currency = inv_item.currency,
-                                    old_status = inv_item.status,
-                                    new_status = inv_item.status,
-                                    old_pack_value = inv_item.pack_value,
-                                    new_pack_value = inv_item.pack_value,
-                                    expiry_date = inv_item.expiry_date,
-                                    layout_id = inv_item.layout_id,
-                                    old_owner_org_id = inv_item.owner_org_id,
-                                    new_owner_org_id = inv_item.owner_org_id,
-                                    )
+
+        adj_id = form.vars.id
+
+        adj_table = db.inv_adj
+        record = db(adj_table.id == adj_id).select(adj_table.category,
+                                                   limitby = (0, 1),
+                                                   ).first()
+        if record.category != 1:
+            # Not a (Full) Inventory Adjustment
+            return
+
+        s3db = current.s3db
+
+        site_id = form.vars.site_id
+
+        adj_bin_table = s3db.inv_adj_item_bin
+        adj_item_table = s3db.inv_adj_item
+        inv_bin_table = s3db.inv_inv_item_bin
+        inv_item_table = s3db.inv_inv_item
+
+        # Get all inv items for this site with a positive quantity
+        query = (inv_item_table.site_id == site_id) & \
+                (inv_item_table.quantity > 0) & \
+                (inv_item_table.deleted == False)
+        left = inv_bin_table.on(inv_bin_table.inv_item_id == inv_item_table.id)
+        rows = db(query).select(inv_item_table.id,
+                                inv_item_table.item_id,
+                                inv_item_table.item_pack_id,
+                                inv_item_table.quantity,
+                                inv_item_table.currency,
+                                inv_item_table.status,
+                                inv_item_table.pack_value,
+                                inv_item_table.expiry_date,
+                                inv_item_table.owner_org_id,
+                                inv_bin_table.layout_id,
+                                inv_bin_table.quantity,
+                                left = left,
+                                )
+
+        # Group by inv_item_id
+        inv_items = {}
+        for row in rows:
+            inv_item_id = row["inv_inv_item.id"]
+            if inv_item_id in inv_items:
+                inv_items[inv_item_id].append(row)
+            else:
+                inv_items[inv_item_id] = [row]
+
+        for inv_item_id in inv_items:
+            bins = inv_items[inv_item_id]
+            # Add an adjustment item record
+            inv_item = bins[0].inv_inv_item
+            adj_item_id = adj_item_table.insert(reason = 0,
+                                                adj_id = adj_id,
+                                                inv_item_id = inv_item.id, # original source inv_item
+                                                item_id = inv_item.item_id, # the supply item
+                                                item_pack_id = inv_item.item_pack_id,
+                                                old_quantity = inv_item.quantity,
+                                                currency = inv_item.currency,
+                                                old_status = inv_item.status,
+                                                new_status = inv_item.status,
+                                                old_pack_value = inv_item.pack_value,
+                                                new_pack_value = inv_item.pack_value,
+                                                expiry_date = inv_item.expiry_date,
+                                                old_owner_org_id = inv_item.owner_org_id,
+                                                new_owner_org_id = inv_item.owner_org_id,
+                                                )
+
+            for row in bins:
+                bin_record = row.inv_inv_item_bin
+                adj_bin_table.insert(adj_item_id = adj_item_id,
+                                     layout_id = bin_record.layout_id,
+                                     quantity = bin_record.quantity,
+                                     )
+
+# =============================================================================
+class InventoryAdjustBinModel(S3Model):
+    """
+        Link Inventory Adjustment Items to Warehouse Locations (i.e. Bins)
+        - can't just use Inventory Item Bins as we need to be able to make
+          draft changes which aren't committed until the adjustment is closed.
+    """
+
+    names = ("inv_adj_item_bin",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Inventory Adjustment Items <> Bins
+        #
+
+        tablename = "inv_adj_item_bin"
+        self.define_table(tablename,
+                          self.inv_adj_item_id(empty = False,
+                                               ondelete = "CASCADE",
+                                               ),
+                          self.org_site_layout_id(label = T("Bin"),
+                                                  empty = False,
+                                                  # This has the URL adjusted for the right site_id in the controller & s3.inv_item.js
+                                                  comment = S3PopupLink(c = "org",
+                                                                        f = "site",
+                                                                        args = ["[id]", "layout", "create"],
+                                                                        vars = {"child": "layout_id",
+                                                                                # @ToDo: Restrict to site_id to reduce risk of race condition
+                                                                                #"optionsVar": "site_id",
+                                                                                #"optionsValue": "[id]",
+                                                                                },
+                                                                        label = T("Create Bin"),
+                                                                        title = T("Bin"),
+                                                                        tooltip = T("If you don't see the Bin listed, you can add a new one by clicking link 'Create Bin'."),
+                                                                        _id = "inv_adj_item_bin_layout_id-create-btn",
+                                                                        ),
+                                                  ),
+                          Field("quantity", "double", notnull=True,
+                                default = 0,
+                                label = T("Quantity"),
+                                represent = lambda v: \
+                                                IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                ),
+                          *s3_meta_fields())
+
+        return {}
 
 # =============================================================================
 class InventoryBinModel(S3Model):

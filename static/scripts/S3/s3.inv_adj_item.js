@@ -1,6 +1,5 @@
 /**
- * Used by the inv/inv_item or <site_instance>/inv_item controller when direct_stock_edits are allowed
- * - Limit to Bins from the relevant Site (inv/inv_item)
+ * Used by the inv/adj/adj_item controller
  * - Validate the Bin Quantity
  */
 
@@ -13,43 +12,14 @@ $(document).ready(function() {
         editBinBtnOK = $('#rdy-defaultbin-0'),
         newBinQuantityField = $('#sub_defaultbin_defaultbin_i_quantity_edit_none'),
         oldBinQuantityField = $('#sub_defaultbin_defaultbin_i_quantity_edit_0'),
-        siteField = $('#inv_inv_item_site_id'),
-        totalQuantityField = $('#inv_inv_item_quantity'),
+        totalQuantityField = $('#inv_adj_item_new_quantity'),
         totalQuantity = totalQuantityField.val(),
         $this;
-
-    if (siteField.length) {
-        // inv/inv_item
-        var ajaxURL,
-            createButtons = $('a[id^="inv"].s3_add_resource_link'), // There will be 3 if we have permission to create new Bins
-            re = /%5Bid%5D/g,
-            oldSiteID = siteField.val(),
-            siteID,
-            trees = $('div[id^="sub_defaultbin_defaultbin_i_layout_id"].s3-hierarchy-widget'); // There will be 3
-
-        siteField.change(function() {
-            // Remove all Bin allocations
-            inlineComponent.inlinecomponent('removeRows');
-            siteID = siteField.val();
-            ajaxURL = S3.Ap.concat('/org/site/' + siteID + '/layout/hierarchy.tree');
-            trees.hierarchicalopts('reload', ajaxURL);
-            createButtons.each(function() {
-                $this = $(this);
-                if (oldSiteID) {
-                    ajaxURL = $this.attr('href').replace(oldSiteID, siteID);
-                } else {
-                    ajaxURL = $this.attr('href').replace(re, siteID);
-                }
-                $this.attr('href', ajaxURL);
-            });
-            oldSiteID = siteID;
-        });
-    }
 
     if (totalQuantity) {
         totalQuantity = parseFloat(totalQuantity);
     } else {
-        totalQuantity = 0;
+        totalQuantity = S3.supply.oldQuantity || 0;
     }
 
     // Attach to the top-level element to catch newly-created readRows
@@ -82,7 +52,7 @@ $(document).ready(function() {
         if (totalQuantity) {
             totalQuantity = parseFloat(totalQuantity);
         } else {
-            totalQuantity = 0;
+            totalQuantity = S3.supply.oldQuantity || 0;
         }
         if (totalQuantity < binnedQuantity) {
             // @ToDo: i18n
