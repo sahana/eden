@@ -5500,7 +5500,7 @@ class event_ApplyScenario(S3Method):
                     # Execute onaccept
                     from gluon.tools import callback
                     try:
-                        callback(onaccept, form, tablename="project_task")
+                        callback(onaccept, form) # , tablename="project_task" (if we ever define callbacks as a dict with tablename)
                     except:
                         error = "onaccept failed: %s" % str(onaccept)
                         current.log.error(error)

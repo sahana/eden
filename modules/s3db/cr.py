@@ -1491,7 +1491,7 @@ class ShelterInspectionModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def shelter_inspection_task_ondelete_cascade(row, tablename=None):
+    def shelter_inspection_task_ondelete_cascade(row):
         """
             Ondelete-cascade method for inspection task links:
                 - close the linked task if there are no other

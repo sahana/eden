@@ -694,7 +694,7 @@ class S3Resource(object):
         if onapprove:
             rows = dbset.select(limitby=(0, len(record_ids)))
             for row in rows:
-                callback(onapprove, row, tablename=self.tablename)
+                callback(onapprove, row) # , tablename=self.tablename (if we ever define callbacks as a dict with tablename)
 
         # Return early if no components to approve
         if components is None:
@@ -764,7 +764,7 @@ class S3Resource(object):
 
                 # On-delete-cascade
                 if ondelete_cascade:
-                    callback(ondelete_cascade, row, tablename=tablename)
+                    callback(ondelete_cascade, row) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
 
                 # Automatic cascade
                 for ref in references:
@@ -805,7 +805,7 @@ class S3Resource(object):
 
                     # On-reject hook
                     if onreject:
-                        callback(onreject, row, tablename=tablename)
+                        callback(onreject, row) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
 
                     # Park foreign keys
                     fields = {"deleted": True}
@@ -831,7 +831,7 @@ class S3Resource(object):
 
                     # On-delete hook
                     if ondelete:
-                        callback(ondelete, row, tablename=tablename)
+                        callback(ondelete, row) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
 
         else:
             # Hard delete
@@ -839,11 +839,11 @@ class S3Resource(object):
 
                 # On-delete-cascade
                 if ondelete_cascade:
-                    callback(ondelete_cascade, row, tablename=tablename)
+                    callback(ondelete_cascade, row) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
 
                 # On-reject
                 if onreject:
-                    callback(onreject, row, tablename=tablename)
+                    callback(onreject, row) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
 
                 try:
                     del table[row[pkey]]
@@ -862,7 +862,7 @@ class S3Resource(object):
 
                     # On-delete
                     if ondelete:
-                        callback(ondelete, row, tablename=tablename)
+                        callback(ondelete, row) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
 
         return True
 
@@ -1779,7 +1779,7 @@ class S3Resource(object):
             onimport = self.get_config("onimport")
             if onimport:
                 #try:
-                callback(onimport, import_info, tablename=self.tablename)
+                callback(onimport, import_info) # , tablename=self.tablename (if we ever define callbacks as a dict with tablename)
                 #except:
                 #    error = "onimport failed: %s" % onimport
                 #    current.log.error(error)
@@ -1880,8 +1880,7 @@ class S3Resource(object):
                 tree = import_job.get_tree()
                 callback(import_prep,
                          # takes tuple (resource, tree) as argument
-                         (self, tree),
-                         tablename=tablename)
+                         (self, tree)) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
                 # Skip import?
                 if self.skip_import:
                     current.log.debug("Skipping import to %s" % tablename)
@@ -1912,8 +1911,7 @@ class S3Resource(object):
                     tree = etree.ElementTree(tree)
                 callback(import_prep,
                          # takes tuple (resource, tree) as argument
-                         (self, tree),
-                         tablename=tablename)
+                         (self, tree)) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
                 # Skip import?
                 if self.skip_import:
                     current.log.debug("Skipping import to %s" % tablename)

@@ -160,7 +160,6 @@ def facility_type():
 def office():
     """ RESTful CRUD controller """
 
-    # Defined in the Model for use from Multiple Controllers for unified menus
     from s3db.org import org_office_controller
     return org_office_controller()
 
@@ -225,20 +224,6 @@ def organisation_list_represent(l):
 # -----------------------------------------------------------------------------
 def region():
     """ RESTful CRUD controller """
-
-    def prep(r):
-        if r.representation == "popup":
-
-            if settings.get_org_regions_hierarchical():
-
-                # Zone is required when creating new regions from popup
-                field = r.table.parent
-                requires = field.requires
-                if hasattr(requires, "other"):
-                    field.requires = requires.other
-
-        return True
-    s3.prep = prep
 
     return s3_rest_controller()
 

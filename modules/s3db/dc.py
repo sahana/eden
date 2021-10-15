@@ -605,33 +605,33 @@ class DataCollectionTemplateModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def dc_template_ondelete(form):
+    def dc_template_ondelete(row):
         """
             On-delete routine for dc_template:
              - Delete the associated Dynamic Table
         """
 
-        template_id = form.id
-        if not template_id:
-            return
+        if hasattr(row, "table_id"):
+            table_id = row.table_id
+        else:
+            # Read from deleted_fk
+            record_id = row.id
 
-        db = current.db
-        s3db = current.s3db
+            # Load record
+            db = current.db
+            table = db.dc_template
+            record = db(table.id == record_id).select(table.deleted_fk,
+                                                      limitby = (0, 1),
+                                                      ).first()
 
-        # Load full record
-        ttable = s3db.dc_template
-        record = db(ttable.id == template_id).select(ttable.deleted_fk,
-                                                     limitby = (0, 1),
-                                                     ).first()
+            deleted_fk = json.loads(record.deleted_fk)
+            table_id = deleted_fk.get("table_id")
 
-        deleted_fk = json.loads(record.deleted_fk)
-        table_id = deleted_fk.get("table_id")
         if table_id:
-            dtable = s3db.s3_table
-            resource = s3db.resource("s3_table",
-                                     id = table_id,
-                                     )
-            resource.delete()
+            resource = current.s3db.resource("s3_table",
+                                             id = table_id,
+                                             )
+            resource.delete(cascade = True)
 
     # -------------------------------------------------------------------------
     @staticmethod

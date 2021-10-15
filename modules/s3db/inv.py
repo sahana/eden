@@ -831,6 +831,8 @@ $.filterOptionsS3({
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        onaccept = self.inv_item_onaccept,
+                       ondelete = self.inv_item_ondelete,
+                       ondelete_cascade = self.inv_item_ondelete_cascade,
                        onimport = self.inv_item_onimport,
                        report_options = report_options,
                        super_entity = "supply_item_entity",
@@ -939,6 +941,46 @@ $.filterOptionsS3({
                 site_id = record.site_id
 
             inv_warehouse_free_capacity(site_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_item_ondelete(row):
+        """
+            Called when Stock is deleted by:
+            - direct_stock_edits
+
+            Update the Free Capacity of the Warehouse
+        """
+
+        # Update the Free Capacity of the Warehouse
+        if current.deployment_settings.get_inv_warehouse_free_capacity_calculated():
+            site_id = row.get("site_id")
+            if not site_id:
+                table = current.s3db.inv_inv_item
+                record = current.db(table.id == row.id).select(table.site_id,
+                                                               limitby = (0, 1),
+                                                               ).first()
+                site_id = record.site_id
+
+            inv_warehouse_free_capacity(site_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_item_ondelete_cascade(row):
+        """
+            Called when Stock is deleted by:
+            - direct_stock_edits
+
+            Update the Stock Cards
+            - needs to be done in ondelete_cascade not ondelete
+        """
+
+        # Update the Stock Cards
+        if current.deployment_settings.get_inv_stock_cards():
+            inv_stock_card_update([row.id],
+                                  comments = "Direct Stock Edit",
+                                  delete = True,
+                                  )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1792,25 +1834,31 @@ class InventoryCommitModel(S3Model):
         """
 
         db = current.db
-        s3db = current.s3db
-        commit_id = row.id
 
-        # Find the request
-        ctable = s3db.inv_commit
-        fks = db(ctable.id == commit_id).select(ctable.deleted_fk,
-                                                limitby = (0, 1),
-                                                ).first().deleted_fk
-        req_id = json.loads(fks)["req_id"]
-        rtable = s3db.inv_req
-        req = db(rtable.id == req_id).select(rtable.id,
-                                             rtable.commit_status,
-                                             limitby = (0, 1),
-                                             ).first()
-        if not req:
-            return
+        if hasattr(row, "req_id"):
+            req_id = row.req_id
+        else:
+            # Read from deleted_fk
+            template_id = row.id
 
-        # Update committed quantities and request status
-        req_update_commit_quantities_and_status(req)
+            # Load record
+            table = db.inv_commit
+            record = db(table.id == record_id).select(table.deleted_fk,
+                                                      limitby = (0, 1),
+                                                      ).first()
+
+            deleted_fk = json.loads(record.deleted_fk)
+            req_id = deleted_fk.get("req_id")
+
+        if req_id:
+            rtable = current.s3db.inv_req
+            req = db(rtable.id == req_id).select(rtable.id,
+                                                 rtable.commit_status,
+                                                 limitby = (0, 1),
+                                                 ).first()
+            if req:
+                # Update committed quantities and request status
+                req_update_commit_quantities_and_status(req)
 
 # =============================================================================
 class InventoryCommitItemModel(S3Model):
@@ -1915,20 +1963,24 @@ class InventoryCommitItemModel(S3Model):
         """
 
         db = current.db
-        s3db = current.s3db
 
-        # Get the commit_id
-        table = s3db.inv_commit_item
-        row = db(table.id == row.id).select(table.deleted_fk,
-                                            limitby = (0, 1),
-                                            ).first()
-        try:
-            deleted_fk = json.loads(row.deleted_fk)
-        except:
-            return
+        if hasattr(row, "commit_id"):
+            commit_id = row.commit_id
+        else:
+            # Read it from deleted_fk
+            record_id = row.id
 
-        commit_id = deleted_fk.get("commit_id")
+            # Load full record
+            table = db.inv_commit_item
+            record = db(table.id == record_id).select(table.deleted_fk,
+                                                      limitby = (0, 1),
+                                                      ).first()
+
+            deleted_fk = json.loads(record.deleted_fk)
+            commit_id = deleted_fk.get("commit_id")
+
         if commit_id:
+            s3db = current.s3db
             ctable = s3db.inv_commit
             rtable = s3db.inv_req
             query = (ctable.id == commit_id) & \
@@ -4594,32 +4646,47 @@ $.filterOptionsS3({
         """
 
         db = current.db
-        sitable = db.supply_item
-        ritable = db.inv_req_item
-        item = db(ritable.id == row.id).select(ritable.deleted_fk,
-                                               limitby = (0, 1),
-                                               ).first()
-        fks = json.loads(item.deleted_fk)
-        req_id = fks["req_id"]
-        item_id = fks["item_id"]
-        citable = db.supply_catalog_item
-        cats = db(citable.item_id == item_id).select(citable.item_category_id)
-        for cat in cats:
-            item_category_id = cat.item_category_id
-            # Check if we have other req_items in the same category
-            query = (ritable.deleted == False) & \
-                    (ritable.req_id == req_id) & \
-                    (ritable.item_id == sitable.id) & \
-                    (sitable.item_category_id == item_category_id)
-            others = db(query).select(ritable.id,
-                                      limitby = (0, 1),
-                                      ).first()
-            if not others:
-                # Delete req_item_category link table
-                rictable = db.inv_req_item_category
-                query = (rictable.req_id == req_id) & \
-                        (rictable.item_category_id == item_category_id)
-                db(query).delete()
+        s3db = current.db
+
+        table = db.inv_req_item
+
+        if hasattr(row, "req_id") and hasattr(row, "item_id"):
+            req_id = row.req_id
+            item_id = row.item_id
+        else:
+            # Read from deleted_fk
+            record_id = row.id
+
+            # Load record
+            record = db(table.id == record_id).select(table.deleted_fk,
+                                                      limitby = (0, 1),
+                                                      ).first()
+
+            deleted_fk = json.loads(record.deleted_fk)
+            req_id = deleted_fk.get("req_id")
+            item_id = deleted_fk.get("item_id")
+
+        if req_id and item_id:
+            citable = s3db.supply_catalog_item
+            cats = db(citable.item_id == item_id).select(citable.item_category_id)
+            for cat in cats:
+                item_category_id = cat.item_category_id
+                # Check if we have other req_items in the same category
+                query = (table.req_id == req_id) & \
+                        (table.item_id == sitable.id) & \
+                        (sitable.item_category_id == item_category_id)
+                others = db(query).select(table.id,
+                                          limitby = (0, 1),
+                                          ).first()
+                if not others:
+                    # Delete req_item_category link table
+                    rictable = s3db.inv_req_item_category
+                    query = (rictable.req_id == req_id) & \
+                            (rictable.item_category_id == item_category_id)
+                    resource = s3db.resource("inv_req_item_category",
+                                             filter = query,
+                                             )
+                    resource.delete(cascade = True)
 
     # ---------------------------------------------------------------------
     @classmethod
@@ -4976,7 +5043,9 @@ class InventoryStockCardModel(S3Model):
                   )
 
         self.add_components(tablename,
-                            inv_stock_log = "card_id",
+                            inv_stock_log = {"name": "log",
+                                             "joinby": "card_id",
+                                             },
                             )
 
         current.response.s3.crud_strings[tablename] = Storage(title_display = T("Stock Card"),
@@ -10607,7 +10676,7 @@ def inv_rheader(r):
     elif tablename == "inv_stock_card":
         # Tabs not used...we only ever see Log tab
         #tabs = [(T("Details"), None),
-        #        (T("Log"), "stock_log"),
+        #        (T("Log"), "log"),
         #        ]
         #rheader_tabs = DIV(s3_rheader_tabs(r, tabs))
 
@@ -12444,6 +12513,7 @@ def inv_stock_card_update(inv_item_ids,
                           send_id = None,
                           recv_id = None,
                           comments = None,
+                          delete = False,
                           ):
     """
         Create/Update the Stock Card
@@ -12564,7 +12634,11 @@ def inv_stock_card_update(inv_item_ids,
             bin_record = row.inv_inv_item_bin
             layout_id = bin_record.layout_id
             if layout_id:
-                quantity = bin_record.quantity * pack_quantity
+                if delete:
+                    delete_quantity = bin_record.quantity * pack_quantity
+                    quantity = 0
+                else:
+                    quantity = bin_record.quantity * pack_quantity
 
                 # Need to match with all others in this bin
                 match_query = query & (ibtable.inv_item_id == iitable.id) & \
@@ -12577,7 +12651,11 @@ def inv_stock_card_update(inv_item_ids,
 
             else:
                 # Unbinned
-                quantity = (inv_quantity - binned_quantity) * pack_quantity
+                if delete:
+                    delete_quantity = (inv_quantity - binned_quantity) * pack_quantity
+                    quantity = 0
+                else:
+                    quantity = (inv_quantity - binned_quantity) * pack_quantity
 
                 # Need to match with all other unbinned
                 matches = db(query).select(iitable.id,
@@ -12604,7 +12682,7 @@ def inv_stock_card_update(inv_item_ids,
                     quantity += ((match_quantity - match_binned_quantity) * match_pack_quantity)
 
             if exists:
-                # Lookup Latest Log Entry for this Bin
+                # Lookup Latest Log Entry for this Bin (or Unbinned)
                 log_query = (sltable.card_id == card_id) & \
                             (sltable.layout_id == layout_id)
                 log = db(log_query).select(sltable.date,
@@ -12612,7 +12690,10 @@ def inv_stock_card_update(inv_item_ids,
                                            orderby = ~sltable.date,
                                            limitby = (0, 1),
                                            ).first()
-                if not log:
+                if delete:
+                    quantity_in = 0
+                    quantity_out = delete_quantity
+                elif not log:
                     quantity_in = quantity
                     quantity_out = 0
                 else:
@@ -12629,6 +12710,8 @@ def inv_stock_card_update(inv_item_ids,
                         quantity_out = 0
             else:
                 quantity_in = quantity
+                if delete:
+                    quantity_out = delete_quantity
 
             balance = quantity
 

@@ -577,27 +577,33 @@ def config(settings):
         db(s3db.s3_table.id == template.table_id).update(**new_vars)
 
     # -------------------------------------------------------------------------
-    def dc_target_ondelete(form):
+    def dc_target_ondelete(row):
         """
             Delete the associated Template
         """
 
-        db = current.db
-        s3db = current.s3db
+        if hasattr(row, "template_id"):
+            template_id = row.template_id
+        else:
+            # Read from deleted_fk
+            record_id = row.id
 
-        target_id = form.id
+            # Load record
+            db = current.db
+            table = db.dc_target
+            record = db(table.id == record_id).select(table.deleted_fk,
+                                                      limitby = (0, 1),
+                                                      ).first()
 
-        table = s3db.dc_target
-        record = db(table.id == target_id).select(table.deleted_fk,
-                                                  limitby = (0, 1),
-                                                  ).first()
-        if record:
             import json
-            deleted_fks = json.loads(record.deleted_fk)
-            template_id = deleted_fks.get("template_id")
-            resource = s3db.resource("dc_template",
-                                     filter=(s3db.dc_template.id == template_id))
-            resource.delete()
+            deleted_fk = json.loads(record.deleted_fk)
+            template_id = deleted_fk.get("template_id")
+
+        if template_id:
+            resource = current.s3db.resource("dc_template",
+                                             id = template_id,
+                                             )
+            resource.delete(cascade = True)
 
     # -------------------------------------------------------------------------
     def customise_dc_target_resource(r, tablename):
@@ -1018,7 +1024,7 @@ def config(settings):
                                               )
 
     # -------------------------------------------------------------------------
-    def project_project_ondelete(form):
+    def project_project_ondelete(row):
         """
             Delete the associated Targets & Templates
         """
@@ -1028,7 +1034,7 @@ def config(settings):
         db = current.db
         s3db = current.s3db
 
-        project_id = form.id
+        project_id = row.id
         target_ids = []
         template_ids = []
 
@@ -1050,11 +1056,13 @@ def config(settings):
             template_ids.append(target.template_id)
 
         resource = s3db.resource("dc_template",
-                                 filter=(s3db.dc_template.id.belongs(template_ids)))
+                                 filter = (s3db.dc_template.id.belongs(template_ids)),
+                                 )
         resource.delete()
         # ondelete CASCADE will clear these:
         #resource = s3db.resource("dc_target",
-        #                         filter=(s3db.dc_target.id.belongs(target_ids)))
+        #                         filter = (s3db.dc_target.id.belongs(target_ids)),
+        #                         )
         #resource.delete()
 
     # -------------------------------------------------------------------------

@@ -763,7 +763,7 @@ class S3SQLDefaultForm(S3SQLForm):
 
             # Execute onaccept
             try:
-                callback(onaccept, form, tablename=tablename)
+                callback(onaccept, form) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
             except:
                 error = "onaccept failed: %s" % str(onaccept)
                 current.log.error(error)
@@ -1186,7 +1186,7 @@ class S3SQLCustomForm(S3SQLForm):
             postprocess = self.opts.get("postprocess", None)
             if postprocess:
                 try:
-                    callback(postprocess, form, tablename=tablename)
+                    callback(postprocess, form) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
                 except:
                     error = "postprocess failed: %s" % postprocess
                     current.log.error(error)
@@ -1223,7 +1223,7 @@ class S3SQLCustomForm(S3SQLForm):
                            config("onvalidation", None))
         if onvalidation is not None:
             try:
-                callback(onvalidation, form, tablename=self.tablename)
+                callback(onvalidation, form) # , tablename=self.tablename (if we ever define callbacks as a dict with tablename)
             except:
                 error = "onvalidation failed: %s" % str(onvalidation)
                 current.log.error(error)
@@ -1262,8 +1262,7 @@ class S3SQLCustomForm(S3SQLForm):
             # Validate against the subtable, store errors in form
             if subonvalidation is not None:
                 try:
-                    callback(subonvalidation, subform,
-                             tablename = subtable._tablename)
+                    callback(subonvalidation, subform) # , tablename=subtable._tablename (if we ever define callbacks as a dict with tablename)
                 except:
                     error = "onvalidation failed: %s" % str(subonvalidation)
                     current.log.error(error)
@@ -1602,7 +1601,7 @@ class S3SQLCustomForm(S3SQLForm):
 
             # Execute onaccept
             try:
-                callback(onaccept, form, tablename=tablename)
+                callback(onaccept, form) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
             except:
                 error = "onaccept failed: %s" % str(onaccept)
                 current.log.error(error)

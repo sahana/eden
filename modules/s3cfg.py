@@ -1177,40 +1177,6 @@ class S3Config(Storage):
         """
         return self.base.get("xml_formats")
 
-
-    def get_import_callback(self, tablename, callback):
-        """
-            Lookup callback to use for imports in the following order:
-                - custom [create, update]_onxxxx
-                - default [create, update]_onxxxx
-                - custom onxxxx
-                - default onxxxx
-            NB: Currently only onaccept is actually used
-        """
-
-        callbacks = self.base.get("import_callbacks", [])
-        if tablename in callbacks:
-            callbacks = callbacks[tablename]
-            if callback in callbacks:
-                return callbacks[callback]
-
-        get_config = current.s3db.get_config
-        default = get_config(tablename, callback)
-        if default:
-            return default
-
-        if callback[:2] != "on":
-            callback = callback[7:]
-
-            if callback in callbacks:
-                return callbacks[callback]
-
-            default = get_config(tablename, callback)
-            if default:
-                return default
-
-        return None
-
     # -------------------------------------------------------------------------
     # Logger settings
     def get_log_level(self):

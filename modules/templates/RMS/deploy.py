@@ -792,7 +792,7 @@ class DeploymentModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def deploy_assignment_experience_ondelete_cascade(row, tablename=None):
+    def deploy_assignment_experience_ondelete_cascade(row):
         """
             Remove linked hrm_experience record
 
@@ -812,13 +812,15 @@ class DeploymentModel(S3Model):
             return
         else:
             # Prevent infinite cascade
-            link.update_record(experience_id=None)
+            link.update_record(experience_id = None)
 
-        s3db.resource("hrm_experience", id=link.experience_id).delete()
+        s3db.resource("hrm_experience",
+                      id = link.experience_id,
+                      ).delete()
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def deploy_assignment_appraisal_ondelete_cascade(row, tablename=None):
+    def deploy_assignment_appraisal_ondelete_cascade(row):
         """
             Remove linked hrm_appraisal record
 
@@ -838,9 +840,11 @@ class DeploymentModel(S3Model):
             return
         else:
             # Prevent infinite cascade
-            link.update_record(appraisal_id=None)
+            link.update_record(appraisal_id = None)
 
-        s3db.resource("hrm_appraisal", id=link.appraisal_id).delete()
+        s3db.resource("hrm_appraisal",
+                      id = link.appraisal_id,
+                      ).delete()
 
 # =============================================================================
 class DeploymentAlertModel(S3Model):
@@ -1955,7 +1959,7 @@ def deploy_apply(r, **attr):
                         if onaccept:
                             data["id"] = application_id
                             form = Storage(vars = data)
-                            callback(onaccept, form, tablename=tablename)
+                            callback(onaccept, form) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
                         added += 1
         current.session.confirmation = T("%(number)s %(team)s members added") % \
                                        {"number": added,

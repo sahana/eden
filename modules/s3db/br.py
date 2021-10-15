@@ -1759,7 +1759,8 @@ class BRAssistanceModel(S3Model):
 
         # Referencing rows
         theme_id = row.id
-        query = (reference.contains(theme_id)) & (mtable.deleted == False)
+        query = (reference.contains(theme_id)) & \
+                (mtable.deleted == False)
         if reference.ondelete == "RESTRICT":
             measures = db(query).select(mtable.id,
                                         limitby = (0, 1),

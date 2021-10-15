@@ -745,20 +745,24 @@ class PersonEntityModel(S3Model):
             @param row: the deleted Row
         """
 
-        if row and row.id:
-            db = current.db
-            atable = db.pr_affiliation
-            record = db(atable.id == row.id).select(atable.deleted_fk,
-                                                    limitby = (0, 1),
-                                                    ).first()
+        if hasattr(row, "pe_id"):
+            pe_id = row.pe_id
         else:
-            return
-        if record and record.deleted_fk:
-            data = json.loads(record.deleted_fk)
-            pe_id = data.get("pe_id")
-            if pe_id:
-                current.s3db.pr_rebuild_path(pe_id, clear=True)
-        return
+            # Read from deleted_fk
+            record_id = row.id
+
+            # Load record
+            db = current.db
+            table = db.pr_affiliation
+            record = db(table.id == record_id).select(table.deleted_fk,
+                                                      limitby = (0, 1),
+                                                      ).first()
+
+            deleted_fk = json.loads(record.deleted_fk)
+            pe_id = deleted_fk.get("pe_id")
+
+        if pe_id:
+            current.s3db.pr_rebuild_path(pe_id, clear=True)
 
 # =============================================================================
 class PersonModel(S3Model):
@@ -3859,27 +3863,47 @@ class PersonEntityAddressModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def pr_address_ondelete(form):
+    def pr_address_ondelete(row):
         """
             Update the Base Location if this was the source
             Remove the associated location_id (if for a specific location, not just an Lx)
         """
 
-        record_id = form.id
-
         db = current.db
         s3db = current.s3db
-        atable = db.pr_address
 
-        row = db(atable.id == record_id).select(atable.deleted_fk,
-                                                atable.is_base_location,
-                                                limitby = (0, 1),
-                                                ).first()
-        deleted_fk = json.loads(row.deleted_fk)
-        location_id = deleted_fk["location_id"]
+        if hasattr(row, "location_id"):
+            location_id = row.location_id
+        else:
+            location_id = None
 
-        if row.is_base_location:
-            pe_id = deleted_fk["pe_id"]
+        if hasattr(row, "pe_id"):
+            pe_id = row.pe_id
+        else:
+            pe_id = None
+
+        # Read the record (always required, for is_base_location)
+        record_id = row.id
+
+        table = db.pr_address
+        fields = [table.is_base_location,
+                  ]
+
+        if not location_id or not pe_id:
+            fields.append(table.deleted_fk)
+
+        record = db(table.id == record_id).select(limitby = (0, 1),
+                                                  *fields).first()
+
+        if not location_id:
+            deleted_fk = json.loads(record.deleted_fk)
+            location_id = deleted_fk.get("location_id")
+
+        if record.is_base_location:
+            if not pe_id:
+                deleted_fk = json.loads(record.deleted_fk)
+                pe_id = deleted_fk.get("pe_id")
+
             S3Tracker()(db.pr_pentity, pe_id).set_base_location(location_id)
             ptable = s3db.pr_person
             person = db(ptable.pe_id == pe_id).select(ptable.id,
@@ -3917,7 +3941,9 @@ class PersonEntityAddressModel(S3Model):
                                                        ).first()
         if not location.level:
             # Delete the Location, if we can
-            resource = s3db.resource("gis_location", id = location_id)
+            resource = s3db.resource("gis_location",
+                                     id = location_id,
+                                     )
             resource.delete(cascade = True)
 
 # =============================================================================

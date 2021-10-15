@@ -4264,7 +4264,7 @@ class fin_VoucherBilling(object):
         if callable(cb):
             from gluon.tools import callback
             try:
-                callback(cb, invoice, tablename="fin_voucher_invoice")
+                callback(cb, invoice) # , tablename="fin_voucher_invoice" (if we ever define callbacks as a dict with tablename)
             except Exception:
                 import sys
                 error = sys.exc_info()[1]

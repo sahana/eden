@@ -7014,6 +7014,37 @@ def config(settings):
     settings.customise_org_organisation_controller = customise_org_organisation_controller
 
     # -------------------------------------------------------------------------
+    def customise_org_region_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.representation == "popup":
+
+                if settings.get_org_regions_hierarchical():
+
+                    # Zone is required when creating new regions from popup
+                    field = r.table.parent
+                    requires = field.requires
+                    if hasattr(requires, "other"):
+                        field.requires = requires.other
+
+            return True
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_org_region_controller = customise_org_region_controller
+
+    # -------------------------------------------------------------------------
     def customise_pr_contact_resource(r, tablename):
 
         # Special cases for different NS

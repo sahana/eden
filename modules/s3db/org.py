@@ -360,15 +360,14 @@ class OrganisationModel(S3Model):
                                           widgets = org_widgets,
                                           )
 
-        list_fields = ["id",
-                       "name",
+        list_fields = ["name",
                        "acronym",
                        (T("Type"), "organisation_organisation_type.organisation_type_id"),
                        "website"
                        ]
 
         if use_sector:
-            list_fields.insert(4, (T("Sectors"), "sector_organisation.sector_id"))
+            list_fields.insert(3, (T("Sectors"), "sector_organisation.sector_id"))
 
         filter_widgets = [S3TextFilter(text_fields,
                                        label = T("Search"),
@@ -390,7 +389,8 @@ class OrganisationModel(S3Model):
                                        s3_get_filter_opts("org_sector",
                                                           location_filter = True,
                                                           none = True,
-                                                          translate = True),
+                                                          translate = True,
+                                                          ),
                                    )
                    )
 
@@ -587,28 +587,31 @@ class OrganisationModel(S3Model):
                                             "link": "org_organisation_branch",
                                             "joinby": "branch_id",
                                             "key": "organisation_id",
-                                            "actuate": "embed",
-                                            "autocomplete": "name",
-                                            "autodelete": False,
                                             },
                                            # 'Supported' Organisations
                                            #{"name": "supported",
                                            # "link": "org_organisation_organisation",
                                            # "joinby": "parent_id",
                                            # "key": "organisation_id",
-                                           # "actuate": "embed",
-                                           # "autocomplete": "name",
-                                           # "autodelete": True,
+                                           # # Hide better
+                                           # # - gives us a form to select existing Orgs, rather than create new ones
+                                           # # - allows deleting links
+                                           # # - but this doesn't show any results!
+                                           # #"actuate": "hide",
+                                           # "actuate": "replace",
                                            # },
                                            # 'Supporting' Organisation
-                                           {"name": "supported_by",
-                                            "link": "org_organisation_organisation",
-                                            "joinby": "organisation_id",
-                                            "key": "parent_id",
-                                            "actuate": "embed",
-                                            "autocomplete": "name",
-                                            "autodelete": False,
-                                            },
+                                           #{"name": "supported_by",
+                                           # "link": "org_organisation_organisation",
+                                           # "joinby": "organisation_id",
+                                           # "key": "parent_id",
+                                           # # Hide better
+                                           # # - gives us a form to select existing Orgs, rather than create new ones
+                                           # # - allows deleting links
+                                           # # - but this doesn't show any results!
+                                           # #"actuate": "hide",
+                                           # "actuate": "replace",
+                                           # },
                                            ),
 
                        # Population Outreach (referral agencies)
@@ -1694,6 +1697,7 @@ class OrganisationOrganisationModel(S3Model):
         Link table between Organisations & Organisations
         - can be used to provide non-hierarchical relationships
         e.g. "Supports" (as used by IFRC offices for National Societies)
+
         To report on the full hierarchy of branches, can use the root_organisation field
     """
 
@@ -1730,7 +1734,7 @@ class OrganisationOrganisationModel(S3Model):
                        # - RMS
                        #onaccept = org_organisation_organisation_onaccept,
                        #ondelete = org_organisation_organisation_ondelete,
-                       realm_entity = self.org_organisation_organisation_realm_entity,
+                       #realm_entity = self.org_organisation_organisation_realm_entity,
                        )
 
         # Pass names back to global scope (s3.*)
@@ -2135,6 +2139,7 @@ class OrganisationSectorModel(S3Model):
                            requires = IS_LENGTH(64),
                            ),
                      # @ToDo: Move this to Link Table
+                     # gis_location_filter will then need adjusting
                      self.gis_location_id(requires = IS_EMPTY_OR(IS_LOCATION()),
                                           widget = S3LocationAutocompleteWidget(),
                                           ),
@@ -3733,20 +3738,23 @@ class SiteModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def org_site_ondelete_cascade(form):
+    def org_site_ondelete_cascade(row):
         """
             Update realm entity in all related HRs
 
             @todo: clean up records which RESTRICT the site_id
         """
 
-        site_id = form.site_id
+        db = current.db
+
+        site_id = row.site_id
+
         htable = current.s3db.hrm_human_resource
         query = (htable.site_id == site_id)
-
-        db = current.db
         rows = db(query).select(htable.id)
+
         db(query).update(site_id = None)
+
         current.auth.set_realm_entity(htable, rows, force_update=True)
 
     # -------------------------------------------------------------------------
@@ -7427,7 +7435,8 @@ def org_organisation_controller():
     # Post-process
     def postp(r, output):
         if r.interactive and r.component:
-            if r.component_name == "human_resource":
+            component_name = r.component_name
+            if component_name == "human_resource":
                 # Modify action button to open correct page for context
                 # (Delete not overridden to keep errors within Tab)
                 controller = "hrm"
@@ -7447,7 +7456,7 @@ def org_organisation_controller():
                 S3CRUD.action_buttons(r, read_url = read_url,
                                          update_url = update_url)
 
-            elif r.component_name == "branch" and r.record and \
+            elif component_name == "branch" and r.record and \
                  isinstance(output, dict) and \
                  "showadd_btn" in output:
                 treeview_link = A(current.T("Show Branch Hierarchy"),
@@ -7512,27 +7521,26 @@ def org_organisation_organisation_ondelete(row):
         - activate for templates that need this:
             * RMS
 
-        @param form: the Row
+        @param row: the Row
     """
 
-    # Get the link
-    try:
+    if hasattr(row, "organisation_id"):
+        organisation_id = row.organisation_id
+    else:
+        # Read from deleted_fk
         record_id = row.id
-    except AttributeError:
-        return
-    table = current.s3db.org_organisation_organisation
-    row = current.db(table.id == record_id).select(table.deleted_fk,
-                                                   limitby = (0, 1),
-                                                   ).first()
-    if row and row.deleted_fk:
-        # Find the organisation ID
-        try:
-            deleted_fk = json.loads(row.deleted_fk)
-        except ValueError:
-            return
+
+        # Load record
+        db = current.db
+        table = db.org_organisation_organisation
+        record = db(table.id == record_id).select(table.deleted_fk,
+                                                  limitby = (0, 1),
+                                                  ).first()
+
+        deleted_fk = json.loads(record.deleted_fk)
         organisation_id = deleted_fk.get("organisation_id")
 
-        # Update the realm entity
+    if organisation_id:
         current.auth.set_realm_entity("org_organisation",
                                       organisation_id,
                                       force_update = True,

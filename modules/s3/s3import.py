@@ -2206,7 +2206,7 @@ class S3ImportItem(object):
                        get_config(tablename, "onvalidation"))
         if onvalidation:
             try:
-                callback(onvalidation, form, tablename=tablename)
+                callback(onvalidation, form) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
             except:
                 from traceback import format_exc
                 current.log.error("S3Import %s onvalidation exception:" % tablename)
@@ -2639,9 +2639,9 @@ class S3ImportItem(object):
                                                   )
             # Onaccept
             key = "%s_onaccept" % method
-            onaccept = current.deployment_settings.get_import_callback(tablename, key)
+            onaccept = s3db.get_config(tablename, key)
             if onaccept:
-                callback(onaccept, form, tablename=tablename)
+                callback(onaccept, form) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
 
             # Restore modified_on.update
             if modified_on_update is not None:

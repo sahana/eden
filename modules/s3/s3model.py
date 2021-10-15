@@ -697,7 +697,7 @@ class S3Model(object):
                 record = Storage(vars = Storage(record),
                                  errors = Storage(),
                                  )
-            callback(onaccept, record, tablename=tablename)
+            callback(onaccept, record) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -718,9 +718,11 @@ class S3Model(object):
         onvalidation = cls.get_config(tablename, "%s_onvalidation" % method,
                        cls.get_config(tablename, "onvalidation"))
         if "vars" not in record:
-            record = Storage(vars=Storage(record), errors=Storage())
+            record = Storage(vars = Storage(record),
+                             errors = Storage(),
+                             )
         if onvalidation:
-            callback(onvalidation, record, tablename=tablename)
+            callback(onvalidation, record) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
         return record.errors
 
     # -------------------------------------------------------------------------

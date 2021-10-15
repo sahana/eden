@@ -4304,13 +4304,6 @@ Thank you"""
                                     )
                                 # Add Region to list_fields
                                 list_fields.insert(-1, "organisation_region.region_id")
-                                # Region is required
-                                f = current.s3db.org_organisation_region.region_id
-                                f.requires = f.requires.other
-
-                            else:
-                                f = current.s3db.org_organisation_region.region_id
-                                f.readable = f.writable = False
 
                             if type_filter == "Supplier":
                                 # Show simple free-text contact field
@@ -4332,22 +4325,24 @@ Thank you"""
                         if r.interactive:
                             table.country.label = T("Country")
                             from s3 import S3SQLCustomForm, S3SQLInlineLink
-                            crud_form = S3SQLCustomForm(
-                                            "name",
-                                            "acronym",
-                                            S3SQLInlineLink("organisation_type",
-                                                            field = "organisation_type_id",
-                                                            label = type_label,
-                                                            multiple = False,
-                                                            ),
-                                            "organisation_region.region_id",
-                                            "country",
-                                            "contact",
-                                            "phone",
-                                            "website",
-                                            "logo",
-                                            "comments",
-                                            )
+
+                            crud_fields = ["name",
+                                           "acronym",
+                                           S3SQLInlineLink("organisation_type",
+                                                           field = "organisation_type_id",
+                                                           label = type_label,
+                                                           multiple = False,
+                                                           ),
+                                           "country",
+                                           "contact",
+                                           "phone",
+                                           "website",
+                                           "logo",
+                                           "comments",
+                                           ]
+                            if type_filter == RED_CROSS:
+                                crud_fields.insert(3, "organisation_region.region_id")
+                            crud_form = S3SQLCustomForm(*crud_fields)
                             resource.configure(crud_form = crud_form)
 
             return result
@@ -5682,10 +5677,10 @@ Thank you"""
                 inv_req_approver_update_roles(form.record.person_id)
 
     # -------------------------------------------------------------------------
-    def inv_req_approver_ondelete(form):
+    def inv_req_approver_ondelete(row):
 
         # Update the req_approver roles for this person
-        inv_req_approver_update_roles(form.person_id)
+        inv_req_approver_update_roles(row.person_id)
 
     # -------------------------------------------------------------------------
     def customise_inv_req_approver_resource(r, tablename):

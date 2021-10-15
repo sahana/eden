@@ -163,10 +163,10 @@ class S3Delete(object):
                 add_error(record_id, "not permitted")
                 continue
 
-            # Run table-specific ondelete-cascade
+            # Run table-specific ondelete_cascade
             if prepare:
                 try:
-                    callback(prepare, record, tablename=tablename)
+                    callback(prepare, record) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
                 except Exception:
                     # Exception indicates record is undeletable
                     add_error(record_id, sys.exc_info()[1])

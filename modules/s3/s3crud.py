@@ -2363,7 +2363,7 @@ class S3CRUD(S3Method):
                 else:
                     onvalidation = create_onvalidation
                 if onvalidation is not None:
-                    callback(onvalidation, form, tablename=tablename)
+                    callback(onvalidation, form) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
                 for fn in form.errors:
                     msg = s3_str(form.errors[fn])
                     if fn in fields:
@@ -3083,7 +3083,7 @@ class S3CRUD(S3Method):
                     # Onvalidation
                     onvalidation = get_config("update_onvalidation") or \
                                    get_config("onvalidation")
-                    callback(onvalidation, _form, tablename=component)
+                    callback(onvalidation, _form) # , tablename=component (if we ever define callbacks as a dict with tablename)
                     # Update the record if no errors
                     if not _form.errors:
                         db(table._id == selected).update(**_form.vars)
@@ -3100,13 +3100,13 @@ class S3CRUD(S3Method):
                     # Onaccept
                     onaccept = get_config("update_onaccept") or \
                                get_config("onaccept")
-                    callback(onaccept, _form, tablename=component)
+                    callback(onaccept, _form) # , tablename=component (if we ever define callbacks as a dict with tablename)
                 else:
                     form_vars.pop(table._id.name, None)
                     # Onvalidation
                     onvalidation = get_config("create_onvalidation") or \
                                    get_config("onvalidation")
-                    callback(onvalidation, _form, tablename=component)
+                    callback(onvalidation, _form) # , tablename=component (if we ever define callbacks as a dict with tablename)
                     # Insert the record if no errors
                     if not _form.errors:
                         selected = table.insert(**_form.vars)
@@ -3127,7 +3127,7 @@ class S3CRUD(S3Method):
                         # Onaccept
                         onaccept = get_config("create_onaccept") or \
                                    get_config("onaccept")
-                        callback(onaccept, _form, tablename=component)
+                        callback(onaccept, _form) # , tablename=component (if we ever define callbacks as a dict with tablename)
                     else:
                         form.errors[key] = current.T("Could not create record.")
 

@@ -1618,15 +1618,16 @@ def config(settings):
                                           status_id = status_id,
                                           )
 
-        # Normal onaccept:
-        # Update Affiliation, record ownership and component ownership
-        from s3db.org import S3FacilityModel
-        S3FacilityModel.org_facility_onaccept(form)
+    #-----------------------------------------------------------------------------
+    def customise_org_facility_resource(r, tablename):
+        
+        if current.response.s3.bulk:
+            current.s3db.add_custom_callback(tablename,
+                                             "onaccept",
+                                             facility_onaccept,
+                                             )
 
-    # Ensure callback is accessible to CLI Imports as well as those going via Controller
-    settings.base.import_callbacks = {"org_facility": {"onaccept": facility_onaccept,
-                                                       },
-                                      }
+    settings.customise_org_facility_resource = customise_org_facility_resource
 
     #-----------------------------------------------------------------------------
     def customise_org_facility_controller(**attr):

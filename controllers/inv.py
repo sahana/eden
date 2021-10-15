@@ -1702,11 +1702,19 @@ def stock_card():
                                       limitby = (0, 1),
                                       ).first()
             if exists:
-                request.args = [str(exists.id), "stock_log"]
+                request.args = [str(exists.id), "log"]
 
     def postp(r, output):
-        # Don't render any Action Buttons
-        s3.actions = []
+        if r.id:
+            # Don't render any Action Buttons
+            s3.actions = []
+        else:
+            url = URL(args = ["[id]", "log"])
+            s3_action_buttons(r,
+                              deletable = False,
+                              read_url = url,
+                              update_url = url,
+                              )
         return output
     s3.postp = postp
 

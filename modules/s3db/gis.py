@@ -5245,14 +5245,17 @@ def gis_location_filter(r):
                                        ).first()
                 code = tag.value
             location_filter = (FS(selector) == code)
+
         elif resource.name == "project":
             # Go via project_location link table
             selector = "location.location_id$%s" % row.level
             location_filter = (FS(selector) == row.name)
+
         else:
             # Normal case: resource with location_id
             selector = "%s.location_id$%s" % (resource.name, row.level)
             location_filter = (FS(selector) == row.name)
+
         resource.add_filter(location_filter)
 
 # =============================================================================
