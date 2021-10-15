@@ -1,13 +1,13 @@
 /*
  * HeatMap Widget
  */
-import { Map, View, getCenter, Feature, HeatmapLayer, ImageLayer, Point, Projection, Static, VectorSource } from './ol5.min.js';
+import { Map, View, getCenter, Feature, Heatmap, ImageLayer, Point, Projection, Static, VectorSource } from './ol.dc_editor.min.js';
 
 (function(factory) {
     'use strict';
     // Use window. for Browser globals (not AMD or Node):
-    factory(window.jQuery, Map, View, getCenter, Feature, HeatmapLayer, ImageLayer, Point, Projection, Static, VectorSource);
-})(function($, Map, View, getCenter, Feature, HeatmapLayer, ImageLayer, Point, Projection, Static, VectorSource) {
+    factory(window.jQuery, Map, View, getCenter, Feature, Heatmap, ImageLayer, Point, Projection, Static, VectorSource);
+})(function($, Map, View, getCenter, Feature, Heatmap, ImageLayer, Point, Projection, Static, VectorSource) {
     'use strict';
     var heatmapID = 0;
 
@@ -82,7 +82,7 @@ import { Map, View, getCenter, Feature, HeatmapLayer, ImageLayer, Point, Project
 
                 var source = new VectorSource({wrapX: false});
 
-                var vector = new HeatmapLayer({
+                var vector = new Heatmap({
                     source: source,
                     gradient: ['#00AAA0', '#f00'], // $persian-green to red
                     blur: 7,   // default: 8 pixels

@@ -1,7 +1,7 @@
 /*
  * Survey Editor Widget
  */
-import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Static, Stroke, Style, VectorLayer, VectorSource } from './ol5.min.js';
+import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Static, Stroke, Style, VectorLayer, VectorSource } from './ol.dc_editor.min.js';
 
 (function(factory) {
     'use strict';
