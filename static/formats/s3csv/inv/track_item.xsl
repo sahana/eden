@@ -17,7 +17,7 @@
         Warehouse.....................inv_inv_item.site_id, inv_send.site_id, inv_recv.from_site_id
         Catalog.......................supply_catalog_item.catalog_id.name
         Supply Item...................inv_inv_item.item_id, supply_item.name
-        Bin...........................inv_inv_item.bin
+        Bin...........................inv_track_item_bin.layout_id
         Unit of Measure...............supply_item_pack
         Item Model....................supply_item.model
         Supplier/Donor................inv_inv_item.supply_org_id
@@ -35,7 +35,7 @@
         Receiving Type................inv_recv.type
         Receiving Status..............inv_recv.status
         Quantity Received.............recv_quantity
-        Receiving Bin.................recv_bin
+        Receiving Bin.................inv_track_item_bin.layout_id
         Comments......................comments
         Send Comments.................inv_send.comments
         Receiving Comments............inv_recv.comments

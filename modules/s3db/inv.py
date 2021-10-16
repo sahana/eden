@@ -30,8 +30,6 @@
 __all__ = ("WarehouseModel",
            "InventoryModel",
            "InventoryAdjustModel",
-           "InventoryAdjustBinModel",
-           "InventoryBinModel",
            "InventoryCommitModel",
            "InventoryCommitItemModel",
            "InventoryKittingModel",
@@ -523,6 +521,7 @@ class InventoryModel(S3Model):
 
     names = ("inv_inv_item",
              "inv_item_id",
+             "inv_inv_item_bin",
              )
 
     def model(self):
@@ -531,6 +530,8 @@ class InventoryModel(S3Model):
         db = current.db
         auth = current.auth
 
+        define_table = self.define_table
+
         organisation_id = self.org_organisation_id
 
         #messages = current.messages
@@ -538,123 +539,125 @@ class InventoryModel(S3Model):
 
         settings = current.deployment_settings
         direct_stock_edits = settings.get_inv_direct_stock_edits()
+        inv_item_status_opts = settings.get_inv_item_status()
         track_pack_values = settings.get_inv_track_pack_values()
         WAREHOUSE = T(settings.get_inv_facility_label())
-
-        inv_source_type = {0: None,
-                           1: T("Donated"),
-                           2: T("Procured"),
-                           }
-        # =====================================================================
-        # Inventory Item
-        #
-        # Stock in a warehouse or other site's inventory store.
-        #
-        # ondelete references have been set to RESTRICT because the inv. items
-        # should never be automatically deleted
-        inv_item_status_opts = settings.get_inv_item_status()
 
         if settings.get_org_branches():
             owner_org_id_label = T("Owned By (Organization/Branch)")
         else:
             owner_org_id_label = T("Owned By Organization")
 
+        inv_source_type = {0: None,
+                           1: T("Donated"),
+                           2: T("Procured"),
+                           }
+
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=2)
+
+        # =====================================================================
+        # Inventory Item
+        #
+        # Stock in a warehouse, or other site,'s inventory store.
+        #
+        # ondelete references have been set to RESTRICT because the inv. items
+        # should never be automatically deleted
+        #
         tablename = "inv_inv_item"
-        self.define_table(tablename,
-                          # This is a component, so needs to be a super_link
-                          # - can't override field name, ondelete or requires
-                          self.super_link("site_id", "org_site",
-                                          default = auth.user.site_id if auth.is_logged_in() else None,
-                                          empty = False,
-                                          instance_types = auth.org_site_types,
-                                          label = WAREHOUSE,
-                                          ondelete = "RESTRICT",
-                                          represent = self.org_site_represent,
-                                          readable = True,
-                                          writable = True,
-                                          # Comment these to use a Dropdown & not an Autocomplete
-                                          #widget = S3SiteAutocompleteWidget(),
-                                          #comment = DIV(_class = "tooltip",
-                                          #              _title = "%s|%s" % (WAREHOUSE,
-                                          #                                  messages.AUTOCOMPLETE_HELP
-                                          #                                  ).
-                                          #              ),
-                                          ),
-                          self.supply_item_entity_id(),
-                          self.supply_item_id(ondelete = "RESTRICT",
+        define_table(tablename,
+                     # This is a component, so needs to be a super_link
+                     # - can't override field name, ondelete or requires
+                     self.super_link("site_id", "org_site",
+                                     default = auth.user.site_id if auth.is_logged_in() else None,
+                                     empty = False,
+                                     instance_types = auth.org_site_types,
+                                     label = WAREHOUSE,
+                                     ondelete = "RESTRICT",
+                                     represent = self.org_site_represent,
+                                     readable = True,
+                                     writable = True,
+                                     # Comment these to use a Dropdown & not an Autocomplete
+                                     #widget = S3SiteAutocompleteWidget(),
+                                     #comment = DIV(_class = "tooltip",
+                                     #              _title = "%s|%s" % (WAREHOUSE,
+                                     #                                  messages.AUTOCOMPLETE_HELP
+                                     #                                  ).
+                                     #              ),
+                                     ),
+                     self.supply_item_entity_id(),
+                     self.supply_item_id(ondelete = "RESTRICT",
+                                         required = True,
+                                         ),
+                     self.supply_item_pack_id(ondelete = "RESTRICT",
                                               required = True,
                                               ),
-                          self.supply_item_pack_id(ondelete = "RESTRICT",
-                                                   required = True,
-                                                   ),
-                          Field("quantity", "double", notnull=True,
-                                default = 0.0,
-                                label = T("Quantity"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
-                                requires = IS_FLOAT_AMOUNT(minimum = 0.0),
-                                writable = direct_stock_edits,
-                                ),
-                          # e.g.: Allow items to be marked as 'still on the shelf but allocated to an outgoing shipment'
-                          Field("status", "integer",
-                                default = 0, # Good. Only Items with this Status can be allocated to Outgoing Shipments
-                                label = T("Status"),
-                                represent = S3Represent(options = inv_item_status_opts),
-                                requires = IS_IN_SET(inv_item_status_opts,
-                                                     zero = None),
-                                ),
-                          s3_date("purchase_date",
-                                  label = T("Purchase Date"),
-                                  ),
-                          s3_date("expiry_date",
-                                  label = T("Expiry Date"),
-                                  represent = inv_expiry_date_represent,
-                                  ),
-                          Field("pack_value", "double",
-                                label = T("Value per Pack"),
-                                represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
-                                readable = track_pack_values,
-                                writable = track_pack_values,
-                                ),
-                          # @ToDo: Move this into a Currency Widget for the pack_value field
-                          s3_currency(readable = track_pack_values,
-                                      writable = track_pack_values,
-                                      ),
-                          Field("item_source_no", length=16,
-                                label = inv_itn_label(),
-                                represent = lambda v: v or NONE,
-                                requires = [IS_LENGTH(16),
-                                            IS_NOT_EMPTY_STR(),
-                                            ]
-                                ),
-                          # Organisation that owns this item
-                          organisation_id("owner_org_id",
-                                          label = owner_org_id_label,
-                                          ondelete = "SET NULL",
-                                          ),
-                          # Original donating Organisation
-                          organisation_id("supply_org_id",
-                                          label = T("Supplier/Donor"),
-                                          ondelete = "SET NULL",
-                                          ),
-                          Field("source_type", "integer",
-                                default = 0,
-                                label = T("Type"),
-                                represent = S3Represent(options = inv_source_type),
-                                requires = IS_EMPTY_OR(
-                                            IS_IN_SET(inv_source_type)
-                                            ),
-                                writable = False,
-                                ),
-                          Field.Method("total_value",
-                                       self.inv_item_total_value
+                     Field("quantity", "double", notnull=True,
+                           default = 0.0,
+                           label = T("Quantity"),
+                           represent = float_represent,
+                           requires = IS_FLOAT_AMOUNT(minimum = 0.0),
+                           writable = direct_stock_edits,
+                           ),
+                     # e.g.: Allow items to be marked as 'still on the shelf but allocated to an outgoing shipment'
+                     Field("status", "integer",
+                           default = 0, # Good. Only Items with this Status can be allocated to Outgoing Shipments
+                           label = T("Status"),
+                           represent = S3Represent(options = inv_item_status_opts),
+                           requires = IS_IN_SET(inv_item_status_opts,
+                                                zero = None),
+                           ),
+                     s3_date("purchase_date",
+                             label = T("Purchase Date"),
+                             ),
+                     s3_date("expiry_date",
+                             label = T("Expiry Date"),
+                             represent = inv_expiry_date_represent,
+                             ),
+                     Field("pack_value", "double",
+                           label = T("Value per Pack"),
+                           represent = float_represent,
+                           readable = track_pack_values,
+                           writable = track_pack_values,
+                           ),
+                     # @ToDo: Move this into a Currency Widget for the pack_value field
+                     s3_currency(readable = track_pack_values,
+                                 writable = track_pack_values,
+                                 ),
+                     Field("item_source_no", length=16,
+                           label = inv_itn_label(),
+                           represent = lambda v: v or NONE,
+                           requires = [IS_LENGTH(16),
+                                       IS_NOT_EMPTY_STR(),
+                                       ]
+                           ),
+                     # Organisation that owns this item
+                     organisation_id("owner_org_id",
+                                     label = owner_org_id_label,
+                                     ondelete = "SET NULL",
+                                     ),
+                     # Original donating Organisation
+                     organisation_id("supply_org_id",
+                                     label = T("Supplier/Donor"),
+                                     ondelete = "SET NULL",
+                                     ),
+                     Field("source_type", "integer",
+                           default = 0,
+                           label = T("Type"),
+                           represent = S3Represent(options = inv_source_type),
+                           requires = IS_EMPTY_OR(
+                                       IS_IN_SET(inv_source_type)
                                        ),
-                          Field.Method("pack_quantity",
-                                       SupplyItemPackQuantity(tablename)
-                                       ),
-                          s3_comments(),
-                          *s3_meta_fields())
+                           writable = False,
+                           ),
+                     Field.Method("total_value",
+                                  self.inv_item_total_value
+                                  ),
+                     Field.Method("pack_quantity",
+                                  SupplyItemPackQuantity(tablename)
+                                  ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
         INV_ITEM = T("Warehouse Stock")
@@ -872,6 +875,37 @@ $.filterOptionsS3({
                             )
 
         # ---------------------------------------------------------------------
+        # Inventory Items <> Bins
+        #
+
+        tablename = "inv_inv_item_bin"
+        define_table(tablename,
+                     inv_item_id(),
+                     self.org_site_layout_id(label = T("Bin"),
+                                             empty = False,
+                                             # This has the URL adjusted for the right site_id in the controller & s3.inv_item.js
+                                             comment = S3PopupLink(c = "org",
+                                                                   f = "site",
+                                                                   args = ["[id]", "layout", "create"],
+                                                                   vars = {"child": "layout_id",
+                                                                           # @ToDo: Restrict to site_id to reduce risk of race condition
+                                                                           #"optionsVar": "site_id",
+                                                                           #"optionsValue": "[id]",
+                                                                           },
+                                                                   label = T("Create Bin"),
+                                                                   title = T("Bin"),
+                                                                   tooltip = T("If you don't see the Bin listed, you can add a new one by clicking link 'Create Bin'."),
+                                                                   _id = "inv_inv_item_bin_layout_id-create-btn",
+                                                                   ),
+                                             ),
+                     Field("quantity", "double", notnull=True,
+                           default = 0,
+                           label = T("Quantity"),
+                           represent = float_represent,
+                           ),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
         return {"inv_item_id": inv_item_id,
@@ -1065,6 +1099,7 @@ class InventoryAdjustModel(S3Model):
              "inv_adj_id",
              "inv_adj_item",
              "inv_adj_item_id",
+             "inv_adj_item_bin",
              )
 
     def model(self):
@@ -1084,6 +1119,9 @@ class InventoryAdjustModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
+
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=2)
 
         # ---------------------------------------------------------------------
         # Adjustments
@@ -1247,8 +1285,7 @@ class InventoryAdjustModel(S3Model):
                      Field("old_quantity", "double", notnull=True,
                            default = 0,
                            label = T("Original Quantity"),
-                           represent = lambda v: \
-                                       IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           represent = float_represent,
                            writable = False,
                            ),
                      Field("new_quantity", "double",
@@ -1366,20 +1403,43 @@ class InventoryAdjustModel(S3Model):
             msg_list_empty = T("No items currently in stock"),
             )
 
+        # ---------------------------------------------------------------------
+        # Inventory Adjustment Items <> Bins
+        #
+        #  can't just use Inventory Item Bins as we need to be able to make
+        #  draft changes which aren't committed until the adjustment is closed.
+        #
+        tablename = "inv_adj_item_bin"
+        define_table(tablename,
+                     adj_item_id(empty = False,
+                                 ondelete = "CASCADE",
+                                 ),
+                     self.org_site_layout_id(label = T("Bin"),
+                                             empty = False,
+                                             # This has the URL adjusted for the right site_id in the controller & s3.inv_item.js
+                                             comment = S3PopupLink(c = "org",
+                                                                   f = "site",
+                                                                   args = ["[id]", "layout", "create"],
+                                                                   vars = {"child": "layout_id",
+                                                                           # @ToDo: Restrict to site_id to reduce risk of race condition
+                                                                           #"optionsVar": "site_id",
+                                                                           #"optionsValue": "[id]",
+                                                                           },
+                                                                   label = T("Create Bin"),
+                                                                   title = T("Bin"),
+                                                                   tooltip = T("If you don't see the Bin listed, you can add a new one by clicking link 'Create Bin'."),
+                                                                   _id = "inv_adj_item_bin_layout_id-create-btn",
+                                                                   ),
+                                             ),
+                     Field("quantity", "double", notnull=True,
+                           default = 0,
+                           label = T("Quantity"),
+                           represent = float_represent,
+                           ),
+                     *s3_meta_fields())
+
         return {"inv_adj_id": adj_id,
                 "inv_adj_item_id": adj_item_id,
-                }
-
-    # -------------------------------------------------------------------------
-    def defaults(self):
-        """
-            Safe defaults for model-global names in case module is disabled
-        """
-
-        dummy = S3ReusableField.dummy
-
-        return {"inv_adj_id": dummy("adj_id"),
-                "inv_adj_item_id": dummy("adj_item_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -1670,104 +1730,6 @@ class InventoryAdjustModel(S3Model):
                                      )
 
 # =============================================================================
-class InventoryAdjustBinModel(S3Model):
-    """
-        Link Inventory Adjustment Items to Warehouse Locations (i.e. Bins)
-        - can't just use Inventory Item Bins as we need to be able to make
-          draft changes which aren't committed until the adjustment is closed.
-    """
-
-    names = ("inv_adj_item_bin",
-             )
-
-    def model(self):
-
-        T = current.T
-
-        # ---------------------------------------------------------------------
-        # Inventory Adjustment Items <> Bins
-        #
-
-        tablename = "inv_adj_item_bin"
-        self.define_table(tablename,
-                          self.inv_adj_item_id(empty = False,
-                                               ondelete = "CASCADE",
-                                               ),
-                          self.org_site_layout_id(label = T("Bin"),
-                                                  empty = False,
-                                                  # This has the URL adjusted for the right site_id in the controller & s3.inv_item.js
-                                                  comment = S3PopupLink(c = "org",
-                                                                        f = "site",
-                                                                        args = ["[id]", "layout", "create"],
-                                                                        vars = {"child": "layout_id",
-                                                                                # @ToDo: Restrict to site_id to reduce risk of race condition
-                                                                                #"optionsVar": "site_id",
-                                                                                #"optionsValue": "[id]",
-                                                                                },
-                                                                        label = T("Create Bin"),
-                                                                        title = T("Bin"),
-                                                                        tooltip = T("If you don't see the Bin listed, you can add a new one by clicking link 'Create Bin'."),
-                                                                        _id = "inv_adj_item_bin_layout_id-create-btn",
-                                                                        ),
-                                                  ),
-                          Field("quantity", "double", notnull=True,
-                                default = 0,
-                                label = T("Quantity"),
-                                represent = lambda v: \
-                                                IS_FLOAT_AMOUNT.represent(v, precision=2),
-                                ),
-                          *s3_meta_fields())
-
-        return {}
-
-# =============================================================================
-class InventoryBinModel(S3Model):
-    """
-        Link Inventory Items to Warehouse Locations (i.e. Bins)
-    """
-
-    names = ("inv_inv_item_bin",
-             )
-
-    def model(self):
-
-        T = current.T
-
-        # ---------------------------------------------------------------------
-        # Inventory Items <> Bins
-        #
-
-        tablename = "inv_inv_item_bin"
-        self.define_table(tablename,
-                          self.inv_item_id(),
-                          self.org_site_layout_id(label = T("Bin"),
-                                                  empty = False,
-                                                  # This has the URL adjusted for the right site_id in the controller & s3.inv_item.js
-                                                  comment = S3PopupLink(c = "org",
-                                                                        f = "site",
-                                                                        args = ["[id]", "layout", "create"],
-                                                                        vars = {"child": "layout_id",
-                                                                                # @ToDo: Restrict to site_id to reduce risk of race condition
-                                                                                #"optionsVar": "site_id",
-                                                                                #"optionsValue": "[id]",
-                                                                                },
-                                                                        label = T("Create Bin"),
-                                                                        title = T("Bin"),
-                                                                        tooltip = T("If you don't see the Bin listed, you can add a new one by clicking link 'Create Bin'."),
-                                                                        _id = "inv_inv_item_bin_layout_id-create-btn",
-                                                                        ),
-                                                  ),
-                          Field("quantity", "double", notnull=True,
-                                default = 0,
-                                label = T("Quantity"),
-                                represent = lambda v: \
-                                                IS_FLOAT_AMOUNT.represent(v, precision=2),
-                                ),
-                          *s3_meta_fields())
-
-        return {}
-
-# =============================================================================
 class InventoryCommitModel(S3Model):
     """
         Model for Commits (Pledges) to Inventory Requisitions
@@ -2055,8 +2017,6 @@ class InventoryCommitModel(S3Model):
 class InventoryCommitItemModel(S3Model):
     """
         Model for Committed (Pledged) Items for Inventory Requisitions
-
-        @ToDo: Move to inv_commit_item
     """
 
     names = ("inv_commit_item",
@@ -2188,6 +2148,8 @@ class InventoryCommitItemModel(S3Model):
 class InventoryKittingModel(S3Model):
     """
         A module to manage the Kitting of Inventory Items
+
+        @ToDo: Update to multiple Bins per Inv Item
     """
 
     names = ("inv_kitting",
@@ -5335,6 +5297,8 @@ class InventoryTrackingModel(S3Model):
              "inv_recv",
              "inv_recv_id",
              "inv_track_item",
+             "inv_send_item_bin",
+             "inv_recv_item_bin",
              )
 
     def model(self):
@@ -5378,13 +5342,16 @@ class InventoryTrackingModel(S3Model):
         recv_shortname = settings.get_inv_recv_shortname()
         show_org = settings.get_inv_send_show_org()
         send_req_ref = settings.get_inv_send_req_ref()
+        track_pack_values = settings.get_inv_track_pack_values()
         type_default = settings.get_inv_send_type_default()
 
         is_logged_in = auth.is_logged_in
         user = auth.user
 
-        org_site_represent = self.org_site_represent
+        is_float_represent = IS_FLOAT_AMOUNT.represent
+        float_represent = lambda v: is_float_represent(v, precision=2)
         string_represent = lambda v: v if v else NONE
+        org_site_represent = self.org_site_represent
 
         send_ref = S3ReusableField("send_ref",
                                    label = T(settings.get_inv_send_ref_field_name()),
@@ -5443,7 +5410,8 @@ class InventoryTrackingModel(S3Model):
                            default = type_default,
                            label = T("Shipment Type"),
                            represent = S3Represent(options = send_type_opts),
-                           requires = IS_IN_SET(send_type_opts),
+                           requires = IS_IN_SET(send_type_opts,
+                                                zero = None),
                            readable = not type_default,
                            writable = not type_default,
                            ),
@@ -5541,18 +5509,14 @@ class InventoryTrackingModel(S3Model):
                            default = SHIP_STATUS_IN_PROCESS,
                            label = T("Status"),
                            represent = S3Represent(options = shipment_status),
-                           requires = IS_EMPTY_OR(
-                                        IS_IN_SET(shipment_status)
-                                      ),
+                           requires = IS_IN_SET(shipment_status),
                            writable = False,
                            ),
                      Field("filing_status", "integer",
                            default = SHIP_DOC_PENDING,
                            label = T("Filing Status"),
                            represent = S3Represent(options = ship_doc_status),
-                           requires = IS_EMPTY_OR(
-                                        IS_IN_SET(ship_doc_status)
-                                       ),
+                           requires = IS_IN_SET(ship_doc_status),
                            widget = radio_widget,
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s|%s" % (T("Filing Status"),
@@ -5774,7 +5738,8 @@ class InventoryTrackingModel(S3Model):
                            default = 0,
                            label = T("Shipment Type"),
                            represent = S3Represent(options = recv_type_opts),
-                           requires = IS_IN_SET(recv_type_opts),
+                           requires = IS_IN_SET(recv_type_opts,
+                                                zero = None),
                            ),
                      organisation_id(label = T("Organization/Supplier"), # From Organization/Supplier
                                      ),
@@ -5821,7 +5786,8 @@ class InventoryTrackingModel(S3Model):
                                label = T("Received By"),
                                ondelete = "SET NULL",
                                default = auth.s3_logged_in_person(),
-                               comment = self.pr_person_comment(child = "recipient_id")),
+                               comment = self.pr_person_comment(child = "recipient_id"),
+                               ),
                      Field("transport_type",
                            label = T("Type of Transport"),
                            # Enable in template as-required
@@ -5833,18 +5799,16 @@ class InventoryTrackingModel(S3Model):
                            default = SHIP_STATUS_IN_PROCESS,
                            label = T("Status"),
                            represent = S3Represent(options = shipment_status),
-                           requires = IS_EMPTY_OR(
-                                        IS_IN_SET(shipment_status)
-                                        ),
+                           requires = IS_IN_SET(shipment_status,
+                                                zero = None),
                            writable = False,
                            ),
                      Field("grn_status", "integer",
                            default = SHIP_DOC_PENDING,
                            label = T("%(GRN)s Status") % {"GRN": recv_shortname},
                            represent = S3Represent(options = ship_doc_status),
-                           requires = IS_EMPTY_OR(
-                                       IS_IN_SET(ship_doc_status)
-                                       ),
+                           requires = IS_IN_SET(ship_doc_status,
+                                                zero = None),
                            widget = radio_widget,
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" % (T("%(GRN)s Status") % {"GRN": recv_shortname},
@@ -5859,9 +5823,8 @@ class InventoryTrackingModel(S3Model):
                            default = SHIP_DOC_PENDING,
                            label = T("Certificate Status"),
                            represent = S3Represent(options = ship_doc_status),
-                           requires = IS_EMPTY_OR(
-                                        IS_IN_SET(ship_doc_status)
-                                       ),
+                           requires = IS_IN_SET(ship_doc_status,
+                                                zero = None),
                            widget = radio_widget,
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" % (T("Certificate Status"),
@@ -5873,9 +5836,8 @@ class InventoryTrackingModel(S3Model):
                            default = SHIP_DOC_PENDING,
                            label = T("Filing Status"),
                            represent = S3Represent(options = ship_doc_status),
-                           requires = IS_EMPTY_OR(
-                                        IS_IN_SET(ship_doc_status)
-                                       ),
+                           requires = IS_IN_SET(ship_doc_status,
+                                                zero = None),
                            widget = radio_widget,
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s|%s" % (T("Filing Status"),
@@ -6046,7 +6008,9 @@ class InventoryTrackingModel(S3Model):
                    )
 
         # ---------------------------------------------------------------------
-        # Tracking Items
+        # Track Items
+        #
+        # - Items in both Sent & Received Shipments
         #
         inv_item_represent = inv_InvItemRepresent()
         inv_item_status_opts = settings.get_inv_item_status()
@@ -6108,15 +6072,16 @@ class InventoryTrackingModel(S3Model):
                            ),
                      Field("pack_value", "double",
                            label = T("Value per Pack"),
+                           readable = track_pack_values,
+                           writable = track_pack_values,
                            ),
-                     s3_currency(),
+                     s3_currency(readable = track_pack_values,
+                                 writable = track_pack_values,
+                                 ),
                      s3_date("expiry_date",
                              label = T("Expiry Date"),
                              represent = inv_expiry_date_represent,
                              ),
-                     # The bin at origin
-                     self.org_site_layout_id(label = T("Bin"),
-                                             ),
                      inv_item_id("recv_inv_item_id",
                                  label = T("Receiving Inventory"),
                                  ondelete = "RESTRICT",
@@ -6125,12 +6090,6 @@ class InventoryTrackingModel(S3Model):
                                  readable = False,
                                  writable = False,
                                  ),
-                     # The bin at destination
-                     self.org_site_layout_id("recv_bin_id",
-                                             label = T("Add to Bin"),
-                                             readable = False,
-                                             writable = False,
-                                             ),
                      Field("item_source_no", length=16,
                            label = inv_itn_label(),
                            represent = string_represent,
@@ -6152,9 +6111,8 @@ class InventoryTrackingModel(S3Model):
                            default = 0,
                            label = T("Item Status"),
                            represent = S3Represent(options = inv_item_status_opts),
-                           requires = IS_EMPTY_OR(
-                                        IS_IN_SET(inv_item_status_opts)
-                                        ),
+                           requires = IS_IN_SET(inv_item_status_opts,
+                                                zero = None),
                            ),
                      Field("status", "integer",
                            default = TRACK_STATUS_PREPARING, # 1
@@ -6247,18 +6205,54 @@ class InventoryTrackingModel(S3Model):
                        "quantity",
                        (T("Total Weight (kg)"), "total_weight"),
                        (T("Total Volume (m3)"), "total_volume"),
-                       "currency",
-                       "pack_value",
-                       "layout_id",
+                       "bin.layout_id",
                        "return_quantity",
                        "recv_quantity",
-                       "recv_bin_id",
+                       "recv_bin.layout_id",
                        "owner_org_id",
                        "supply_org_id",
                        ]
 
+        if track_pack_values:
+            list_fields.insert(10, "pack_value")
+            list_fields.insert(10, "currency")
+
+        crud_form = S3SQLCustomForm("track_org_id",
+                                    "send_inv_item_id",
+                                    "item_id",
+                                    "item_pack_id",
+                                    "quantity",
+                                    "recv_quantity",
+                                    "return_quantity",
+                                    "pack_value",
+                                    "currency",
+                                    "expiry_date",
+                                    S3SQLInlineComponent("bin",
+                                                         label = T("Bins"),
+                                                         fields = [(T("Bin"), "layout_id"),
+                                                                   (T("Quantity"), "quantity"),
+                                                                   ],
+                                                         ),
+                                    "recv_inv_item_id",
+                                    S3SQLInlineComponent("recv_bin",
+                                                         label = T("Add to Bins"),
+                                                         fields = [(T("Bin"), "layout_id"),
+                                                                   (T("Quantity"), "quantity"),
+                                                                   ],
+                                                         ),
+                                    "item_source_no",
+                                    "supply_org_id",
+                                    "owner_org_id",
+                                    "inv_item_status",
+                                    "status",
+                                    "adj_item_id",
+                                    "req_item_id",
+                                    "comments",
+                                    )
+
         # Resource configuration
         configure(tablename,
+                  crud_form = crud_form,
                   extra_fields = ["quantity",
                                   "recv_quantity",
                                   "pack_value",
@@ -6272,6 +6266,82 @@ class InventoryTrackingModel(S3Model):
                   onvalidation = self.inv_track_item_onvalidation,
                   )
 
+        # Components
+        add_components(tablename,
+                       inv_send_item_bin = {"name": "bin",
+                                            "joinby": "track_item_id",
+                                            },
+                       inv_recv_item_bin = {"name": "recv_bin",
+                                            "joinby": "track_item_id",
+                                            },
+                       )
+
+        track_item_id = S3ReusableField("track_item_id", "reference inv_track_item",
+                                        ondelete = "CASCADE",
+                                        )
+
+        # ---------------------------------------------------------------------
+        # Send Items <> Bins
+        #
+        layout_id = self.org_site_layout_id
+
+        tablename = "inv_send_item_bin"
+        define_table(tablename,
+                     track_item_id(),
+                     layout_id(label = T("Bin"),
+                               empty = False,
+                               # This has the URL adjusted for the right site_id
+                               comment = S3PopupLink(c = "org",
+                                                     f = "site",
+                                                     args = ["[id]", "layout", "create"],
+                                                     vars = {"child": "layout_id",
+                                                             # @ToDo: Restrict to site_id to reduce risk of race condition
+                                                             #"optionsVar": "site_id",
+                                                             #"optionsValue": "[id]",
+                                                             },
+                                                     label = T("Create Bin"),
+                                                     title = T("Bin"),
+                                                     tooltip = T("If you don't see the Bin listed, you can add a new one by clicking link 'Create Bin'."),
+                                                     _id = "inv_send_item_bin_layout_id-create-btn",
+                                                     ),
+                                 ),
+                     Field("quantity", "double", notnull=True,
+                           default = 0,
+                           label = T("Quantity"),
+                           represent = float_represent,
+                           ),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Recv Items <> Bins
+        #
+        tablename = "inv_recv_item_bin"
+        define_table(tablename,
+                     track_item_id(),
+                     layout_id(label = T("Bin"),
+                               empty = False,
+                               # This has the URL adjusted for the right site_id in the controller
+                               comment = S3PopupLink(c = "org",
+                                                     f = "site",
+                                                     args = ["[id]", "layout", "create"],
+                                                     vars = {"child": "layout_id",
+                                                             # @ToDo: Restrict to site_id to reduce risk of race condition
+                                                             #"optionsVar": "site_id",
+                                                             #"optionsValue": "[id]",
+                                                             },
+                                                     label = T("Create Bin"),
+                                                     title = T("Bin"),
+                                                     tooltip = T("If you don't see the Bin listed, you can add a new one by clicking link 'Create Bin'."),
+                                                     _id = "inv_recv_item_bin_layout_id-create-btn",
+                                                     ),
+                                 ),
+                     Field("quantity", "double", notnull=True,
+                           default = 0,
+                           label = T("Quantity"),
+                           represent = float_represent,
+                           ),
+                     *s3_meta_fields())
+
         #----------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
@@ -6279,17 +6349,18 @@ class InventoryTrackingModel(S3Model):
                 "inv_send_id": send_id,
                 }
 
+    # Only used internally
     # -------------------------------------------------------------------------
-    def defaults(self):
-        """
-            Safe defaults for model-global names in case module is disabled
-        """
+    #def defaults(self):
+    #    """
+    #        Safe defaults for model-global names in case module is disabled
+    #    """
 
-        dummy = S3ReusableField.dummy
+    #    dummy = S3ReusableField.dummy
 
-        return {"inv_recv_id": dummy("recv_id"),
-                "inv_send_id": dummy("send_id"),
-                }
+    #    return {"inv_recv_id": dummy("recv_id"),
+    #            "inv_send_id": dummy("send_id"),
+    #            }
 
     # -------------------------------------------------------------------------
     @staticmethod

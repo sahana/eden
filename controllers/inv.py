@@ -2043,6 +2043,7 @@ def send_req():
         Currently not exposed to UI
         - deemed better to force users through Check process
 
+        @ToDo: Update for inv_inv_item_bin
         @ToDo: Rewrite as Method
     """
 
@@ -2137,7 +2138,7 @@ def send_req():
                 iitable.currency,
                 ii_expiry_field,
                 ii_purchase_field,
-                iitable.layout_id,
+                #iitable.layout_id,
                 iitable.owner_org_id,
                 iitable.supply_org_id,
                 sip_quantity_field,
@@ -2220,7 +2221,7 @@ def send_req():
                    status = IN_PROCESS,
                    pack_value = iitem.pack_value,
                    currency = iitem.currency,
-                   layout_id = iitem.layout_id,
+                   #layout_id = iitem.layout_id,
                    expiry_date = iitem.expiry_date,
                    owner_org_id = iitem.owner_org_id,
                    supply_org_id = iitem.supply_org_id,
@@ -2245,7 +2246,7 @@ def send_req():
                    status = IN_PROCESS,
                    pack_value = iitem.pack_value,
                    currency = iitem.currency,
-                   layout_id = iitem.layout_id,
+                   #layout_id = iitem.layout_id,
                    expiry_date = iitem.expiry_date,
                    owner_org_id = iitem.owner_org_id,
                    supply_org_id = iitem.supply_org_id,
