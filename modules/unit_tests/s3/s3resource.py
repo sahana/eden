@@ -169,7 +169,8 @@ class ResourceAxisFilterTests(unittest.TestCase):
         db = current.db
         db.define_table(tablename,
                         Field("facility_type_id",
-                              "list:reference org_facility_type"),
+                              "list:reference org_facility_type",
+                              ),
                         *s3_meta_fields())
         table = db[tablename]
 
@@ -2531,7 +2532,8 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
         if not hasattr(table, "name"):
             table.name = Field.Method("name", self.lazy_name)
             s3db.configure("pr_person",
-                           extra_fields=["first_name", "last_name"])
+                           extra_fields = ["first_name", "last_name"],
+                           )
         self.record_id = None
 
     # -------------------------------------------------------------------------
@@ -2540,7 +2542,8 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
 
         self.record_id = row.pr_person.id
         return "%s %s" % (row.pr_person.first_name,
-                          row.pr_person.last_name)
+                          row.pr_person.last_name,
+                          )
 
     # -------------------------------------------------------------------------
     def testLazyVirtualFieldsResolve(self):
@@ -2573,7 +2576,9 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
 
         # Select raw rows
         rows = resource.select(["name", "first_name", "last_name"],
-                               limit=1, as_rows=True)
+                               limit = 1,
+                               as_rows = True,
+                               )
         row = rows[0]
         assertTrue("name" in row)
         assertTrue(callable(row["name"]))
@@ -2607,14 +2612,15 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
         resource.add_filter(query)
 
         data = resource.select(["name", "first_name", "last_name"],
-                               limit=None)
+                               limit = None,
+                               )
         rows = data["rows"]
         for item in rows:
             assertTrue("pr_person.name" in item)
             assertEqual(item["pr_person.name"][:5], "Admin")
-            assertEqual(item["pr_person.name"], "%s %s" % (
-                        item["pr_person.first_name"],
-                        item["pr_person.last_name"]))
+            assertEqual(item["pr_person.name"], "%s %s" % (item["pr_person.first_name"],
+                                                           item["pr_person.last_name"],
+                                                           ))
 
     # -------------------------------------------------------------------------
     def testLazyVirtualFieldsURLFilter(self):
@@ -2634,9 +2640,9 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
         for item in rows:
             assertTrue("pr_person.name" in item)
             assertEqual(item["pr_person.name"][:5], "Admin")
-            assertEqual(item["pr_person.name"], "%s %s" % (
-                        item["pr_person.first_name"],
-                        item["pr_person.last_name"]))
+            assertEqual(item["pr_person.name"], "%s %s" % (item["pr_person.first_name"],
+                                                           item["pr_person.last_name"],
+                                                           ))
 
     # -------------------------------------------------------------------------
     def tearDown(self):

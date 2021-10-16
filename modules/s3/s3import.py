@@ -2624,6 +2624,8 @@ class S3ImportItem(object):
             else:
                 modified_on_update = None
 
+            get_config = s3db.get_config
+
             # Update super entity links
             s3db.update_super(table, form.vars)
             if method == CREATE:
@@ -2632,14 +2634,15 @@ class S3ImportItem(object):
             elif method == UPDATE:
                 # Update realm
                 update_realm = enforce_realm_update or \
-                               s3db.get_config(table, "update_realm")
+                               get_config(table, "update_realm")
                 if update_realm:
                     current.auth.set_realm_entity(table, self.id,
                                                   force_update = True,
                                                   )
             # Onaccept
             key = "%s_onaccept" % method
-            onaccept = s3db.get_config(tablename, key)
+            onaccept = get_config(tablename, key) or \
+                       get_config(tablename, "onaccept")
             if onaccept:
                 callback(onaccept, form) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
 

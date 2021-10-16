@@ -1902,11 +1902,12 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
         if userfield != "email":
             utable[userfield].requires = \
                 IS_NOT_IN_DB(db, "%s.%s" % (utable._tablename,
-                                            userfield))
+                                            userfield,
+                                            ))
 
         email = utable.email
         email.label = T("Email") #messages.label_email
-        email.requires = [IS_EMAIL(error_message=messages.invalid_email),
+        email.requires = [IS_EMAIL(error_message = messages.invalid_email),
                           IS_LOWER(),
                           IS_NOT_IN_DB(db,
                                        "%s.email" % utable._tablename,
