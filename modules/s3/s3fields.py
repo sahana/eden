@@ -401,16 +401,18 @@ class S3Represent(object):
             value = row[self.key]
 
         # Lookup the representation
-        if value:
+        if value is not None:
             rows = [row] if row is not None else None
             items = self._lookup([value], rows=rows)
             if value in items:
                 k, v = value, items[value]
-                r = self.link(k, v, row=self.rows.get(k)) \
-                    if show_link else items[value]
+                if show_link:
+                    rep = self.link(k, v, row=self.rows.get(k))
+                else:
+                    rep = items[value]
             else:
-                r = self.default
-            return r
+                rep = self.default
+            return rep
         return self.none
 
     # -------------------------------------------------------------------------

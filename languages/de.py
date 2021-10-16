@@ -4140,6 +4140,7 @@
 'Overview & Statistics': 'Übersicht & Statistik',
 'Overview': 'Übersicht',
 'Overviews': 'Übersichten',
+'Owned By Organization': 'Gehört (Organisation)',
 'Owned By (Organization/Branch)': 'Gehört (Organisation/Niederlassung)',
 'Owned Records': 'Eigene Datensätze',
 'Owned Resources': 'Eigene Ressourcen',

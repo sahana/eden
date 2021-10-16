@@ -302,6 +302,192 @@ def inv_item_bin():
     return s3_rest_controller()
 
 # =============================================================================
+def adj():
+    """
+        RESTful CRUD controller for Stock Adjustments
+    """
+
+    table = s3db.inv_adj
+
+    # Limit site_id to sites the user has permissions for
+    error_msg = T("You do not have permission to adjust the stock level in this warehouse.")
+    auth.permitted_facilities(table = table,
+                              error_msg = error_msg)
+
+    def prep(r):
+        if r.interactive:
+            if r.component:
+                if r.component_name == "adj_item":
+                    adj_status = r.record.status
+                    if adj_status:
+                        s3db.configure("inv_adj_item",
+                                       editable = False,
+                                       insertable = False,
+                                       )
+                    else:
+                        # Limit to Bins from this site
+                        from s3db.org import org_site_layout_config
+                        org_site_layout_config(r.record.site_id, s3db.inv_adj_item_bin.layout_id)
+
+                        # Validate Bin Quantities
+                        if s3.debug:
+                            s3.scripts.append("/%s/static/scripts/S3/s3.inv_adj_item.js" % r.application)
+                        else:
+                            s3.scripts.append("/%s/static/scripts/S3/s3.inv_adj_item.min.js" % r.application)
+
+                        if r.component_id:
+                            aitable = s3db.inv_adj_item
+                            if adj_status == 0:
+                                aitable.reason.writable = True
+                            record = db(aitable.id == r.component_id).select(aitable.inv_item_id,
+                                                                             aitable.old_quantity,
+                                                                             limitby = (0, 1),
+                                                                             ).first()
+                            if record.inv_item_id:
+                                aitable.item_id.writable = False
+                                aitable.item_id.comment = None
+                                aitable.item_pack_id.writable = False
+
+                            abtable = s3db.inv_adj_item_bin
+                            sum_field = abtable.quantity.sum()
+                            binned = db(abtable.adj_item_id == r.component_id).select(sum_field,
+                                                                                      limitby = (0, 1),
+                                                                                      orderby = sum_field,
+                                                                                      ).first()[sum_field]
+                            if binned:
+                                s3.js_global.append('''S3.supply.binnedQuantity=%s
+S3.supply.oldQuantity=%s''' % (binned, record.old_quantity))
+
+                elif r.component_name == "image":
+                    doc_table = s3db.doc_image
+                    doc_table.organisation_id.readable = doc_table.organisation_id.writable = False
+                    doc_table.person_id.readable = doc_table.person_id.writable = False
+                    doc_table.location_id.readable = doc_table.location_id.writable = False
+            else:
+                if r.record:
+                    if r.record.status:
+                        # Don't allow modifying completed adjustments
+                        #table.adjuster_id.writable = False
+                        #table.comments.writable = False
+                        s3db.configure("inv_adj",
+                                       deletable = False,
+                                       editable = False,
+                                       )
+                    else:
+                        # Don't allow switching Site after Adjustment created as the Items in the Adjustment match the original Site
+                        table.site_id.writable = False
+                else:
+                    if "item" in get_vars and "site" in get_vars:
+                        # Create a adj record with a single adj_item record
+                        # e.g. coming from New Adjustment button on inv/inv_item/x/adj_item tab
+                        # e.g. coming from Adjust Stock Item button on inv/site/inv_item/x tab
+                        # @ToDo: This should really be a POST, not a GET
+                        inv_item_id = get_vars.item
+                        inv_item_table = s3db.inv_inv_item
+                        inv_item = db(inv_item_table.id == inv_item_id).select(inv_item_table.id,
+                                                                               inv_item_table.item_id,
+                                                                               inv_item_table.item_pack_id,
+                                                                               inv_item_table.quantity,
+                                                                               inv_item_table.currency,
+                                                                               inv_item_table.status,
+                                                                               inv_item_table.pack_value,
+                                                                               inv_item_table.expiry_date,
+                                                                               inv_item_table.owner_org_id,
+                                                                               limitby = (0, 1),
+                                                                               ).first()
+                        inv_bin_table = s3db.inv_inv_item_bin
+                        bins = db(inv_bin_table.inv_item_id == inv_item_id).select(inv_bin_table.layout_id,
+                                                                                   inv_bin_table.quantity,
+                                                                                   )
+                        item_id = inv_item.item_id
+                        adj_id = table.insert(adjuster_id = auth.s3_logged_in_person(),
+                                              site_id = get_vars.site,
+                                              adjustment_date = request.utcnow,
+                                              status = 0,
+                                              category = 1,
+                                              comments = "Adjust %s" % inv_item_table.item_id.represent(item_id, show_link=False),
+                                              )
+                        adj_bin_table = s3db.inv_adj_item_bin
+                        adj_item_table = s3db.inv_adj_item
+                        adj_item_id = adj_item_table.insert(reason = 0, # Unknown
+                                                            adj_id = adj_id,
+                                                            inv_item_id = inv_item.id, # original source inv_item
+                                                            item_id = item_id, # the supply item
+                                                            item_pack_id = inv_item.item_pack_id,
+                                                            old_quantity = inv_item.quantity,
+                                                            currency = inv_item.currency,
+                                                            old_status = inv_item.status,
+                                                            new_status = inv_item.status,
+                                                            old_pack_value = inv_item.pack_value,
+                                                            new_pack_value = inv_item.pack_value,
+                                                            expiry_date = inv_item.expiry_date,
+                                                            old_owner_org_id = inv_item.owner_org_id,
+                                                            new_owner_org_id = inv_item.owner_org_id,
+                                                            )
+                        for row in bins:
+                            adj_bin_table.insert(adj_item_id = adj_item_id,
+                                                 layout_id = row.layout_id,
+                                                 quantity = row.quantity,
+                                                 )
+                        redirect(URL(c = "inv",
+                                     f = "adj",
+                                     args = [adj_id,
+                                             "adj_item",
+                                             adj_item_id,
+                                             "update",
+                                             ]
+                                     ))
+                    else:
+                        table.comments.default = "Complete Stock Adjustment"
+                        if "site" in get_vars:
+                            table.site_id.writable = True
+                            table.site_id.default = get_vars.site
+        return True
+    s3.prep = prep
+
+    def postp(r, output):
+        if r.interactive:
+            s3_action_buttons(r, deletable=False)
+        return output
+    s3.postp = postp
+
+    from s3db.inv import inv_adj_rheader
+    return s3_rest_controller(rheader = inv_adj_rheader)
+
+# -----------------------------------------------------------------------------
+def adj_item():
+    """
+        RESTful CRUD controller for Adjustment Items
+        - just used for options.s3json lookups
+    """
+
+    s3.prep = lambda r: \
+        r.representation == "s3json" and r.method == "options"
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def adj_item_bin():
+    """
+        RESTful CRUD controller for Adjustment Item Bins
+        - just used for options.s3json lookups
+    """
+
+    s3.prep = lambda r: \
+        r.representation == "s3json" and r.method == "options"
+
+    return s3_rest_controller()
+
+# =============================================================================
+def kitting():
+    """
+        RESTful CRUD controller for Kitting
+    """
+
+    from s3db.inv import inv_rheader
+    return s3_rest_controller(rheader = inv_rheader)
+
+# =============================================================================
 def recv():
     """ RESTful CRUD controller """
 
@@ -1524,192 +1710,6 @@ def commit_item():
     """
 
     return s3_rest_controller()
-
-# =============================================================================
-def adj():
-    """
-        RESTful CRUD controller for Stock Adjustments
-    """
-
-    table = s3db.inv_adj
-
-    # Limit site_id to sites the user has permissions for
-    error_msg = T("You do not have permission to adjust the stock level in this warehouse.")
-    auth.permitted_facilities(table = table,
-                              error_msg = error_msg)
-
-    def prep(r):
-        if r.interactive:
-            if r.component:
-                if r.component_name == "adj_item":
-                    adj_status = r.record.status
-                    if adj_status:
-                        s3db.configure("inv_adj_item",
-                                       editable = False,
-                                       insertable = False,
-                                       )
-                    else:
-                        # Limit to Bins from this site
-                        from s3db.org import org_site_layout_config
-                        org_site_layout_config(r.record.site_id, s3db.inv_adj_item_bin.layout_id)
-
-                        # Validate Bin Quantities
-                        if s3.debug:
-                            s3.scripts.append("/%s/static/scripts/S3/s3.inv_adj_item.js" % r.application)
-                        else:
-                            s3.scripts.append("/%s/static/scripts/S3/s3.inv_adj_item.min.js" % r.application)
-
-                        if r.component_id:
-                            aitable = s3db.inv_adj_item
-                            if adj_status == 0:
-                                aitable.reason.writable = True
-                            record = db(aitable.id == r.component_id).select(aitable.inv_item_id,
-                                                                             aitable.old_quantity,
-                                                                             limitby = (0, 1),
-                                                                             ).first()
-                            if record.inv_item_id:
-                                aitable.item_id.writable = False
-                                aitable.item_id.comment = None
-                                aitable.item_pack_id.writable = False
-
-                            abtable = s3db.inv_adj_item_bin
-                            sum_field = abtable.quantity.sum()
-                            binned = db(abtable.adj_item_id == r.component_id).select(sum_field,
-                                                                                      limitby = (0, 1),
-                                                                                      orderby = sum_field,
-                                                                                      ).first()[sum_field]
-                            if binned:
-                                s3.js_global.append('''S3.supply.binnedQuantity=%s
-S3.supply.oldQuantity=%s''' % (binned, record.old_quantity))
-
-                elif r.component_name == "image":
-                    doc_table = s3db.doc_image
-                    doc_table.organisation_id.readable = doc_table.organisation_id.writable = False
-                    doc_table.person_id.readable = doc_table.person_id.writable = False
-                    doc_table.location_id.readable = doc_table.location_id.writable = False
-            else:
-                if r.record:
-                    if r.record.status:
-                        # Don't allow modifying completed adjustments
-                        #table.adjuster_id.writable = False
-                        #table.comments.writable = False
-                        s3db.configure("inv_adj",
-                                       deletable = False,
-                                       editable = False,
-                                       )
-                    else:
-                        # Don't allow switching Site after Adjustment created as the Items in the Adjustment match the original Site
-                        table.site_id.writable = False
-                else:
-                    if "item" in get_vars and "site" in get_vars:
-                        # Create a adj record with a single adj_item record
-                        # e.g. coming from New Adjustment button on inv/inv_item/x/adj_item tab
-                        # e.g. coming from Adjust Stock Item button on inv/site/inv_item/x tab
-                        # @ToDo: This should really be a POST, not a GET
-                        inv_item_id = get_vars.item
-                        inv_item_table = s3db.inv_inv_item
-                        inv_item = db(inv_item_table.id == inv_item_id).select(inv_item_table.id,
-                                                                               inv_item_table.item_id,
-                                                                               inv_item_table.item_pack_id,
-                                                                               inv_item_table.quantity,
-                                                                               inv_item_table.currency,
-                                                                               inv_item_table.status,
-                                                                               inv_item_table.pack_value,
-                                                                               inv_item_table.expiry_date,
-                                                                               inv_item_table.owner_org_id,
-                                                                               limitby = (0, 1),
-                                                                               ).first()
-                        inv_bin_table = s3db.inv_inv_item_bin
-                        bins = db(inv_bin_table.inv_item_id == inv_item_id).select(inv_bin_table.layout_id,
-                                                                                   inv_bin_table.quantity,
-                                                                                   )
-                        item_id = inv_item.item_id
-                        adj_id = table.insert(adjuster_id = auth.s3_logged_in_person(),
-                                              site_id = get_vars.site,
-                                              adjustment_date = request.utcnow,
-                                              status = 0,
-                                              category = 1,
-                                              comments = "Adjust %s" % inv_item_table.item_id.represent(item_id, show_link=False),
-                                              )
-                        adj_bin_table = s3db.inv_adj_item_bin
-                        adj_item_table = s3db.inv_adj_item
-                        adj_item_id = adj_item_table.insert(reason = 0,
-                                                            adj_id = adj_id,
-                                                            inv_item_id = inv_item.id, # original source inv_item
-                                                            item_id = item_id, # the supply item
-                                                            item_pack_id = inv_item.item_pack_id,
-                                                            old_quantity = inv_item.quantity,
-                                                            currency = inv_item.currency,
-                                                            old_status = inv_item.status,
-                                                            new_status = inv_item.status,
-                                                            old_pack_value = inv_item.pack_value,
-                                                            new_pack_value = inv_item.pack_value,
-                                                            expiry_date = inv_item.expiry_date,
-                                                            old_owner_org_id = inv_item.owner_org_id,
-                                                            new_owner_org_id = inv_item.owner_org_id,
-                                                            )
-                        for row in bins:
-                            adj_bin_table.insert(adj_item_id = adj_item_id,
-                                                 layout_id = row.layout_id,
-                                                 quantity = row.quantity,
-                                                 )
-                        redirect(URL(c = "inv",
-                                     f = "adj",
-                                     args = [adj_id,
-                                             "adj_item",
-                                             adj_item_id,
-                                             "update",
-                                             ]
-                                     ))
-                    else:
-                        table.comments.default = "Complete Stock Adjustment"
-                        if "site" in get_vars:
-                            table.site_id.writable = True
-                            table.site_id.default = get_vars.site
-        return True
-    s3.prep = prep
-
-    def postp(r, output):
-        if r.interactive:
-            s3_action_buttons(r, deletable=False)
-        return output
-    s3.postp = postp
-
-    from s3db.inv import inv_adj_rheader
-    return s3_rest_controller(rheader = inv_adj_rheader)
-
-# -----------------------------------------------------------------------------
-def adj_item():
-    """
-        RESTful CRUD controller for Adjustment Items
-        - just used for options.s3json lookups
-    """
-
-    s3.prep = lambda r: \
-        r.representation == "s3json" and r.method == "options"
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def adj_item_bin():
-    """
-        RESTful CRUD controller for Adjustment Item Bins
-        - just used for options.s3json lookups
-    """
-
-    s3.prep = lambda r: \
-        r.representation == "s3json" and r.method == "options"
-
-    return s3_rest_controller()
-
-# =============================================================================
-def kitting():
-    """
-        RESTful CRUD controller for Kitting
-    """
-
-    from s3db.inv import inv_rheader
-    return s3_rest_controller(rheader = inv_rheader)
 
 # =============================================================================
 def stock_card():

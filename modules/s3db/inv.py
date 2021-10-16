@@ -554,6 +554,11 @@ class InventoryModel(S3Model):
         # should never be automatically deleted
         inv_item_status_opts = settings.get_inv_item_status()
 
+        if settings.get_org_branches():
+            owner_org_id_label = T("Owned By (Organization/Branch)")
+        else:
+            owner_org_id_label = T("Owned By Organization")
+
         tablename = "inv_inv_item"
         self.define_table(tablename,
                           # This is a component, so needs to be a super_link
@@ -592,12 +597,11 @@ class InventoryModel(S3Model):
                                 ),
                           # e.g.: Allow items to be marked as 'still on the shelf but allocated to an outgoing shipment'
                           Field("status", "integer",
-                                default = 0, # Only Items with this Status can be allocated to Outgoing Shipments
+                                default = 0, # Good. Only Items with this Status can be allocated to Outgoing Shipments
                                 label = T("Status"),
                                 represent = S3Represent(options = inv_item_status_opts),
-                                requires = IS_EMPTY_OR(
-                                            IS_IN_SET(inv_item_status_opts)
-                                            ),
+                                requires = IS_IN_SET(inv_item_status_opts,
+                                                     zero = None),
                                 ),
                           s3_date("purchase_date",
                                   label = T("Purchase Date"),
@@ -626,7 +630,7 @@ class InventoryModel(S3Model):
                                 ),
                           # Organisation that owns this item
                           organisation_id("owner_org_id",
-                                          label = T("Owned By (Organization/Branch)"),
+                                          label = owner_org_id_label,
                                           ondelete = "SET NULL",
                                           ),
                           # Original donating Organisation
@@ -1120,17 +1124,19 @@ class InventoryAdjustModel(S3Model):
                              writable = False
                              ),
                      Field("status", "integer",
-                           requires = IS_EMPTY_OR(IS_IN_SET(adjust_status)),
-                           represent = S3Represent(options = adjust_status),
                            default = 0,
                            label = T("Status"),
+                           represent = S3Represent(options = adjust_status),
+                           requires = IS_IN_SET(adjust_status,
+                                                zero = None),
                            writable = False
                            ),
                      Field("category", "integer",
-                           requires = IS_EMPTY_OR(IS_IN_SET(adjust_type)),
-                           represent = S3Represent(options = adjust_type),
                            default = 1,
                            label = T("Type"),
+                           represent = S3Represent(options = adjust_type),
+                           requires = IS_IN_SET(adjust_type,
+                                                zero = None),
                            writable = False,
                            ),
                      s3_comments(),
@@ -1168,15 +1174,17 @@ class InventoryAdjustModel(S3Model):
                                  )
 
         adjust_reason = {0 : T("Unknown"),
-                         1 : T("None"),
-                         2 : T("Lost"),
+                         1 : T("Lost"),
+                         2 : T("Found"),
                          3 : T("Damaged"),
                          4 : T("Expired"),
-                         5 : T("Found"),
-                         6 : T("Transfer Ownership"),
+                         5 : T("Transfer Ownership"),
                          7 : T("Issued without Record"),
                          8 : T("Distributed without Record"),
                          }
+
+        if track_pack_values:
+            adjust_reason[6] = T("Update Value")
 
         # CRUD strings
         if settings.get_inv_stock_count():
@@ -1211,8 +1219,16 @@ class InventoryAdjustModel(S3Model):
         #
         inv_item_status_opts = settings.get_inv_item_status()
 
+        if settings.get_org_branches():
+            old_owner_org_id_label = T("Currently Owned by (Organization/Branch)")
+            new_owner_org_id_label = T("Transfer Ownership to Organization/Branch")
+        else:
+            old_owner_org_id_label = T("Currently Owned by Organization")
+            new_owner_org_id_label = T("Transfer Ownership to Organization")
+
         tablename = "inv_adj_item"
         define_table(tablename,
+                     adj_id(),
                      # Original inventory item
                      self.inv_item_id(ondelete = "RESTRICT",
                                       readable = False,
@@ -1220,6 +1236,14 @@ class InventoryAdjustModel(S3Model):
                                       ),
                      self.supply_item_id(ondelete = "RESTRICT"),
                      self.supply_item_pack_id(ondelete = "SET NULL"),
+                     Field("reason", "integer",
+                           default = 0, # Unknown
+                           label = T("Reason"),
+                           represent = S3Represent(options = adjust_reason),
+                           requires = IS_IN_SET(adjust_reason,
+                                                zero = None),
+                           writable = False,
+                           ),
                      Field("old_quantity", "double", notnull=True,
                            default = 0,
                            label = T("Original Quantity"),
@@ -1232,13 +1256,36 @@ class InventoryAdjustModel(S3Model):
                            represent = self.qnty_adj_repr,
                            requires = IS_FLOAT_AMOUNT(minimum = 0.0),
                            ),
-                     Field("reason", "integer",
-                           default = 1,
-                           label = T("Reason"),
-                           represent = S3Represent(options = adjust_reason),
-                           requires = IS_IN_SET(adjust_reason),
+                     Field("old_status", "integer",
+                           default = 0, # Good
+                           label = T("Current Status"),
+                           represent = S3Represent(options = inv_item_status_opts),
+                           requires = IS_IN_SET(inv_item_status_opts,
+                                                zero = None),
                            writable = False,
                            ),
+                     Field("new_status", "integer",
+                           default = 0, # Good
+                           label = T("Revised Status"),
+                           represent = S3Represent(options = inv_item_status_opts),
+                           requires = IS_IN_SET(inv_item_status_opts,
+                                                zero = None),
+                           ),
+                     # Organisation that owned this item before
+                     organisation_id("old_owner_org_id",
+                                     label = old_owner_org_id_label,
+                                     ondelete = "SET NULL",
+                                     writable = False,
+                                     comment = None,
+                                     ),
+                     # Organisation that owns this item now
+                     organisation_id("new_owner_org_id",
+                                     label = new_owner_org_id_label,
+                                     ondelete = "SET NULL",
+                                     ),
+                     s3_date("expiry_date",
+                             label = T("Expiry Date"),
+                             ),
                      Field("old_pack_value", "double",
                            label = T("Original Value per Pack"),
                            readable = track_pack_values,
@@ -1250,58 +1297,30 @@ class InventoryAdjustModel(S3Model):
                            writable = track_pack_values,
                            ),
                      s3_currency(readable = track_pack_values,
-                                 writable = track_pack_values),
-                     Field("old_status", "integer",
-                           default = 0,
-                           label = T("Current Status"),
-                           represent = S3Represent(options = inv_item_status_opts),
-                           requires = IS_EMPTY_OR(IS_IN_SET(inv_item_status_opts)),
-                           writable = False,
-                           ),
-                     Field("new_status", "integer",
-                           default = 0,
-                           label = T("Revised Status"),
-                           represent = S3Represent(options = inv_item_status_opts),
-                           requires = IS_EMPTY_OR(IS_IN_SET(inv_item_status_opts)),
-                           ),
-                     s3_date("expiry_date",
-                             label = T("Expiry Date"),
-                             ),
-                     # Organisation that owned this item before
-                     organisation_id("old_owner_org_id",
-                                     label = T("Current Owned By (Organization/Branch)"),
-                                     ondelete = "SET NULL",
-                                     writable = False,
-                                     comment = None,
-                                     ),
-                     # Organisation that owns this item now
-                     organisation_id("new_owner_org_id",
-                                     label = T("Transfer Ownership To (Organization/Branch)"),
-                                     ondelete = "SET NULL",
-                                     ),
-                     adj_id(),
+                                 writable = track_pack_values,
+                                 ),
                      s3_comments(),
                      *s3_meta_fields())
 
         crud_form = S3SQLCustomForm("item_id",
                                     "item_pack_id",
+                                    "reason",
                                     "old_quantity",
                                     "new_quantity",
-                                    "reason",
-                                    "old_pack_value",
-                                    "new_pack_value",
-                                    "currency",
-                                    "old_status",
-                                    "new_status",
-                                    "expiry_date",
                                     S3SQLInlineComponent("bin",
                                                          label = T("Bins"),
                                                          fields = [(T("Bin"), "layout_id"),
                                                                    (T("Quantity"), "quantity"),
                                                                    ],
                                                          ),
+                                    "old_status",
+                                    "new_status",
                                     "old_owner_org_id",
                                     "new_owner_org_id",
+                                    "expiry_date",
+                                    "old_pack_value",
+                                    "new_pack_value",
+                                    "currency",
                                     "comments",
                                     )
 
@@ -1337,12 +1356,12 @@ class InventoryAdjustModel(S3Model):
         crud_strings["inv_adj_item"] = Storage(
             label_create = T("Add Item to Stock"),
             title_display = T("Item Details"),
-            title_list = T("Items in Stock"),
-            title_update = T("Adjust Item Quantity"),
-            label_list_button = T("List Items in Stock"),
+            #title_list = T("Items in Stock"),
+            title_update = T("Adjust Stock Item"),
+            label_list_button = T("List Items"),
             #label_delete_button = T("Remove Item from Stock"), # This is forbidden - set qty to zero instead
             msg_record_created = T("Item added to stock adjustment"),
-            msg_record_modified = T("Item quantity adjusted"),
+            msg_record_modified = T("Item adjustment saved as Draft until Adjustment Completed"),
             #msg_record_deleted = T("Item removed from Stock"), # This is forbidden - set qty to zero instead
             msg_list_empty = T("No items currently in stock"),
             )
