@@ -259,6 +259,9 @@ def site():
            r.method not in ("search_ac", "search_address_ac", "site_contact_person"):
             if r.id:
                 # Redirect to the instance controller
+                # @ToDo: Avoid redirect and return the controller directly
+                # - means we need to have the controllers defined in s3db
+                # - means we will need to do the relevant permission checks first
                 (prefix, resourcename, id) = s3db.get_instance(db.org_site, r.id)
                 args = r.args
                 args[0] = id

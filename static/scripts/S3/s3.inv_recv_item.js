@@ -31,7 +31,7 @@ $(document).ready(function() {
             return
         }
 
-        // Use data provided (currently just RMS template)
+        // Use data provided from inv_recv_controller
         // - Pack Options
         // - REQ Quantity
         // - req_item_id

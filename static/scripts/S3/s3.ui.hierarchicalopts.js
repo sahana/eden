@@ -653,7 +653,7 @@
         },
 
         /**
-         * Check particular nodes (used by setCurrentFilters)
+         * Check particular nodes (used by setCurrentFilters and s3.inv_send_item.js)
          *
          * @param {Array} values - the record IDs of the nodes to select
          */

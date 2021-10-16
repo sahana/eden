@@ -76,7 +76,7 @@ $(document).ready(function() {
         }
         if (totalQuantity < binnedQuantity) {
             // @ToDo: i18n
-            message = 'Total Quantity reduced to Quantity in Bins';
+            message = 'Total Quantity increased to Quantity in Bins';
             error = $('<div id="inv_adj_item_new_quantity-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
             totalQuantityField.val(binnedQuantity)
                               .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {

@@ -522,6 +522,8 @@ def track_item():
             s3.filter = (table.send_inv_item_id == item_id ) | \
                         (table.recv_inv_item_id == item_id)
 
+        list_fields = None # Configure later (DRY)
+
     else:
         report = get_vars.get("report")
         if report == "rel":
@@ -529,6 +531,9 @@ def track_item():
             s3.crud_strings["inv_track_item"] = Storage(title_list = T("Summary of Releases"),
                                                         subtitle_list = T("Summary Details"),
                                                         )
+
+            s3.filter = (FS("send_id") != None)
+
             list_fields = [#"send_id",
                            #"req_item_id",
                            (T("Date Released"), "send_id$date"),
@@ -547,11 +552,9 @@ def track_item():
                 list_fields.insert(3, (settings.get_inv_req_shortname(), "send_id$req_ref"))
 
             s3db.configure("inv_track_item",
-                           list_fields = list_fields,
                            orderby = "inv_send.site_id",
                            sort = True
                            )
-            s3.filter = (FS("send_id") != None)
 
         elif report == "inc":
             # Summary of Incoming Supplies
@@ -559,30 +562,33 @@ def track_item():
                                                         subtitle_list = T("Summary Details"),
                                                         )
 
-            s3db.configure("inv_track_item",
-                           list_fields = [(T("Date Received"), "recv_id$date"),
-                                          (T("Received By"), "recv_id$recipient_id"),
-                                          (settings.get_inv_send_shortname(), "recv_id$send_ref"),
-                                          (settings.get_inv_recv_shortname(), "recv_id$recv_ref"),
-                                          (settings.get_proc_shortname(), "recv_id$purchase_ref"),
-                                          (T("Item/Description"), "item_id"),
-                                          (T("Unit"), "item_pack_id"),
-                                          (T("Quantity"), "quantity"),
-                                          (T("Unit Cost"), "pack_value"),
-                                          (T("Total Cost"), "total_value"),
-                                          (T("Source"), "supply_org_id"),
-                                          (T("Remarks"), "comments"),
-                                          ],
-                            orderby = "inv_recv.recipient_id",
-                            )
-
             s3.filter = (FS("recv_id") != None)
+
+            list_fields = [(T("Date Received"), "recv_id$date"),
+                           (T("Received By"), "recv_id$recipient_id"),
+                           (settings.get_inv_send_shortname(), "recv_id$send_ref"),
+                           (settings.get_inv_recv_shortname(), "recv_id$recv_ref"),
+                           (settings.get_proc_shortname(), "recv_id$purchase_ref"),
+                           (T("Item/Description"), "item_id"),
+                           (T("Unit"), "item_pack_id"),
+                           (T("Quantity"), "quantity"),
+                           (T("Unit Cost"), "pack_value"),
+                           (T("Total Cost"), "total_value"),
+                           (T("Source"), "supply_org_id"),
+                           (T("Remarks"), "comments"),
+                           ]
+
+            s3db.configure("inv_track_item",
+                           orderby = "inv_recv.recipient_id",
+                           )
 
         elif report == "util":
             # Utilization Report
             s3.crud_strings["inv_track_item"] = Storage(title_list = T("Utilization Report"),
                                                         subtitle_list = T("Utilization Details"),
                                                         )
+
+            s3.filter = (FS("item_id") != None)
 
             list_fields = [(T("Item/Description"), "item_id$name"),
                            (T("Beneficiary"), "send_id$site_id"),
@@ -599,31 +605,51 @@ def track_item():
             elif settings.get_inv_send_req_ref():
                 list_fields.insert(3, (settings.get_inv_req_shortname(), "send_id$req_ref"))
 
-            s3db.configure("inv_track_item",
-                           list_fields = list_fields,
-                           )
-
-            s3.filter = (FS("item_id") != None)
-
         elif report == "exp":
             # Expiration Report
             s3.crud_strings["inv_track_item"] = Storage(title_list = T("Expiration Report"),
                                                         subtitle_list = T("Expiration Details"),
                                                         )
 
-            s3db.configure("inv_track_item",
-                           list_fields = ["recv_inv_item_id$site_id",
-                                          (T("Item/Description"), "item_id"),
-                                          (T("Expiration Date"), "expiry_date"),
-                                          (T("Source"), "supply_org_id"),
-                                          (T("Unit"), "item_pack_id"),
-                                          (T("Quantity"), "quantity"),
-                                          (T("Unit Cost"), "pack_value"),
-                                          (T("Total Cost"), "total_value"),
-                                          ],
-                           )
-
             s3.filter = (FS("expiry_date") != None)
+
+            list_fields = ["recv_inv_item_id$site_id",
+                          (T("Item/Description"), "item_id"),
+                          (T("Expiration Date"), "expiry_date"),
+                          (T("Source"), "supply_org_id"),
+                          (T("Unit"), "item_pack_id"),
+                          (T("Quantity"), "quantity"),
+                          (T("Unit Cost"), "pack_value"),
+                          (T("Total Cost"), "total_value"),
+                          ]
+        else:
+            list_fields = None # Configure later (DRY)
+
+    if not list_fields:
+        list_fields = ["status",
+                       "item_source_no",
+                       "item_id",
+                       "item_pack_id",
+                       "send_id",
+                       "recv_id",
+                       "quantity",
+                       (T("Total Weight (kg)"), "total_weight"),
+                       (T("Total Volume (m3)"), "total_volume"),
+                       "bin.layout_id",
+                       "return_quantity",
+                       "recv_quantity",
+                       "recv_bin.layout_id",
+                       "owner_org_id",
+                       "supply_org_id",
+                       ]
+
+        if settings.get_inv_track_pack_values():
+            list_fields.insert(10, "pack_value")
+            list_fields.insert(10, "currency")
+
+    s3db.configure("inv_track_item",
+                   list_fields = list_fields,
+                   )
 
     from s3db.inv import inv_rheader
     return s3_rest_controller(rheader = inv_rheader)

@@ -28,7 +28,7 @@
          Quantity...............inv_inv_item.quantity
          Unit Value.............inv_inv_item.pack_value
          Currency...............inv_inv_item.currency
-         Bin....................inv_inv_item_bin.layout_id (Split via / if need hierarchy...supports up to 3 levels)
+         Bin....................inv_inv_item_bin.layout_id as Name (Split via / if need hierarchy...supports up to 3 levels) or Name:Quantity if Bin Quantity differs from Total Quantity
          Expiry Date............inv_inv_item.expiry_date
          Supplier/Donor.........inv_inv_item.supply_org_id
          Tracking Number........inv_inv_item.tracking_no
@@ -144,6 +144,7 @@
                                                                col[@field='Warehouse']/text(), '|',
                                                                col[@field='Facility Type']/text(), '|',
                                                                col[@field='Bin']/text()))[1])]">
+                <!-- @ToDo: Can this be made more efficient by only running the template for Bin Names, rather than with Quantities? -->
                 <xsl:call-template name="Bin"/>
             </xsl:for-each>
 
@@ -175,6 +176,7 @@
                 <xsl:with-param name="colhdrs" select="$TrackingNumber"/>
             </xsl:call-template>
         </xsl:variable>
+        <xsl:variable name="quantity" select="col[@field='Quantity']/text()"/>
         <xsl:variable name="model" select="col[@field='Model']/text()"/>
         <xsl:variable name="item_tuid" select="concat('supply_item/',$item, '/', $um, '/', $model)"/>
         <xsl:variable name="um_tuid" select="concat('supply_item_pack/',$item, '/', $um, '/', $model)"/>
@@ -236,7 +238,7 @@
                     <xsl:value-of select="col[@field='Supplier/Donor']"/>
                 </xsl:attribute>
             </reference>
-            <data field="quantity"><xsl:value-of select="col[@field='Quantity']"/></data>
+            <data field="quantity"><xsl:value-of select="$quantity"/></data>
             <xsl:if test="col[@field='Unit Value']!=''">
                 <data field="pack_value"><xsl:value-of select="col[@field='Unit Value']"/></data>
                 <xsl:if test="col[@field='Currency']!=''">
@@ -246,14 +248,34 @@
             <data field="tracking_no"><xsl:value-of select="$tracking"/></data>
             <!-- Bin -->
             <xsl:if test="$BinName!=''">
+                <xsl:variable name="bin_name">
+                    <xsl:choose>
+                        <xsl:when test="contains($BinName, ':')">
+                            <xsl:value-of select="substring-before($BinName, ':')"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="$BinName"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:variable>
+                <xsl:variable name="bin_quantity">
+                    <xsl:choose>
+                        <xsl:when test="contains($BinName, ':')">
+                            <xsl:value-of select="substring-after($BinName, ':')"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="$quantity"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:variable>
                 <resource name="inv_inv_item_bin">
-                    <xsl:variable name="BinTUID" select="concat($FacilityTUID, '|', $BinName)"/>
+                    <xsl:variable name="BinTUID" select="concat($FacilityTUID, '|', $bin_name)"/>
                     <reference field="layout_id" resource="org_site_layout">
                         <xsl:attribute name="tuid">
                             <xsl:value-of select="$BinTUID"/>
                         </xsl:attribute>
                     </reference>
-                    <data field="quantity"><xsl:value-of select="col[@field='Quantity']"/></data>
+                    <data field="quantity"><xsl:value-of select="$bin_quantity"/></data>
                 </resource>
             </xsl:if>
             <data field="expiry_date"><xsl:value-of select="$expiry"/></data>
@@ -341,6 +363,16 @@
         <xsl:variable name="BinName" select="col[@field='Bin']/text()"/>
 
         <xsl:if test="$BinName!=''">
+            <xsl:variable name="bin_name">
+                <xsl:choose>
+                    <xsl:when test="contains($BinName, ':')">
+                        <xsl:value-of select="substring-before($BinName, ':')"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$BinName"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
 
             <xsl:variable name="OrgName">
                 <xsl:call-template name="GetColumnValue">
@@ -353,18 +385,18 @@
 
             <xsl:variable name="root_bin">
                 <xsl:choose>
-                    <xsl:when test="contains($BinName, '/')">
-                        <xsl:value-of select="substring-before($BinName, '/')"/>
+                    <xsl:when test="contains($bin_name, '/')">
+                        <xsl:value-of select="substring-before($bin_name, '/')"/>
                     </xsl:when>
                     <xsl:otherwise>
-                        <xsl:value-of select="$BinName"/>
+                        <xsl:value-of select="$bin_name"/>
                     </xsl:otherwise>
                 </xsl:choose>
             </xsl:variable>
             <xsl:variable name="last_part">
                 <xsl:choose>
-                    <xsl:when test="contains($BinName, '/')">
-                        <xsl:value-of select="substring-after($BinName, '/')"/>
+                    <xsl:when test="contains($bin_name, '/')">
+                        <xsl:value-of select="substring-after($bin_name, '/')"/>
                     </xsl:when>
                     <xsl:otherwise>
                         <xsl:text></xsl:text>
@@ -443,7 +475,7 @@
             <xsl:if test="$sub_sub_bin!=''">
                 <resource name="org_site_layout">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat($FacilityTUID, '|', $BinName)"/>
+                        <xsl:value-of select="concat($FacilityTUID, '|', $bin_name)"/>
                     </xsl:attribute>
                     <data field="name"><xsl:value-of select="$sub_sub_bin"/></data>
                     <reference field="site_id">
