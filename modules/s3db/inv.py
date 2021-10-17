@@ -592,6 +592,7 @@ class InventoryModel(S3Model):
                                          ),
                      self.supply_item_pack_id(ondelete = "RESTRICT",
                                               required = True,
+                                              script = None, # We use s3.inv_item.js rather than filterOptionsS3
                                               ),
                      Field("quantity", "double", notnull=True,
                            default = 0.0,

@@ -7966,52 +7966,61 @@ def org_site_prep(r):
         component_name = r.component_name
 
         if component_name == "inv_item":
-            if not current.deployment_settings.get_inv_direct_stock_edits():
-                # Can't create/edit stock so no point configuring this workflow
-                return
+            if r.interactive and \
+               r.method in (None, "update") and \
+               current.deployment_settings.get_inv_direct_stock_edits():
 
-            db = current.db
-            s3db = current.s3db
+                db = current.db
+                s3db = current.s3db
 
-            site_id = r.record.site_id
+                site_id = r.record.site_id
 
-            # Filter out items which are already in this inventory
-            table = db.inv_inv_item
-            query = (table.site_id == site_id) & \
-                    (table.deleted == False)
-            inv_item_rows = db(query).select(table.item_id)
-            item_ids = [row.item_id for row in inv_item_rows]
+                # Filter out items which are already in this inventory
+                table = db.inv_inv_item
+                query = (table.site_id == site_id) & \
+                        (table.deleted == False)
+                inv_item_rows = db(query).select(table.item_id)
+                item_ids = [row.item_id for row in inv_item_rows]
 
-            # Ensure that the current item CAN be selected
-            if r.method == "update":
-                item = db(table.id == r.args[2]).select(table.item_id,
-                                                        limitby = (0, 1),
-                                                        ).first()
-                item_ids.remove(item.item_id)
-            table.item_id.requires.set_filter(not_filterby = "id",
-                                              not_filter_opts = item_ids,
-                                              )
+                inv_item_id = r.component_id
 
-            # Limit to Bins from this site
-            org_site_layout_config(site_id, s3db.inv_inv_item_bin.layout_id)
+                # Ensure that the current item CAN be selected
+                if inv_item_id:
+                    inv_item = db(table.id == inv_item_id).select(table.item_id,
+                                                                  table.item_pack_id,
+                                                                  limitby = (0, 1),
+                                                                  ).first()
+                    item_ids.remove(inv_item.item_id)
+                table.item_id.requires.set_filter(not_filterby = "id",
+                                                  not_filter_opts = item_ids,
+                                                  )
 
-            # Handle Bin Allocations
-            s3 = current.response.s3
-            if s3.debug:
-                s3.scripts.append("/%s/static/scripts/S3/s3.inv_item.js" % r.application)
-            else:
-                s3.scripts.append("/%s/static/scripts/S3/s3.inv_item.min.js" % r.application)
-            if r.component_id:
-                ibtable = s3db.inv_inv_item_bin
-                # We can't update this dynamically
-                #ibtable.quantity.requires = IS_INT_IN_RANGE(0, r.record.quantity)
-                sum_field = ibtable.quantity.sum()
-                binned = db(ibtable.inv_item_id == r.component_id).select(sum_field,
-                                                                          limitby = (0, 1),
-                                                                          orderby = sum_field,
-                                                                          ).first()[sum_field]
-                if binned:
-                    s3.js_global.append('''S3.supply.binnedQuantity=%s''' % binned)
+                # Limit to Bins from this site
+                org_site_layout_config(site_id, s3db.inv_inv_item_bin.layout_id)
+
+                # Handle Bin Allocations
+                s3 = current.response.s3
+                if s3.debug:
+                    s3.scripts.append("/%s/static/scripts/S3/s3.inv_item.js" % r.application)
+                else:
+                    s3.scripts.append("/%s/static/scripts/S3/s3.inv_item.min.js" % r.application)
+                if inv_item_id:
+                    ibtable = s3db.inv_inv_item_bin
+                    # We can't update this dynamically
+                    #ibtable.quantity.requires = IS_INT_IN_RANGE(0, r.record.quantity)
+                    sum_field = ibtable.quantity.sum()
+                    binned = db(ibtable.inv_item_id == inv_item_id).select(sum_field,
+                                                                           limitby = (0, 1),
+                                                                           orderby = sum_field,
+                                                                           ).first()[sum_field]
+                    if binned:
+                        binned = '''
+S3.supply.binnedQuantity=%s''' % binned
+                    else:
+                        binned = ""
+                    s3.js_global.append('''S3.supply.itemPackID=%s%s''' % (inv_item.item_pack_id,
+                                                                           binned,
+                                                                           ))
 
         #elif component_name == "send":
         #    # Default to the Search tab in the location selector widget1

@@ -162,6 +162,38 @@ def item_pack():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def item_packs():
+    """
+        Called by s3.inv_item.js to provide the pack options for a
+            particular Item
+
+        Access via the .json representation to avoid work rendering menus, etc
+    """
+
+    try:
+        item_id = request.args[0]
+    except:
+        raise HTTP(400, current.xml.json_message(False, 400, "No value provided!"))
+
+    ptable = s3db.supply_item_pack
+    rows = db(ptable.item_id == item_id).select(ptable.id,
+                                                ptable.name,
+                                                ptable.quantity,
+                                                )
+
+    # Simplify format
+    packs = [{"i": row.id,
+              "n": row.name,
+              "q": row.quantity,
+              } for row in rows]
+
+    SEPARATORS = (",", ":")
+    output = json.dumps(packs, separators=SEPARATORS)
+
+    response.headers["Content-Type"] = "application/json"
+    return output
+
+# -----------------------------------------------------------------------------
 def kit_item():
     """ RESTful CRUD controller """
 

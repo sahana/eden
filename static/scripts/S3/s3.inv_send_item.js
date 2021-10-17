@@ -98,7 +98,7 @@ $(document).ready(function() {
             $('#TotalQuantity').remove();
 
             // @ToDo: When sites have a very large number of items:
-            //if (!inv_items || !inv_items[inv_item_id]) {read data for this item via AJAX call & cache}
+            //if (!inv_items || !inv_items[inv_item_id]) {read data for this item via AJAX call to inv/inv_item_quantity & cache}
 
             var data = inv_items[inv_item_id],
                 defaultPack,

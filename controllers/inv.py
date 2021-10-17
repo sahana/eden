@@ -111,33 +111,6 @@ def inv_item():
             #elif component_name == "bin":
             #    s3db.inv_inv_item_bin.quantity.requires = IS_INT_IN_RANGE(0, r.record.quantity)
         else:
-            if settings.get_inv_direct_stock_edits():
-                # Limit to Bins from this site
-                # Validate Bin Quantities
-                if s3.debug:
-                    s3.scripts.append("/%s/static/scripts/S3/s3.inv_item.js" % r.application)
-                else:
-                    s3.scripts.append("/%s/static/scripts/S3/s3.inv_item.min.js" % r.application)
-                if r.record:
-                    site_id = r.record.site_id
-                    ibtable = s3db.inv_inv_item_bin
-                    # We can't update this dynamically
-                    #ibtable.quantity.requires = IS_INT_IN_RANGE(0, r.record.quantity)
-                    sum_field = ibtable.quantity.sum()
-                    binned = db(ibtable.inv_item_id == r.id).select(sum_field,
-                                                                    limitby = (0, 1),
-                                                                    orderby = sum_field,
-                                                                    ).first()[sum_field]
-                    if binned:
-                        s3.js_global.append('''S3.supply.binnedQuantity=%s''' % binned)
-                    f = ibtable.layout_id
-                    f.widget.filter = (s3db.org_site_layout.site_id == site_id)
-                    f.comment.args = [site_id, "layout", "create"]
-                    # We can't update this dynamically
-                    #f.requires.other.set_filter(filterby = "site_id",
-                    #                            filter_opts = [site_id],
-                    #                            )
-
             tablename = "inv_inv_item"
             s3.crud_strings[tablename].msg_list_empty = T("No Stock currently registered")
 
@@ -163,6 +136,43 @@ def inv_item():
                                               "status",
                                               ]
                                )
+
+            if r.interactive and \
+               r.method in (None, "update", "summary") and \
+               settings.get_inv_direct_stock_edits():
+                # Limit to Bins from this site
+                # Validate Bin Quantities
+                if s3.debug:
+                    s3.scripts.append("/%s/static/scripts/S3/s3.inv_item.js" % r.application)
+                else:
+                    s3.scripts.append("/%s/static/scripts/S3/s3.inv_item.min.js" % r.application)
+
+                record = r.record
+                if record:
+                    site_id = record.site_id
+                    ibtable = s3db.inv_inv_item_bin
+                    # We can't update this dynamically
+                    #ibtable.quantity.requires = IS_INT_IN_RANGE(0, r.record.quantity)
+                    sum_field = ibtable.quantity.sum()
+                    binned = db(ibtable.inv_item_id == r.id).select(sum_field,
+                                                                    limitby = (0, 1),
+                                                                    orderby = sum_field,
+                                                                    ).first()[sum_field]
+                    if binned:
+                        binned = '''
+S3.supply.binnedQuantity=%s''' % binned
+                    else:
+                        binned = ""
+                    s3.js_global.append('''S3.supply.itemPackID=%s%s''' % (record.item_pack_id,
+                                                                           binned,
+                                                                           ))
+                    f = ibtable.layout_id
+                    f.widget.filter = (s3db.org_site_layout.site_id == site_id)
+                    f.comment.args = [site_id, "layout", "create"]
+                    # We can't update this dynamically
+                    #f.requires.other.set_filter(filterby = "site_id",
+                    #                            filter_opts = [site_id],
+                    #                            )
 
         return True
     s3.prep = prep
