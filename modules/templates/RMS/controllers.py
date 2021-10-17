@@ -7,7 +7,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from s3 import ICON, IS_FLOAT_AMOUNT, s3_str, \
-               S3CustomController, S3Report, S3Request, S3Represent
+               S3CustomController, S3Report, s3_request, S3Represent
 
 from s3db.inv import SHIP_DOC_PENDING, SHIP_DOC_COMPLETE, \
                      SHIP_STATUS_SENT, SHIP_STATUS_RECEIVED, SHIP_STATUS_RETURNING
@@ -770,7 +770,7 @@ class inv_dashboard(S3CustomController):
 
         # Capacity
         # Define the Pivot Table
-        r = S3Request("inv", "inv_item")
+        r = s3_request("inv", "inv_item")
         r.customise_resource()
         resource = s3db.resource("inv_inv_item")
         report = S3Report()

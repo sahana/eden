@@ -71,7 +71,8 @@ class S3Request(object):
                  extension = None,
                  get_vars = None,
                  post_vars = None,
-                 http = None):
+                 http = None,
+                 ):
         """
             Constructor
 
@@ -111,7 +112,8 @@ class S3Request(object):
         if c or f:
             if not auth.permission.has_permission("read",
                                                   c = self.controller,
-                                                  f = self.function):
+                                                  f = self.function,
+                                                  ):
                 auth.permission.fail()
 
         # Allow override of request args/vars
@@ -243,7 +245,8 @@ class S3Request(object):
                 self.component = c
             else:
                 error = "%s not a component of %s" % (self.component_name,
-                                                      self.resource.tablename)
+                                                      self.resource.tablename,
+                                                      )
                 raise AttributeError(error)
 
         # Identify link table and link ID
@@ -262,23 +265,35 @@ class S3Request(object):
         set_handler = self.set_handler
 
         set_handler("export_tree", self.get_tree,
-                    http=("GET",), transform=True)
+                    http = ("GET",),
+                    transform = True,
+                    )
         set_handler("import_tree", self.put_tree,
-                    http=("GET", "PUT", "POST"), transform=True)
+                    http = ("GET", "PUT", "POST"),
+                    transform = True,
+                    )
         set_handler("fields", self.get_fields,
-                    http=("GET",), transform=True)
+                    http = ("GET",),
+                    transform = True,
+                    )
         set_handler("options", self.get_options,
-                    http=("GET",),
+                    http = ("GET",),
                     representation = ("__transform__", "json"),
                     )
 
         sync = current.sync
         set_handler("sync", sync,
-                    http=("GET", "PUT", "POST",), transform=True)
+                    http = ("GET", "PUT", "POST",),
+                    transform = True,
+                    )
         set_handler("sync_log", sync.log,
-                    http=("GET",), transform=True)
+                    http = ("GET",),
+                    transform = True,
+                    )
         set_handler("sync_log", sync.log,
-                    http=("GET",), transform=False)
+                    http = ("GET",),
+                    transform = False,
+                    )
 
         # Initialize CRUD
         self.resource.crud(self, method="_init")
@@ -420,11 +435,11 @@ class S3Request(object):
             handler = self.get_handler(method, transform=transform)
 
         elif http == "PUT":
-            transform = self.transformable(method="import")
+            transform = self.transformable(method = "import")
             handler = self.get_handler(method, transform=transform)
 
         elif http == "POST":
-            transform = self.transformable(method="import")
+            transform = self.transformable(method = "import")
             return self.get_handler(method, transform=transform)
 
         elif http == "DELETE":
@@ -759,14 +774,16 @@ class S3Request(object):
                 else:
                     # Record not found => go to list
                     self.error(404, current.ERROR.BAD_RECORD,
-                               next = self.url(id="", method=""),
+                               next = self.url(id = "",
+                                               method = "",
+                                               ),
                                )
                 method = "read"
             else:
                 method = "list"
 
         elif method in ("create", "update"):
-            if self.transformable(method="import"):
+            if self.transformable(method = "import"):
                 method = "import_tree"
                 transform = True
 
@@ -806,7 +823,7 @@ class S3Request(object):
         if self.method == "delete":
             return self.__DELETE()
         else:
-            if self.transformable(method="import"):
+            if self.transformable(method = "import"):
                 return self.__PUT()
             else:
                 post_vars = self.post_vars
@@ -1095,11 +1112,11 @@ class S3Request(object):
 
         try:
             output = r.resource.import_xml(source,
-                                           id=_id,
-                                           format=representation,
-                                           files=r.files,
-                                           stylesheet=stylesheet,
-                                           ignore_errors=ignore_errors,
+                                           id = _id,
+                                           format = representation,
+                                           files = r.files,
+                                           stylesheet = stylesheet,
+                                           ignore_errors = ignore_errors,
                                            **args)
         except IOError:
             current.auth.permission.fail()
@@ -1134,11 +1151,12 @@ class S3Request(object):
         opts = str(get_vars.get("options", False)).lower() == "true"
         refs = str(get_vars.get("references", False)).lower() == "true"
         stylesheet = r.stylesheet()
-        output = r.resource.export_struct(meta=meta,
-                                          options=opts,
-                                          references=refs,
-                                          stylesheet=stylesheet,
-                                          as_json=as_json)
+        output = r.resource.export_struct(meta = meta,
+                                          options = opts,
+                                          references = refs,
+                                          stylesheet = stylesheet,
+                                          as_json = as_json,
+                                          )
         if output is None:
             # Transformation error
             r.error(400, current.xml.error)
@@ -1157,11 +1175,12 @@ class S3Request(object):
 
         representation = r.representation
         if representation == "xml":
-            output = r.resource.export_fields(component=r.component_name)
+            output = r.resource.export_fields(component = r.component_name)
             content_type = "text/xml"
         elif representation == "s3json":
-            output = r.resource.export_fields(component=r.component_name,
-                                              as_json=True)
+            output = r.resource.export_fields(component = r.component_name,
+                                              as_json = True,
+                                              )
             content_type = "application/json"
         else:
             r.error(415, current.ERROR.BAD_FORMAT)
@@ -1497,12 +1516,13 @@ class S3Request(object):
             else:
                 f = "%s.%s" % (f, representation)
 
-        return URL(r=self,
-                   c=self.controller,
-                   f=f,
-                   args=args,
-                   vars=vars,
-                   host=host)
+        return URL(r = self,
+                   c = self.controller,
+                   f = f,
+                   args = args,
+                   vars = vars,
+                   host = host,
+                   )
 
     # -------------------------------------------------------------------------
     def target(self):
@@ -1522,16 +1542,19 @@ class S3Request(object):
                 return(link.prefix,
                        link.name,
                        link.table,
-                       link.tablename)
+                       link.tablename,
+                       )
             return (component.prefix,
                     component.name,
                     component.table,
-                    component.tablename)
+                    component.tablename,
+                    )
         else:
             return (self.prefix,
                     self.name,
                     self.table,
-                    self.tablename)
+                    self.tablename,
+                    )
 
     # -------------------------------------------------------------------------
     @property
@@ -1811,8 +1834,8 @@ class S3Method(object):
         # Apply method
         if widget_id and hasattr(self, "widget"):
             output = self.widget(r,
-                                 method=self.method,
-                                 widget_id=widget_id,
+                                 method = self.method,
+                                 widget_id = widget_id,
                                  **attr)
         else:
             output = self.apply_method(r, **attr)

@@ -9,8 +9,7 @@ from gluon.html import *
 from gluon.storage import Storage
 from gluon.sqlhtml import SQLFORM
 
-from s3 import S3FilterForm, S3CustomController, S3OptionsFilter, S3Request, \
-               S3SQLCustomForm
+from s3 import S3FilterForm, S3CustomController, S3OptionsFilter, S3SQLCustomForm
 
 THEME = "historic.SSF"
 

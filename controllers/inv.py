@@ -33,96 +33,9 @@ def warehouse():
         RESTful CRUD controller
     """
 
-    request_args = request.args
-    if "viewing" in get_vars:
-        viewing = get_vars.viewing
-        tn, record_id = viewing.split(".", 1)
-        if tn == "inv_warehouse":
-            request_args.insert(0, record_id)
-
-    # CRUD pre-process
-    def prep(r):
-        # Function to call for all Site Instance Types
-        from s3db.org import org_site_prep
-        org_site_prep(r)
-
-        # "show_obsolete" var option can be added (btn?) later to disable this filter
-        # @ToDo: Better to do this using a default_filter BUT we then need to have the filter visible, which isn't great UX for a little-used filter...
-        if r.method in [None, "list"] and \
-            not r.vars.get("show_obsolete", False):
-            r.resource.add_filter(db.inv_warehouse.obsolete != True)
-
-        # Add this to Template if-desired
-        #if r.representation == "xls":
-        #    list_fields = r.resource.get_config("list_fields")
-        #    list_fields += ["location_id$lat",
-        #                    "location_id$lon",
-        #                    "location_id$inherited",
-        #                    ]
-
-        return True
-    s3.prep = prep
-
-    # CRUD post-process
-    def postp(r, output):
-        if r.interactive and not r.component and r.method != "import":
-            if auth.s3_has_permission("read", "inv_inv_item"):
-                # Change Action buttons to open Stock Tab by default
-                read_url = URL(f="warehouse",
-                               args = ["[id]", "inv_item"],
-                               )
-                update_url = URL(f="warehouse",
-                                 args = ["[id]", "inv_item"],
-                                 )
-                s3_action_buttons(r,
-                                  read_url = read_url,
-                                  update_url = update_url,
-                                  )
-        else:
-            cname = r.component_name
-            if cname == "human_resource":
-                # Modify action button to open staff instead of human_resource
-                read_url = URL(c="hrm", f="staff",
-                               args = ["[id]"],
-                               )
-                update_url = URL(c="hrm", f="staff",
-                                 args = ["[id]", "update"],
-                                 )
-                s3_action_buttons(r,
-                                  read_url = read_url,
-                                  #delete_url = delete_url,
-                                  update_url = update_url,
-                                  )
-        return output
-    s3.postp = postp
-
-    if "extra_data" in get_vars:
-        resourcename = "inv_item"
-    else:
-        resourcename = "warehouse"
-    csv_stylesheet = "%s.xsl" % resourcename
-
-    if len(request_args) > 1 and request_args[1] in ("req", "send", "recv"):
-        # Sends/Receives should break out of Component Tabs
-        # to allow access to action buttons in inv_recv rheader
-        native = True
-    else:
-        native = False
-
-    from s3db.inv import inv_rheader
-    return s3_rest_controller(#hide_filter = {"inv_item": False,
-                              #               "_default": True,
-                              #               },
-                              # Extra fields for CSV uploads:
-                              #csv_extra_fields = [{"label": "Organisation",
-                              #                     "field": s3db.org_organisation_id(comment = None)
-                              #                     },
-                              #                    ]
-                              csv_stylesheet = csv_stylesheet,
-                              csv_template = resourcename,
-                              native = native,
-                              rheader = inv_rheader,
-                              )
+    # Defined in the model for forwards from org/site controller
+    from s3db.inv import inv_warehouse_controller
+    return inv_warehouse_controller()
 
 # -----------------------------------------------------------------------------
 def warehouse_type():

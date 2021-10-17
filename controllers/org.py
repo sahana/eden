@@ -259,17 +259,30 @@ def site():
            r.method not in ("search_ac", "search_address_ac", "site_contact_person"):
             if r.id:
                 # Redirect to the instance controller
-                # @ToDo: Avoid redirect and return the controller directly
-                # - means we need to have the controllers defined in s3db
-                # - means we will need to do the relevant permission checks first
                 (prefix, resourcename, id) = s3db.get_instance(db.org_site, r.id)
-                args = r.args
-                args[0] = id
-                redirect(URL(c = prefix,
-                             f = resourcename,
-                             args = args,
-                             vars = r.get_vars,
-                             ))
+                # If we have a controller defined in s3db then we can Forward without a Redirect
+                # Use Web2Py's Custom Importer rather than importlib.import_module
+                parent = __import__("s3db", fromlist=["s3db"])
+                module = parent.__dict__[prefix]
+                controller = "%s_%s_controller" % (prefix, resourcename)
+                names = module.__all__
+                if controller in names:
+                    s3models = module.__dict__
+                    function = s3models[controller]
+                    request.controller = prefix
+                    request.function = resourcename
+                    request.args[0] = str(id)
+                    return function()
+                else:
+                    # Revert to a Redirect
+                    args = r.args
+                    args[0] = id
+                    redirect(URL(c = prefix,
+                                 f = resourcename,
+                                 args = args,
+                                 vars = r.get_vars,
+                                 ))
+
             else:
                 # Not supported
                 return False

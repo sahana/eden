@@ -9,7 +9,7 @@ from gluon.storage import Storage
 from s3 import FS, ICON, s3_auth_user_represent, \
                S3CRUD, S3CustomController, \
                S3DateFilter, S3DateTime, S3FilterForm, S3LocationFilter,\
-               S3MapFilter, S3OptionsFilter, S3Request, S3TextFilter
+               S3MapFilter, S3OptionsFilter, s3_request, S3TextFilter
 
 THEME = "WACOP"
 
@@ -42,7 +42,7 @@ class index(S3CustomController):
         #ajax_vars = {"home": 1}
         customise = current.deployment_settings.customise_resource(tablename)
         if customise:
-            r = S3Request(c="event", f="incident")#, vars=ajax_vars)
+            r = s3_request(c="event", f="incident")#, vars=ajax_vars)
             customise(r, tablename)
 
         #current.deployment_settings.ui.datatables_pagingType = "bootstrap"

@@ -313,7 +313,11 @@
         reload: function(ajaxURL) {
             // Load the data
             var self = this;
-            ajaxURL += '?widget_id=' + $(this.element).attr('id');
+            if (ajaxURL.includes('?')) {
+                ajaxURL += '&widget_id=' + $(this.element).attr('id');
+            } else {
+                ajaxURL += '?widget_id=' + $(this.element).attr('id');
+            }
 
             // Remove old JSTree
             this.tree.jstree('destroy');

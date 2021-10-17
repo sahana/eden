@@ -83,6 +83,7 @@ __all__ = ("WarehouseModel",
            "inv_track_item_deleting",
            #"inv_track_item_onaccept",
            "inv_tracking_status",
+           "inv_warehouse_controller",
            "inv_warehouse_free_capacity",
            "inv_InvItemRepresent",
            #"inv_PackageRepresent",
@@ -804,8 +805,8 @@ $.filterOptionsS3({
                                     "quantity",
                                     S3SQLInlineComponent("bin",
                                                          label = T("Bins"),
-                                                         fields = [(T("Bin"), "layout_id"),
-                                                                   (T("Quantity"), "quantity"),
+                                                         fields = ["layout_id",
+                                                                   "quantity",
                                                                    ],
                                                          ),
                                     "status",
@@ -1347,8 +1348,8 @@ class InventoryAdjustModel(S3Model):
                                     "new_quantity",
                                     S3SQLInlineComponent("bin",
                                                          label = T("Bins"),
-                                                         fields = [(T("Bin"), "layout_id"),
-                                                                   (T("Quantity"), "quantity"),
+                                                         fields = ["layout_id",
+                                                                   "quantity",
                                                                    ],
                                                          ),
                                     "old_status",
@@ -5321,13 +5322,13 @@ class InventoryTrackingModel(S3Model):
         set_method = self.set_method
         super_link = self.super_link
 
-        person_id = self.pr_person_id
-        organisation_id = self.org_organisation_id
-        item_id = self.supply_item_id
         inv_item_id = self.inv_item_id
-        item_pack_id = self.supply_item_pack_id
-        req_item_id = self.inv_req_item_id
+        organisation_id = self.org_organisation_id
+        person_id = self.pr_person_id
         req_ref = self.inv_req_ref
+
+        is_logged_in = auth.is_logged_in
+        user = auth.user
 
         site_types = auth.org_site_types
 
@@ -5351,9 +5352,6 @@ class InventoryTrackingModel(S3Model):
         track_pack_values = settings.get_inv_track_pack_values()
         type_default = settings.get_inv_send_type_default()
 
-        is_logged_in = auth.is_logged_in
-        user = auth.user
-
         is_float_represent = IS_FLOAT_AMOUNT.represent
         float_represent = lambda v: is_float_represent(v, precision=2)
         string_represent = lambda v: v if v else NONE
@@ -5362,11 +5360,6 @@ class InventoryTrackingModel(S3Model):
         send_ref = S3ReusableField("send_ref",
                                    label = T(settings.get_inv_send_ref_field_name()),
                                    represent = self.inv_send_ref_represent,
-                                   writable = False,
-                                   )
-        recv_ref = S3ReusableField("recv_ref",
-                                   label = T("%(GRN)s Number") % {"GRN": recv_shortname},
-                                   represent = self.inv_recv_ref_represent,
                                    writable = False,
                                    )
 
@@ -5723,7 +5716,11 @@ class InventoryTrackingModel(S3Model):
         define_table(tablename,
                      # Instance
                      super_link("doc_id", "doc_entity"),
-                     recv_ref(),
+                     Field("recv_ref",
+                           label = T("%(GRN)s Number") % {"GRN": recv_shortname},
+                           represent = self.inv_recv_ref_represent,
+                           writable = False,
+                           ),
                      # This is a component, so needs to be a super_link
                      # - can't override field name, ondelete or requires
                      super_link("site_id", "org_site",
@@ -6052,8 +6049,8 @@ class InventoryTrackingModel(S3Model):
 # 'fncRepresent':S3.supply.fncRepresentItem
 #})''',
                                  ),
-                     item_id(ondelete = "RESTRICT"),
-                     item_pack_id(ondelete = "SET NULL"),
+                     self.supply_item_id(ondelete = "RESTRICT"),
+                     self.supply_item_pack_id(),
                      # Now done as a VirtualField instead (looks better & updates closer to real-time, so less of a race condition)
                      #Field("req_quantity", "double",
                      #      # This isn't the Quantity requested, but rather the quantity still needed
@@ -6133,9 +6130,9 @@ class InventoryTrackingModel(S3Model):
                      send_id(),
                      # receive record
                      recv_id(),
-                     req_item_id(readable = False,
-                                 writable = False,
-                                 ),
+                     self.inv_req_item_id(readable = False,
+                                          writable = False,
+                                          ),
                      Field.Method("total_value",
                                   self.inv_track_item_total_value,
                                   ),
@@ -9030,8 +9027,8 @@ def inv_recv_controller():
                                                     "recv_quantity",
                                                     S3SQLInlineComponent("recv_bin",
                                                                          label = T("Add to Bins"),
-                                                                         fields = [(T("Bin"), "layout_id"),
-                                                                                   (T("Quantity"), "quantity"),
+                                                                         fields = ["layout_id",
+                                                                                   "quantity",
                                                                                    ],
                                                                          ),
                                                     "return_quantity",
@@ -9064,8 +9061,8 @@ def inv_recv_controller():
                                                     "recv_quantity",
                                                     S3SQLInlineComponent("recv_bin",
                                                                          label = T("Add to Bins"),
-                                                                         fields = [(T("Bin"), "layout_id"),
-                                                                                   (T("Quantity"), "quantity"),
+                                                                         fields = ["layout_id",
+                                                                                   "quantity",
                                                                                    ],
                                                                          ),
                                                     "pack_value",
@@ -9091,8 +9088,8 @@ def inv_recv_controller():
                                                     "expiry_date",
                                                     S3SQLInlineComponent("recv_bin",
                                                                          label = T("Add to Bins"),
-                                                                         fields = [(T("Bin"), "layout_id"),
-                                                                                   (T("Quantity"), "quantity"),
+                                                                         fields = ["layout_id",
+                                                                                   "quantity",
                                                                                    ],
                                                                          readonly = True,
                                                                          ),
@@ -9114,14 +9111,14 @@ def inv_recv_controller():
                                                     "expiry_date",
                                                     S3SQLInlineComponent("send_bin",
                                                                          label = T("Bins"),
-                                                                         fields = [(T("Bin"), "layout_id"),
-                                                                                   (T("Quantity"), "quantity"),
+                                                                         fields = ["layout_id",
+                                                                                   "quantity",
                                                                                    ],
                                                                          ),
                                                     S3SQLInlineComponent("recv_bin",
                                                                          label = T("Add to Bins"),
-                                                                         fields = [(T("Bin"), "layout_id"),
-                                                                                   (T("Quantity"), "quantity"),
+                                                                         fields = ["layout_id",
+                                                                                   "quantity",
                                                                                    ],
                                                                          ),
                                                     "item_source_no",
@@ -10152,15 +10149,14 @@ def inv_req_inline_form(method):
               "date",
               "priority",
               "date_required",
-              S3SQLInlineComponent(
-                "req_item",
-                label = T("Items"),
-                fields = ["item_id",
-                          "item_pack_id",
-                          "quantity",
-                          "comments"
-                          ]
-              ),
+              S3SQLInlineComponent("req_item",
+                                   label = T("Items"),
+                                   fields = ["item_id",
+                                             "item_pack_id",
+                                             "quantity",
+                                             "comments"
+                                             ]
+                                   ),
               #purpose
               "comments",
               ]
@@ -11323,8 +11319,8 @@ def inv_send_controller():
                                                     "quantity",
                                                     S3SQLInlineComponent("send_bin",
                                                                          label = T("Bins"),
-                                                                         fields = [(T("Bin"), "layout_id"),
-                                                                                   (T("Quantity"), "quantity"),
+                                                                         fields = ["layout_id",
+                                                                                   "quantity",
                                                                                    ],
                                                                          ),
                                                     "expiry_date",
@@ -11354,8 +11350,8 @@ def inv_send_controller():
                                                     "expiry_date",
                                                     S3SQLInlineComponent("recv_bin",
                                                                          label = T("Bins"),
-                                                                         fields = [(T("Bin"), "layout_id"),
-                                                                                   (T("Quantity"), "quantity"),
+                                                                         fields = ["layout_id",
+                                                                                   "quantity",
                                                                                    ],
                                                                          readonly = True,
                                                                          ),
@@ -11544,7 +11540,7 @@ def inv_send_controller():
                             req_ids = [row.req_id for row in reqs]
                             rtable = s3db.inv_req
                             ritable = s3db.inv_req_item
-                            riptable = s3db.get_aliased(iptable, "req_item_pack")
+                            #riptable = s3db.get_aliased(iptable, "req_item_pack")
                             if len(req_ids) == 1:
                                 query = (rtable.id == req_ids[0])
                             else:
@@ -11552,21 +11548,18 @@ def inv_send_controller():
                             query &= (ritable.req_id == rtable.id) & \
                                      (ritable.site_id == site_id) & \
                                      (ritable.quantity_transit < ritable.quantity) & \
-                                     (ritable.item_pack_id == riptable.id) & \
+                                     (ritable.item_pack_id == iptable.id) & \
                                      (ritable.item_id == iitable.item_id) & \
-                                     (iitable.site_id == site_id) & \
-                                     (iitable.item_pack_id == iptable.id)
+                                     (iitable.site_id == site_id)
                             items = db(query).select(iitable.id,
-                                                     iitable.quantity,
-                                                     iptable.quantity,
+                                                     iitable.quantity, # inv_pack_quantity done later, when adding packs
                                                      rtable.req_ref,
                                                      ritable.id,
                                                      ritable.quantity,
-                                                     riptable.quantity,
+                                                     iptable.quantity,
                                                      )
                             for row in items:
-                                inv_pack_quantity = row["supply_item_pack.quantity"]
-                                req_pack_quantity = row["req_item_pack.quantity"]
+                                req_pack_quantity = row["supply_item_pack.quantity"]
                                 req_ref = row["inv_req.req_ref"]
                                 inv_row = row["inv_inv_item"]
                                 req_row = row["inv_req_item"]
@@ -11578,7 +11571,7 @@ def inv_send_controller():
                                                                        "r": req_ref,
                                                                        })
                                 else:
-                                    inv_data[inv_item_id] = {"q": inv_row.quantity * inv_pack_quantity,
+                                    inv_data[inv_item_id] = {"q": inv_row.quantity,
                                                              "r": [{"i": req_row.id,
                                                                     "q": req_row.quantity * req_pack_quantity,
                                                                     "r": req_ref,
@@ -11633,11 +11626,9 @@ def inv_send_controller():
                         # Read Item Details
                         # @ToDo: This may have scalability issues if a site has a very large number of items
                         #        => Switch back to reading data per item via AJAX in this case
-                        query &= (iitable.item_pack_id == iptable.id)
                         left = ibtable.on(ibtable.inv_item_id == iitable.id)
                         items = db(query).select(iitable.id,
                                                  iitable.quantity,
-                                                 iptable.quantity,
                                                  ibtable.layout_id,
                                                  ibtable.quantity,
                                                  left = left,
@@ -11662,7 +11653,7 @@ def inv_send_controller():
                                          ]
                                 else:
                                     b = []
-                                inv_data[inv_item_id] = {"q": inv_row.quantity * row["supply_item_pack.quantity"],
+                                inv_data[inv_item_id] = {"q": inv_row.quantity,
                                                          "b": b,
                                                          }
 
@@ -11672,26 +11663,40 @@ def inv_send_controller():
                     # Add Packs to replace the filterOptionsS3 lookup
                     pack_query = query & (iitable.item_id == iptable.item_id)
                     rows = db(pack_query).select(iitable.id,
+                                                 iitable.item_pack_id,
                                                  iptable.id,
                                                  iptable.name,
                                                  iptable.quantity,
                                                  )
                     for row in rows:
-                        inv_item_id = row["inv_inv_item.id"]
-                        pack = row.supply_item_pack
+                        inv_row = row["inv_inv_item"]
+                        inv_item_id = inv_row.id
+                        inv_pack_id = inv_row.item_pack_id
                         this_data = inv_data[inv_item_id]
                         packs = this_data.get("p")
+                        pack_row = row.supply_item_pack
+                        pack_id = pack_row.id
+                        pack = {"i": pack_id,
+                                "n": pack_row.name,
+                                "q": pack_row.quantity,
+                                }
+                        if pack_id == inv_pack_id:
+                            # Default for inv_item & hence it's Bins
+                            pack["d"] = 1
                         if not packs:
-                            this_data["p"] = [{"i": pack.id,
-                                               "n": pack.name,
-                                               "q": pack.quantity,
-                                               },
-                                              ]
+                            this_data["p"] = [pack]
                         else:
-                            this_data["p"].append({"i": pack.id,
-                                                   "n": pack.name,
-                                                   "q": pack.quantity,
-                                                   })
+                            this_data["p"].append(pack)
+
+                    binned_quantity = ""
+                    if track_item_id:
+                        # Update form
+                        # add binnedQuantity if there are multiple Bins to manage
+                        isbtable = s3db.inv_send_item_bin
+                        bins = db(isbtable.track_item_id == track_item_id).select(isbtable.quantity)
+                        if len(bins) > 1:
+                            binned_quantity = '''
+S3.supply.binnedQuantity=%s''' % sum([row.quantity for row in bins])
 
                     # Pass data to s3.inv_send_item.js
                     # When send_inv_item_id is selected
@@ -11700,9 +11705,10 @@ def inv_send_controller():
                     # - set/filter Bins
                     # - set req_item_id (if coming from a Request)
                     s3.js_global.append('''S3.supply.inv_items=%s
-S3.supply.site_id=%s''' % (json.dumps(inv_data, separators=SEPARATORS),
-                           site_id,
-                           ))
+S3.supply.site_id=%s%s''' % (json.dumps(inv_data, separators=SEPARATORS),
+                             site_id,
+                             binned_quantity,
+                             ))
 
         else:
             # No Component
@@ -13381,6 +13387,108 @@ def inv_track_item_onaccept(form):
             db(tracktable.id == record_id).update(**data)
 
 # =============================================================================
+def inv_warehouse_controller():
+    """
+        RESTful CRUD controller
+
+        Defined in the model for forwards from org/site controller
+    """
+
+    s3 = current.response.s3
+    request = current.request
+    get_vars = request.get_vars
+
+    request_args = request.args
+    if "viewing" in get_vars:
+        viewing = get_vars.viewing
+        tn, record_id = viewing.split(".", 1)
+        if tn == "inv_warehouse":
+            request_args.insert(0, record_id)
+
+    # CRUD pre-process
+    def prep(r):
+        # Function to call for all Site Instance Types
+        from .org import org_site_prep
+        org_site_prep(r)
+
+        # "show_obsolete" var option can be added (btn?) later to disable this filter
+        # @ToDo: Better to do this using a default_filter BUT we then need to have the filter visible, which isn't great UX for a little-used filter...
+        if r.method in [None, "list"] and \
+            not r.vars.get("show_obsolete", False):
+            r.resource.add_filter(current.db.inv_warehouse.obsolete != True)
+
+        # Add this to Template if-desired
+        #if r.representation == "xls":
+        #    list_fields = r.resource.get_config("list_fields")
+        #    list_fields += ["location_id$lat",
+        #                    "location_id$lon",
+        #                    "location_id$inherited",
+        #                    ]
+
+        return True
+    s3.prep = prep
+
+    # CRUD post-process
+    def postp(r, output):
+        if r.interactive and not r.component and r.method != "import":
+            if current.auth.s3_has_permission("read", "inv_inv_item"):
+                # Change Action buttons to open Stock Tab by default
+                read_url = URL(f = "warehouse",
+                               args = ["[id]", "inv_item"],
+                               )
+                update_url = URL(f = "warehouse",
+                                 args = ["[id]", "inv_item"],
+                                 )
+                S3CRUD.action_buttons(r,
+                                      read_url = read_url,
+                                      update_url = update_url,
+                                      )
+        else:
+            cname = r.component_name
+            if cname == "human_resource":
+                # Modify action button to open staff instead of human_resource
+                read_url = URL(c="hrm", f="staff",
+                               args = ["[id]"],
+                               )
+                update_url = URL(c="hrm", f="staff",
+                                 args = ["[id]", "update"],
+                                 )
+                S3CRUD.action_buttons(r,
+                                      read_url = read_url,
+                                      #delete_url = delete_url,
+                                      update_url = update_url,
+                                      )
+        return output
+    s3.postp = postp
+
+    if "extra_data" in get_vars:
+        resourcename = "inv_item"
+    else:
+        resourcename = "warehouse"
+    csv_stylesheet = "%s.xsl" % resourcename
+
+    if len(request_args) > 1 and request_args[1] in ("req", "send", "recv"):
+        # Sends/Receives should break out of Component Tabs
+        # to allow access to action buttons in inv_recv rheader
+        native = True
+    else:
+        native = False
+
+    return current.rest_controller(#hide_filter = {"inv_item": False,
+                                   #               "_default": True,
+                                   #               },
+                                   # Extra fields for CSV uploads:
+                                   #csv_extra_fields = [{"label": "Organisation",
+                                   #                     "field": s3db.org_organisation_id(comment = None)
+                                   #                     },
+                                   #                    ]
+                                   csv_stylesheet = csv_stylesheet,
+                                   csv_template = resourcename,
+                                   native = native,
+                                   rheader = inv_rheader,
+                                   )
+
+# =============================================================================
 def inv_warehouse_free_capacity(site_id):
     """
         Update the Warehouse Free Capacity
@@ -13430,7 +13538,7 @@ def inv_warehouse_free_capacity(site_id):
     tablename = "inv_warehouse"
     customise = current.deployment_settings.customise_resource(tablename)
     if customise:
-        r = S3Request("inv", "warehouse", args=[], vars={})
+        r = s3_request("inv", "warehouse", args=[], vars={})
         customise(r, tablename)
     on_free_capacity_update = s3db.get_config(tablename, "on_free_capacity_update")
     if on_free_capacity_update:

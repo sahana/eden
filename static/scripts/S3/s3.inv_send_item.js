@@ -31,6 +31,8 @@ $(document).ready(function() {
             errorField = $('#quantity__error'),
             i,
             inlineComponent = $('#sub-defaultsend_bin'),
+            InvQuantity,
+            InvPackQuantity,
             ItemPackField = $('#inv_track_item_item_pack_id'),
             newBinQuantityField = $('#sub_defaultsend_bin_defaultsend_bin_i_quantity_edit_none'),
             newTree = $('#sub_defaultsend_bin_defaultsend_bin_i_layout_id_edit_none-hierarchy'),
@@ -47,25 +49,37 @@ $(document).ready(function() {
             startingInvItemID = invItemField.val(),
             startingQuantity,
             startingPackID,
+            startingPackQuantity,
             stockQuantity, // Available Stock
             totalQuantity, // Value in QuantityField
             trees = $('div[id^="sub_defaultsend_bin_defaultsend_bin_i_layout_id"].s3-hierarchy-widget'); // There will be 3
-
 
         if (ReqItemRow.length) {
             // Hide it by Default
             ReqItemRow.hide();
         }
 
-        var updateBinQuantity = function() {
+        var updateBinQuantity = function(start) {
             // Show the Bins
             binRow.show();
-            // Populate the Bin fields
-            binQuantity = bins[0].q;
+            // Populate the Bin Quantity field
+            if (!start) {
+                binQuantity = newBinQuantityField.val(); // Current qty from Bin in this Send Item
+                if (binQuantity) {
+                    binnedQuantity -= parseFloat(binQuantity);
+                }
+            }
+            binQuantity = bins[0].q; // Inv qty in Bin
             if (binQuantity > totalQuantity) {
                 newBinQuantityField.val(totalQuantity);
+                if (!start) {
+                    binnedQuantity += totalQuantity;
+                }
             } else {
                 newBinQuantityField.val(binQuantity);
+                if (!start) {
+                    binnedQuantity += binQuantity;
+                }
             }
         };
 
@@ -73,10 +87,9 @@ $(document).ready(function() {
             // Update the available packs for this item
             // Display the number of these items available in this site's inventory
 
-            var inv_item_id = invItemField.val(),
-                startingPackQuantity;
+            var inv_item_id = invItemField.val();
 
-            // Remove old Items
+            // Remove old Elements
             ItemPackField.html('');
             if (update) {
                  // Don't clear for update forms
@@ -94,12 +107,50 @@ $(document).ready(function() {
             // @ToDo: if (!inv_items) {read data for this item via AJAX call} for when sites have a very large number of items
 
             var data = inv_items[inv_item_id],
-                first = true,
+                defaultPack,
                 packs = data.p,
                 packsLength = packs.length,
                 req_items = data.r,
-                InvQuantity = data.q,
                 updateSendQuantity;
+
+            InvQuantity = data.q;
+
+            for (i = 0; i < packsLength; i++) {
+                pack = packs[i];
+                if (pack.q == 1) {
+                    piece = pack.n;
+                    break;
+                }
+            }
+
+            // Update available Packs
+            for (i = 0; i < packsLength; i++) {
+                pack = packs[i];
+                if (pack.d != undefined) {
+                    defaultPack = true;
+                    InvPackQuantity = pack.q;
+                } else {
+                    defaultPack = false;
+                }
+                if (startingPackID && (startingInvItemID == inv_item_id) && (startingPackID == pack.i)) {
+                    startingPackQuantity = pack.q;
+                    PackQuantity = pack.q;
+                    PackName = pack.n;
+                    selected = ' selected';
+                } else if (defaultPack) {
+                    PackQuantity = pack.q;
+                    PackName = pack.n;
+                    selected = ' selected';
+                } else {
+                    selected = '';
+                }
+                if (pack.q !== 1) {
+                    opt = '<option value="' + pack.i + '"' + selected + '>' + pack.n + ' (' + pack.q + ' x ' + piece + ')</option>';
+                } else {
+                    opt = '<option value="' + pack.i + '"' + selected + '>' + pack.n + '</option>';
+                }
+                ItemPackField.append(opt);
+            }
 
             // Empty the Bins field
             inlineComponent.inlinecomponent('removeRows');
@@ -114,7 +165,7 @@ $(document).ready(function() {
                 // Show the Bins
                 binRow.show();
                 // Populate the Bin fields
-                updateBinQuantity();
+                updateBinQuantity(true);
                 var onTreeReady = function() {
                     newTree.hierarchicalopts('set', [bins[0].l]);
                     // Make read-only
@@ -136,52 +187,29 @@ $(document).ready(function() {
                 // Split across multiple Bins
                 // Show the Bins
                 binRow.show();
-                // Make read-write
-                newBinQuantityField.removeAttr('disabled');
-                $('#add-row-defaultsend_bin > .subform-action').show();
-                newTree.next('.s3_inline_add_resource_link').show();
-                $('.s3-hierarchy-button').removeAttr('disabled');
-                // We run before the hierarchicalopts so need to wait for tree to be ready
-                newTree.find('.s3-hierarchy-tree').first().on('ready.jstree', function() {
+                var onTreeReady = function() {
+                    // Make read-write
+                    newBinQuantityField.removeAttr('disabled');
+                    $('#add-row-defaultsend_bin > .subform-action').show();
+                    newTree.next('.s3_inline_add_resource_link').show();
+                    $('.s3-hierarchy-button').removeAttr('disabled');
                     // Filter to the available bins
+                    // @ToDo: Make 1 server-side call & apply results to all 3 trees
                     ajaxURL = S3.Ap.concat('/org/site/' + siteID + '/layout/hierarchy.tree?inv_item_id=' + inv_item_id);
                     trees.hierarchicalopts('reload', ajaxURL);
                     // Manage the allocations from where the items are pulled
                     // - see s3.inv_adj_item.js
                     // have this be optional & allow automation in form postprocess? Visible via both screen & picklist.xls
-                });
-            }
-
-            for (i = 0; i < packsLength; i++) {
-                pack = packs[i];
-                if (pack.q == 1) {
-                    piece = pack.n;
-                    break;
-                }
-            }
-
-            // Update available Packs
-            for (i = 0; i < packsLength; i++) {
-                pack = packs[i];
-                if (startingPackID && (startingInvItemID == inv_item_id) && (startingPackID == pack.i)) {
-                    startingPackQuantity = pack.q;
-                    PackQuantity = pack.q;
-                    PackName = pack.n;
-                    selected = ' selected';
-                } else if (first) {
-                    PackQuantity = pack.q;
-                    PackName = pack.n;
-                    selected = ' selected';
+                };
+                if (newTree.is(":data('s3-hierarchicalopts')")) {
+                    // Tree is already ready
+                    onTreeReady();
                 } else {
-                    selected = '';
+                    // We run before the hierarchicalopts so need to wait for tree to be ready
+                    newTree.find('.s3-hierarchy-tree').first().on('ready.jstree', function() {
+                        onTreeReady();
+                    });
                 }
-                if (pack.q !== 1) {
-                    opt = '<option value="' + pack.i + '"' + selected + '>' + pack.n + ' (' + pack.q + ' x ' + piece + ')</option>';
-                } else {
-                    opt = '<option value="' + pack.i + '"' + selected + '>' + pack.n + '</option>';
-                }
-                ItemPackField.append(opt);
-                first = false;
             }
 
             if (errorField.length) {
@@ -196,7 +224,7 @@ $(document).ready(function() {
             } else {
                 // Calculate Available Stock Quantity for this Pack
                 // - inv_quantity will be the same in every row
-                stockQuantity = InvQuantity / PackQuantity; // inv_quantity includes inv_pack_quantity
+                stockQuantity = InvQuantity * InvPackQuantity / PackQuantity;
                 if (startingQuantity && (startingInvItemID == inv_item_id)) {
                     stockQuantity += (startingQuantity * startingPackQuantity / PackQuantity);
                 }
@@ -306,7 +334,7 @@ $(document).ready(function() {
                             PackQuantity = pack.q;
                             PackName = pack.n;
                             // Calculate Available Stock Quantity for this Pack
-                            stockQuantity = InvQuantity / PackQuantity;
+                            stockQuantity = InvQuantity * InvPackQuantity / PackQuantity;
                             if (startingQuantity && (startingInvItemID == inv_item_id)) {
                                 stockQuantity += (startingQuantity * startingPackQuantity / PackQuantity);
                             }
@@ -330,6 +358,14 @@ $(document).ready(function() {
 
         if (startingInvItemID) {
             // Update form
+            if (binnedQuantity == 0) {
+                binnedQuantity = oldBinQuantityField.val();
+                if (binnedQuantity) {
+                    binnedQuantity = parseFloat(binnedQuantity);
+                } else {
+                    binnedQuantity = 0;
+                }
+            }
             startingQuantity = QuantityField.val();
             if (startingQuantity) {
                 startingQuantity = parseFloat(startingQuantity);
@@ -375,6 +411,10 @@ $(document).ready(function() {
             } else {
                 totalQuantity = 0;
             }
+            if (binsLength == 1) {
+                // Update the Bin Quantity field
+                updateBinQuantity();
+            }
             if (totalQuantity > stockQuantity) {
                 // @ToDo: i18n
                 message = 'Total Quantity reduced to Quantity in Stock';
@@ -393,10 +433,6 @@ $(document).ready(function() {
                     $(this).fadeOut('slow').remove();
                     return false;
                 });
-            }
-            if (binsLength == 1) {
-                // Update the Bin Quantity field
-                updateBinQuantity();
             }
             // Validate the new bin again
             newBinQuantityField.change();

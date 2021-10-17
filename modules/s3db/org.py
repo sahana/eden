@@ -1016,8 +1016,7 @@ class OrganisationBranchModel(S3Model):
                 tablename = "org_organisation_organisation_type"
                 customise = current.deployment_settings.customise_resource(tablename)
                 if customise:
-                    from s3 import S3Request
-                    r = S3Request("org", "organisation_type", args=[], vars={})
+                    r = s3_request("org", "organisation_type", args=[], vars={})
                     customise(r, tablename)
                 onaccept = s3db.get_config(tablename, "onaccept")
                 for organisation_type_id in org_types - branch_types:
@@ -7941,6 +7940,7 @@ def org_site_layout_config(site_id, field=None):
             pass
     else:
         field = table.parent
+
     requires = field.requires
     if hasattr(requires, "other"):
         requires.other.set_filter(filterby = "site_id",
@@ -8065,9 +8065,19 @@ def org_site_prep(r):
             #    except:
             #        pass
 
-        elif component_name == "layout" and \
-             r.method != "hierarchy":
-            org_site_layout_config(r.record.site_id)
+        elif component_name == "layout":
+            if r.method == "hierarchy":
+                inv_item_id = r.get_vars.get("inv_item_id")
+                if inv_item_id:
+                    # Restrict to just Bins for this Inv Item
+                    # - called by s3.inv_send_item.js
+                    s3db = current.s3db
+                    ibtable = s3db.inv_inv_item_bin
+                    rows = current.db(ibtable.inv_item_id == inv_item_id).select(ibtable.layout_id)
+                    bins = [row.layout_id for row in rows]
+                    current.response.s3.filter = (s3db.org_site_layout.id.belongs(bins))
+            else:
+                org_site_layout_config(r.record.site_id)
 
         elif component_name == "req":
             if r.method != "update" and r.method != "read":

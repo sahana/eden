@@ -20,7 +20,8 @@ def index():
 def disease():
     """ Disease Information Controller """
 
-    return s3_rest_controller(rheader = s3db.disease_rheader)
+    from s3db.disease import disease_rheader
+    return s3_rest_controller(rheader = disease_rheader)
 
 # -----------------------------------------------------------------------------
 def case():
@@ -40,7 +41,7 @@ def case():
         else:
             dtable = s3db.disease_disease
             diseases = db(dtable.deleted == False).select(dtable.id,
-                                                          limitby=(0, 2)
+                                                          limitby = (0, 2),
                                                           )
             if len(diseases) == 1:
                 # Default to only disease
@@ -65,8 +66,8 @@ def case():
                 msg_record_created = T("Contact added"),
                 msg_record_modified = T("Contact updated"),
                 msg_record_deleted = T("Contact deleted"),
-                msg_list_empty = T("No Close Contacts currently registered"))
-
+                msg_list_empty = T("No Close Contacts currently registered"),
+                )
 
         return True
     s3.prep = prep
@@ -79,7 +80,8 @@ def case():
         return output
     s3.postp = postp
 
-    return s3_rest_controller(rheader = s3db.disease_rheader)
+    from s3db.disease import disease_rheader
+    return s3_rest_controller(rheader = disease_rheader)
 
 # -----------------------------------------------------------------------------
 def person():
@@ -112,10 +114,11 @@ def person():
                     r.error(404, current.ERROR.BAD_RECORD)
 
                 # Update the request
-                request = s3base.S3Request("pr", "person",
-                                           args = [str(row.person_id)],
-                                           vars = {},
-                                           )
+                from s3 import s3_request, S3SQLInlineComponent, S3SQLCustomForm
+                request = s3_request("pr", "person",
+                                     args = [str(row.person_id)],
+                                     vars = {},
+                                     )
                 r.resource = resource = request.resource
                 r.record = request.record
                 r.id = request.id
@@ -126,7 +129,6 @@ def person():
                 name_fields = [fn for fn in keys if fn in NAMES]
 
                 # Fields in form
-                from s3 import S3SQLInlineComponent
                 crud_fields = name_fields + \
                               ["gender",
                                "date_of_birth",
@@ -152,7 +154,7 @@ def person():
                                     ),
                                ]
 
-                resource.configure(crud_form = s3base.S3SQLCustomForm(*crud_fields),
+                resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
                                    deletable = False,
                                    )
             return True
@@ -171,8 +173,9 @@ def person():
         return output
     s3.postp = postp
 
+    from s3db.disease import disease_rheader
     return s3_rest_controller("pr", "person",
-                              rheader = s3db.disease_rheader,
+                              rheader = disease_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -195,7 +198,8 @@ def tracing():
         return True
     s3.prep = prep
 
-    return s3_rest_controller(rheader = s3db.disease_rheader)
+    from s3db.disease import disease_rheader
+    return s3_rest_controller(rheader = disease_rheader)
 
 # -----------------------------------------------------------------------------
 def testing_report():
