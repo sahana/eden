@@ -1038,7 +1038,8 @@ def config(settings):
         target_ids = []
         template_ids = []
 
-
+        # @ToDo: Do this in ondelete_cascade instead
+        #        - tbhis isn't scalable
         ltable = s3db.project_project_target
         rows = db(ltable.deleted == True).select(ltable.deleted_fk)
         for row in rows:

@@ -4333,21 +4333,15 @@ class ProjectOrganisationModel(S3Model):
 
         db = current.db
         potable = db.project_organisation
-        ptable = db.project_project
-        query = (potable.id == row.get("id"))
-        deleted_row = db(query).select(potable.deleted_fk,
-                                       potable.role,
-                                       limitby = (0, 1),
-                                       ).first()
+        deleted_row = db(potable.id == row.id).select(potable.role,
+                                                      limitby = (0, 1),
+                                                      ).first()
 
         if str(deleted_row.role) == \
            str(current.deployment_settings.get_project_organisation_lead_role()):
-            # Get the project_id
-            deleted_fk = json.loads(deleted_row.deleted_fk)
-            project_id = deleted_fk["project_id"]
 
             # Set the project organisation_id to NULL (using None)
-            db(ptable.id == project_id).update(organisation_id = None)
+            db(db.project_project.id == row.project_id).update(organisation_id = None)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5808,20 +5802,14 @@ class ProjectPlanningModel(S3Model):
         db = current.db
         s3db = current.s3db
         table = s3db.project_indicator_data
-        record_id = row.get("id")
+        record_id = row.id
+        indicator_id = row.indicator_id
 
         # Read the Indicator Data record
-        record = db(table.id == record_id).select(table.deleted_fk,
-                                                  table.start_date,
+        record = db(table.id == record_id).select(table.start_date,
                                                   table.end_date,
                                                   limitby = (0, 1),
                                                   ).first()
-        try:
-            fks = json.loads(record.deleted_fk)
-            indicator_id = fks["indicator_id"]
-        except:
-            current.log.error("Cannot find Project Indicator Data record (no record for this ID), so cannot update start_date or statuses")
-            return
         start_date = record.start_date
         end_date = record.end_date
 
@@ -6131,29 +6119,24 @@ class ProjectPlanningModel(S3Model):
             Update Project Status at all levels
         """
 
-        db = current.db
-        s3db = current.s3db
-        table = s3db.project_activity_data
-        record_id = row.get("id")
-
-        # Read the Activity Data record
-        record = db(table.id == record_id).select(table.deleted_fk,
-                                                  table.start_date,
-                                                  table.end_date,
-                                                  limitby = (0, 1),
-                                                  ).first()
-        try:
-            fks = json.loads(record.deleted_fk)
-            indicator_activity_id = fks["indicator_activity_id"]
-        except:
-            current.log.error("Cannot find Project Activity Data record (no record for this ID), so cannot update start_date or statuses")
-            return
+        indicator_activity_id = row.indicator_activity_id
 
         if not indicator_activity_id:
             # SHARE
             return
 
         # RMS HNRC
+        db = current.db
+        s3db = current.s3db
+        table = s3db.project_activity_data
+        record_id = row.id
+
+        # Read the Activity Data record
+        record = db(table.id == record_id).select(table.start_date,
+                                                  table.end_date,
+                                                  limitby = (0, 1),
+                                                  ).first()
+
         start_date = record.start_date
         end_date = record.end_date
 

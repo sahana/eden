@@ -6349,7 +6349,6 @@ def hrm_human_resource_onaccept(form):
                                                htable.site_contact,
                                                htable.status,
                                                htable.deleted,
-                                               htable.deleted_fk,
                                                limitby = (0, 1),
                                                ).first()
 
@@ -6660,8 +6659,9 @@ def hrm_compose():
                 (htable.person_id == table.id)
         title = current.T("Send a message to this person")
         # URL to redirect to after message sent
-        url = URL(f="compose",
-                  vars={fieldname: record_id})
+        url = URL(f = "compose",
+                  vars = {fieldname: record_id},
+                  )
     elif "group_id" in get_vars:
         fieldname = "group_id"
         record_id = get_vars.group_id
@@ -6669,21 +6669,22 @@ def hrm_compose():
         query = (table.id == record_id)
         title = current.T("Send a message to this team")
         # URL to redirect to after message sent
-        url = URL(f="compose",
-                  vars={fieldname: record_id})
+        url = URL(f = "compose",
+                  vars = {fieldname: record_id},
+                  )
     elif "training_event.id" in get_vars:
         fieldname = "training_event.id"
         record_id = get_vars.get(fieldname)
         pe_id = get_vars.pe_id
         title = current.T("Message Participants")
         # URL to redirect to after message sent
-        url = URL(f="training_event",
+        url = URL(f = "training_event",
                   args = record_id,
                   )
 
     else:
         current.session.error = current.T("Record not found")
-        redirect(URL(f="index"))
+        redirect(URL(f = "index"))
 
     if not pe_id:
         db = current.db
@@ -6692,7 +6693,7 @@ def hrm_compose():
                               ).first()
         if not pe:
             current.session.error = current.T("Record not found")
-            redirect(URL(f="index"))
+            redirect(URL(f = "index"))
 
         pe_id = pe.pe_id
 
@@ -6707,11 +6708,12 @@ def hrm_compose():
             s3db.msg_outbox.contact_method.default = contact.contact_method
         else:
             current.session.error = current.T("No contact method found")
-            redirect(URL(f="index"))
+            redirect(URL(f = "index"))
 
     # Create the form
     output = current.msg.compose(recipient = pe_id,
-                                 url = url)
+                                 url = url,
+                                 )
 
     output["title"] = title
 
@@ -8409,9 +8411,11 @@ def hrm_human_resource_controller(extra_filter = None):
                     else:
                         c = "hrm"
                         f = "staff"
+                    # @ToDo: Forward instead? (see org/site)
                     redirect(URL(c=c, f=f,
-                                 args=r.args,
-                                 vars=r.vars))
+                                 args = r.args,
+                                 vars = r.vars,
+                                 ))
 
             elif method == "delete":
                 if deploy:
@@ -8445,6 +8449,7 @@ def hrm_human_resource_controller(extra_filter = None):
 
             elif r.id:
                 # Redirect to person controller
+                # @ToDo: Forward instead? (see org/site)
                 if r.record.type == 2:
                     group = "volunteer"
                 else:
@@ -8531,30 +8536,36 @@ def hrm_person_controller(**attr):
     if "all" in contacts_tabs:
         set_method("pr", "person",
                    method = "contacts",
-                   action = s3db.pr_Contacts)
+                   action = s3db.pr_Contacts,
+                   )
     if "public" in contacts_tabs:
         set_method("pr", "person",
                    method = "public_contacts",
-                   action = s3db.pr_Contacts)
+                   action = s3db.pr_Contacts,
+                   )
     if "private" in contacts_tabs:
         set_method("pr", "person",
                    method = "private_contacts",
-                   action = s3db.pr_Contacts)
+                   action = s3db.pr_Contacts,
+                   )
 
     # Custom Method for CV
     set_method("pr", "person",
                method = "cv",
-               action = hrm_CV)
+               action = hrm_CV,
+               )
 
     # Custom Method for Medical
     set_method("pr", "person",
                method = "medical",
-               action = hrm_Medical)
+               action = hrm_Medical,
+               )
 
     # Custom Method for HR Record
     set_method("pr", "person",
                method = "record",
-               action = hrm_Record)
+               action = hrm_Record,
+               )
 
     if settings.has_module("asset"):
         # Assets as component of people
@@ -8644,19 +8655,19 @@ def hrm_person_controller(**attr):
         s3.crud_strings[tablename].update(
                 title_upload = T("Import Contacts"),
                 title_display = T("Contact Details"),
-                title_update = T("Contact Details")
+                title_update = T("Contact Details"),
                 )
     elif group == "volunteer":
         s3.crud_strings[tablename].update(
                 title_upload = T("Import Volunteers"),
                 title_display = T("Volunteer Details"),
-                title_update = T("Volunteer Details")
+                title_update = T("Volunteer Details"),
                 )
     else:
         s3.crud_strings[tablename].update(
                 title_upload = T("Import Staff"),
                 title_display = T("Staff Member Details"),
-                title_update = T("Staff Member Details")
+                title_update = T("Staff Member Details"),
                 )
 
     # Import pre-process
@@ -8834,7 +8845,7 @@ def hrm_person_controller(**attr):
                             T.force(language)
                             session.s3.language = language
                     s3db.configure("auth_user",
-                                   onaccept = auth_user_onaccept
+                                   onaccept = auth_user_onaccept,
                                    )
 
             if method == "record" or r.component_name == "human_resource":
@@ -9045,7 +9056,8 @@ def hrm_training_event_controller():
                     msg_record_created = T("Survey added"),
                     msg_record_modified = T("Survey updated"),
                     msg_record_deleted = T("Survey deleted"),
-                    msg_list_empty = T("No Surveys currently registered"))
+                    msg_list_empty = T("No Surveys currently registered"),
+                    )
             else:
                 #label = T("Assessment")
                 s3.crud_strings[tablename] = Storage(
@@ -9059,7 +9071,8 @@ def hrm_training_event_controller():
                     msg_record_created = T("Assessment added"),
                     msg_record_modified = T("Assessment updated"),
                     msg_record_deleted = T("Assessment deleted"),
-                    msg_list_empty = T("No Assessments currently registered"))
+                    msg_list_empty = T("No Assessments currently registered"),
+                    )
 
             # Open in native controller
             current.s3db.configure(tablename,
@@ -9091,7 +9104,8 @@ def hrm_training_event_controller():
                 msg_record_modified = T("Participant updated"),
                 msg_record_deleted = T("Participant removed"),
                 msg_no_match = T("No entries found"),
-                msg_list_empty = T("Currently no Participants registered"))
+                msg_list_empty = T("Currently no Participants registered"),
+                )
 
             # Hide/default fields which get populated from the Event
             record = r.record
@@ -9168,7 +9182,8 @@ def hrm_xls_list_fields(r, staff=True, vol=True):
     settings = current.deployment_settings
     table = r.table
     table.organisation_id.represent = s3db.org_OrganisationRepresent(acronym = False,
-                                                                     parent = False)
+                                                                     parent = False,
+                                                                     )
     table.site_id.represent = s3db.org_SiteRepresent(show_type = False)
 
     current.messages["NONE"] = "" # Don't want to see "-"

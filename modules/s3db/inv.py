@@ -9170,100 +9170,102 @@ def inv_recv_controller():
                     deletable = True
                     editable = True
                     insertable = True
-                    # Adjust CRUD strings
-                    s3.crud_strings.inv_recv.title_update = \
-                    s3.crud_strings.inv_recv.title_display = T("Process Received Shipment")
-                    # Limit to Bins from this site
-                    from .org import org_site_layout_config
-                    org_site_layout_config(record.site_id, s3db.inv_recv_item_bin.layout_id)
-                    if settings.get_inv_recv_req():
-                        rrtable = s3db.inv_recv_req
-                        reqs = db(rrtable.recv_id == r.id).select(rrtable.req_id)
-                        if reqs:
-                            # Allow populating req_item_id
-                            f = tracktable.req_item_id
-                            f.writable = True
-                            f.comment = None
-                            f.label = T("Request")
-                            # Items use dropdown, not Autocomplete
-                            f = tracktable.item_id
-                            f.comment = None # Cannot create new Items here
-                            f.widget = None
-                            # We replace filterOptionsS3
-                            tracktable.item_pack_id.comment = None
-                            if s3.debug:
-                                s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_item.js" % r.application)
-                            else:
-                                s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_item.min.js" % r.application)
-                            # Filter to Items in the Request(s) which have not yet been received
-                            rtable = s3db.inv_req
-                            ritable = s3db.inv_req_item
-                            iptable = s3db.supply_item_pack
-                            req_ids = [row.req_id for row in reqs]
-                            if len(req_ids) == 1:
-                                query = (rtable.id == req_ids[0])
-                            else:
-                                query = (rtable.id.belongs(req_ids))
-                            query &= (ritable.req_id == rtable.id) & \
-                                     (ritable.quantity_fulfil < ritable.quantity) & \
-                                     (ritable.item_pack_id == iptable.id)
-                            items = db(query).select(rtable.req_ref,
-                                                     ritable.id,
-                                                     ritable.item_id,
-                                                     ritable.quantity,
-                                                     iptable.quantity,
-                                                     )
-                            item_ids = [row["inv_req_item.item_id"] for row in items]
-                            f.requires.set_filter(filterby = "id",
-                                                  filter_opts = item_ids,
-                                                  )
-                            item_data = {}
-                            for row in items:
-                                req_pack_quantity = row["supply_item_pack.quantity"]
-                                req_ref = row["inv_req.req_ref"]
-                                req_row = row["inv_req_item"]
-                                item_id = req_row.item_id
-                                if item_id in item_data:
-                                    item_data[item_id]["req_items"].append({"req_item_id": req_row.id,
-                                                                            "req_quantity": req_row.quantity * req_pack_quantity,
-                                                                            "req_ref": req_ref,
-                                                                            })
-                                else:
-                                    item_data[item_id] = {"req_items": [{"req_item_id": req_row.id,
-                                                                         "req_quantity": req_row.quantity * req_pack_quantity,
-                                                                         "req_ref": req_ref,
-                                                                         }],
-                                                          }
-                            # Remove req_ref when there are no duplicates to distinguish
-                            for item_id in item_data:
-                                req_items = item_data[item_id]["req_items"]
-                                if len(req_items) == 1:
-                                    req_items[0].pop("req_ref")
+                    if r.interactive:
+                        # Adjust CRUD strings
+                        s3.crud_strings.inv_recv.title_update = \
+                        s3.crud_strings.inv_recv.title_display = T("Process Received Shipment")
+                        if r.method in (None, "update"):
+                            # Limit to Bins from this site
+                            from .org import org_site_layout_config
+                            org_site_layout_config(record.site_id, s3db.inv_recv_item_bin.layout_id)
+                            if settings.get_inv_recv_req():
+                                rrtable = s3db.inv_recv_req
+                                reqs = db(rrtable.recv_id == r.id).select(rrtable.req_id)
+                                if reqs:
+                                    # Allow populating req_item_id
+                                    f = tracktable.req_item_id
+                                    f.writable = True
+                                    f.comment = None
+                                    f.label = T("Request")
+                                    # Items use dropdown, not Autocomplete
+                                    f = tracktable.item_id
+                                    f.comment = None # Cannot create new Items here
+                                    f.widget = None
+                                    # We replace filterOptionsS3
+                                    tracktable.item_pack_id.comment = None
+                                    if s3.debug:
+                                        s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_item.js" % r.application)
+                                    else:
+                                        s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_item.min.js" % r.application)
+                                    # Filter to Items in the Request(s) which have not yet been received
+                                    rtable = s3db.inv_req
+                                    ritable = s3db.inv_req_item
+                                    iptable = s3db.supply_item_pack
+                                    req_ids = [row.req_id for row in reqs]
+                                    if len(req_ids) == 1:
+                                        query = (rtable.id == req_ids[0])
+                                    else:
+                                        query = (rtable.id.belongs(req_ids))
+                                    query &= (ritable.req_id == rtable.id) & \
+                                             (ritable.quantity_fulfil < ritable.quantity) & \
+                                             (ritable.item_pack_id == iptable.id)
+                                    items = db(query).select(rtable.req_ref,
+                                                             ritable.id,
+                                                             ritable.item_id,
+                                                             ritable.quantity,
+                                                             iptable.quantity,
+                                                             )
+                                    item_ids = [row["inv_req_item.item_id"] for row in items]
+                                    f.requires.set_filter(filterby = "id",
+                                                          filter_opts = item_ids,
+                                                          )
+                                    item_data = {}
+                                    for row in items:
+                                        req_pack_quantity = row["supply_item_pack.quantity"]
+                                        req_ref = row["inv_req.req_ref"]
+                                        req_row = row["inv_req_item"]
+                                        item_id = req_row.item_id
+                                        if item_id in item_data:
+                                            item_data[item_id]["req_items"].append({"req_item_id": req_row.id,
+                                                                                    "req_quantity": req_row.quantity * req_pack_quantity,
+                                                                                    "req_ref": req_ref,
+                                                                                    })
+                                        else:
+                                            item_data[item_id] = {"req_items": [{"req_item_id": req_row.id,
+                                                                                 "req_quantity": req_row.quantity * req_pack_quantity,
+                                                                                 "req_ref": req_ref,
+                                                                                 }],
+                                                                  }
+                                    # Remove req_ref when there are no duplicates to distinguish
+                                    for item_id in item_data:
+                                        req_items = item_data[item_id]["req_items"]
+                                        if len(req_items) == 1:
+                                            req_items[0].pop("req_ref")
 
-                            # Add Packs to replace the filterOptionsS3 lookup
-                            rows = db(iptable.item_id.belongs(item_ids)).select(iptable.id,
-                                                                                iptable.item_id,
-                                                                                iptable.name,
-                                                                                iptable.quantity,
-                                                                                )
-                            for row in rows:
-                                item_id = row.item_id
-                                this_data = item_data[item_id]
-                                packs = this_data.get("packs")
-                                if not packs:
-                                    this_data["packs"] = [{"id": row.id,
-                                                           "name": row.name,
-                                                           "quantity": row.quantity,
-                                                           },
-                                                          ]
-                                else:
-                                    this_data["packs"].append({"id": row.id,
-                                                               "name": row.name,
-                                                               "quantity": row.quantity,
-                                                               })
-                            # Pass data to inv_recv_item.js
-                            # to Apply req_item_id & quantity when item_id selected
-                            s3.js_global.append('''S3.supply.item_data=%s''' % json.dumps(item_data, separators=SEPARATORS))
+                                    # Add Packs to replace the filterOptionsS3 lookup
+                                    rows = db(iptable.item_id.belongs(item_ids)).select(iptable.id,
+                                                                                        iptable.item_id,
+                                                                                        iptable.name,
+                                                                                        iptable.quantity,
+                                                                                        )
+                                    for row in rows:
+                                        item_id = row.item_id
+                                        this_data = item_data[item_id]
+                                        packs = this_data.get("packs")
+                                        if not packs:
+                                            this_data["packs"] = [{"id": row.id,
+                                                                   "name": row.name,
+                                                                   "quantity": row.quantity,
+                                                                   },
+                                                                  ]
+                                        else:
+                                            this_data["packs"].append({"id": row.id,
+                                                                       "name": row.name,
+                                                                       "quantity": row.quantity,
+                                                                       })
+                                    # Pass data to inv_recv_item.js
+                                    # to Apply req_item_id & quantity when item_id selected
+                                    s3.js_global.append('''S3.supply.item_data=%s''' % json.dumps(item_data, separators=SEPARATORS))
 
                 # Default the Supplier/Donor to the Org sending the shipment
                 tracktable.supply_org_id.default = record.organisation_id
@@ -11493,222 +11495,223 @@ def inv_send_controller():
                                list_fields = list_fields,
                                )
 
-                if status == SHIP_STATUS_IN_PROCESS:
-                    if r.interactive:
-                        crud_strings = s3.crud_strings.inv_send
-                        crud_strings.title_update = \
-                        crud_strings.title_display = T("Process Shipment to Send")
+                if status == SHIP_STATUS_IN_PROCESS and \
+                   r.interactive:
+                    crud_strings = s3.crud_strings.inv_send
+                    crud_strings.title_update = \
+                    crud_strings.title_display = T("Process Shipment to Send")
 
-                    # Limit to Bins from this site
-                    from .org import org_site_layout_config
-                    org_site_layout_config(r.record.site_id, s3db.inv_send_item_bin.layout_id)
+                    if r.method in (None, "update"):
+                        # Limit to Bins from this site
+                        from .org import org_site_layout_config
+                        org_site_layout_config(r.record.site_id, s3db.inv_send_item_bin.layout_id)
 
-                    # We replace filterOptionsS3
-                    if s3.debug:
-                        s3.scripts.append("/%s/static/scripts/S3/s3.inv_send_item.js" % r.application)
-                    else:
-                        s3.scripts.append("/%s/static/scripts/S3/s3.inv_send_item.min.js" % r.application)
-                    # Filter out Items which have Quantity 0, are Expired or in Bad condition
-                    site_id = record.site_id
-                    ii_query = (iitable.quantity > 0) & \
-                               ((iitable.expiry_date >= r.now) | ((iitable.expiry_date == None))) & \
-                               (iitable.status == 0)
-                    if track_item_id:
-                        # Ensure we include the current inv_item
-                        ii_query |= (iitable.id == track_record.send_inv_item_id)
+                        # We replace filterOptionsS3
+                        if s3.debug:
+                            s3.scripts.append("/%s/static/scripts/S3/s3.inv_send_item.js" % r.application)
+                        else:
+                            s3.scripts.append("/%s/static/scripts/S3/s3.inv_send_item.min.js" % r.application)
+                        # Filter out Items which have Quantity 0, are Expired or in Bad condition
+                        site_id = record.site_id
+                        ii_query = (iitable.quantity > 0) & \
+                                   ((iitable.expiry_date >= r.now) | ((iitable.expiry_date == None))) & \
+                                   (iitable.status == 0)
+                        if track_item_id:
+                            # Ensure we include the current inv_item
+                            ii_query |= (iitable.id == track_record.send_inv_item_id)
 
-                    ibtable = s3db.inv_inv_item_bin
-                    iptable = s3db.supply_item_pack
-                    inv_data = {}
-                    inv_item_ids = []
-                    iiappend = inv_item_ids.append
+                        ibtable = s3db.inv_inv_item_bin
+                        iptable = s3db.supply_item_pack
+                        inv_data = {}
+                        inv_item_ids = []
+                        iiappend = inv_item_ids.append
 
-                    reqs = None
-                    if settings.get_inv_send_req():
-                        srtable = s3db.inv_send_req
-                        reqs = db(srtable.send_id == r.id).select(srtable.req_id)
-                        if reqs:
-                            # Allow populating req_item_id
-                            f = tracktable.req_item_id
-                            f.writable = True
-                            f.comment = None
-                            f.label = T("Request")
-                            # Limit send_inv_item_id to
-                            # - Items in the Request
-                            # - Items Requested from this site
-                            # - Items not yet Shipped
-                            req_ids = [row.req_id for row in reqs]
-                            rtable = s3db.inv_req
-                            ritable = s3db.inv_req_item
-                            #riptable = s3db.get_aliased(iptable, "req_item_pack")
-                            if len(req_ids) == 1:
-                                query = (rtable.id == req_ids[0])
-                            else:
-                                query = (rtable.id.belongs(req_ids))
-                            query &= (ritable.req_id == rtable.id) & \
-                                     (ritable.site_id == site_id) & \
-                                     (ritable.quantity_transit < ritable.quantity) & \
-                                     (ritable.item_pack_id == iptable.id) & \
-                                     (ritable.item_id == iitable.item_id) & \
-                                     (iitable.site_id == site_id)
+                        reqs = None
+                        if settings.get_inv_send_req():
+                            srtable = s3db.inv_send_req
+                            reqs = db(srtable.send_id == r.id).select(srtable.req_id)
+                            if reqs:
+                                # Allow populating req_item_id
+                                f = tracktable.req_item_id
+                                f.writable = True
+                                f.comment = None
+                                f.label = T("Request")
+                                # Limit send_inv_item_id to
+                                # - Items in the Request
+                                # - Items Requested from this site
+                                # - Items not yet Shipped
+                                req_ids = [row.req_id for row in reqs]
+                                rtable = s3db.inv_req
+                                ritable = s3db.inv_req_item
+                                #riptable = s3db.get_aliased(iptable, "req_item_pack")
+                                if len(req_ids) == 1:
+                                    query = (rtable.id == req_ids[0])
+                                else:
+                                    query = (rtable.id.belongs(req_ids))
+                                query &= (ritable.req_id == rtable.id) & \
+                                         (ritable.site_id == site_id) & \
+                                         (ritable.quantity_transit < ritable.quantity) & \
+                                         (ritable.item_pack_id == iptable.id) & \
+                                         (ritable.item_id == iitable.item_id) & \
+                                         (iitable.site_id == site_id)
+                                items = db(query).select(iitable.id,
+                                                         iitable.quantity, # inv_pack_quantity done later, when adding packs
+                                                         rtable.req_ref,
+                                                         ritable.id,
+                                                         ritable.quantity,
+                                                         iptable.quantity,
+                                                         )
+                                for row in items:
+                                    req_pack_quantity = row["supply_item_pack.quantity"]
+                                    req_ref = row["inv_req.req_ref"]
+                                    inv_row = row["inv_inv_item"]
+                                    req_row = row["inv_req_item"]
+                                    inv_item_id = inv_row.id
+                                    iiappend(inv_item_id)
+                                    if inv_item_id in inv_data:
+                                        inv_data[inv_item_id]["r"].append({"i": req_row.id,
+                                                                           "q": req_row.quantity * req_pack_quantity,
+                                                                           "r": req_ref,
+                                                                           })
+                                    else:
+                                        inv_data[inv_item_id] = {"q": inv_row.quantity,
+                                                                 "r": [{"i": req_row.id,
+                                                                        "q": req_row.quantity * req_pack_quantity,
+                                                                        "r": req_ref,
+                                                                        },
+                                                                       ],
+                                                                 }
+                                # Remove req_ref when there are no duplicates to distinguish
+                                for inv_item_id in inv_data:
+                                    req_items = inv_data[inv_item_id]["req_items"]
+                                    if len(req_items) == 1:
+                                        req_items[0].pop("req_ref")
+
+                                inv_item_ids = set(inv_item_ids)
+                                query = (iitable.id.belongs(inv_item_ids))
+
+                                # Add Bins
+                                bin_query = query & (ibtable.inv_item_id == iitable.id)
+                                rows = db(bin_query).select(iitable.id,
+                                                            ibtable.layout_id,
+                                                            ibtable.quantity,
+                                                            )
+                                for row in rows:
+                                    bin_row = row.inv_inv_item_bin
+                                    layout_id = bin_row.layout_id
+                                    if not layout_id:
+                                        continue
+                                    inv_item_id = row["inv_inv_item.id"]
+                                    this_data = inv_data[inv_item_id]
+                                    bins = this_data.get("b")
+                                    if not bins:
+                                        this_data["b"] = [{"l": layout_id,
+                                                           "q": bin_row.quantity,
+                                                           },
+                                                          ]
+                                    else:
+                                        this_data["b"].append({"l": layout_id,
+                                                               "q": bin_row.quantity,
+                                                               })
+
+                                # Set the dropdown options
+                                f = tracktable.send_inv_item_id
+                                f.requires = f.requires.other
+                                f.requires.dbset = db(query & ii_query)
+
+                        if not reqs:
+                            # Restrict to valid items from this site only
+                            f = tracktable.send_inv_item_id
+                            f.requires = f.requires.other
+                            query = ii_query & (iitable.site_id == site_id)
+                            f.requires.dbset = db(query)
+
+                            # Read Item Details
+                            # @ToDo: This may have scalability issues if a site has a very large number of items
+                            #        => Switch back to reading data per item via AJAX in this case
+                            left = ibtable.on(ibtable.inv_item_id == iitable.id)
                             items = db(query).select(iitable.id,
-                                                     iitable.quantity, # inv_pack_quantity done later, when adding packs
-                                                     rtable.req_ref,
-                                                     ritable.id,
-                                                     ritable.quantity,
-                                                     iptable.quantity,
+                                                     iitable.quantity,
+                                                     ibtable.layout_id,
+                                                     ibtable.quantity,
+                                                     left = left,
                                                      )
                             for row in items:
-                                req_pack_quantity = row["supply_item_pack.quantity"]
-                                req_ref = row["inv_req.req_ref"]
                                 inv_row = row["inv_inv_item"]
-                                req_row = row["inv_req_item"]
+                                bin_row = row["inv_inv_item_bin"]
                                 inv_item_id = inv_row.id
                                 iiappend(inv_item_id)
                                 if inv_item_id in inv_data:
-                                    inv_data[inv_item_id]["r"].append({"i": req_row.id,
-                                                                       "q": req_row.quantity * req_pack_quantity,
-                                                                       "r": req_ref,
-                                                                       })
+                                    layout_id = bin_row.layout_id
+                                    if layout_id:
+                                        inv_data[inv_item_id]["b"].append({"l": layout_id,
+                                                                           "q": bin_row.quantity,
+                                                                           })
                                 else:
+                                    layout_id = bin_row.layout_id
+                                    if layout_id:
+                                        b = [{"l": layout_id,
+                                              "q": bin_row.quantity,
+                                              },
+                                             ]
+                                    else:
+                                        b = []
                                     inv_data[inv_item_id] = {"q": inv_row.quantity,
-                                                             "r": [{"i": req_row.id,
-                                                                    "q": req_row.quantity * req_pack_quantity,
-                                                                    "r": req_ref,
-                                                                    },
-                                                                   ],
+                                                             "b": b,
                                                              }
-                            # Remove req_ref when there are no duplicates to distinguish
-                            for inv_item_id in inv_data:
-                                req_items = inv_data[inv_item_id]["req_items"]
-                                if len(req_items) == 1:
-                                    req_items[0].pop("req_ref")
 
                             inv_item_ids = set(inv_item_ids)
                             query = (iitable.id.belongs(inv_item_ids))
 
-                            # Add Bins
-                            bin_query = query & (ibtable.inv_item_id == iitable.id)
-                            rows = db(bin_query).select(iitable.id,
-                                                        ibtable.layout_id,
-                                                        ibtable.quantity,
-                                                        )
-                            for row in rows:
-                                bin_row = row.inv_inv_item_bin
-                                layout_id = bin_row.layout_id
-                                if not layout_id:
-                                    continue
-                                inv_item_id = row["inv_inv_item.id"]
-                                this_data = inv_data[inv_item_id]
-                                bins = this_data.get("b")
-                                if not bins:
-                                    this_data["b"] = [{"l": layout_id,
-                                                       "q": bin_row.quantity,
-                                                       },
-                                                      ]
-                                else:
-                                    this_data["b"].append({"l": layout_id,
-                                                           "q": bin_row.quantity,
-                                                           })
-
-                            # Set the dropdown options
-                            f = tracktable.send_inv_item_id
-                            f.requires = f.requires.other
-                            f.requires.dbset = db(query & ii_query)
-
-                    if not reqs:
-                        # Restrict to valid items from this site only
-                        f = tracktable.send_inv_item_id
-                        f.requires = f.requires.other
-                        query = ii_query & (iitable.site_id == site_id)
-                        f.requires.dbset = db(query)
-
-                        # Read Item Details
-                        # @ToDo: This may have scalability issues if a site has a very large number of items
-                        #        => Switch back to reading data per item via AJAX in this case
-                        left = ibtable.on(ibtable.inv_item_id == iitable.id)
-                        items = db(query).select(iitable.id,
-                                                 iitable.quantity,
-                                                 ibtable.layout_id,
-                                                 ibtable.quantity,
-                                                 left = left,
-                                                 )
-                        for row in items:
+                        # Add Packs to replace the filterOptionsS3 lookup
+                        pack_query = query & (iitable.item_id == iptable.item_id)
+                        rows = db(pack_query).select(iitable.id,
+                                                     iitable.item_pack_id,
+                                                     iptable.id,
+                                                     iptable.name,
+                                                     iptable.quantity,
+                                                     )
+                        for row in rows:
                             inv_row = row["inv_inv_item"]
-                            bin_row = row["inv_inv_item_bin"]
                             inv_item_id = inv_row.id
-                            iiappend(inv_item_id)
-                            if inv_item_id in inv_data:
-                                layout_id = bin_row.layout_id
-                                if layout_id:
-                                    inv_data[inv_item_id]["b"].append({"l": layout_id,
-                                                                       "q": bin_row.quantity,
-                                                                       })
+                            inv_pack_id = inv_row.item_pack_id
+                            this_data = inv_data[inv_item_id]
+                            packs = this_data.get("p")
+                            pack_row = row.supply_item_pack
+                            pack_id = pack_row.id
+                            pack = {"i": pack_id,
+                                    "n": pack_row.name,
+                                    "q": pack_row.quantity,
+                                    }
+                            if pack_id == inv_pack_id:
+                                # Default for inv_item & hence it's Bins
+                                pack["d"] = 1
+                            if not packs:
+                                this_data["p"] = [pack]
                             else:
-                                layout_id = bin_row.layout_id
-                                if layout_id:
-                                    b = [{"l": layout_id,
-                                          "q": bin_row.quantity,
-                                          },
-                                         ]
-                                else:
-                                    b = []
-                                inv_data[inv_item_id] = {"q": inv_row.quantity,
-                                                         "b": b,
-                                                         }
+                                this_data["p"].append(pack)
 
-                        inv_item_ids = set(inv_item_ids)
-                        query = (iitable.id.belongs(inv_item_ids))
-
-                    # Add Packs to replace the filterOptionsS3 lookup
-                    pack_query = query & (iitable.item_id == iptable.item_id)
-                    rows = db(pack_query).select(iitable.id,
-                                                 iitable.item_pack_id,
-                                                 iptable.id,
-                                                 iptable.name,
-                                                 iptable.quantity,
-                                                 )
-                    for row in rows:
-                        inv_row = row["inv_inv_item"]
-                        inv_item_id = inv_row.id
-                        inv_pack_id = inv_row.item_pack_id
-                        this_data = inv_data[inv_item_id]
-                        packs = this_data.get("p")
-                        pack_row = row.supply_item_pack
-                        pack_id = pack_row.id
-                        pack = {"i": pack_id,
-                                "n": pack_row.name,
-                                "q": pack_row.quantity,
-                                }
-                        if pack_id == inv_pack_id:
-                            # Default for inv_item & hence it's Bins
-                            pack["d"] = 1
-                        if not packs:
-                            this_data["p"] = [pack]
-                        else:
-                            this_data["p"].append(pack)
-
-                    binned_quantity = ""
-                    if track_item_id:
-                        # Update form
-                        # add binnedQuantity if there are multiple Bins to manage
-                        isbtable = s3db.inv_send_item_bin
-                        bins = db(isbtable.track_item_id == track_item_id).select(isbtable.quantity)
-                        if len(bins) > 1:
-                            binned_quantity = '''
+                        binned_quantity = ""
+                        if track_item_id:
+                            # Update form
+                            # add binnedQuantity if there are multiple Bins to manage
+                            isbtable = s3db.inv_send_item_bin
+                            bins = db(isbtable.track_item_id == track_item_id).select(isbtable.quantity)
+                            if len(bins) > 1:
+                                binned_quantity = '''
 S3.supply.binnedQuantity=%s''' % sum([row.quantity for row in bins])
 
-                    # Pass data to s3.inv_send_item.js
-                    # When send_inv_item_id is selected
-                    # - populate item_pack_id
-                    # - show stock quantity
-                    # - set/filter Bins
-                    # - set req_item_id (if coming from a Request)
-                    s3.js_global.append('''S3.supply.inv_items=%s
+                        # Pass data to s3.inv_send_item.js
+                        # When send_inv_item_id is selected
+                        # - populate item_pack_id
+                        # - show stock quantity
+                        # - set/filter Bins
+                        # - set req_item_id (if coming from a Request)
+                        s3.js_global.append('''S3.supply.inv_items=%s
 S3.supply.site_id=%s%s''' % (json.dumps(inv_data, separators=SEPARATORS),
-                             site_id,
-                             binned_quantity,
-                             ))
+                                 site_id,
+                                 binned_quantity,
+                                 ))
 
         else:
             # No Component
