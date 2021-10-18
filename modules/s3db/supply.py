@@ -651,7 +651,10 @@ $.filterOptionsS3({
             ]
 
         configure(tablename,
-                  deduplicate = self.supply_catalog_item_duplicate,
+                  deduplicate = S3Duplicate(primary = ("catalog_id",
+                                                       "item_category_id",
+                                                       "item_id",
+                                                       )),
                   filter_widgets = filter_widgets,
                   )
 
@@ -980,35 +983,6 @@ $.filterOptionsS3({
         parent_category_id = data.get("parent_category_id")
         if parent_category_id:
             query &= (table.parent_category_id == parent_category_id)
-        duplicate = current.db(query).select(table.id,
-                                             limitby = (0, 1),
-                                             ).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def supply_catalog_item_duplicate(item):
-        """
-            Callback function used to look for duplicates during
-            the import process
-
-            @param item: the S3ImportItem to check
-        """
-
-        data = item.data
-        table = item.table
-        query = (table.deleted != True)
-        item_id = data.get("item_id")
-        if item_id:
-            query &= (table.item_id == item_id)
-        catalog_id = data.get("catalog_id")
-        if catalog_id:
-            query &= (table.catalog_id == catalog_id)
-        item_category_id = data.get("item_category_id")
-        if item_category_id:
-            query &= (table.item_category_id == item_category_id)
         duplicate = current.db(query).select(table.id,
                                              limitby = (0, 1),
                                              ).first()
