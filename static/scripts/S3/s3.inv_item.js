@@ -10,26 +10,38 @@ $(document).ready(function() {
 
     if (ItemField.length) {
         var ajaxURL,
-            allPacks = {},
+            allPacks = S3.supply.packs || {},
             availableQuantity,
             binQuantity,
-            binnedQuantity = S3.supply.binnedQuantity || 0,
+            binnedQuantity = S3.supply.binnedQuantity || 0, // Needs to be multiplied by startingPackQuantity for comparisons.
+            binnedQuantityPacked, // Quantity binned of current Pack
             editBinBtnOK = $('#rdy-defaultbin-0'),
             error,
+            first,
             inlineComponent = $('#sub-defaultbin'),
             itemID = ItemField.val(),
             ItemPackField = $('#inv_inv_item_item_pack_id'),
-            itemPackID = S3.supply.itemPackID,
+            itemPackID,
             newBinQuantityField = $('#sub_defaultbin_defaultbin_i_quantity_edit_none'),
+            // Represent numbers with thousand separator
+            // @ToDo: Respect settings
+            numberFormat = /(\d)(?=(\d{3})+(?!\d))/g,
             oldBinQuantityField = $('#sub_defaultbin_defaultbin_i_quantity_edit_0'),
+            oldPackQuantity,
             pack,
             packs,
+            packsByID,
             packsLength,
+            PackQuantity,
             siteField = $('#inv_inv_item_site_id'),
+            startingQuantity, // Needs to be multiplied by startingPackQuantity for comparisons
+            startingPackID = S3.supply.itemPackID,
+            startingPackQuantity = 1,
             totalQuantityField = $('#inv_inv_item_quantity'),
-            totalQuantity = totalQuantityField.val(),
+            totalQuantity = totalQuantityField.val(), // Needs to be multiplied by PackQuantity for comparisons
             $this,
-            updatePacks;
+            updatePacks,
+            updateQuantity;
 
         if (siteField.length) {
             // inv/inv_item
@@ -58,26 +70,29 @@ $(document).ready(function() {
             });
         }
 
-        if (totalQuantity) {
-            totalQuantity = parseFloat(totalQuantity);
-        } else {
-            totalQuantity = 0;
-        }
-
         updatePacks = function(update) {
+            first = true;
             packs = allPacks[itemID];
+            packsByID = {};
             packsLength = packs.length;
             ItemPackField.html('');
             for (i = 0; i < packsLength; i++) {
                 pack = packs[i];
-                opt = '<option value="' + pack.i + '">' + pack.n + '</option>';
+                packsByID[pack.i] = pack.q;
+                if (startingPackID && (startingPackID == pack.i)) {
+                    itemPackID = startingPackID;
+                    oldPackQuantity = startingPackQuantity = PackQuantity = pack.q;
+                    selected = ' selected';
+                } else if (first) {
+                    itemPackID = pack.i;
+                    oldPackQuantity = PackQuantity = pack.q;
+                    selected = ' selected';
+                } else {
+                    selected = '';
+                }
+                first = false;
+                opt = '<option value="' + pack.i + '"' + selected + '>' + pack.n + '</option>';
                 ItemPackField.append(opt);
-            }
-            if (update) {
-                // Set the original Pack
-                ItemPackField.val(itemPackID);
-                // Don't trigger a NavigateAwayConfirm just for this
-                S3ClearNavigateAwayConfirm();
             }
         };
 
@@ -96,7 +111,7 @@ $(document).ready(function() {
                     dataType: 'json',
                     success: function(data) {
                         allPacks[itemID] = data;
-                        updatePacks(update);
+                        updatePacks();
                     }
                 });
             }
@@ -104,11 +119,37 @@ $(document).ready(function() {
 
         if (itemID) {
             // Update form
+            if (totalQuantity) {
+                totalQuantity = parseFloat(totalQuantity);
+            } else {
+                totalQuantity = 0;
+            }
             ItemField.trigger('change.s3', true);
         }
 
         ItemPackField.on('change.s3', function() {
             itemPackID = ItemPackField.val();
+            PackQuantity = packsByID[itemPackID];
+            // Adjust Total Quantity
+            totalQuantity = totalQuantityField.val();
+            totalQuantity = totalQuantity * oldPackQuantity / PackQuantity;
+            totalQuantityField.val(totalQuantity);
+            // Adjust Bins
+            binQuantity = newBinQuantityField.val();
+            binQuantity = binQuantity * oldPackQuantity / PackQuantity;
+            newBinQuantityField.val(binQuantity);
+            binQuantity = oldBinQuantityField.val();
+            binQuantity = binQuantity * oldPackQuantity / PackQuantity;
+            oldBinQuantityField.val(binQuantity);
+            updateQuantity = function(row) {
+                binQuantity = row.quantity.value;
+                binQuantity = binQuantity * oldPackQuantity / PackQuantity;
+                row.quantity.value = binQuantity;
+                row.quantity.text = binQuantity.toString().replace(numberFormat, '$1,');
+            };
+            inlineComponent.inlinecomponent('updateRows', updateQuantity);
+            // New oldPackQuantity
+            oldPackQuantity = PackQuantity;
         });
 
         // Attach to the top-level element to catch newly-created readRows
@@ -116,22 +157,18 @@ $(document).ready(function() {
             binQuantity = oldBinQuantityField.val();
             if (binQuantity) {
                 binQuantity = parseFloat(binQuantity);
-            } else {
-                binQuantity = 0;
+                // Make this Bin's Quantity available
+                binnedQuantity -= (binQuantity * PackQuantity / startingPackQuantity);
             }
-            // Make this Bin's Quantity available
-            binnedQuantity = binnedQuantity - binQuantity;
         });
 
         editBinBtnOK.click(function() {
             binQuantity = oldBinQuantityField.val();
             if (binQuantity) {
                 binQuantity = parseFloat(binQuantity);
-            } else {
-                binQuantity = 0;
+                // Make this Bin's Quantity unavailable
+                binnedQuantity += (binQuantity * PackQuantity / startingPackQuantity);
             }
-            // Make this Bin's Quantity unavailable
-            binnedQuantity = binnedQuantity + binQuantity;
             // Validate the new bin again
             newBinQuantityField.change();
         });
@@ -143,11 +180,12 @@ $(document).ready(function() {
             } else {
                 totalQuantity = 0;
             }
-            if (totalQuantity < binnedQuantity) {
+            binnedQuantityPacked = binnedQuantity * startingPackQuantity / PackQuantity;
+            if (totalQuantity < binnedQuantityPacked) {
                 // @ToDo: i18n
                 message = 'Total Quantity reduced to Quantity in Bins';
                 error = $('<div class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
-                totalQuantityField.val(binnedQuantity)
+                totalQuantityField.val(binnedQuantityPacked)
                                   .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
                     $(this).fadeOut('slow').remove();
                     return false;
@@ -161,19 +199,18 @@ $(document).ready(function() {
             binQuantity = newBinQuantityField.val();
             if (binQuantity) {
                 binQuantity = parseFloat(binQuantity);
-            } else {
-                binQuantity = 0;
-            }
-            availableQuantity = totalQuantity - binnedQuantity;
-            if (binQuantity > availableQuantity) {
-                // @ToDo: i18n
-                message = 'Bin Quantity reduced to Available Quantity';
-                error = $('<div class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
-                newBinQuantityField.val(availableQuantity)
-                                   .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
-                    $(this).fadeOut('slow').remove();
-                    return false;
-                });
+                binnedQuantityPacked = binnedQuantity * startingPackQuantity / PackQuantity;
+                availableQuantity = totalQuantity - binnedQuantityPacked;
+                if (binQuantity > availableQuantity) {
+                    // @ToDo: i18n
+                    message = 'Bin Quantity reduced to Available Quantity';
+                    error = $('<div class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
+                    newBinQuantityField.val(availableQuantity)
+                                       .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                        $(this).fadeOut('slow').remove();
+                        return false;
+                    });
+                }
             }
         });
 
@@ -181,30 +218,37 @@ $(document).ready(function() {
             binQuantity = oldBinQuantityField.val();
             if (binQuantity) {
                 binQuantity = parseFloat(binQuantity);
-            } else {
-                binQuantity = 0;
-            }
-            availableQuantity = totalQuantity - binnedQuantity;
-            if (binQuantity > availableQuantity) {
-                // @ToDo: i18n
-                message = 'Bin Quantity reduced to Available Quantity';
-                error = $('<div class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
-                oldBinQuantityField.val(availableQuantity)
-                                   .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
-                    $(this).fadeOut('slow').remove();
-                    return false;
-                });
+                binnedQuantityPacked = binnedQuantity * startingPackQuantity / PackQuantity;
+                availableQuantity = totalQuantity - binnedQuantityPacked;
+                if (binQuantity > availableQuantity) {
+                    // @ToDo: i18n
+                    message = 'Bin Quantity reduced to Available Quantity';
+                    error = $('<div class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
+                    oldBinQuantityField.val(availableQuantity)
+                                       .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                        $(this).fadeOut('slow').remove();
+                        return false;
+                    });
+                }
             }
         });
 
         inlineComponent.on('rowAdded', function(event, row) {
             // Make Quantity unavailable
-            binnedQuantity = binnedQuantity + parseFloat(row.quantity.value);
+            binQuantity = row.quantity.value;
+            if (binQuantity) {
+                binQuantity = parseFloat(binQuantity);
+                binnedQuantity += (binQuantity * PackQuantity / startingPackQuantity);
+            }
         });
 
         inlineComponent.on('rowRemoved', function(event, row) {
             // Make Quantity available
-            binnedQuantity = binnedQuantity - parseFloat(row.quantity.value);
+            binQuantity = row.quantity.value;
+            if (binQuantity) {
+                binQuantity = parseFloat(binQuantity);
+                binnedQuantity -= (binQuantity * PackQuantity / startingPackQuantity);
+            }
         });
     }
 });

@@ -127,8 +127,7 @@ $(document).ready(function() {
                     defaultPack = false;
                 }
                 if (startingPackID && (startingInvItemID == inv_item_id) && (startingPackID == pack.i)) {
-                    startingPackQuantity = pack.q;
-                    PackQuantity = pack.q;
+                    startingPackQuantity = PackQuantity = pack.q;
                     PackName = pack.n;
                     selected = ' selected';
                 } else if (defaultPack) {
@@ -492,11 +491,9 @@ $(document).ready(function() {
                 binQuantity = oldBinQuantityField.val();
                 if (binQuantity) {
                     binQuantity = parseFloat(binQuantity);
-                } else {
-                    binQuantity = 0;
+                    // Make this Bin's Quantity available
+                    binnedQuantity -= (binQuantity * PackQuantity / InvPackQuantity);
                 }
-                // Make this Bin's Quantity available
-                binnedQuantity -= (binQuantity * PackQuantity / InvPackQuantity);
             }
         });
 
@@ -505,11 +502,9 @@ $(document).ready(function() {
                 binQuantity = oldBinQuantityField.val();
                 if (binQuantity) {
                     binQuantity = parseFloat(binQuantity);
-                } else {
-                    binQuantity = 0;
+                    // Make this Bin's Quantity unavailable
+                    binnedQuantity = binnedQuantity + (binQuantity * PackQuantity / InvPackQuantity);
                 }
-                // Make this Bin's Quantity unavailable
-                binnedQuantity = binnedQuantity + (binQuantity * PackQuantity / InvPackQuantity);
                 // Validate the new bin again
                 newBinQuantityField.change();
             }
@@ -521,7 +516,7 @@ $(document).ready(function() {
                 binQuantity = row.quantity.value;
                 if (binQuantity) {
                     binQuantity = parseFloat(binQuantity);
-                    binnedQuantity = binnedQuantity + (binQuantity * PackQuantity / InvPackQuantity);
+                    binnedQuantity += (binQuantity * PackQuantity / InvPackQuantity);
                 }
                 // Cleanup any old warning message
                 $('#sub_defaultsend_bin_defaultsend_bin_i_quantity_edit_none-warning').remove();
@@ -534,7 +529,7 @@ $(document).ready(function() {
                 binQuantity = row.quantity.value;
                 if (binQuantity) {
                     binQuantity = parseFloat(binQuantity);
-                    binnedQuantity = binnedQuantity - (binQuantity * PackQuantity / InvPackQuantity);
+                    binnedQuantity -= (binQuantity * PackQuantity / InvPackQuantity);
                 }
             }
         });

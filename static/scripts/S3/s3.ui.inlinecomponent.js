@@ -1336,6 +1336,8 @@
         /**
          * Update row
          *
+         * - Saves the Row currently being Edited
+         *
          * @param {string|number} rowindex - the row index
          */
         _updateRow: function(rowindex) {
@@ -1524,6 +1526,8 @@
 
         /**
          * Remove all rows
+         *
+         * - called by s3.inv_send_item.js
          */
         removeRows: function() {
 
@@ -1555,10 +1559,50 @@
                 this._catchSubmit();
             }
 
-            // Update the real_input JSON with deletion of this row
+            // Update the real_input JSON with deletion of these rows
             this._serialize();
 
             this._showHeaders();
+
+            return true;
+        },
+
+        /**
+         * Update all read rows with a callback function
+         *
+         * - called by s3.inv_item.js
+         */
+        updateRows: function(callback) {
+
+            var data = this._deserialize(),
+                formName = this.formname,
+                items = [],
+                fields = data.fields,
+                fieldsLength = fields.length,
+                fieldName,
+                row,
+                rows = data.data;
+
+            for (var i = 0, len = rows.length; i < len; i++) {
+                row = rows[i];
+
+                // Modify the data according to the callback
+                callback(row);
+
+                row._changed = true; // mark as changed
+
+                // Render the new data
+                items = [];
+                for (var j = 0; j < fieldsLength; j++) {
+                    fieldName = fields[j].name;
+                    // Store text representation for the read-row
+                    items.push(row[fieldName].text);
+                }
+                this._renderReadRow(formName, i, items);
+            }
+
+            // Update the real_input JSON with the new data
+            this._serialize();
 
             return true;
         },

@@ -159,13 +159,34 @@ def inv_item():
                                                                     orderby = sum_field,
                                                                     ).first()[sum_field]
                     if binned:
+                        # This is in the current Pack units
                         binned = '''
 S3.supply.binnedQuantity=%s''' % binned
                     else:
                         binned = ""
-                    s3.js_global.append('''S3.supply.itemPackID=%s%s''' % (record.item_pack_id,
-                                                                           binned,
-                                                                           ))
+                    # Need to transmit the current item_pack_id as not included in the IS_ONE_OF_EMPTY_SELECT widget
+                    # Also send the current pack details to avoid an AJAX call
+                    item_id = record.item_id
+                    ptable = s3db.supply_item_pack
+                    rows = db(ptable.item_id == item_id).select(ptable.id,
+                                                                ptable.name,
+                                                                ptable.quantity,
+                                                                )
+
+                    # Simplify format
+                    packs = {item_id: [{"i": row.id,
+                                        "n": row.name,
+                                        "q": row.quantity,
+                                        } for row in rows],
+                             }
+
+                    SEPARATORS = (",", ":")
+                    packs = json.dumps(packs, separators=SEPARATORS)
+                    s3.js_global.append('''S3.supply.packs=%s
+S3.supply.itemPackID=%s%s''' % (packs,
+                                record.item_pack_id,
+                                binned,
+                                ))
                     f = ibtable.layout_id
                     f.widget.filter = (s3db.org_site_layout.site_id == site_id)
                     f.comment.args = [site_id, "layout", "create"]

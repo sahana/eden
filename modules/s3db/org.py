@@ -7990,7 +7990,8 @@ def org_site_prep(r):
                                                                   table.item_pack_id,
                                                                   limitby = (0, 1),
                                                                   ).first()
-                    item_ids.remove(inv_item.item_id)
+                    item_id = inv_item.item_id
+                    item_ids.remove(item_id)
                 table.item_id.requires.set_filter(not_filterby = "id",
                                                   not_filter_opts = item_ids,
                                                   )
@@ -8018,9 +8019,27 @@ def org_site_prep(r):
 S3.supply.binnedQuantity=%s''' % binned
                     else:
                         binned = ""
-                    s3.js_global.append('''S3.supply.itemPackID=%s%s''' % (inv_item.item_pack_id,
-                                                                           binned,
-                                                                           ))
+                    # Need to transmit the current item_pack_id as not included in the IS_ONE_OF_EMPTY_SELECT widget
+                    # Also send the current pack details to avoid an AJAX call
+                    ptable = s3db.supply_item_pack
+                    rows = db(ptable.item_id == item_id).select(ptable.id,
+                                                                ptable.name,
+                                                                ptable.quantity,
+                                                                )
+
+                    # Simplify format
+                    packs = {item_id: [{"i": row.id,
+                                        "n": row.name,
+                                        "q": row.quantity,
+                                        } for row in rows],
+                             }
+
+                    packs = json.dumps(packs, separators=SEPARATORS)
+                    s3.js_global.append('''S3.supply.packs=%s
+S3.supply.itemPackID=%s%s''' % (packs,
+                                inv_item.item_pack_id,
+                                binned,
+                                ))
 
         #elif component_name == "send":
         #    # Default to the Search tab in the location selector widget1
