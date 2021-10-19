@@ -11532,6 +11532,11 @@ def inv_send_controller():
                         ii_query = (iitable.quantity > 0) & \
                                    ((iitable.expiry_date >= r.now) | ((iitable.expiry_date == None))) & \
                                    (iitable.status == 0)
+                        # Filter out Items which are already in this shipment
+                        send_id = r.id
+                        track_items = db(tracktable.send_id == send_id).select(tracktable.send_inv_item_id)
+                        inv_item_ids = [row.send_inv_item_id for row in track_items]
+                        ii_query &= ~(iitable.id.belongs(inv_item_ids))
                         if track_item_id:
                             # Ensure we include the current inv_item
                             ii_query |= (iitable.id == track_record.send_inv_item_id)
@@ -11545,7 +11550,7 @@ def inv_send_controller():
                         reqs = None
                         if settings.get_inv_send_req():
                             srtable = s3db.inv_send_req
-                            reqs = db(srtable.send_id == r.id).select(srtable.req_id)
+                            reqs = db(srtable.send_id == send_id).select(srtable.req_id)
                             if reqs:
                                 # Allow populating req_item_id
                                 f = tracktable.req_item_id
