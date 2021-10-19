@@ -13306,7 +13306,7 @@ def inv_stock_card_update(inv_item_ids,
                            )
 
 # =============================================================================
-def inv_track_item_deleting(record_id):
+def inv_track_item_deleting(track_item_id):
     """
        A track item can only be deleted if the status is Preparing
        When a track item record is deleted and it is linked to an inv_item
@@ -13314,59 +13314,88 @@ def inv_track_item_deleting(record_id):
     """
 
     db = current.db
-    s3db = current.s3db
-    tracktable = db.inv_track_item
-    record = db(tracktable.id == record_id).select(tracktable.status,
-                                                   tracktable.req_item_id,
-                                                   tracktable.item_pack_id,
-                                                   tracktable.quantity,
-                                                   tracktable.send_inv_item_id,
-                                                   limitby = (0, 1),
-                                                   ).first()
-    if record.status != 1:
-        # Not 'Preparing': Do not allow
+
+    table = db.inv_track_item
+    record = db(table.id == track_item_id).select(table.send_inv_item_id,
+                                                  table.status,
+                                                  limitby = (0, 1),
+                                                  ).first()
+    if record.status != TRACK_STATUS_PREPARING: # 1
+        # Do not allow
         return False
 
-    # Transit Quantity not updated until Shipment is Sent
-    #if record.req_item_id:
-    #    # This is linked to a Request:
-    #    # - remove these items from the quantity in transit
-    #    req_id = record.req_item_id
-    #    ritable = s3db.inv_req_item
-    #    req_item = db(ritable.id == req_id).select(ritable.id,
-    #                                               ritable.quantity_transit,
-    #                                               ritable.item_pack_id,
-    #                                               limitby = (0, 1),
-    #                                               ).first()
-    #    req_quantity = req_item.quantity_transit
-    #    siptable = db.supply_item_pack
-    #    req_pack_quantity = db(siptable.id == req_item.item_pack_id).select(siptable.quantity,
-    #                                                                        limitby = (0, 1),
-    #                                                                        ).first().quantity
-    #    track_pack_quantity = db(siptable.id == record.item_pack_id).select(siptable.quantity,
-    #                                                                        limitby = (0, 1),
-    #                                                                        ).first().quantity
-    #    from .supply import supply_item_add
-    #    quantity_transit = supply_item_add(req_quantity,
-    #                                       req_pack_quantity,
-    #                                       - record.quantity,
-    #                                       track_pack_quantity
-    #                                       )
-    #    req_item.update_record(quantity_transit = quantity_transit)
-    #    inv_req_update_status(req_id)
+    inv_item_id = record.send_inv_item_id
+    if not inv_item_id:
+        return True
 
-    if record.send_inv_item_id:
-        # This is linked to a Warehouse Inventory item:
-        # - remove the total from this record and place it back in the warehouse
-        track_total = record.quantity
-        inv_item_table = db.inv_inv_item
-        db(inv_item_table.id == record.send_inv_item_id).update(quantity = inv_item_table.quantity + track_total)
-        db(tracktable.id == record_id).update(quantity = 0,
-                                              comments = "%sQuantity was: %s" % \
-                                                            (tracktable.comments,
-                                                             track_total,
-                                                             ),
-                                              )
+    # This is linked to a Warehouse Inventory item:
+    # - place the stock back in the warehouse
+
+    s3db = current.s3db
+
+    sbtable = s3db.inv_send_item_bin
+    iitable = s3db.inv_inv_item
+    ibtable = s3db.inv_inv_item_bin
+    iptable = s3db.supply_item_pack
+
+    # Read the Send Item, including Bins
+    query = (table.id == track_item_id) & \
+            (table.item_pack_id == iptable.id)
+    left = sbtable.on(sbtable.track_item_id == table.id)
+    rows = db(query).select(table.quantity,
+                            iptable.quantity,
+                            sbtable.layout_id,
+                            sbtable.quantity,
+                            left = left,
+                            )
+
+    row = rows.first()
+    send_quantity = row["inv_track_item.quantity"]
+    send_pack_quantity = row["supply_item_pack.quantity"]
+    send_bins = {}
+    for row in rows:
+        bin_row = row["inv_send_item_bin"]
+        bin_quantity = bin_row.quantity
+        if bin_quantity:
+            send_bins[bin_row.layout_id] = bin_quantity
+
+    # Read the Inv Item, including Bins
+    query = (iitable.id == inv_item_id) & \
+            (iitable.item_pack_id == iptable.id)
+    left = ibtable.on((ibtable.inv_item_id == iitable.id) & \
+                      (ibtable.layout_id.belongs(send_bins.keys())))
+    rows = db(query).select(iitable.quantity,
+                            iptable.quantity,
+                            ibtable.id,
+                            ibtable.layout_id,
+                            ibtable.quantity,
+                            left = left,
+                            )
+
+    row = rows.first()
+    inv_total_quantity = row["inv_inv_item.quantity"]
+    inv_pack_quantity = row["supply_item_pack.quantity"]
+    inv_bins = []
+    for row in rows:
+        bin_row = row["inv_inv_item_bin"]
+        layout_id = bin_row.layout_id 
+        if layout_id:
+            inv_bins.append({"id": bin_row.id,
+                             "layout_id": layout_id,
+                             "quantity": bin_row.quantity or 0,
+                             })
+
+    # Update Stock level
+    new_inv_quantity = ((inv_total_quantity * inv_pack_quantity) + (send_quantity * send_pack_quantity)) / inv_pack_quantity
+    db(iitable.id == inv_item_id).update(quantity = new_inv_quantity)
+
+    # Update Bins
+    for inv_bin in inv_bins:
+        layout_id = inv_bin["layout_id"]
+        send_bin_quantity = send_bins[layout_id]
+        new_bin_quantity = ((inv_bin["quantity"] * inv_pack_quantity) + (send_bin_quantity * send_pack_quantity)) / inv_pack_quantity
+        db(ibtable.id == inv_bin["id"]).update(quantity = new_bin_quantity)
+
     return True
 
 # =============================================================================
