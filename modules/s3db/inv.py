@@ -6213,7 +6213,8 @@ class InventoryTrackingModel(S3Model):
                   filter_widgets = filter_widgets,
                   # Configured in the Controller to adapt to requirements
                   #list_fields = list_fields,
-                  onaccept = inv_track_item_onaccept,
+                  # Now done in crud_form.postprocess
+                  #onaccept = inv_track_item_onaccept,
                   onvalidation = self.inv_track_item_onvalidation,
                   )
 
@@ -8644,184 +8645,6 @@ def inv_package_labels(r, **attr):
     return output.read()
 
 # =============================================================================
-def inv_pick(r):
-    """
-        Ensure that all Outbound Shipment Items are allocated from Inventory Bins
-
-        We optimise to minimise the number of Bins remaining for an Item
-        An alternative would be to optimise this Pick
-
-        DRY Helper for inv_pick_list and inv_send_process
-    """
-
-    send_id = r.id
-
-    db = current.db
-    s3db = current.s3db
-
-    table = s3db.inv_track_item
-    sbtable = s3db.inv_send_item_bin
-
-    # Read all Send Items & Bins to find out if there are any which still need allocating
-    left = sbtable.on(sbtable.track_item_id == table.id)
-    rows = db(table.send_id == send_id).select(table.id,
-                                               table.quantity,
-                                               table.send_inv_item_id,
-                                               sbtable.id,
-                                               sbtable.layout_id,
-                                               sbtable.quantity,
-                                               left = left,
-                                               )
-
-    track_items = {}
-    for row in rows:
-        bin_row = row["inv_send_item_bin"]
-        bin_quantity = bin_row.quantity
-        if bin_quantity:
-            send_bin = {"id": bin_row.id,
-                        "layout_id": bin_row.layout_id,
-                        "quantity": bin_quantity,
-                        }
-        track_row = row["inv_track_item"]
-        track_item_id = track_row.id
-        if track_item_id not in track_items:
-            if bin_quantity:
-                send_bins = [send_bin]
-            else:
-                send_bins = []
-            track_items[track_item_id] = {"quantity": track_row.quantity,
-                                          "inv_item_id": track_row.send_inv_item_id,
-                                          "send_bins": send_bins,
-                                          "binned_quantity": bin_quantity or 0,
-                                          }
-        elif bin_quantity:
-            track_item = track_items[track_item_id]
-            track_item["send_bins"].append(send_bin)
-            track_item["binned_quantity"] += bin_quantity
-
-    track_item_ids = []
-    inv_item_ids = []
-    inv_items = {}
-    for track_item_id in track_items:
-        track_item = track_items[track_item_id]
-        if track_item["quantity"] == track_item["binned_quantity"]:
-            continue
-        # We assume that a single inv_item_id isn't split across multiple track_items
-        track_item_ids.append(track_item_id)
-        track_item["track_item_id"] = track_item_id
-        inv_item_id = track_item["inv_item_id"]
-        inv_items[inv_item_id] = track_item
-        inv_item_ids.append(inv_item_id)
-
-    if len(inv_item_ids) == 0:
-        # All OK :)
-        return
-
-    # Read the Pack Quantities
-    iptable = s3db.supply_item_pack
-    query = (table.id.belongs(set(track_item_ids))) & \
-            (table.item_pack_id == iptable.id)
-    rows = db(query).select(table.id,
-                            iptable.quantity,
-                            )
-    track_packs = {row["inv_track_item.id"]: row["supply_item_pack.quantity"] for row in rows}
-
-    iitable = s3db.inv_inv_item
-    iquery = (iitable.id.belongs(set(inv_item_ids)))
-    query =  iquery & \
-            (iitable.item_pack_id == iptable.id)
-    rows = db(query).select(iitable.id,
-                            iptable.quantity,
-                            )
-    inv_packs = {row["inv_inv_item.id"]: row["supply_item_pack.quantity"] for row in rows}
-
-    # Read the Inv Bins
-    ibtable = s3db.inv_inv_item_bin
-    left = ibtable.on(ibtable.inv_item_id == iitable.id)
-    rows = db(iquery).select(iitable.id,
-                             #iitable.quantity,
-                             ibtable.layout_id,
-                             ibtable.quantity,
-                             left = left,
-                             )
-
-    for row in rows:
-        bin_row = row["inv_inv_item_bin"]
-        bin_quantity = bin_row.quantity
-        inv_row = row["inv_inv_item"]
-        inv_item_id = inv_row.id
-        inv_item = inv_items[inv_item_id]
-        if bin_quantity:
-            inv_bin = {"layout_id": bin_row.layout_id,
-                       "quantity": bin_quantity,
-                       }
-        if "inv_bins" in inv_item:
-            if bin_quantity:
-                inv_item["inv_bins"].append(inv_bin)
-                #inv_item["inv_binned_quantity"] += bin_quantity
-        else:
-            #inv_item["inv_quantity"] = inv_row["quantity"]
-            if bin_quantity:
-                inv_item["inv_bins"] = [inv_bin]
-                #inv_item["inv_binned_quantity"] = bin_quantity
-            else:
-                inv_item["inv_bins"] = []
-                #inv_item["inv_binned_quantity"] = 0
-
-    from operator import itemgetter
-
-    for inv_item_id in inv_items:
-        inv_item = inv_items[inv_item_id]
-        track_item_id = inv_item["track_item_id"]
-        send_pack_quantity = track_packs[track_item_id]
-        to_allocate = (inv_item["quantity"] - inv_item["binned_quantity"]) * send_pack_quantity
-        send_bins = inv_item["send_bins"]
-        if send_bins:
-            send_bins = {send_bin["layout_id"]: {"id": send_bin["id"],
-                                                 "quantity": send_bin["quantity"],
-                                                 } for send_bin in send_bins}
-        inv_bins = inv_item["inv_bins"]
-        inv_bins.sort(key = itemgetter("quantity"))
-        inv_pack_quantity = inv_packs[inv_item_id]
-        while (to_allocate > 0):
-            for inv_bin in inv_bins:
-                layout_id = inv_bin["layout_id"]
-                inv_quantity = inv_bin["quantity"] * inv_pack_quantity
-                if layout_id in send_bins:
-                    send_bin = send_bins[layout_id]
-                    send_quantity = send_bin["quantity"] * send_pack_quantity
-                    if inv_quantity > send_quantity:
-                        # Allocate more from this bin
-                        if inv_quantity > (to_allocate + send_quantity):
-                            # Allocate all from this bin
-                            db(sbtable.id == send_bin["id"]).update(quantity = (to_allocate + send_quantity) / send_pack_quantity)
-                            to_allocate = 0
-                        else:
-                            # Allocate what we can from this bin
-                            db(sbtable.id == send_bin["id"]).update(quantity = inv_quantity / send_pack_quantity)
-                            to_allocate -= (inv_quantity - send_quantity)
-                else:
-                    if inv_quantity > to_allocate:
-                        # Allocate all from this bin
-                        sbtable.insert(track_item_id = track_item_id,
-                                       layout_id = layout_id,
-                                       quantity = to_allocate / send_pack_quantity,
-                                       )
-                        to_allocate = 0
-                    else:
-                        # Allocate what we can from this bin
-                        sbtable.insert(track_item_id = track_item_id,
-                                       layout_id = layout_id,
-                                       quantity = inv_quantity / send_pack_quantity,
-                                       )
-                        to_allocate -= inv_quantity
-
-            # Allocate from unbinned Stock
-            #unbinned = (inv_item["inv_quantity"] - inv_item["inv_binned_quantity"]) * inv_pack_quantity
-            # No validation here - this is just the default
-            break
-
-# =============================================================================
 def inv_pick_list(r, **attr):
     """
         Generate a Picking List for an Outbound Shipment
@@ -8848,14 +8671,6 @@ def inv_pick_list(r, **attr):
                            ),
                 )
 
-    s3db = current.s3db
-
-    if current.auth.s3_has_permission("update", s3db.inv_send,
-                                      record_id = send_id,
-                                      ):
-        # Ensure that all Outbound Shipment Items are allocated from Inventory Bins
-        inv_pick(r)
-
     from s3.codecs.xls import S3XLS
 
     try:
@@ -8865,6 +8680,8 @@ def inv_pick_list(r, **attr):
 
     # Extract the Data
     send_ref = record.send_ref
+
+    s3db = current.s3db
 
     table = s3db.inv_track_item
     itable = s3db.supply_item
@@ -9889,7 +9706,8 @@ def inv_recv_process(r, **attr):
                                                           )
 
     # Defaults to inv_track_item_onaccept, but allow templates to override
-    onaccept = s3db.get_config("inv_track_item", "onaccept")
+    # @ToDo: Rewrite to bulk function with support for Bins
+    onaccept = s3db.get_config("inv_track_item", "onaccept") or inv_track_item_onaccept
     for track_item in track_rows:
         onaccept(Storage(vars = Storage(id = track_item.id),
                          record = Storage(track_item),
@@ -11531,6 +11349,7 @@ def inv_send_controller():
                                                     # writable set to True later if linked to requests
                                                     "req_item_id",
                                                     "comments",
+                                                    # Remove Items from stock when allocated to a Shipment
                                                     postprocess = inv_send_item_postprocess,
                                                     )
                     elif status == TRACK_STATUS_ARRIVED:
@@ -12008,13 +11827,180 @@ S3.supply.site_id=%s%s''' % (json.dumps(inv_data, separators=SEPARATORS),
 # =============================================================================
 def inv_send_item_postprocess(form):
     """
-        When Stock Items are added to a Shipment then we need to remove them
-        from the Inventory
+        When a Stock Item is added to a Shipment then we need to remove it from
+        the Inventory.
+        If the bin to take from hasn't been selected then we auto-allocate.
+        We optimise to minimise the number of Bins remaining for an Item
+        (An alternative would be to optimise this Pick)
     """
 
-    # @ToDo: replace the relevant section in inv_track_item_onaccept
-    # @ToDo: add inv_pick functionality here instead of in inv_picking_list/inv_send_process
-    return
+    record = form.record
+    track_item_id = form.vars.id
+
+    db = current.db
+    s3db = current.s3db
+
+    table = s3db.inv_track_item
+    sbtable = s3db.inv_send_item_bin
+    iitable = s3db.inv_inv_item
+    ibtable = s3db.inv_inv_item_bin
+    iptable = s3db.supply_item_pack
+
+    # Read the Send Item, including Bins
+    query = (table.id == track_item_id) & \
+            (table.item_pack_id == iptable.id)
+    left = sbtable.on(sbtable.track_item_id == table.id)
+    rows = db(query).select(table.quantity,
+                            table.send_inv_item_id,
+                            iptable.id,
+                            iptable.quantity,
+                            sbtable.id,
+                            sbtable.layout_id,
+                            sbtable.quantity,
+                            left = left,
+                            )
+
+    row = rows.first()
+    track_row = row["inv_track_item"]
+    inv_item_id = track_row.send_inv_item_id
+    send_quantity = track_row.quantity
+    pack_row = row["supply_item_pack"]
+    send_item_pack_id = pack_row.id
+    send_pack_quantity = pack_row.quantity
+    send_bins = {}
+    binned_quantity = 0
+    for row in rows:
+        bin_row = row["inv_send_item_bin"]
+        bin_quantity = bin_row.quantity
+        if bin_quantity:
+            binned_quantity += bin_quantity
+            send_bins[bin_row.layout_id] = {"id": bin_row.id,
+                                            "quantity": bin_quantity,
+                                            }
+
+    # Read the Inv Item, including Bins
+    query = (iitable.id == inv_item_id) & \
+            (iitable.item_pack_id == iptable.id)
+    left = ibtable.on(ibtable.inv_item_id == iitable.id)
+    rows = db(query).select(iitable.quantity,
+                            iptable.quantity,
+                            ibtable.id,
+                            ibtable.layout_id,
+                            ibtable.quantity,
+                            left = left,
+                            )
+
+    row = rows.first()
+    inv_total_quantity = row["inv_inv_item.quantity"]
+    inv_pack_quantity = row["supply_item_pack.quantity"]
+    inv_bins = []
+    for row in rows:
+        bin_row = row["inv_inv_item_bin"]
+        bin_quantity = bin_row.quantity
+        if bin_quantity:
+            inv_bins.append({"id": bin_row.id,
+                             "layout_id": bin_row.layout_id,
+                             "quantity": bin_quantity,
+                             })
+
+    if send_quantity > binned_quantity:
+        # Auto-allocate
+        from operator import itemgetter
+        inv_bins.sort(key = itemgetter("quantity"))
+        to_allocate = (send_quantity - binned_quantity) * send_pack_quantity
+        while (to_allocate > 0):
+            for inv_bin in inv_bins:
+                layout_id = inv_bin["layout_id"]
+                inv_quantity = inv_bin["quantity"] * inv_pack_quantity
+                if layout_id in send_bins:
+                    send_bin = send_bins[layout_id]
+                    send_quantity = send_bin["quantity"] * send_pack_quantity
+                    if inv_quantity > send_quantity:
+                        # Allocate more from this bin
+                        if inv_quantity > (to_allocate + send_quantity):
+                            # Allocate all from this bin
+                            new_quantity = (to_allocate + send_quantity) / send_pack_quantity
+                            send_bin["quantity"] = new_quantity
+                            db(sbtable.id == send_bin["id"]).update(quantity = new_quantity)
+                            to_allocate = 0
+                        else:
+                            # Allocate what we can from this bin
+                            new_quantity = inv_quantity / send_pack_quantity
+                            send_bin["quantity"] = new_quantity
+                            db(sbtable.id == send_bin["id"]).update(quantity = new_quantity)
+                            to_allocate -= (inv_quantity - send_quantity)
+                else:
+                    if inv_quantity > to_allocate:
+                        # Allocate all from this bin
+                        new_quantity = to_allocate / send_pack_quantity
+                        bin_id = sbtable.insert(track_item_id = track_item_id,
+                                                layout_id = layout_id,
+                                                quantity = new_quantity,
+                                                )
+                        send_bins[layout_id] = {"id": bin_id,
+                                                "quantity": new_quantity,
+                                                }
+                        to_allocate = 0
+                    else:
+                        # Allocate what we can from this bin
+                        new_quantity = inv_quantity / send_pack_quantity
+                        bin_id = sbtable.insert(track_item_id = track_item_id,
+                                                layout_id = layout_id,
+                                                quantity = new_quantity,
+                                                )
+                        send_bins[layout_id] = {"id": bin_id,
+                                                "quantity": new_quantity,
+                                                }
+                        to_allocate -= inv_quantity
+            # Allocate from unbinned Stock
+            break
+
+    # Update Stock levels
+    if record:
+        # Update form
+        item_pack_id = record.item_pack_id
+        if item_pack_id == send_item_pack_id:
+            old_pack_quantity = send_pack_quantity
+        else:
+            old_pack = db(iptable.id == item_pack_id).select(iptable.quantity,
+                                                             limitby = (0, 1),
+                                                             ).first()
+            old_pack_quantity = old_pack.quantity
+        new_inv_quantity = ((inv_total_quantity * inv_pack_quantity)  + (record.quantity * old_pack_quantity) - (send_quantity * send_pack_quantity)) / inv_pack_quantity
+    else:
+        new_inv_quantity = ((inv_total_quantity * inv_pack_quantity) - (send_quantity * send_pack_quantity)) / inv_pack_quantity
+    db(iitable.id == inv_item_id).update(quantity = new_inv_quantity)
+
+    # Update Bins
+    if record:
+        old_bin_data = record.sub_defaultsend_bin
+        if old_bin_data:
+            old_bin_data = json.loads(old_bin_data) or {}
+            old_bin_data = old_bin_data.get("data", [])
+            old_bins = {}
+            for row in old_bin_data:
+                bin_quantity = row["quantity"]["value"]
+                if bin_quantity:
+                    old_bins[row["layout_id"]["value"]] = float(bin_quantity)
+    for inv_bin in inv_bins:
+        layout_id = inv_bin["layout_id"]
+        if record:
+            old_bin = old_bins.get(layout_id)
+            send_bin = send_bins.get(layout_id)
+            if send_bin and not old_bin:
+                new_bin_quantity = ((inv_bin["quantity"] * inv_pack_quantity) - (send_bin["quantity"] * send_pack_quantity)) / inv_pack_quantity
+                db(ibtable.id == inv_bin["id"]).update(quantity = new_bin_quantity)
+            elif old_bin and not send_bin:
+                new_bin_quantity = ((inv_bin["quantity"] * inv_pack_quantity) + (old_bin["quantity"] * old_pack_quantity)) / inv_pack_quantity
+                db(ibtable.id == inv_bin["id"]).update(quantity = new_bin_quantity)
+            elif send_bin and old_bin:
+                new_bin_quantity = ((inv_bin["quantity"] * inv_pack_quantity) + (old_bin["quantity"] * old_pack_quantity) - (send_bin["quantity"] * send_pack_quantity)) / inv_pack_quantity
+                db(ibtable.id == inv_bin["id"]).update(quantity = new_bin_quantity)
+        else:
+            send_bin = send_bins.get(layout_id)
+            if send_bin:
+                new_bin_quantity = ((inv_bin["quantity"] * inv_pack_quantity) - (send_bin["quantity"] * send_pack_quantity)) / inv_pack_quantity
+                db(ibtable.id == inv_bin["id"]).update(quantity = new_bin_quantity)
 
 # =============================================================================
 def inv_send_onaccept(form):
@@ -12065,9 +12051,7 @@ def inv_send_onaccept(form):
                                         send_inv_item_id = row.id,
                                         )
                     # Call inv_track_item_onaccept to remove inv_item from stock
-                    # @ToDo: Update for Bins
-                    #        - rewrite as separate function which works on all at once & 
-                    #          keeps inv_track_item_onaccept simpler
+                    # @ToDo: Rewrite as separate function which works in bulk & supports Bins
                     inv_track_item_onaccept(Storage(vars = form_vars))
 
     # If the send_ref is None then set it up
@@ -12171,9 +12155,6 @@ def inv_send_process(r, **attr):
                            args = [send_id],
                            ),
                 )
-
-    # Ensure that all Outbound Shipment Items are allocated from Inventory Bins
-    inv_pick(r)
 
     settings = current.deployment_settings
     stock_cards = settings.get_inv_stock_cards()
