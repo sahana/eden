@@ -38,47 +38,71 @@ $(document).ready(function() {
             InvQuantity, // Available Stock. Needs to be multiplied by InvPackQuantity for comparisons
             InvPackQuantity,
             ItemPackField = $('#inv_track_item_item_pack_id'),
+            itemPackID,
             newBinField = $('#sub_defaultsend_bin_defaultsend_bin_i_layout_id_edit_none'),
             newBinQuantityField = $('#sub_defaultsend_bin_defaultsend_bin_i_quantity_edit_none'),
             newTree = $('#sub_defaultsend_bin_defaultsend_bin_i_layout_id_edit_none-hierarchy'),
+            // Represent numbers with thousand separator
+            // @ToDo: Respect settings
+            numberFormat = /(\d)(?=(\d{3})+(?!\d))/g,
             oldBinField = $('#sub_defaultsend_bin_defaultsend_bin_i_layout_id_edit_0'),
             oldBinQuantityField = $('#sub_defaultsend_bin_defaultsend_bin_i_quantity_edit_0'),
+            oldPackQuantity,
             opt,
             pack,
             PackQuantity,
             PackName,
+            packs,
+            packsLength,
             piece,
             QuantityField = $('#inv_track_item_quantity'),
             ReqItemRow = $('#inv_track_item_req_item_id__row'),
+            req_items,
             selected,
             siteID = S3.supply.site_id,
             startingInvItemID = invItemField.val(),
             startingQuantity, // Needs to be multiplied by startingPackQuantity for comparisons
-            startingPackID,
-            startingPackQuantity,
+            startingPackID = S3.supply.itemPackID,
+            startingPackQuantity = 1,
             stockQuantity, // Available Stock of current Pack
             totalQuantity, // Value in QuantityField
-            trees = $('div[id^="sub_defaultsend_bin_defaultsend_bin_i_layout_id"].s3-hierarchy-widget'); // There will be 3
+            trees = $('div[id^="sub_defaultsend_bin_defaultsend_bin_i_layout_id"].s3-hierarchy-widget'), // There will be 3
+            update,
+            updateBinQuantity,
+            updateQuantity,
+            updateSendQuantity;
 
         if (ReqItemRow.length) {
             // Hide it by Default
             ReqItemRow.hide();
         }
 
-        var updateBinQuantity = function() {
+        updateBinQuantity = function() {
             // Runs when binsLength == 1
-            // Show the Bins
-            binRow.show();
-            // Populate the Bin Quantity field
-            binStockQuantity = bins[0].q; // Inv qty in Bin
-            if ((binStockQuantity * InvPackQuantity) > (totalQuantity * PackQuantity)) {
-                newBinQuantityField.val(totalQuantity);
+            if (update) {
+                // Update the Bin Quantity field
+                updateQuantity = function(row) {
+                    row.quantity.value = totalQuantity;
+                    row.quantity.text = totalQuantity.toString().replace(numberFormat, '$1,');
+                };
+                inlineComponent.inlinecomponent('updateRows', updateQuantity);
+                // Hide the buttons again
+                $('#edt-defaultsend_bin-0').hide();
+                $('#rmv-defaultsend_bin-0').hide();
             } else {
-                newBinQuantityField.val(binStockQuantity * InvPackQuantity / PackQuantity);
+                // Show the Bins
+                binRow.show();
+                // Populate the Bin Quantity field
+                binStockQuantity = bins[0].q; // Inv qty in Bin
+                if ((binStockQuantity * InvPackQuantity) > (totalQuantity * PackQuantity)) {
+                    newBinQuantityField.val(totalQuantity);
+                } else {
+                    newBinQuantityField.val(binStockQuantity * InvPackQuantity / PackQuantity);
+                }
             }
         };
 
-        var InvItemChange = function(event, update) {
+        var InvItemChange = function(event, first) {
             // Update the available packs for this item
             // Display the number of these items available in this site's inventory
 
@@ -86,9 +110,10 @@ $(document).ready(function() {
 
             // Remove old Elements
             ItemPackField.html('');
-            if (update) {
-                 // Don't clear for update forms
+            if (first) {
+                 // Don't clear for first run of update forms
             } else {
+                update = false;
                 QuantityField.val('');
                 totalQuantity = 0;
                 // Empty the Bins field
@@ -101,13 +126,12 @@ $(document).ready(function() {
             //if (!inv_items || !inv_items[inv_item_id]) {read data for this item via AJAX call to inv/inv_item_quantity & cache}
 
             var data = inv_items[inv_item_id],
-                defaultPack,
-                packs = data.p,
-                packsLength = packs.length,
-                req_items = data.r,
-                updateSendQuantity;
+                defaultPack;
 
             InvQuantity = data.q;
+            packs = data.p;
+            packsLength = packs.length;
+            req_items = data.r;
 
             for (i = 0; i < packsLength; i++) {
                 pack = packs[i];
@@ -127,11 +151,13 @@ $(document).ready(function() {
                     defaultPack = false;
                 }
                 if (startingPackID && (startingInvItemID == inv_item_id) && (startingPackID == pack.i)) {
-                    startingPackQuantity = PackQuantity = pack.q;
+                    itemPackID = pack.i;
+                    oldPackQuantity = startingPackQuantity = PackQuantity = pack.q;
                     PackName = pack.n;
                     selected = ' selected';
                 } else if (defaultPack) {
-                    PackQuantity = pack.q;
+                    itemPackID = pack.i;
+                    oldPackQuantity = PackQuantity = pack.q;
                     PackName = pack.n;
                     selected = ' selected';
                 } else {
@@ -144,6 +170,10 @@ $(document).ready(function() {
                 }
                 ItemPackField.append(opt);
             }
+            if (first) {
+                // Adjust the quantities now that the vars are defined
+                binnedQuantity = binnedQuantity * InvPackQuantity / PackQuantity;
+            }
 
             bins = data.b;
             binsLength = bins.length;
@@ -152,26 +182,33 @@ $(document).ready(function() {
                 // Hide the Bins
                 binRow.hide();
             } else if (binsLength == 1) {
-                // Show the Bins
-                binRow.show();
-                // Populate the Bin fields
-                updateBinQuantity();
-                var onTreeReady = function() {
-                    newTree.hierarchicalopts('set', [bins[0].l]);
-                    // Make read-only
-                    newBinQuantityField.attr('disabled', 'disabled');
-                    $('#add-row-defaultsend_bin > .subform-action').hide();
-                    newTree.next('.s3_inline_add_resource_link').hide();
-                    $('.s3-hierarchy-button').attr('disabled','disabled');
-                };
-                if (newTree.is(":data('s3-hierarchicalopts')")) {
-                    // Tree is already ready
-                    onTreeReady();
+                if (update) {
+                    // Hide the Add Row
+                    $('#add-row-defaultsend_bin').hide();
+                    // Hide the Buttons on the readRow
+                    $('#read-row-defaultsend_bin-0 > .subform-action').hide();
                 } else {
-                    // We run before the hierarchicalopts so need to wait for tree to be ready
-                    newTree.find('.s3-hierarchy-tree').first().on('ready.jstree', function() {
+                    // Show the Bins
+                    binRow.show();
+                    // Populate the Bin fields
+                    updateBinQuantity();
+                    var onTreeReady = function() {
+                        newTree.hierarchicalopts('set', [bins[0].l]);
+                        // Make read-only
+                        newBinQuantityField.attr('disabled', 'disabled');
+                        $('#add-row-defaultsend_bin > .subform-action').hide();
+                        newTree.next('.s3_inline_add_resource_link').hide();
+                        $('.s3-hierarchy-button').attr('disabled','disabled');
+                    };
+                    if (newTree.is(":data('s3-hierarchicalopts')")) {
+                        // Tree is already ready
                         onTreeReady();
-                    });
+                    } else {
+                        // We run before the hierarchicalopts so need to wait for tree to be ready
+                        newTree.find('.s3-hierarchy-tree').first().on('ready.jstree', function() {
+                            onTreeReady();
+                        });
+                    }
                 }
             } else {
                 // Split across multiple Bins
@@ -317,45 +354,66 @@ $(document).ready(function() {
 
                 updateSendQuantity();
             }
-
-            if (packsLength > 1) {
-                var item_pack_id;
-                ItemPackField.on('change', function() {
-                    item_pack_id = parseInt(ItemPackField.val());
-                    for (i = 0; i < packsLength; i++) {
-                        pack = packs[i]
-                        if (pack.i == item_pack_id) {
-                            PackQuantity = pack.q;
-                            PackName = pack.n;
-                            // Calculate Available Stock Quantity for this Pack
-                            stockQuantity = InvQuantity * InvPackQuantity / PackQuantity;
-                            if (startingQuantity && (startingInvItemID == inv_item_id)) {
-                                stockQuantity += (startingQuantity * startingPackQuantity / PackQuantity);
-                            }
-
-                            // Display Available Stock Quantity
-                            $('#TotalQuantity').html(stockQuantity.toFixed(2) + ' ' + PackName + ' (' + i18n.in_inv + ')');
-
-                            if (req_items) {
-                                // Update Send Quantity
-                                updateSendQuantity();
-                            }
-
-                            break;
-                        }
-                    }
-                });
-            }
         };
 
         invItemField.on('change.s3', InvItemChange);
 
+        ItemPackField.on('change.s3', function() {
+            itemPackID = parseInt(ItemPackField.val());
+            for (i = 0; i < packsLength; i++) {
+                pack = packs[i]
+                if (pack.i == itemPackID) {
+                    PackQuantity = pack.q;
+                    PackName = pack.n;
+                    // Calculate Available Stock Quantity for this Pack
+                    stockQuantity = InvQuantity * InvPackQuantity / PackQuantity;
+                    if (startingQuantity && (startingInvItemID == inv_item_id)) {
+                        stockQuantity += (startingQuantity * startingPackQuantity / PackQuantity);
+                    }
+
+                    // Display Available Stock Quantity
+                    $('#TotalQuantity').html(stockQuantity.toFixed(2) + ' ' + PackName + ' (' + i18n.in_inv + ')');
+
+                    // Adjust Total Quantity
+                    totalQuantity = QuantityField.val();
+                    totalQuantity = totalQuantity * oldPackQuantity / PackQuantity;
+                    QuantityField.val(totalQuantity);
+                    // Adjust Bins
+                    binQuantity = newBinQuantityField.val();
+                    binQuantity = binQuantity * oldPackQuantity / PackQuantity;
+                    newBinQuantityField.val(binQuantity);
+                    binQuantity = oldBinQuantityField.val();
+                    binQuantity = binQuantity * oldPackQuantity / PackQuantity;
+                    oldBinQuantityField.val(binQuantity);
+                    updateQuantity = function(row) {
+                        binQuantity = row.quantity.value;
+                        binQuantity = binQuantity * oldPackQuantity / PackQuantity;
+                        row.quantity.value = binQuantity;
+                        row.quantity.text = binQuantity.toString().replace(numberFormat, '$1,');
+                    };
+                    inlineComponent.inlinecomponent('updateRows', updateQuantity);
+                    // New oldPackQuantity
+                    oldPackQuantity = PackQuantity;
+
+                    if (req_items) {
+                        // Update Send Quantity
+                        updateSendQuantity();
+                    }
+
+                    break;
+                }
+            }
+        });
+
         if (startingInvItemID) {
             // Update form
+            update = true
             if (binnedQuantity == 0) {
                 binnedQuantity = oldBinQuantityField.val();
                 if (binnedQuantity) {
-                    binnedQuantity = parseFloat(binnedQuantity) * InvPackQuantity / PackQuantity;
+                    // InvPackQuantity & PackQuantity not yet defined so do this in InvItemChange
+                    //binnedQuantity = parseFloat(binnedQuantity) * InvPackQuantity / PackQuantity;
+                    binnedQuantity = parseFloat(binnedQuantity);
                 } else {
                     binnedQuantity = 0;
                 }
@@ -367,7 +425,6 @@ $(document).ready(function() {
             } else {
                 totalQuantity = 0;
             }
-            startingPackID = parseInt(ItemPackField.val());
             invItemField.trigger('change.s3', true);
         }
 
