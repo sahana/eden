@@ -4754,6 +4754,13 @@ class S3Config(Storage):
         """
         return self.inv.get("minimums", False)
 
+    def get_inv_send_add_items_of_shipment_type(self):
+        """
+            Whether to automatically add all Items of a Shipment Type to a Shipment
+            # eg. Items for Dump, Sale, Reject, Surplus
+        """
+        return self.inv.get("add_items_of_shipment_type", False)
+
     def get_inv_send_gift_certificate(self):
         """
             Whether to show a button to generate a Gift Certificate for Outbound Shipments

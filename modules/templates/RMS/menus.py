@@ -267,8 +267,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return self.hrm()
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def inv():
+    def inv(self):
         """ INV / Inventory """
 
         if current.request.function == "req_approver":

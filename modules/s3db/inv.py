@@ -11113,6 +11113,8 @@ def inv_send_commit():
                         )
     send_id = send_table.insert(**form_vars)
     form_vars.id = send_id
+    inv_send_onaccept(Storage(vars = form_vars))
+
     s3db.inv_send_req.insert(send_id = send_id,
                              req_id = record.inv_req.id,
                              )
@@ -11148,11 +11150,6 @@ def inv_send_commit():
                quantity = row.inv_commit_item.quantity,
                recv_quantity = row.inv_commit_item.quantity,
                )
-
-    # Create the Waybill
-    form = Storage()
-    form.vars = form_vars
-    inv_send_onaccept(form)
 
     # Redirect to inv_send for the send id just created
     redirect(URL(c = "inv",
@@ -12008,6 +12005,91 @@ def inv_send_item_postprocess(form):
                 db(ibtable.id == inv_bin["id"]).update(quantity = new_bin_quantity)
 
 # =============================================================================
+def inv_send_add_items_of_shipment_type(send_id, site_id, shipment_type):
+    """
+        Add all inv_items with status matching the send shipment type
+        eg. Items for Dump, Sale, Reject, Surplus
+    """
+
+    table = db.inv_track_item
+    sbtable = db.inv_send_item_bin
+    iitable = db.inv_inv_item
+    ibtable = db.inv_inv_item_bin
+    query = (iitable.site_id == site_id) & \
+            (iitable.status == shipment_type) & \
+            (iitable.quantity > 0)
+    left = ibtable.on(ubtable.inv_item_id == iitable.id)
+    rows = db(query).select(iitable.id,
+                            iitable.item_id,
+                            iitable.item_pack_id,
+                            iitable.quantity,
+                            iitable.pack_value,
+                            iitable.currency,
+                            iitable.expiry_date,
+                            iitable.item_source_no,
+                            iitable.owner_org_id,
+                            iitable.supply_org_id,
+                            ibtable.id,
+                            ibtable.layout_id,
+                            ibtable.quantity,
+                            left = left,
+                            )
+
+    inv_items = {}
+    inv_bin_ids = []
+    iappend = inv_bin_ids.append
+    for row in rows:
+        bin_row = row["inv_inv_item_bin"]
+        bin_quantity = bin_row.quantity
+        if bin_quantity:
+            iappend(bin_row.id)
+            inv_bin = {"layout_id": bin_row.layout_id,
+                       "quantity": bin_quantity,
+                       }
+        inv_row = row["inv_inv_item"]
+        inv_item_id = inv_row.id
+        if inv_item_id not in inv_items:
+            if bin_quantity:
+                inv_bins = [inv_bin]
+            else:
+                inv_bins = []
+            inv_items[inv_item_id] = {"track_record": {"send_inv_item_id": inv_item_id,
+                                                       "inv_item_status": shipment_type,
+                                                       "item_id": inv_row.item_id,
+                                                       "item_pack_id": inv_row.item_pack_id,
+                                                       "quantity": inv_row.quantity,
+                                                       "pack_value": inv_row.pack_value,
+                                                       "currency": inv_row.currency,
+                                                       "expiry_date": inv_row.expiry_date,
+                                                       "item_source_no": inv_row.item_source_no,
+                                                       "owner_org_id": inv_row.owner_org_id,
+                                                       "supply_org_id": inv_row.supply_org_id,
+                                                       },
+                                      "inv_bins": inv_bins,
+                                      }
+        elif bin_quantity:
+            inv_items["inv_bins"].append(inv_bin)
+
+    for inv_item_id in inv_items:
+        inv_item = inv_items[inv_item_id]
+
+        # Create the Track Item record
+        track_record = inv_item["track_record"]
+        track_item_id = table.insert(**track_record)
+
+        # Create the Send Bins
+        inv_bins = inv_item["inv_bins"]
+        for inv_bin in inv_bins:
+            sbtable.insert(track_item_id = track_item_id,
+                           layout_id = inv_bin["layout_id"],
+                           quantity = inv_bin["quantity"],
+                           )
+
+    # Remove the Stock from Inventory
+    db(iitable.id.belongs(inv_items.keys())).update(quantity = 0)
+    db(ibtable.id.belongs(inv_bin_ids)).update(quantity = 0)
+
+# =============================================================================
 def inv_send_onaccept(form):
     """
        When a inv send record is created
@@ -12015,57 +12097,22 @@ def inv_send_onaccept(form):
        - add all inv items with the status of the shipment type
     """
 
-    db = current.db
-
     form_vars = form.vars
-    record_id = form_vars.id
+    send_id = form_vars.id
 
-    shipment_type = form_vars.type
-    if shipment_type:
-        shipment_type = int(shipment_type)
+    if current.deployment_settings.get_inv_send_add_items_of_shipment_type():
+        shipment_type = form_vars.type
         if shipment_type:
-            # Add all inv_items with status matching the send shipment type
-            # eg. Items for Dump, Sale, Reject, Surplus
-            site_id = form_vars.site_id
-            itable = db.inv_inv_item
-            tracktable = db.inv_track_item
-            query = (itable.site_id == site_id) & \
-                    (itable.status == shipment_type)
-            rows = db(query).select()
-            for row in rows:
-                if row.quantity != 0:
-                    # Insert inv_item to inv_track_item
-                    inv_track_id = tracktable.insert(send_id = record_id,
-                                                     send_inv_item_id = row.id,
-                                                     item_id = row.item_id,
-                                                     quantity = row.quantity,
-                                                     currency = row.currency,
-                                                     pack_value = row.pack_value,
-                                                     expiry_date = row.expiry_date,
-                                                     owner_org_id = row.owner_org_id,
-                                                     supply_org_id = row.supply_org_id,
-                                                     item_source_no = row.item_source_no,
-                                                     item_pack_id = row.item_pack_id,
-                                                     inv_item_status = row.status,
-                                                     #status = TRACK_STATUS_PREPARING,
-                                                     )
-                    # Construct form.vars for inv_track_item_onaccept
-                    form_vars = Storage(id = inv_track_id,
-                                        quantity = row.quantity,
-                                        item_pack_id = row.item_pack_id,
-                                        send_inv_item_id = row.id,
-                                        )
-                    # Call inv_track_item_onaccept to remove inv_item from stock
-                    # @ToDo: Rewrite as separate function which works in bulk & supports Bins
-                    inv_track_item_onaccept(Storage(vars = form_vars))
+            inv_send_add_items_of_shipment_type(send_id, form_vars.site_id, int(shipment_type))
 
     # If the send_ref is None then set it up
+    db = current.db
     stable = db.inv_send
-    record = db(stable.id == record_id).select(stable.id,
-                                               stable.send_ref,
-                                               stable.site_id,
-                                               limitby = (0, 1),
-                                               ).first()
+    record = db(stable.id == send_id).select(stable.id,
+                                             stable.send_ref,
+                                             stable.site_id,
+                                             limitby = (0, 1),
+                                             ).first()
     if not record.send_ref:
         from .supply import supply_get_shipping_code as get_shipping_code
         code = get_shipping_code(current.deployment_settings.get_inv_send_shortname(),

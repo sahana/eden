@@ -3019,9 +3019,9 @@ Please go to %(url)s to approve this user."""
         else:
             fields.append(ptable.last_name)
 
-        rows = db(query).select(*fields,
-                                distinct=True,
-                                left = left)
+        rows = db(query).select(distinct = True,
+                                left = left,
+                                *fields)
 
         person_ids = [] # Collect the person IDs
 

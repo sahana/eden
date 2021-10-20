@@ -756,7 +756,8 @@ class S3SQLDefaultForm(S3SQLForm):
                     update_realm = s3db.get_config(table, "update_realm")
                     if update_realm:
                         current.auth.set_realm_entity(table, form_vars,
-                                                      force_update = True)
+                                                      force_update = True,
+                                                      )
                 # Store session vars
                 self.resource.lastid = str(form_vars.id)
                 s3_store_last_record_id(tablename, form_vars.id)
@@ -784,7 +785,8 @@ class S3SQLDefaultForm(S3SQLForm):
                     if fieldname in table:
                         if isinstance(table[fieldname].requires, IS_LIST_OF):
                             errors.append("%s: %s" % (fieldname,
-                                                      form.errors[fieldname]))
+                                                      form.errors[fieldname],
+                                                      ))
                         else:
                             errors.append(str(form.errors[fieldname]))
                 if errors:

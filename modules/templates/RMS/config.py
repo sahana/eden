@@ -3892,6 +3892,8 @@ Thank you"""
             message_T = T("%(item)s replenishment needed in %(site)s Warehouse. %(quantity)s remaining. Please review at: %(url)s")
             alert_T = T("%(item)s replenishment needed in %(site)s Warehouse. %(quantity)s remaining")
 
+            warnings = []
+
             for alert in alerts:
                 item_id = alert[0]
                 item = items.get(item_id)
@@ -3936,7 +3938,9 @@ Thank you"""
                                            "site": warehouse_name,
                                            "quantity": quantity,
                                            }
-                session.warning.append(alert)
+                warnings.append(alert)
+
+        session.warning = ", ".join(warnings)
 
     # -------------------------------------------------------------------------
     def on_free_capacity_update(warehouse):
