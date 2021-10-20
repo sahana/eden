@@ -6928,7 +6928,7 @@ class S3Permission(object):
                         c = None,
                         f = None,
                         t = None,
-                        entity = None
+                        entity = None,
                         ):
         """
             Find all applicable ACLs for the specified situation for

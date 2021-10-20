@@ -153,9 +153,9 @@ class S3Codec(object):
     # Error handling
     # -------------------------------------------------------------------------
     @staticmethod
-    def json_message(success=True,
-                     statuscode=None,
-                     message=None,
+    def json_message(success = True,
+                     statuscode = None,
+                     message = None,
                      **kwargs):
         """
             Provide a nicely-formatted JSON Message

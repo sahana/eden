@@ -70,12 +70,16 @@ __all__ = ("WarehouseModel",
            "inv_req_update_status", # exported for recv_cancel controller (until rewritten as Method)
            "inv_rfooter",
            "inv_rheader",
+           #"inv_send_add_items_of_shipment_type",
            "inv_send_commit",
            "inv_send_controller",
+           #"inv_send_cancel",
            #"inv_send_item_postprocess",
            #"inv_send_onaccept",
            #"inv_send_process",
            #"inv_send_received",
+           #"inv_send_return",
+           #"inv_send_return_complete",
            #"inv_send_rheader",
            "inv_ship_status",
            #"inv_stock_card_update",
@@ -4093,7 +4097,9 @@ class InventoryRequisitionModel(S3Model):
         rtable = s3db.inv_req
 
         # Check we have permission to update the Request
-        if not current.auth.s3_has_permission("update", rtable, record_id=req_id):
+        if not current.auth.s3_has_permission("update", rtable,
+                                              record_id = req_id,
+                                              ):
             r.unauthorised()
 
         db = current.db
@@ -5620,6 +5626,12 @@ class InventoryTrackingModel(S3Model):
                        )
 
         # Custom methods
+        # Cancel Shipment
+        set_method("inv", "send",
+                   method = "cancel",
+                   action = inv_send_cancel,
+                   )
+
         # Generate PDF of Waybill
         set_method("inv", "send",
                    method = "form",
@@ -5660,6 +5672,18 @@ class InventoryTrackingModel(S3Model):
         set_method("inv", "send",
                    method = "received",
                    action = inv_send_received,
+                   )
+
+        # Manage Returns
+        set_method("inv", "send",
+                   method = "return",
+                   action = inv_send_return,
+                   )
+
+        # Complete Returns
+        set_method("inv", "send",
+                   method = "return_complete",
+                   action = inv_send_return_complete,
                    )
 
         # Display Timeline
@@ -9490,6 +9514,7 @@ def inv_recv_rheader(r):
                     (tracktable.deleted == False)
             cnt = current.db(query).count()
 
+            s3 = current.response.s3
             if record.status == SHIP_STATUS_SENT or \
                record.status == SHIP_STATUS_IN_PROCESS:
                 if current.auth.s3_has_permission("update", "inv_recv",
@@ -9502,12 +9527,14 @@ def inv_recv_rheader(r):
                                                             "process",
                                                             ]
                                                     ),
-                                        _id = "recv_process",
+                                        _id = "recv-process",
                                         _class = "action-btn"
                                         ))
-                        recv_btn_confirm = SCRIPT("S3.confirmClick('#recv_process', '%s')"
-                                                  % T("Do you want to receive this shipment?") )
-                        rfooter.append(recv_btn_confirm)
+                        s3.js_global.append('''i18n.recv_process_confirm="%s"''' % T("Do you want to receive this shipment?"))
+                        if s3.debug:
+                            s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_rheader.js" % r.application)
+                        else:
+                            s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_rheader.min.js" % r.application)
                     else:
                         msg = T("You need to check all item quantities and allocate to bins before you can receive the shipment")
                         rfooter.append(SPAN(msg))
@@ -9533,9 +9560,13 @@ def inv_recv_rheader(r):
                 msg = T("This shipment contains one line item")
             elif cnt > 1:
                 msg = T("This shipment contains %s items") % cnt
-            shipment_details.append(TR(TH(action, _colspan=2), TD(msg)))
+            shipment_details.append(TR(TH(action,
+                                          _colspan = 2,
+                                          ),
+                                       TD(msg),
+                                       ))
 
-            current.response.s3.rfooter = rfooter
+            s3.rfooter = rfooter
             rheader = DIV(shipment_details,
                           rheader_tabs,
                           )
@@ -9582,20 +9613,19 @@ def inv_recv_pdf_footer(r):
 def inv_recv_process(r, **attr):
     """
         Receive a Shipment
-
-        @ToDo: Avoid Writes in GETs
     """
+
+    if r.http != "POST":
+        r.error(405, current.ERROR.BAD_METHOD,
+                next = URL(),
+                )
 
     T = current.T
 
     recv_id = r.id
 
     if not recv_id:
-        r.error(405, T("Can only receive a single shipment."),
-                next = URL(c = "inv",
-                           f = "recv",
-                           ),
-                )
+        r.error(405, T("Can only receive a single shipment."))
 
     auth = current.auth
     s3db = current.s3db
@@ -9619,18 +9649,12 @@ def inv_recv_process(r, **attr):
     status = recv_record.status
     if status == inv_ship_status["RECEIVED"]:
         r.error(405, T("This shipment has already been received."),
-                next = URL(c = "inv",
-                           f = "recv",
-                           args = [recv_id],
-                           ),
+                tree = URL(args = [recv_id]),
                 )
 
     elif status == inv_ship_status["CANCEL"]:
         r.error(405, T("This shipment has already been received & subsequently canceled."),
-                next = URL(c = "inv",
-                           f = "recv",
-                           args = [recv_id],
-                           ),
+                tree = URL(args = [recv_id]),
                 )
 
     settings = current.deployment_settings
@@ -9735,10 +9759,14 @@ def inv_recv_process(r, **attr):
         on_inv_recv_process(recv_record)
 
     # Done => confirmation message, open the record
-    current.session.confirmation = T("Shipment Items Received")
-    redirect(URL(c="inv", f="recv",
-                 args = [recv_id],
-                 ))
+    message = T("Shipment Items Received")
+    current.session.confirmation = message
+
+    output = json.dumps({"message": s3_str(message),
+                         "tree": URL(args = [recv_id]),
+                         }, separators=SEPARATORS)
+    current.response.headers["Content-Type"] = "application/json"
+    return output
 
 # =============================================================================
 def inv_req_job_reset(r, **attr):
@@ -9754,7 +9782,9 @@ def inv_req_job_reset(r, **attr):
                 S3Task.reset(job_id)
                 current.session.confirmation = current.T("Job reactivated")
 
-    redirect(r.url(method="", component_id=0))
+    redirect(r.url(method = "",
+                   component_id = 0,
+                   ))
 
 # =============================================================================
 def inv_req_job_run(r, **attr):
@@ -11059,18 +11089,102 @@ def inv_remove(inv_rec,
     return send_item_quantity
 
 # =============================================================================
+def inv_send_add_items_of_shipment_type(send_id, site_id, shipment_type):
+    """
+        Add all inv_items with status matching the send shipment type
+        eg. Items for Dump, Sale, Reject, Surplus
+    """
+
+    table = db.inv_track_item
+    sbtable = db.inv_send_item_bin
+    iitable = db.inv_inv_item
+    ibtable = db.inv_inv_item_bin
+    query = (iitable.site_id == site_id) & \
+            (iitable.status == shipment_type) & \
+            (iitable.quantity > 0)
+    left = ibtable.on(ubtable.inv_item_id == iitable.id)
+    rows = db(query).select(iitable.id,
+                            iitable.item_id,
+                            iitable.item_pack_id,
+                            iitable.quantity,
+                            iitable.pack_value,
+                            iitable.currency,
+                            iitable.expiry_date,
+                            iitable.item_source_no,
+                            iitable.owner_org_id,
+                            iitable.supply_org_id,
+                            ibtable.id,
+                            ibtable.layout_id,
+                            ibtable.quantity,
+                            left = left,
+                            )
+
+    inv_items = {}
+    inv_bin_ids = []
+    iappend = inv_bin_ids.append
+    for row in rows:
+        bin_row = row["inv_inv_item_bin"]
+        bin_quantity = bin_row.quantity
+        if bin_quantity:
+            iappend(bin_row.id)
+            inv_bin = {"layout_id": bin_row.layout_id,
+                       "quantity": bin_quantity,
+                       }
+        inv_row = row["inv_inv_item"]
+        inv_item_id = inv_row.id
+        if inv_item_id not in inv_items:
+            if bin_quantity:
+                inv_bins = [inv_bin]
+            else:
+                inv_bins = []
+            inv_items[inv_item_id] = {"track_record": {"send_inv_item_id": inv_item_id,
+                                                       "inv_item_status": shipment_type,
+                                                       "item_id": inv_row.item_id,
+                                                       "item_pack_id": inv_row.item_pack_id,
+                                                       "quantity": inv_row.quantity,
+                                                       "pack_value": inv_row.pack_value,
+                                                       "currency": inv_row.currency,
+                                                       "expiry_date": inv_row.expiry_date,
+                                                       "item_source_no": inv_row.item_source_no,
+                                                       "owner_org_id": inv_row.owner_org_id,
+                                                       "supply_org_id": inv_row.supply_org_id,
+                                                       },
+                                      "inv_bins": inv_bins,
+                                      }
+        elif bin_quantity:
+            inv_items["inv_bins"].append(inv_bin)
+
+    for inv_item_id in inv_items:
+        inv_item = inv_items[inv_item_id]
+
+        # Create the Track Item record
+        track_record = inv_item["track_record"]
+        track_item_id = table.insert(**track_record)
+
+        # Create the Send Bins
+        inv_bins = inv_item["inv_bins"]
+        for inv_bin in inv_bins:
+            sbtable.insert(track_item_id = track_item_id,
+                           layout_id = inv_bin["layout_id"],
+                           quantity = inv_bin["quantity"],
+                           )
+
+    # Remove the Stock from Inventory
+    db(iitable.id.belongs(inv_items.keys())).update(quantity = 0)
+    db(ibtable.id.belongs(inv_bin_ids)).update(quantity = 0)
+
+# =============================================================================
 def inv_send_commit():
     """
         Controller function to create a Shipment containing all
         Items in a Commitment (interactive)
 
         @ToDo: Rewrite as Method
-        @ToDo: Avoid Writes in GETs
     """
 
     # Get the commit record
     try:
-        commit_id = current.request.args[0]
+        commit_id = r.id
     except KeyError:
         redirect(URL(c="inv", f="commit"))
 
@@ -11827,6 +11941,83 @@ S3.supply.site_id=%s%s''' % (json.dumps(inv_data, separators=SEPARATORS),
                                    )
 
 # =============================================================================
+def inv_send_cancel(r, **attr):
+    """
+        This will cancel a shipment that has been sent
+
+        @ToDo: Redirect to a screen to do Bin allocations?
+
+        @todo need to roll back commitments
+    """
+
+    if r.http != "POST":
+        r.error(405, current.ERROR.BAD_METHOD,
+                next = URL(),
+                )
+
+    T = current.T
+
+    send_id = r.id
+    r.error(405, T("Can only cancel a single shipment."))
+
+    s3db = current.s3db
+
+    stable = s3db.inv_send
+
+    if not current.auth.s3_has_permission("delete", stable,
+                                          record_id = send_id,
+                                          ):
+        r.unauthorised()
+
+    record = r.record
+
+    if record.status != SHIP_STATUS_SENT:
+        r.error(409, T("This shipment has not been sent - it has NOT been canceled because it can still be edited."),
+                tree = URL(args = [send_id]),
+                )
+
+    db = current.db
+
+    rtable = s3db.inv_recv
+    tracktable = s3db.inv_track_item
+
+    # Change the send and recv status to cancelled
+    db(stable.id == send_id).update(status = SHIP_STATUS_CANCEL)
+    recv_row = db(tracktable.send_id == send_id).select(tracktable.recv_id,
+                                                        limitby = (0, 1),
+                                                        ).first()
+    if recv_row:
+        db(rtable.id == recv_row.recv_id).update(date = r.utcnow,
+                                                 status = SHIP_STATUS_CANCEL,
+                                                 )
+
+    # Change the track items status to canceled and then delete them
+    # If they are linked to a request then the in transit total will also be reduced
+    # Records can only be deleted if the status is In Process (or preparing)
+    # so change the status before we delete
+    # @ToDo: Rewrite to do this in Bulk
+    db(tracktable.send_id == send_id).update(status = TRACK_STATUS_PREPARING)
+    track_rows = db(tracktable.send_id == send_id).select(tracktable.id)
+    for track_item in track_rows:
+        inv_track_item_deleting(track_item.id)
+
+    # Now change the status to cancelled
+    db(tracktable.send_id == send_id).update(status = TRACK_STATUS_CANCELED)
+
+    if current.deployment_settings.get_inv_warehouse_free_capacity_calculated():
+        # Update the Warehouse Free capacity
+        inv_warehouse_free_capacity(record.site_id)
+
+    message = T("Sent Shipment canceled and items returned to Warehouse")
+    current.session.confirmation = message
+
+    output = json.dumps({"message": s3_str(message),
+                         "tree": URL(args = [send_id]),
+                         }, separators=SEPARATORS)
+    current.response.headers["Content-Type"] = "application/json"
+    return output
+
+# =============================================================================
 def inv_send_item_postprocess(form):
     """
         When a Stock Item is added to a Shipment then we need to remove it from
@@ -12005,91 +12196,6 @@ def inv_send_item_postprocess(form):
                 db(ibtable.id == inv_bin["id"]).update(quantity = new_bin_quantity)
 
 # =============================================================================
-def inv_send_add_items_of_shipment_type(send_id, site_id, shipment_type):
-    """
-        Add all inv_items with status matching the send shipment type
-        eg. Items for Dump, Sale, Reject, Surplus
-    """
-
-    table = db.inv_track_item
-    sbtable = db.inv_send_item_bin
-    iitable = db.inv_inv_item
-    ibtable = db.inv_inv_item_bin
-    query = (iitable.site_id == site_id) & \
-            (iitable.status == shipment_type) & \
-            (iitable.quantity > 0)
-    left = ibtable.on(ubtable.inv_item_id == iitable.id)
-    rows = db(query).select(iitable.id,
-                            iitable.item_id,
-                            iitable.item_pack_id,
-                            iitable.quantity,
-                            iitable.pack_value,
-                            iitable.currency,
-                            iitable.expiry_date,
-                            iitable.item_source_no,
-                            iitable.owner_org_id,
-                            iitable.supply_org_id,
-                            ibtable.id,
-                            ibtable.layout_id,
-                            ibtable.quantity,
-                            left = left,
-                            )
-
-    inv_items = {}
-    inv_bin_ids = []
-    iappend = inv_bin_ids.append
-    for row in rows:
-        bin_row = row["inv_inv_item_bin"]
-        bin_quantity = bin_row.quantity
-        if bin_quantity:
-            iappend(bin_row.id)
-            inv_bin = {"layout_id": bin_row.layout_id,
-                       "quantity": bin_quantity,
-                       }
-        inv_row = row["inv_inv_item"]
-        inv_item_id = inv_row.id
-        if inv_item_id not in inv_items:
-            if bin_quantity:
-                inv_bins = [inv_bin]
-            else:
-                inv_bins = []
-            inv_items[inv_item_id] = {"track_record": {"send_inv_item_id": inv_item_id,
-                                                       "inv_item_status": shipment_type,
-                                                       "item_id": inv_row.item_id,
-                                                       "item_pack_id": inv_row.item_pack_id,
-                                                       "quantity": inv_row.quantity,
-                                                       "pack_value": inv_row.pack_value,
-                                                       "currency": inv_row.currency,
-                                                       "expiry_date": inv_row.expiry_date,
-                                                       "item_source_no": inv_row.item_source_no,
-                                                       "owner_org_id": inv_row.owner_org_id,
-                                                       "supply_org_id": inv_row.supply_org_id,
-                                                       },
-                                      "inv_bins": inv_bins,
-                                      }
-        elif bin_quantity:
-            inv_items["inv_bins"].append(inv_bin)
-
-    for inv_item_id in inv_items:
-        inv_item = inv_items[inv_item_id]
-
-        # Create the Track Item record
-        track_record = inv_item["track_record"]
-        track_item_id = table.insert(**track_record)
-
-        # Create the Send Bins
-        inv_bins = inv_item["inv_bins"]
-        for inv_bin in inv_bins:
-            sbtable.insert(track_item_id = track_item_id,
-                           layout_id = inv_bin["layout_id"],
-                           quantity = inv_bin["quantity"],
-                           )
-
-    # Remove the Stock from Inventory
-    db(iitable.id.belongs(inv_items.keys())).update(quantity = 0)
-    db(ibtable.id.belongs(inv_bin_ids)).update(quantity = 0)
-
-# =============================================================================
 def inv_send_onaccept(form):
     """
        When a inv send record is created
@@ -12163,19 +12269,21 @@ def inv_send_package_update(send_package_id):
 def inv_send_process(r, **attr):
     """
         Process a Shipment
-
-        @ToDo: Avoid Writes in GETs
+        - called via POST from inv_send_rheader
+        - called via JSON method to reduce request overheads
     """
+
+    if r.http != "POST":
+        r.error(405, current.ERROR.BAD_METHOD,
+                next = URL(),
+                )
 
     T = current.T
 
     send_id = r.id
 
     if not send_id:
-        r.error(405, T("Can only process a single shipment."),
-                next = URL(f = "send",
-                           ),
-                )
+        r.error(405, T("Can only process a single shipment."))
 
     auth = current.auth
     s3db = current.s3db
@@ -12186,27 +12294,16 @@ def inv_send_process(r, **attr):
                                   ):
         r.unauthorised()
 
-    db = current.db
+    record = r.record
 
-    send_record = db(stable.id == send_id).select(stable.status,
-                                                  stable.sender_id,
-                                                  stable.send_ref,
-                                                  stable.req_ref,
-                                                  stable.site_id,
-                                                  stable.delivery_date,
-                                                  stable.recipient_id,
-                                                  stable.to_site_id,
-                                                  stable.transport_type,
-                                                  stable.comments,
-                                                  limitby = (0, 1),
-                                                  ).first()
-
-    if send_record.status != SHIP_STATUS_IN_PROCESS:
-        r.error(409, T("This shipment has already been sent."),
-                next = URL(f = "send",
-                           args = [send_id],
-                           ),
+    if record.status != SHIP_STATUS_IN_PROCESS:
+        error = T("No items have been selected for shipping.")
+        current.session.error = error
+        r.error(409, error,
+                tree = URL(args = [send_id]),
                 )
+
+    db = current.db
 
     settings = current.deployment_settings
     stock_cards = settings.get_inv_stock_cards()
@@ -12221,19 +12318,15 @@ def inv_send_process(r, **attr):
         track_fields.append(tracktable.send_inv_item_id)
     track_items = db(tracktable.send_id == send_id).select(*track_fields)
     if not track_items:
-        r.error(409, T("No items have been selected for shipping."),
-                next = URL(f = "send",
-                           args = [send_id],
-                           ),
+        error = T("No items have been selected for shipping.")
+        current.session.error = error
+        r.error(409, error,
+                tree = URL(args = [send_id]),
                 )
 
     # Update Send record & lock for editing
-    #system_roles = auth.get_system_roles()
-    #ADMIN = system_roles.ADMIN
     db(stable.id == send_id).update(date = r.utcnow,
                                     status = SHIP_STATUS_SENT,
-                                    #owned_by_user = None,
-                                    #owned_by_group = ADMIN,
                                     )
 
     # If this is linked to a Request then update the quantity in transit
@@ -12268,15 +12361,15 @@ def inv_send_process(r, **attr):
 
     # Create a Receive record
     rtable = s3db.inv_recv
-    recv = {"sender_id": send_record.sender_id,
-            "send_ref": send_record.send_ref,
-            "req_ref": send_record.req_ref,
-            "from_site_id": send_record.site_id,
-            "eta": send_record.delivery_date,
-            "recipient_id": send_record.recipient_id,
-            "site_id": send_record.to_site_id,
-            "transport_type": send_record.transport_type,
-            "comments": send_record.comments,
+    recv = {"sender_id": record.sender_id,
+            "send_ref": record.send_ref,
+            "req_ref": record.req_ref,
+            "from_site_id": record.site_id,
+            "eta": record.delivery_date,
+            "recipient_id": record.recipient_id,
+            "site_id": record.to_site_id,
+            "transport_type": record.transport_type,
+            "comments": record.comments,
             "status": SHIP_STATUS_SENT,
             "type": 1, # "Another Inventory"
             }
@@ -12292,7 +12385,7 @@ def inv_send_process(r, **attr):
 
     if settings.get_inv_warehouse_free_capacity_calculated():
         # Update the Warehouse Free capacity
-        inv_warehouse_free_capacity(send_record.site_id)
+        inv_warehouse_free_capacity(record.site_id)
 
     if stock_cards:
         inv_item_ids = [row.send_inv_item_id for row in track_items]
@@ -12305,31 +12398,34 @@ def inv_send_process(r, **attr):
     tablename = "inv_send"
     on_inv_send_process = s3db.get_config(tablename, "on_inv_send_process")
     if on_inv_send_process:
-        send_record.id = send_id
-        on_inv_send_process(send_record)
+        on_inv_send_process(record)
 
-    current.session.confirmation = T("Shipment Items sent from Warehouse")
-    redirect(URL(f = "send",
-                 args = [send_id, "track_item"]
-                 ))
+    message = T("Shipment Items sent from Warehouse")
+    current.session.confirmation = message
+
+    output = json.dumps({"message": s3_str(message),
+                         "tree": URL(args = [send_id, "track_item"]),
+                         }, separators=SEPARATORS)
+    current.response.headers["Content-Type"] = "application/json"
+    return output
 
 # =============================================================================
 def inv_send_received(r, **attr):
     """
         Confirm a Shipment has been Received
-
-        @ToDo: Avoid Writes in GETs
     """
+
+    if r.http != "POST":
+        r.error(405, current.ERROR.BAD_METHOD,
+                next = URL(),
+                )
 
     T = current.T
 
     send_id = r.id
 
     if not send_id:
-        r.error(405, T("Can only confirm a single shipment."),
-                next = URL(f = "send",
-                           ),
-                )
+        r.error(405, T("Can only confirm a single shipment."))
 
     auth = current.auth
     s3db = current.s3db
@@ -12396,11 +12492,163 @@ def inv_send_received(r, **attr):
                     # REQ_STATUS_PARTIAL
                     db(rtable.id == req_id).update(fulfil_status = 1)
 
-    current.session.confirmation = T("Shipment received")
-    redirect(URL(c = "inv",
-                 f = "send",
-                 args = [send_id],
-                 ))
+    message = T("Shipment received")
+    current.session.confirmation = message
+
+    output = json.dumps({"message": s3_str(message),
+                         "tree": URL(args = [send_id, "track_item"]),
+                         }, separators=SEPARATORS)
+    current.response.headers["Content-Type"] = "application/json"
+    return output
+
+# =============================================================================
+def inv_send_return_complete(r, **attr):
+    """
+        Return some stock from a shipment back into the warehouse
+
+        @ToDo: Bin Allocations
+    """
+
+    if r.http != "POST":
+        r.error(405, current.ERROR.BAD_METHOD,
+                next = URL(),
+                )
+
+    T = current.T
+
+    send_id = r.id
+
+    if not send_id:
+        r.error(405, T("Can only return a single shipment."))
+
+    s3db = current.s3db
+
+    stable = s3db.inv_send
+
+    if not current.auth.s3_has_permission("update", stable,
+                                          record_id = send_id,
+                                          ):
+        r.unauthorised()
+
+    record = r.record
+
+    if record.status != SHIP_STATUS_RETURNING:
+        r.error(409, T("This shipment has not been returned."),
+                tree = URL(args = [send_id]),
+                )
+
+    db = current.db
+
+    invtable = s3db.inv_inv_item
+    tracktable = s3db.inv_track_item
+
+    # Move the goods back into the warehouse and change the status to received
+    # Update Receive record & lock for editing
+    # Move each item to the site
+    track_rows = db(tracktable.send_id == send_id).select(tracktable.id,
+                                                          tracktable.quantity,
+                                                          tracktable.return_quantity,
+                                                          tracktable.send_inv_item_id,
+                                                          )
+    for track_item in track_rows:
+        send_inv_id = track_item.send_inv_item_id
+        return_qnty = track_item.return_quantity
+        if return_qnty == None:
+            return_qnty = 0
+        # Update the receive quantity in the tracking record
+        db(tracktable.id == track_item.id).update(recv_quantity = track_item.quantity - return_qnty)
+        if return_qnty:
+            db(invtable.id == send_inv_id).update(quantity = invtable.quantity + return_qnty)
+
+    db(stable.id == send_id).update(status = SHIP_STATUS_RECEIVED)
+    recv_row = db(tracktable.send_id == send_id).select(tracktable.recv_id,
+                                                        limitby = (0, 1),
+                                                        ).first()
+    if recv_row:
+        db(s3db.inv_recv.id == recv_row.recv_id).update(date = r.utcnow,
+                                                        status = SHIP_STATUS_RECEIVED,
+                                                        )
+
+    # Change the status for all track items in this shipment to Received
+    db(tracktable.send_id == send_id).update(status = TRACK_STATUS_ARRIVED)
+
+    if current.deployment_settings.get_inv_warehouse_free_capacity_calculated():
+        # Update the Warehouse Free capacity
+        inv_warehouse_free_capacity(record.site_id)
+
+    redirect(URL(args = [send_id]))
+
+    message = T("Return completed. Stock is back in the Warehouse and can be assigned to Bins")
+    current.session.confirmation = message
+
+    output = json.dumps({"message": s3_str(message),
+                         "tree": URL(args = [send_id]),
+                         }, separators=SEPARATORS)
+    current.response.headers["Content-Type"] = "application/json"
+    return output
+
+# =============================================================================
+def inv_send_return(r, **attr):
+    """
+        This will return a shipment that has been sent
+
+        @todo need to roll back commitments
+    """
+
+    if r.http != "POST":
+        r.error(405, current.ERROR.BAD_METHOD,
+                next = URL(),
+                )
+
+    T = current.T
+
+    send_id = r.id
+
+    if not send_id:
+        r.error(405, T("Can only return a single shipment."),
+                next = URL(),
+                )
+
+    s3db = current.s3db
+
+    stable = s3db.inv_send
+
+    if not current.auth.s3_has_permission("update", stable,
+                                          record_id = send_id,
+                                          ):
+        r.unauthorised()
+
+    if r.record.status == SHIP_STATUS_IN_PROCESS:
+        r.error(409, T("This shipment has not been sent - it cannot be returned because it can still be edited."),
+                tree = URL(args = [send_id]),
+                )
+
+    db = current.db
+
+    rtable = s3db.inv_recv
+    tracktable = s3db.inv_track_item
+
+    # Change the status to Returning
+    db(stable.id == send_id).update(status = SHIP_STATUS_RETURNING)
+    recv_row = db(tracktable.send_id == send_id).select(tracktable.recv_id,
+                                                        limitby = (0, 1),
+                                                        ).first()
+    if recv_row:
+        db(rtable.id == recv_row.recv_id).update(date = r.utcnow,
+                                                 status = SHIP_STATUS_RETURNING,
+                                                 )
+
+    # Set all track items to status of returning
+    db(tracktable.send_id == send_id).update(status = TRACK_STATUS_RETURNING)
+
+    message = T("Sent Shipment has returned, indicate how many items will be returned to Warehouse.")
+    current.session.confirmation = message
+
+    output = json.dumps({"message": s3_str(message),
+                         "tree": URL(args = [send_id, "track_item"]),
+                         }, separators=SEPARATORS)
+    current.response.headers["Content-Type"] = "application/json"
+    return output
 
 # =============================================================================
 def inv_send_rheader(r):
@@ -12538,14 +12786,13 @@ def inv_send_rheader(r):
                                         )
                                      )
 
-
-            
             rfooter = TAG[""]()
 
             if status != SHIP_STATUS_CANCEL and \
                r.method != "form":
                 if current.auth.s3_has_permission("update", "inv_send",
-                                                  record_id = record.id):
+                                                  record_id = record.id,
+                                                  ):
 
                     packaging = None
                     # Don't show buttons unless Items have been added
@@ -12556,12 +12803,18 @@ def inv_send_rheader(r):
                                             ).first()
                     if item:
                         actions = DIV()
-                        jappend = s3.jquery_ready.append
+                        jappend = s3.js_global.append
+                        if s3.debug:
+                            s3.scripts.append("/%s/static/scripts/S3/s3.inv_send_rheader.js" % r.application)
+                        else:
+                            s3.scripts.append("/%s/static/scripts/S3/s3.inv_send_rheader.min.js" % r.application)
                         if status == SHIP_STATUS_IN_PROCESS:
                             actions.append(A(ICON("print"),
                                              " ",
                                              T("Picking List"),
-                                             _href = URL(args = [record.id, "pick_list.xls"]
+                                             _href = URL(args = [record.id,
+                                                                 "pick_list.xls",
+                                                                 ]
                                                          ),
                                              _class = "action-btn",
                                              )
@@ -12571,41 +12824,49 @@ def inv_send_rheader(r):
                                 actions.append(A(ICON("print"),
                                                  " ",
                                                  T("Labels"),
-                                                 _href = URL(args = [record.id, "labels.xls"]
+                                                 _href = URL(args = [record.id,
+                                                                     "labels.xls",
+                                                                     ]
                                                              ),
                                                  _class = "action-btn",
                                                  )
                                                )
 
                             actions.append(A(T("Send Shipment"),
-                                             _href = URL(args = [record.id, "process"]
+                                             _href = URL(args = [record.id,
+                                                                 "process",
+                                                                 ]
                                                          ),
-                                             _id = "send_process",
+                                             _id = "send-process",
                                              _class = "action-btn",
                                              )
                                            )
 
-                            jappend('''S3.confirmClick("#send_process","%s")''' % \
+                            jappend('''i18n.send_process_confirm="%s"''' % \
                                 T("Do you want to send this shipment?"))
 
                         elif status == SHIP_STATUS_RETURNING:
                             actions.append(A(T("Complete Returns"),
                                              _href = URL(c = "inv",
-                                                         f = "return_process",
-                                                         args = [record.id]
+                                                         f = "send",
+                                                         args = [record.id,
+                                                                 "return_complete",
+                                                                 ]
                                                          ),
-                                             _id = "return_process",
+                                             _id = "return-process",
                                              _class = "action-btn"
                                              )
                                            )
-                            jappend('''S3.confirmClick("#return_process","%s")''' % \
+                            jappend('''i18n.return_process_confirm="%s"''' % \
                                 T("Do you want to complete the return process?"))
 
                         elif status == SHIP_STATUS_SENT:
                             actions.append(A(T("Manage Returns"),
                                              _href = URL(c = "inv",
-                                                         f = "send_returns",
-                                                         args = [record.id],
+                                                         f = "send",
+                                                         args = [record.id,
+                                                                 "return",
+                                                                 ],
                                                          vars = None,
                                                          ),
                                              _id = "send-return",
@@ -12613,7 +12874,7 @@ def inv_send_rheader(r):
                                              _title = T("Only use this button to accept back into stock some items that were returned from a delivery.")
                                              )
                                            )
-                            jappend('''S3.confirmClick("#send-return","%s")''' % \
+                            jappend('''i18n.send_return_confirm="%s"''' % \
                                 T("Confirm that some items were returned from a delivery and they will be accepted back into stock."))
 
                             actions.append(A(T("Confirm Shipment Received"),
@@ -12627,7 +12888,7 @@ def inv_send_rheader(r):
                                              _title = T("Only use this button to confirm that the shipment has been received by a destination which will not record the shipment directly into the system.")
                                              )
                                            )
-                            jappend('''S3.confirmClick("#send-receive","%s")''' % \
+                            jappend('''i18n.send_receive_confirm="%s"''' % \
                                 T("Confirm that the shipment has been received by a destination which will not record the shipment directly into the system."))
 
                         if status != SHIP_STATUS_RECEIVED:
@@ -12642,7 +12903,9 @@ def inv_send_rheader(r):
                                 actions.insert(index, A(ICON("print"),
                                                         " ",
                                                         T("Packing List"),
-                                                        _href = URL(args = [record.id, "packing_list.xls"]
+                                                        _href = URL(args = [record.id,
+                                                                            "packing_list.xls",
+                                                                            ]
                                                                     ),
                                                         _class = "action-btn",
                                                         )
@@ -12671,15 +12934,17 @@ def inv_send_rheader(r):
                             if status != SHIP_STATUS_IN_PROCESS:
                                 actions.append(A(T("Cancel Shipment"),
                                                  _href = URL(c = "inv",
-                                                             f = "send_cancel",
-                                                             args = [record.id]
+                                                             f = "send",
+                                                             args = [record.id,
+                                                                     "cancel",
+                                                                     ]
                                                              ),
                                                  _id = "send-cancel",
                                                  _class = "delete-btn"
                                                  )
                                                )
 
-                                jappend('''S3.confirmClick("#send-cancel","%s")''' % \
+                                jappend('''i18n.send_cancel_confirm="%s"''' % \
                                     T("Do you want to cancel this sent shipment? The items will be returned to the Warehouse. This action CANNOT be undone!"))
 
                         shipment_details.append(TR(TH(actions,

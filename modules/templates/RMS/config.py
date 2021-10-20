@@ -3940,7 +3940,7 @@ Thank you"""
                                            }
                 warnings.append(alert)
 
-        session.warning = ", ".join(warnings)
+            session.warning = ", ".join(warnings)
 
     # -------------------------------------------------------------------------
     def on_free_capacity_update(warehouse):

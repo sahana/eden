@@ -1,5 +1,5 @@
 /**
- * Used by the inv/send controller when settings.inv_send_req = True
+ * Used by inv_send_controller when settings.inv_send_req = True
  * - set Sites based on selected Requests
  */
 
