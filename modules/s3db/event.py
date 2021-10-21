@@ -4284,8 +4284,6 @@ class IncidentReportModel(S3Model):
          - useful for busy call centres which may receive many reports about a
            single incident and may receive calls which need logging but don't
            get responded to as an Incident (e.g. Out of Scope)
-
-        @ToDo: Deprecate IRS module by porting functionality here
     """
 
     names = ("event_incident_report",

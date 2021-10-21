@@ -3598,6 +3598,14 @@ def config(settings):
 
             # Hide Street Address
             current.s3db.event_incident_report.location_id.widget = S3LocationSelector()
+        elif root_org == YRCS:
+            from gluon import XML
+            from s3 import s3_richtext_widget
+            table = current.s3db.event_incident_report
+            table.description.widget = s3_richtext_widget
+            table.description.represent = XML
+            table.needs.widget = s3_richtext_widget
+            table.needs.represent = XML
 
     settings.customise_event_incident_report_resource = customise_event_incident_report_resource
 
