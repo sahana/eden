@@ -1,4 +1,4 @@
-/* GIS module */
+/* Map (OL2) */
 
 .embeddedComponent .map_wrapper {
     min-width: 350px;
@@ -30,8 +30,11 @@ form .map_loader {
     margin-top: 0;
 }
 
-.x-form-item-label {
+body.ltr .x-form-item-label {
     margin: 0 0 0 4px;
+}
+body.rtl .x-form-item-label {
+    margin: 0 4px 0 0;
 }
 /* Workaround for Chrome browser not utilising full screen width */
 body.x-window-maximized-ct {
@@ -43,8 +46,11 @@ body.x-window-maximized-ct {
 }
 
 /* Main Map */
-.map_home {
+body.ltr .map_home {
     margin: 0 0 0 -12px;
+}
+body.rtl .map_home {
+    margin: 0 -12px 0 0;
 }
 .map_home .gis_fullscreen_map-btn {
     font-weight: bold;
@@ -124,8 +130,11 @@ body.rtl .map_home .gis_fullscreen_map-btn {
 .x-tree-node {
     font-size: 12px;
 }
-.x-tree-node-leaf {
+body.ltr .x-tree-node-leaf {
     margin-left: 10px;
+}
+body.rtl .x-tree-node-leaf {
+    margin-right: 10px;
 }
 /* Override Bootstrap */
 .x-tree-root-ct,
@@ -357,13 +366,20 @@ svg[id^=OpenLayers] {
 
 /* Google Layers */
 .olLayerGoogleCopyright {
-    right: 3px;
     bottom: 2px;
-    left: auto;
+}
+.olLayerGoogleCopyright {
+    left: 3px;
+    right: auto;
 }
 .olLayerGooglePoweredBy {
-    left: 2px;
     bottom: 2px;
+}
+body.ltr .olLayerGooglePoweredBy {
+    left: 2px;
+}
+body.rtl .olLayerGooglePoweredBy {
+    right: 2px;
 }
 .olForeignContainer div.olControlMousePosition {
     bottom: 28px;
@@ -386,10 +402,8 @@ svg[id^=OpenLayers] {
     max-width: 450px;
 }
 .olPopupCloseBox { /* Needed for Foundation-based themes for some reason */
-    margin-right: 15px;
     margin-top: -8px;
-}
-.olFramedCloudPopupContent label {
+    margin-right: 15px; /* Not currently going to top-left in RTL */
     padding-right: 5px;
 }
 .gis-map-window .olFramedCloudPopupContent td {

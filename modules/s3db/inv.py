@@ -47,6 +47,7 @@ __all__ = ("WarehouseModel",
            "InventoryStockCardModel",
            "InventoryTrackingModel",
            "inv_adj_rheader",
+           "inv_commit_send",
            #"inv_gift_certificate",
            "inv_item_total_weight",
            "inv_item_total_volume",
@@ -54,8 +55,10 @@ __all__ = ("WarehouseModel",
            #"inv_packing_list",
            #"inv_pick_list",
            "inv_recv_attr",
+           #"inv_recv_cancel",
            "inv_recv_controller",
            "inv_recv_crud_strings",
+           "inv_recv_form",
            "inv_recv_rheader",
            #"inv_recv_process",
            "inv_remove",
@@ -71,7 +74,6 @@ __all__ = ("WarehouseModel",
            "inv_rfooter",
            "inv_rheader",
            #"inv_send_add_items_of_shipment_type",
-           "inv_send_commit",
            "inv_send_controller",
            #"inv_send_cancel",
            #"inv_send_item_postprocess",
@@ -85,6 +87,7 @@ __all__ = ("WarehouseModel",
            #"inv_stock_card_update",
            "inv_stock_movements",
            "inv_tabs",
+           #"inv_timeline",
            "inv_track_item_deleting",
            #"inv_track_item_onaccept",
            "inv_tracking_status",
@@ -3933,8 +3936,8 @@ class InventoryRequisitionModel(S3Model):
         msg = T("You have committed to all items in this Request. Please check that all details are correct and update as-required.")
 
         if "send" in r.args:
-            redirect(URL(f = "send_commit",
-                         args = [cid],
+            redirect(URL(f = "commit",
+                         args = [cid, "send"],
                          ))
 
         elif "assign" in r.args:
@@ -5020,17 +5023,18 @@ class InventoryRequisitionRecurringModel(S3Model):
             )
 
         # Custom Methods
-        self.set_method("inv", "req",
-                        component_name = "job",
-                        method = "reset",
-                        action = inv_req_job_reset,
-                        )
+        set_method = self.set_method
+        set_method("inv", "req",
+                   component_name = "job",
+                   method = "reset",
+                   action = inv_req_job_reset,
+                   )
 
-        self.set_method("inv", "req",
-                        component_name = "job",
-                        method = "run",
-                        action = inv_req_job_run,
-                        )
+        set_method("inv", "req",
+                   component_name = "job",
+                   method = "run",
+                   action = inv_req_job_run,
+                   )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -5327,7 +5331,6 @@ class InventoryTrackingModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        set_method = self.set_method
         super_link = self.super_link
 
         inv_item_id = self.inv_item_id
@@ -5624,73 +5627,6 @@ class InventoryTrackingModel(S3Model):
                                   "actuate": "hide",
                                   },
                        )
-
-        # Custom methods
-        # Cancel Shipment
-        set_method("inv", "send",
-                   method = "cancel",
-                   action = inv_send_cancel,
-                   )
-
-        # Generate PDF of Waybill
-        set_method("inv", "send",
-                   method = "form",
-                   action = self.inv_send_form,
-                   )
-
-        # Generate Gift Certificate
-        set_method("inv", "send",
-                   method = "gift_certificate",
-                   action = inv_gift_certificate,
-                   )
-
-        # Generate Package Labels
-        set_method("inv", "send",
-                   method = "labels",
-                   action = inv_package_labels,
-                   )
-
-        # Generate Picking List
-        set_method("inv", "send",
-                   method = "pick_list",
-                   action = inv_pick_list,
-                   )
-
-        # Generate Packing List
-        set_method("inv", "send",
-                   method = "packing_list",
-                   action = inv_packing_list,
-                   )
-
-        # Process Shipment
-        set_method("inv", "send",
-                   method = "process",
-                   action = inv_send_process,
-                   )
-
-        # Confirm Shipment Received
-        set_method("inv", "send",
-                   method = "received",
-                   action = inv_send_received,
-                   )
-
-        # Manage Returns
-        set_method("inv", "send",
-                   method = "return",
-                   action = inv_send_return,
-                   )
-
-        # Complete Returns
-        set_method("inv", "send",
-                   method = "return_complete",
-                   action = inv_send_return_complete,
-                   )
-
-        # Display Timeline
-        set_method("inv", "send",
-                   method = "timeline",
-                   action = self.inv_timeline,
-                   )
 
         # Redirect to the Items tabs after creation
         send_item_url = URL(c="inv", f="send",
@@ -6011,30 +5947,6 @@ class InventoryTrackingModel(S3Model):
                                   "actuate": "hide",
                                   },
                        )
-
-        # Custom methods
-        # Print Forms
-        set_method("inv", "recv",
-                   method = "form",
-                   action = self.inv_recv_form,
-                   )
-
-        set_method("inv", "recv",
-                   method = "cert",
-                   action = self.inv_recv_donation_cert,
-                   )
-
-        # Process Shipment
-        set_method("inv", "recv",
-                   method = "process",
-                   action = inv_recv_process,
-                   )
-
-        # Timeline
-        set_method("inv", "recv",
-                   method = "timeline",
-                   action = self.inv_timeline,
-                   )
 
         # ---------------------------------------------------------------------
         # Track Items
@@ -6619,100 +6531,6 @@ class InventoryTrackingModel(S3Model):
             # Internal Shipment needs from_site_id
             form.errors.organisation_id = current.T("Please enter an Organization/Supplier")
 
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def inv_recv_form (r, **attr):
-        """
-            Generate a PDF of a GRN (Goods Received Note)
-        """
-
-        T = current.T
-        db = current.db
-        settings = current.deployment_settings
-
-        table = db.inv_recv
-        track_table = db.inv_track_item
-
-        table.date.readable = True
-        table.site_id.readable = True
-        track_table.recv_quantity.readable = True
-
-        table.site_id.label = T("By %(site)s") % {"site": T(settings.get_inv_facility_label())}
-        table.site_id.represent = current.s3db.org_site_represent
-
-        record = db(table.id == r.id).select(table.recv_ref,
-                                             limitby = (0, 1),
-                                             ).first()
-        recv_ref = record.recv_ref
-
-        list_fields = ["item_id",
-                       (T("Weight (kg)"), "item_id$weight"),
-                       (T("Volume (m3)"), "item_id$volume"),
-                       "item_source_no",
-                       "item_pack_id",
-                       "quantity",
-                       "recv_quantity",
-                       "currency",
-                       "pack_value",
-                       "layout_id",
-                       ]
-
-        from s3.s3export import S3Exporter
-        exporter = S3Exporter().pdf
-        return exporter(r.resource,
-                        request = r,
-                        method = "list",
-                        pdf_title = T(settings.get_inv_recv_form_name()),
-                        pdf_filename = recv_ref,
-                        list_fields = list_fields,
-                        pdf_hide_comments = True,
-                        pdf_componentname = "track_item",
-                        pdf_header_padding = 12,
-                        pdf_footer = inv_recv_pdf_footer,
-                        pdf_table_autogrow = "B",
-                        pdf_orientation = "Landscape",
-                        **attr
-                        )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def inv_recv_donation_cert (r, **attr):
-        """
-            Generate a PDF of a Donation certificate
-        """
-
-        T = current.T
-        db = current.db
-
-        table = db.inv_recv
-
-        table.date.readable = True
-        table.type.readable = False
-        field = table.site_id
-        field.readable = True
-
-        field.label = T("By %(site)s") % \
-            {"site": T(current.deployment_settings.get_inv_facility_label())}
-        field.represent = current.s3db.org_site_represent
-
-        record = db(table.id == r.id).select(table.site_id,
-                                             limitby = (0, 1),
-                                             ).first()
-        site_id = record.site_id
-        site = field.represent(site_id, False)
-
-        from s3.s3export import S3Exporter
-        exporter = S3Exporter().pdf
-        return exporter(r.resource,
-                        request = r,
-                        method = "list",
-                        pdf_title = "Donation Certificate",
-                        pdf_filename = "DC-%s" % site,
-                        pdf_hide_comments = True,
-                        pdf_componentname = "track_item",
-                        **attr
-                        )
-
     # -------------------------------------------------------------------------
     @staticmethod
     def qnty_recv_repr(value):
@@ -6887,194 +6705,6 @@ class InventoryTrackingModel(S3Model):
             #db.inv_track_item.recv_quantity.default = form_vars.quantity
             form_vars.recv_quantity = form_vars.quantity
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def inv_timeline(r, **attr):
-        """
-            Display the Incidents on a Simile Timeline
-
-            http://www.simile-widgets.org/wiki/Reference_Documentation_for_Timeline
-
-            @ToDo: Play button
-            http://www.simile-widgets.org/wiki/Timeline_Moving_the_Timeline_via_Javascript
-        """
-
-        resource_name = r.name
-
-        if r.representation != "html" or resource_name not in ("recv", "send"):
-            r.error(405, current.ERROR.BAD_METHOD)
-
-        T = current.T
-        db = current.db
-
-        response = current.response
-        s3 = response.s3
-
-        s3_include_simile()
-
-        # Add our data
-        # @ToDo: Make this the initial data & then collect extra via REST with a stylesheet
-        # add in JS using S3.timeline.eventSource.addMany(events) where events is a []
-
-        if r.record:
-            # Single record
-            rows = [r.record]
-        else:
-            # Multiple records
-            # @ToDo: Load all records & sort to closest in time
-            # http://stackoverflow.com/questions/7327689/how-to-generate-a-sequence-of-future-datetimes-in-python-and-determine-nearest-d
-            fields = ["id",
-                      "date",
-                      "send_ref",
-                      "comments",
-                      ]
-            if resource_name == "recv":
-                fields.append("recv_ref")
-            rows = r.resource.select(fields,
-                                     limit = 2000,
-                                     virtual = False,
-                                     as_rows = True,
-                                     )
-
-        # We need to link these records to the other end, which can only be done by send_ref
-        send_refs = [row.send_ref for row in rows if row.send_ref is not None]
-
-        data = {"dateTimeFormat": "iso8601",
-                }
-
-        now = r.utcnow
-        tl_start = tl_end = now
-        events = []
-        eappend = events.append
-        if resource_name == "send":
-            table = db.inv_recv
-            query = (table.deleted == False) & \
-                    current.auth.s3_accessible_query("read", table) & \
-                    (table.send_ref.belongs(send_refs)) & \
-                    (table.date != None)
-            recv_rows = db(query).select(table.date,
-                                         table.send_ref,
-                                         #table.comments,
-                                         )
-
-            for row in rows:
-                send_date = row.date
-                if send_date is None:
-                    # Can't put on Timeline
-                    continue
-                send_ref = row.send_ref
-                if send_ref is not None:
-                    recv_row = recv_rows.find(lambda rrow: rrow.send_ref == send_ref).first()
-                    if recv_row is None:
-                        recv_date = send_date
-                    else:
-                        recv_date = recv_row.date
-                else:
-                    recv_date = send_date
-
-                if send_date < tl_start:
-                    tl_start = send_date
-                if recv_date > tl_end:
-                    tl_end = recv_date
-                send_date = send_date.isoformat()
-                recv_date = recv_date.isoformat()
-
-                # @ToDo: Build better Caption rather than just using raw Comments
-                caption = description = row.comments or ""
-                link = URL(args = [row.id])
-
-                # Append to events
-                eappend({"start": send_date,
-                         "end": recv_date,
-                         "title": send_ref,
-                         "caption": caption,
-                         "description": description or "",
-                         "link": link,
-                         # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
-                         # "color" : "blue",
-                         })
-        else:
-            table = db.inv_send
-            query = (table.deleted == False) & \
-                    current.auth.s3_accessible_query("read", table) & \
-                    (table.send_ref.belongs(send_refs)) & \
-                    (table.date != None)
-            send_rows = db(query).select(table.date,
-                                         table.send_ref,
-                                         #table.comments,
-                                         )
-
-            for row in rows:
-                recv_date = row.date
-                if recv_date is None:
-                    # Can't put on Timeline
-                    continue
-                send_ref = row.send_ref
-                if send_ref is not None:
-                    send_row = send_rows.find(lambda srow: srow.send_ref == send_ref).first()
-                    if send_row is None:
-                        send_date = recv_date
-                    else:
-                        send_date = send_row.date
-                else:
-                    send_date = recv_date
-                    send_ref = row.recv_ref
-
-                if send_date < tl_start:
-                    tl_start = send_date
-                if recv_date > tl_end:
-                    tl_end = recv_date
-                send_date = send_date.isoformat()
-                recv_date = recv_date.isoformat()
-
-                # @ToDo: Build better Caption rather than just using raw Comments
-                caption = description = row.comments or ""
-                link = URL(args = [row.id])
-
-                # Append to events
-                eappend({"start": send_date,
-                         "end": recv_date,
-                         "title": send_ref,
-                         "caption": caption,
-                         "description": description or "",
-                         "link": link,
-                         # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
-                         # "color" : "blue",
-                         })
-
-        if len(events) == 0:
-            response.warning = T("No suitable data found")
-
-        data["events"] = events
-        data = json.dumps(data, separators=SEPARATORS)
-
-        code = "".join((
-'''S3.timeline.data=''', data, '''
-S3.timeline.tl_start="''', tl_start.isoformat(), '''"
-S3.timeline.tl_end="''', tl_end.isoformat(), '''"
-S3.timeline.now="''', now.isoformat(), '''"
-'''))
-
-        # Configure our code in static/scripts/S3/s3.timeline.js
-        s3.js_global.append(code)
-
-        # Create the DIV
-        item = DIV(_id = "s3timeline",
-                   _class = "s3-timeline",
-                   )
-
-        output = {"item": item}
-
-        # Maintain RHeader for consistency
-        if "rheader" in attr:
-            rheader = attr["rheader"](r)
-            if rheader:
-                output["rheader"] = rheader
-
-        output["title"] = T("Shipments Timeline")
-        response.view = "timeline.html"
-        return output
-
 # =============================================================================
 def inv_adj_rheader(r):
     """ Resource Header for Inventory Adjustments """
@@ -7139,6 +6769,118 @@ def inv_adj_rheader(r):
 
             return rheader
     return None
+
+# =============================================================================
+def inv_commit_send(r, **attr):
+    """
+        Controller function to create a Shipment containing all
+        Items in a Commitment (interactive)
+
+        @ToDo: Switch to POST
+               - called from:
+                    commit_rheader
+                    commit() action buttons
+                    inv_commit_all
+                    req_controller()
+    """
+
+    #if r.http != "POST":
+    #    r.error(405, current.ERROR.BAD_METHOD,
+    #            next = URL(),
+    #            )
+
+    T = current.T
+
+    commit_id = r.id
+    if not commit_id:
+        r.error(405, T("Can only create a shipment from a single commit."),
+                next = URL(),
+                #tree = URL(),
+                )
+
+    s3db = current.s3db
+
+    stable = s3db.inv_send
+
+    if not current.auth.s3_has_permission("create", stable):
+        r.unauthorised()
+
+    record = r.record
+    req_id = record.req_id
+
+    db = current.db
+
+    req_table = db.inv_req
+    rim_table = db.inv_req_item
+    com_table = db.inv_commit
+    cim_table = db.inv_commit_item
+
+
+    req_record = db(req_table.id == req_id).select(req_table.requester_id,
+                                                   req_table.site_id,
+                                                   #req_table.req_ref, # Only used for External Requests
+                                                   limitby = (0, 1),
+                                                   ).first()
+
+    # @ToDo: Identify if we have stock items which match the commit items
+    # If we have a single match per item then proceed automatically (as-now) & then decrement the stock quantity
+    # If we have no match then warn the user & ask if they should proceed anyway
+    # If we have mulitple matches then provide a UI to allow the user to select which stock items to use
+
+    # Create an inv_send and link to the commit
+    form_vars = Storage(sender_id = record.committer_id,
+                        site_id = record.site_id,
+                        recipient_id = req_record.requester_id,
+                        to_site_id = req_record.site_id,
+                        #req_ref = req_record.req_ref,
+                        status = 0,
+                        )
+    send_id = stable.insert(**form_vars)
+    form_vars.id = send_id
+    inv_send_onaccept(Storage(vars = form_vars))
+
+    s3db.inv_send_req.insert(send_id = send_id,
+                             req_id = req_id,
+                             )
+
+    # Get all of the committed items
+    query = (cim_table.commit_id == commit_id) & \
+            (cim_table.req_item_id == rim_table.id)
+    rows = db(query).select(rim_table.id,
+                            rim_table.item_id,
+                            rim_table.item_pack_id,
+                            rim_table.currency,
+                            rim_table.quantity,
+                            rim_table.quantity_transit,
+                            rim_table.quantity_fulfil,
+                            cim_table.quantity,
+                            )
+    # Create inv_track_items for each commit item
+    track_org_id = record.organisation_id
+    insert = s3db.inv_track_item.insert
+    for row in rows:
+        rim = row.inv_req_item
+        # Now done as a VirtualField instead (looks better & updates closer to real-time, so less of a race condition)
+        #quantity_shipped = max(rim.quantity_transit, rim.quantity_fulfil)
+        #quantity_needed = rim.quantity - quantity_shipped
+        insert(req_item_id = rim.id,
+               track_org_id = organisation_id,
+               send_id = send_id,
+               status = 1,
+               item_id = rim.item_id,
+               item_pack_id = rim.item_pack_id,
+               currency = rim.currency,
+               #req_quantity = quantity_needed,
+               quantity = row.inv_commit_item.quantity,
+               recv_quantity = row.inv_commit_item.quantity,
+               )
+
+    # Redirect to inv_send for the send id just created
+    redirect(URL(c = "inv",
+                 f = "send",
+                 #args = [send_id, "track_item"]
+                 args = [send_id]
+                 ))
 
 # =============================================================================
 def inv_gift_certificate(r, **attr):
@@ -8977,6 +8719,123 @@ def inv_recv_attr(status):
             table.comments.writable = True
 
 # =============================================================================
+def inv_recv_cancel(r, **attr):
+    """
+        Cancel a Received Shipment
+
+        - not currently visible in UI as
+            "serves no useful purpose & AusRC complained about it"
+
+        @todo what to do if the quantity cancelled doesn't exist?
+    """
+
+    if r.http != "POST":
+        r.error(405, current.ERROR.BAD_METHOD,
+                next = URL(),
+                )
+
+    T = current.T
+
+    recv_id = r.id
+    r.error(405, T("Can only cancel a single shipment."))
+
+    s3db = current.s3db
+
+    rtable = s3db.inv_send
+
+    if not current.auth.s3_has_permission("delete", rtable,
+                                          record_id = recv_id,
+                                          ):
+        r.unauthorised()
+
+    record = r.record
+
+    if record.status != SHIP_STATUS_RECEIVED:
+        r.error(409, T("This shipment has not been received - it has NOT been canceled because it can still be edited."),
+                tree = URL(args = [send_id]),
+                )
+
+    db = current.db
+
+    stable = s3db.inv_send
+    tracktable = s3db.inv_track_item
+    inv_item_table = s3db.inv_inv_item
+    ritable = s3db.inv_req_item
+    siptable = s3db.supply_item_pack
+
+    # Go through each item in the shipment remove them from the site store
+    # and put them back in the track item record
+    recv_items = db(tracktable.recv_id == recv_id).select(tracktable.recv_inv_item_id,
+                                                          tracktable.recv_quantity,
+                                                          tracktable.send_id,
+                                                          )
+    send_id = None
+    for recv_item in recv_items:
+        inv_item_id = recv_item.recv_inv_item_id
+        # This assumes that the inv_item has the quantity
+        quantity = inv_item_table.quantity - recv_item.recv_quantity
+        if quantity == 0:
+            db(inv_item_table.id == inv_item_id).delete()
+        else:
+            db(inv_item_table.id == inv_item_id).update(quantity = quantity)
+        db(tracktable.recv_id == recv_id).update(status = TRACK_STATUS_TRANSIT) # 2
+        # @todo potential problem in that the send id should be the same for all track items but is not explicitly checked
+        if send_id is None and recv_item.send_id is not None:
+            send_id = recv_item.send_id
+    track_rows = db(tracktable.recv_id == recv_id).select(tracktable.req_item_id,
+                                                          tracktable.item_pack_id,
+                                                          tracktable.recv_quantity,
+                                                          )
+    for track_item in track_rows:
+        # If this is linked to a request
+        # then remove these items from the quantity in fulfil
+        if track_item.req_item_id:
+            req_id = track_item.req_item_id
+            req_item = db(ritable.id == req_id).select(ritable.quantity_fulfil,
+                                                       ritable.item_pack_id,
+                                                       limitby = (0, 1),
+                                                       ).first()
+            req_quantity = req_item.quantity_fulfil
+            # @ToDo: Optimise by reading these 2 in a single DB query
+            req_pack_quantity = db(siptable.id == req_item.item_pack_id).select(siptable.quantity,
+                                                                                limitby = (0, 1),
+                                                                                ).first().quantity
+            track_pack_quantity = db(siptable.id == track_item.item_pack_id).select(siptable.quantity,
+                                                                                    limitby = (0, 1),
+                                                                                    ).first().quantity
+            quantity_fulfil = s3db.supply_item_add(req_quantity,
+                                                   req_pack_quantity,
+                                                   - track_item.recv_quantity,
+                                                   track_pack_quantity
+                                                   )
+            db(ritable.id == req_id).update(quantity_fulfil = quantity_fulfil)
+            inv_req_update_status(req_id)
+
+    # Now set the recv record to cancelled and the send record to sent
+    db(rtable.id == recv_id).update(date = r.utcnow,
+                                    status = SHIP_STATUS_CANCEL,
+                                    )
+    if send_id != None:
+        # The sent record is now set back to SENT so the source warehouse can
+        # now cancel this record to get the stock back into their warehouse.
+        # IMPORTANT reports need to locate this record otherwise it can be
+        # a mechanism to circumvent the auditing of stock
+        db(stable.id == send_id).update(status = SHIP_STATUS_SENT)
+
+    if current.deployment_settings.get_inv_warehouse_free_capacity_calculated():
+        # Update the Warehouse Free capacity
+        inv_warehouse_free_capacity(record.site_id)
+
+    message = T("Received Shipment canceled and items removed from Warehouse")
+    current.session.confirmation = message
+
+    output = json.dumps({"message": s3_str(message),
+                         "tree": URL(args = [recv_id]),
+                         }, separators=SEPARATORS)
+    current.response.headers["Content-Type"] = "application/json"
+    return output
+
+# =============================================================================
 def inv_recv_controller():
     """
         RESTful CRUD controller for Inbound Shipments
@@ -8997,6 +8856,39 @@ def inv_recv_controller():
         error_msg = T("You do not have permission for any facility to receive a shipment.")
     current.auth.permitted_facilities(table = recvtable,
                                       error_msg = error_msg)
+
+    # Custom methods
+    set_method = s3db.set_method
+    # Printable GRN Form in PDF format
+    # - note that it is easy to over-ride this method to produce custom versions
+    set_method("inv", "recv",
+               method = "form",
+               action = inv_recv_form,
+               )
+
+    # Cancel Received Shipment
+    #set_method("inv", "recv",
+    #           method = "cancel",
+    #           action = inv_recv_cancel,
+    #           )
+
+    # Donation Certificate
+    set_method("inv", "recv",
+               method = "cert",
+               action = inv_recv_donation_cert,
+               )
+
+    # Process Shipment
+    set_method("inv", "recv",
+               method = "process",
+               action = inv_recv_process,
+               )
+
+    # Timeline
+    set_method("inv", "recv",
+               method = "timeline",
+               action = inv_timeline,
+               )
 
     def prep(r):
 
@@ -9435,6 +9327,98 @@ def inv_recv_crud_strings():
             )
 
 # =============================================================================
+def inv_recv_donation_cert (r, **attr):
+    """
+        Generate a PDF of a Donation certificate
+    """
+
+    T = current.T
+    db = current.db
+
+    table = db.inv_recv
+
+    table.date.readable = True
+    table.type.readable = False
+    field = table.site_id
+    field.readable = True
+
+    field.label = T("By %(site)s") % \
+        {"site": T(current.deployment_settings.get_inv_facility_label())}
+    field.represent = current.s3db.org_site_represent
+
+    record = db(table.id == r.id).select(table.site_id,
+                                         limitby = (0, 1),
+                                         ).first()
+    site_id = record.site_id
+    site = field.represent(site_id, False)
+
+    from s3.s3export import S3Exporter
+    exporter = S3Exporter().pdf
+    return exporter(r.resource,
+                    request = r,
+                    method = "list",
+                    pdf_title = "Donation Certificate",
+                    pdf_filename = "DC-%s" % site,
+                    pdf_hide_comments = True,
+                    pdf_componentname = "track_item",
+                    **attr
+                    )
+
+# =============================================================================
+def inv_recv_form (r, **attr):
+    """
+        Generate a PDF of a GRN (Goods Received Note)
+    """
+
+    T = current.T
+    db = current.db
+    settings = current.deployment_settings
+
+    table = db.inv_recv
+    track_table = db.inv_track_item
+
+    table.date.readable = True
+    table.site_id.readable = True
+    track_table.recv_quantity.readable = True
+
+    table.site_id.label = T("By %(site)s") % {"site": T(settings.get_inv_facility_label())}
+    table.site_id.represent = current.s3db.org_site_represent
+
+    record = db(table.id == r.id).select(table.recv_ref,
+                                         limitby = (0, 1),
+                                         ).first()
+    recv_ref = record.recv_ref
+
+    list_fields = ["item_id",
+                   (T("Weight (kg)"), "item_id$weight"),
+                   (T("Volume (m3)"), "item_id$volume"),
+                   "item_source_no",
+                   "item_pack_id",
+                   "quantity",
+                   "recv_quantity",
+                   "currency",
+                   "pack_value",
+                   "layout_id",
+                   ]
+
+    from s3.s3export import S3Exporter
+    exporter = S3Exporter().pdf
+    return exporter(r.resource,
+                    request = r,
+                    method = "list",
+                    pdf_title = T(settings.get_inv_recv_form_name()),
+                    pdf_filename = recv_ref,
+                    list_fields = list_fields,
+                    pdf_hide_comments = True,
+                    pdf_componentname = "track_item",
+                    pdf_header_padding = 12,
+                    pdf_footer = inv_recv_pdf_footer,
+                    pdf_table_autogrow = "B",
+                    pdf_orientation = "Landscape",
+                    **attr
+                    )
+
+# =============================================================================
 def inv_recv_rheader(r):
     """ Resource Header for Receiving """
 
@@ -9518,17 +9502,18 @@ def inv_recv_rheader(r):
             if record.status == SHIP_STATUS_SENT or \
                record.status == SHIP_STATUS_IN_PROCESS:
                 if current.auth.s3_has_permission("update", "inv_recv",
-                                                  record_id = record.id):
+                                                  record_id = record.id,
+                                                  ):
                     if cnt > 0:
                         action.append(A(T("Receive Shipment"),
                                         _href = URL(c = "inv",
                                                     f = "recv",
                                                     args = [record.id,
                                                             "process",
-                                                            ]
+                                                            ],
                                                     ),
                                         _id = "recv-process",
-                                        _class = "action-btn"
+                                        _class = "action-btn",
                                         ))
                         s3.js_global.append('''i18n.recv_process_confirm="%s"''' % T("Do you want to receive this shipment?"))
                         if s3.debug:
@@ -9542,19 +9527,23 @@ def inv_recv_rheader(r):
             #else:
             #    if record.status == SHIP_STATUS_RECEIVED:
             #        if current.auth.s3_has_permission("update", "inv_recv",
-            #                                          record_id = record.id):
+            #                                          record_id = record.id,
+            #                                          ):
             #            action.append(A(T("Cancel Shipment"),
             #                            _href = URL(c = "inv",
-            #                                        f = "recv_cancel",
-            #                                        args = [record.id]
+            #                                        f = "recv",
+            #                                        args = [record.id,
+            #                                                "cancel",
+            #                                                ],
             #                                        ),
-            #                            _id = "recv_cancel",
-            #                            _class = "action-btn"
+            #                            _id = "recv-cancel",
+            #                            _class = "action-btn",
             #                            ))
-
-            #            cancel_btn_confirm = SCRIPT("S3.confirmClick('#recv_cancel', '%s')"
-            #                                         % T("Do you want to cancel this received shipment? The items will be removed from the Warehouse. This action CANNOT be undone!") )
-            #            rfooter.append(cancel_btn_confirm)
+            #            s3.js_global.append('''i18n.recv_cancel_confirm="%s"''' % T("Do you want to cancel this received shipment? The items will be removed from the Warehouse. This action CANNOT be undone!"))
+            #            if s3.debug:
+            #                s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_rheader.js" % r.application)
+            #            else:
+            #                s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_rheader.min.js" % r.application)
             msg = ""
             if cnt == 1:
                 msg = T("This shipment contains one line item")
@@ -10587,8 +10576,8 @@ def inv_req_rheader(r, check_page=False):
            r.component_name == "commit" and \
            r.component_id:
             prepare_btn = A(T("Prepare Shipment"),
-                            _href = URL(f = "send_commit",
-                                        args = [r.component_id]
+                            _href = URL(f = "commit",
+                                        args = [r.component_id, "send"]
                                         ),
                             _id = "send-commit",
                             _class = "action-btn",
@@ -11174,105 +11163,6 @@ def inv_send_add_items_of_shipment_type(send_id, site_id, shipment_type):
     db(ibtable.id.belongs(inv_bin_ids)).update(quantity = 0)
 
 # =============================================================================
-def inv_send_commit():
-    """
-        Controller function to create a Shipment containing all
-        Items in a Commitment (interactive)
-
-        @ToDo: Rewrite as Method
-    """
-
-    # Get the commit record
-    try:
-        commit_id = r.id
-    except KeyError:
-        redirect(URL(c="inv", f="commit"))
-
-    db = current.db
-    s3db = current.s3db
-
-    req_table = db.inv_req
-    rim_table = db.inv_req_item
-    com_table = db.inv_commit
-    cim_table = db.inv_commit_item
-
-    send_table = s3db.inv_send
-    tracktable = s3db.inv_track_item
-
-    query = (com_table.id == commit_id) & \
-            (com_table.req_id == req_table.id) & \
-            (com_table.deleted == False)
-    record = db(query).select(com_table.committer_id,
-                              com_table.site_id,
-                              com_table.organisation_id,
-                              req_table.id,
-                              req_table.requester_id,
-                              req_table.site_id,
-                              #req_table.req_ref, # Only used for External Requests
-                              limitby = (0, 1),
-                              ).first()
-
-    # @ToDo: Identify if we have stock items which match the commit items
-    # If we have a single match per item then proceed automatically (as-now) & then decrement the stock quantity
-    # If we have no match then warn the user & ask if they should proceed anyway
-    # If we have mulitple matches then provide a UI to allow the user to select which stock items to use
-
-    # Create an inv_send and link to the commit
-    form_vars = Storage(sender_id = record.inv_commit.committer_id,
-                        site_id = record.inv_commit.site_id,
-                        recipient_id = record.inv_req.requester_id,
-                        to_site_id = record.inv_req.site_id,
-                        #req_ref = record.inv_req.req_ref,
-                        status = 0,
-                        )
-    send_id = send_table.insert(**form_vars)
-    form_vars.id = send_id
-    inv_send_onaccept(Storage(vars = form_vars))
-
-    s3db.inv_send_req.insert(send_id = send_id,
-                             req_id = record.inv_req.id,
-                             )
-
-    # Get all of the committed items
-    query = (cim_table.commit_id == commit_id) & \
-            (cim_table.req_item_id == rim_table.id) & \
-            (cim_table.deleted == False)
-    records = db(query).select(rim_table.id,
-                               rim_table.item_id,
-                               rim_table.item_pack_id,
-                               rim_table.currency,
-                               rim_table.quantity,
-                               rim_table.quantity_transit,
-                               rim_table.quantity_fulfil,
-                               cim_table.quantity,
-                               )
-    # Create inv_track_items for each commit item
-    insert = tracktable.insert
-    for row in records:
-        rim = row.inv_req_item
-        # Now done as a VirtualField instead (looks better & updates closer to real-time, so less of a race condition)
-        #quantity_shipped = max(rim.quantity_transit, rim.quantity_fulfil)
-        #quantity_needed = rim.quantity - quantity_shipped
-        insert(req_item_id = rim.id,
-               track_org_id = record.inv_commit.organisation_id,
-               send_id = send_id,
-               status = 1,
-               item_id = rim.item_id,
-               item_pack_id = rim.item_pack_id,
-               currency = rim.currency,
-               #req_quantity = quantity_needed,
-               quantity = row.inv_commit_item.quantity,
-               recv_quantity = row.inv_commit_item.quantity,
-               )
-
-    # Redirect to inv_send for the send id just created
-    redirect(URL(c = "inv",
-                 f = "send",
-                 #args = [send_id, "track_item"]
-                 args = [send_id]
-                 ))
-
-# =============================================================================
 def inv_send_controller():
     """
        RESTful CRUD controller for inv_send
@@ -11291,6 +11181,74 @@ def inv_send_controller():
 
     response = current.response
     s3 = response.s3
+
+    # Custom methods
+    set_method = s3db.set_method
+    # Cancel Shipment
+    set_method("inv", "send",
+               method = "cancel",
+               action = inv_send_cancel,
+               )
+
+    # Generate PDF of Waybill
+    set_method("inv", "send",
+               method = "form",
+               action = self.inv_send_form,
+               )
+
+    # Generate Gift Certificate
+    set_method("inv", "send",
+               method = "gift_certificate",
+               action = inv_gift_certificate,
+               )
+
+    # Generate Package Labels
+    set_method("inv", "send",
+               method = "labels",
+               action = inv_package_labels,
+               )
+
+    # Generate Picking List
+    set_method("inv", "send",
+               method = "pick_list",
+               action = inv_pick_list,
+               )
+
+    # Generate Packing List
+    set_method("inv", "send",
+               method = "packing_list",
+               action = inv_packing_list,
+               )
+
+    # Process Shipment
+    set_method("inv", "send",
+               method = "process",
+               action = inv_send_process,
+               )
+
+    # Confirm Shipment Received
+    set_method("inv", "send",
+               method = "received",
+               action = inv_send_received,
+               )
+
+    # Manage Returns
+    set_method("inv", "send",
+               method = "return",
+               action = inv_send_return,
+               )
+
+    # Complete Returns
+    set_method("inv", "send",
+               method = "return_complete",
+               action = inv_send_return_complete,
+               )
+
+    # Display Timeline
+    set_method("inv", "send",
+               method = "timeline",
+               action = inv_timeline,
+               )
 
     def prep(r):
         settings = current.deployment_settings
@@ -11958,7 +11916,8 @@ def inv_send_cancel(r, **attr):
     T = current.T
 
     send_id = r.id
-    r.error(405, T("Can only cancel a single shipment."))
+    if not send_id:
+        r.error(405, T("Can only cancel a single shipment."))
 
     s3db = current.s3db
 
@@ -13273,6 +13232,193 @@ def inv_tabs(r):
         return tabs
 
     return []
+
+# =============================================================================
+def inv_timeline(r, **attr):
+    """
+        Display the Shipments on a Simile Timeline
+
+        http://www.simile-widgets.org/wiki/Reference_Documentation_for_Timeline
+
+        @ToDo: Play button
+        http://www.simile-widgets.org/wiki/Timeline_Moving_the_Timeline_via_Javascript
+    """
+
+    resource_name = r.name
+
+    if r.representation != "html" or resource_name not in ("recv", "send"):
+        r.error(405, current.ERROR.BAD_METHOD)
+
+    T = current.T
+    db = current.db
+
+    response = current.response
+    s3 = response.s3
+
+    s3_include_simile()
+
+    # Add our data
+    # @ToDo: Make this the initial data & then collect extra via REST with a stylesheet
+    # add in JS using S3.timeline.eventSource.addMany(events) where events is a []
+
+    if r.record:
+        # Single record
+        rows = [r.record]
+    else:
+        # Multiple records
+        # @ToDo: Load all records & sort to closest in time
+        # http://stackoverflow.com/questions/7327689/how-to-generate-a-sequence-of-future-datetimes-in-python-and-determine-nearest-d
+        fields = ["id",
+                  "date",
+                  "send_ref",
+                  "comments",
+                  ]
+        if resource_name == "recv":
+            fields.append("recv_ref")
+        rows = r.resource.select(fields,
+                                 limit = 2000,
+                                 virtual = False,
+                                 as_rows = True,
+                                 )
+
+    # We need to link these records to the other end, which can only be done by send_ref
+    send_refs = [row.send_ref for row in rows if row.send_ref is not None]
+
+    data = {"dateTimeFormat": "iso8601",
+            }
+
+    now = r.utcnow
+    tl_start = tl_end = now
+    events = []
+    eappend = events.append
+    if resource_name == "send":
+        table = db.inv_recv
+        query = (table.deleted == False) & \
+                current.auth.s3_accessible_query("read", table) & \
+                (table.send_ref.belongs(send_refs)) & \
+                (table.date != None)
+        recv_rows = db(query).select(table.date,
+                                     table.send_ref,
+                                     #table.comments,
+                                     )
+
+        for row in rows:
+            send_date = row.date
+            if send_date is None:
+                # Can't put on Timeline
+                continue
+            send_ref = row.send_ref
+            if send_ref is not None:
+                recv_row = recv_rows.find(lambda rrow: rrow.send_ref == send_ref).first()
+                if recv_row is None:
+                    recv_date = send_date
+                else:
+                    recv_date = recv_row.date
+            else:
+                recv_date = send_date
+
+            if send_date < tl_start:
+                tl_start = send_date
+            if recv_date > tl_end:
+                tl_end = recv_date
+            send_date = send_date.isoformat()
+            recv_date = recv_date.isoformat()
+
+            # @ToDo: Build better Caption rather than just using raw Comments
+            caption = description = row.comments or ""
+            link = URL(args = [row.id])
+
+            # Append to events
+            eappend({"start": send_date,
+                     "end": recv_date,
+                     "title": send_ref,
+                     "caption": caption,
+                     "description": description or "",
+                     "link": link,
+                     # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
+                     # "color" : "blue",
+                     })
+    else:
+        table = db.inv_send
+        query = (table.deleted == False) & \
+                current.auth.s3_accessible_query("read", table) & \
+                (table.send_ref.belongs(send_refs)) & \
+                (table.date != None)
+        send_rows = db(query).select(table.date,
+                                     table.send_ref,
+                                     #table.comments,
+                                     )
+
+        for row in rows:
+            recv_date = row.date
+            if recv_date is None:
+                # Can't put on Timeline
+                continue
+            send_ref = row.send_ref
+            if send_ref is not None:
+                send_row = send_rows.find(lambda srow: srow.send_ref == send_ref).first()
+                if send_row is None:
+                    send_date = recv_date
+                else:
+                    send_date = send_row.date
+            else:
+                send_date = recv_date
+                send_ref = row.recv_ref
+
+            if send_date < tl_start:
+                tl_start = send_date
+            if recv_date > tl_end:
+                tl_end = recv_date
+            send_date = send_date.isoformat()
+            recv_date = recv_date.isoformat()
+
+            # @ToDo: Build better Caption rather than just using raw Comments
+            caption = description = row.comments or ""
+            link = URL(args = [row.id])
+
+            # Append to events
+            eappend({"start": send_date,
+                     "end": recv_date,
+                     "title": send_ref,
+                     "caption": caption,
+                     "description": description or "",
+                     "link": link,
+                     # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
+                     # "color" : "blue",
+                     })
+
+    if len(events) == 0:
+        response.warning = T("No suitable data found")
+
+    data["events"] = events
+    data = json.dumps(data, separators=SEPARATORS)
+
+    code = "".join((
+'''S3.timeline.data=''', data, '''
+S3.timeline.tl_start="''', tl_start.isoformat(), '''"
+S3.timeline.tl_end="''', tl_end.isoformat(), '''"
+S3.timeline.now="''', now.isoformat(), '''"
+'''))
+
+    # Configure our code in static/scripts/S3/s3.timeline.js
+    s3.js_global.append(code)
+
+    # Create the DIV
+    item = DIV(_id = "s3timeline",
+               _class = "s3-timeline",
+               )
+
+    output = {"item": item}
+
+    # Maintain RHeader for consistency
+    if "rheader" in attr:
+        rheader = attr["rheader"](r)
+        if rheader:
+            output["rheader"] = rheader
+
+    output["title"] = T("Shipments Timeline")
+    response.view = "timeline.html"
+    return output
 
 # =============================================================================
 def inv_track_item_quantity_needed(row):

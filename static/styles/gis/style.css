@@ -6,24 +6,44 @@ div.olMap {
 }
 
 div.olMapViewport {
-    text-align: left;
+    text-align: end;
+}
+
+body.rtl div.olMapViewport {
+    direction: ltr;
 }
 
 div.olLayerDiv {
    -moz-user-select: none;
    -khtml-user-select: none;
 }
+body.rtl div.olLayerDiv {
+    direction: ltr;
+}
 
 .olLayerGoogleCopyright {
-    left: 2px;
     bottom: 2px;
 }
-.olLayerGoogleV3.olLayerGoogleCopyright {
+body.ltr .olLayerGoogleCopyright {
+    left: 2px;
+}
+body.rtl .olLayerGoogleCopyright {
+    right: 2px;
+}
+body.ltr .olLayerGoogleV3.olLayerGoogleCopyright {
     right: auto !important;
 }
+body.ltr .olLayerGoogleV3.olLayerGoogleCopyright {
+    left: auto !important;
+}
 .olLayerGooglePoweredBy {
-    left: 2px;
     bottom: 15px;
+}
+body.ltr .olLayerGooglePoweredBy {
+    left: 2px;
+}
+body.rtl .olLayerGooglePoweredBy {
+    right: 2px;
 }
 .olLayerGoogleV3.olLayerGooglePoweredBy {
     bottom: 15px !important;
@@ -34,24 +54,39 @@ div.olLayerDiv {
 }
 .olControlAttribution {
     font-size: smaller;
-    right: 3px;
     bottom: 4.5em;
     position: absolute;
     display: block;
 }
-.olControlScale {
+body.ltr .olControlAttribution {
     right: 3px;
+}
+body.rtl .olControlAttribution {
+    left: 3px;
+}
+.olControlScale {
     bottom: 3em;
     display: block;
     position: absolute;
     font-size: smaller;
 }
+body.ltr .olControlScale {
+    right: 3px;
+}
+body.rtl .olControlScale {
+    left: 3px;
+}
 .olControlScaleLine {
    display: block;
    position: absolute;
-   left: 10px;
    bottom: 15px;
    font-size: xx-small;
+}
+body.ltr .olControlScaleLine {
+   left: 10px;
+}
+body.rtl .olControlScaleLine {
+   right: 10px;
 }
 .olControlScaleLineBottom {
    border: solid 2px black;
@@ -66,26 +101,41 @@ div.olLayerDiv {
 }
 
 .olControlPermalink {
-    right: 3px;
     bottom: 1.5em;
     display: block;
     position: absolute;
     font-size: smaller;
 }
+body.ltr .olControlPermalink {
+    right: 3px;
+}
+body.rtl .olControlPermalink {
+    left: 3px;
+}
 
 div.olControlMousePosition {
     bottom: 0;
-    right: 3px;
     display: block;
     position: absolute;
     font-family: Arial;
     font-size: smaller;
 }
+body.ltr div.olControlMousePosition {
+    right: 3px;
+}
+body.rtl div.olControlMousePosition {
+    left: 3px;
+}
 
 .olControlOverviewMapContainer {
     position: absolute;
     bottom: 0;
+}
+body.ltr .olControlOverviewMapContainer {
     right: 0;
+}
+body.rtl .olControlOverviewMapContainer {
+    left: 0;
 }
 
 .olControlOverviewMapElement {
@@ -98,9 +148,16 @@ div.olControlMousePosition {
 .olControlOverviewMapMaximizeButton {
     height: 18px;
     width: 18px;
-    right: 0;
     bottom: 80px;
     cursor: pointer;
+}
+body.ltr .olControlOverviewMapMinimizeButton,
+body.ltr .olControlOverviewMapMaximizeButton {
+    right: 0;
+}
+body.rtl .olControlOverviewMapMinimizeButton,
+body.rtl .olControlOverviewMapMaximizeButton {
+    left: 0;
 }
 
 .olControlOverviewMapExtentRectangle {
@@ -118,20 +175,36 @@ div.olControlMousePosition {
 }
 
 .olLayerGeoRSSDescription {
-    float:left;
     width:100%;
     overflow:auto;
     font-size:1.0em;
 }
-.olLayerGeoRSSClose {
+body.ltr .olLayerGeoRSSDescription {
+    float:left;
+}
+body.rtl .olLayerGeoRSSDescription {
     float:right;
+}
+.olLayerGeoRSSClose {
     color:gray;
     font-size:1.2em;
     margin-right:6px;
     font-family:sans-serif;
 }
+body.ltr .olLayerGeoRSSClose {
+    float:right;
+}
+body.rtl .olLayerGeoRSSClose {
+    float:left;
+}
 .olLayerGeoRSSTitle {
-    float:left;font-size:1.2em;
+    font-size:1.2em;
+}
+body.ltr .olLayerGeoRSSTitle {
+    float:left;
+}
+body.rtl .olLayerGeoRSSTitle {
+    float:right;
 }
 
 .olPopupContent {
@@ -189,7 +262,12 @@ div.olControlSaveFeaturesItemInactive {
 
 .olControlPanPanel {
     top: 10px;
+}
+body.ltr .olControlPanPanel {
     left: 5px;
+}
+body.rtl .olControlPanPanel {
+    right: 5px;
 }
 
 .olControlPanPanel div {
@@ -202,29 +280,54 @@ div.olControlSaveFeaturesItemInactive {
 
 .olControlPanPanel .olControlPanNorthItemInactive {
     top: 0;
-    left: 9px;
     background-position: 0 0;
+}
+body.ltr .olControlPanPanel .olControlPanNorthItemInactive {
+    left: 9px;
+}
+body.rtl .olControlPanPanel .olControlPanNorthItemInactive {
+    right: 9px;
 }
 .olControlPanPanel .olControlPanSouthItemInactive {
     top: 36px;
-    left: 9px;
     background-position: 18px 0;
+}
+body.ltr .olControlPanPanel .olControlPanSouthItemInactive {
+    left: 9px;
+}
+body.rtl .olControlPanPanel .olControlPanSouthItemInactive {
+    right: 9px;
 }
 .olControlPanPanel .olControlPanWestItemInactive {
     position: absolute;
     top: 18px;
-    left: 0;
     background-position: 0 18px;
+}
+body.ltr .olControlPanPanel .olControlPanWestItemInactive {
+    left: 0;
+}
+body.rtl .olControlPanPanel .olControlPanWestItemInactive {
+    right: 0;
 }
 .olControlPanPanel .olControlPanEastItemInactive {
     top: 18px;
-    left: 18px;
     background-position: 18px 18px;
+}
+body.ltr .olControlPanPanel .olControlPanEastItemInactive {
+    left: 18px;
+}
+body.rtl .olControlPanPanel .olControlPanEastItemInactive {
+    right: 18px;
 }
 
 .olControlZoomPanel {
     top: 71px;
+}
+body.ltr .olControlZoomPanel {
     left: 14px;
+}
+body.rtl .olControlZoomPanel {
+    right: 14px;
 }
 
 .olControlZoomPanel div {
@@ -237,20 +340,35 @@ div.olControlSaveFeaturesItemInactive {
 
 .olControlZoomPanel .olControlZoomInItemInactive {
     top: 0;
-    left: 0;
     background-position: 0 0;
+}
+body.ltr .olControlZoomPanel .olControlZoomInItemInactive {
+    left: 0;
+}
+body.rtl .olControlZoomPanel .olControlZoomInItemInactive {
+    right: 0;
 }
 
 .olControlZoomPanel .olControlZoomToMaxExtentItemInactive {
     top: 18px;
-    left: 0;
     background-position: 0 -18px;
+}
+body.ltr .olControlZoomPanel .olControlZoomToMaxExtentItemInactive {
+    left: 0;
+}
+body.rtl .olControlZoomPanel .olControlZoomToMaxExtentItemInactive {
+    right: 0;
 }
 
 .olControlZoomPanel .olControlZoomOutItemInactive {
     top: 36px;
-    left: 0;
     background-position: 0 18px;
+}
+body.rtl .olControlZoomPanel .olControlZoomOutItemInactive {
+    left: 0;
+}
+body.ltr .olControlZoomPanel .olControlZoomOutItemInactive {
+    right: 0;
 }
 
 /*
@@ -308,16 +426,22 @@ div.olControlSaveFeaturesItemInactive {
 .olControlLayerSwitcher {
     position: absolute;
     top: 25px;
-    right: 0;
     width: 20em;
     font-family: sans-serif;
     font-weight: bold;
     margin-top: 3px;
-    margin-left: 3px;
     margin-bottom: 3px;
     font-size: smaller;
     color: white;
     background-color: transparent;
+}
+body.ltr .olControlLayerSwitcher {
+    right: 0;
+    margin-left: 3px;
+}
+body.rtl .olControlLayerSwitcher {
+    left: 0;
+    margin-right: 3px;
 }
 
 .olControlLayerSwitcher .layersDiv {
@@ -331,13 +455,24 @@ div.olControlSaveFeaturesItemInactive {
 .olControlLayerSwitcher .layersDiv .baseLbl,
 .olControlLayerSwitcher .layersDiv .dataLbl {
     margin-top: 3px;
-    margin-left: 3px;
     margin-bottom: 3px;
 }
+body.ltr .olControlLayerSwitcher .layersDiv .baseLbl,
+body.ltr .olControlLayerSwitcher .layersDiv .dataLbl {
+    margin-left: 3px;
+}
+body.rtl .olControlLayerSwitcher .layersDiv .baseLbl,
+body.rtl .olControlLayerSwitcher .layersDiv .dataLbl {
+    margin-right: 3px;
+}
 
-.olControlLayerSwitcher .layersDiv .baseLayersDiv,
-.olControlLayerSwitcher .layersDiv .dataLayersDiv {
+body.ltr .olControlLayerSwitcher .layersDiv .baseLayersDiv,
+body.ltr .olControlLayerSwitcher .layersDiv .dataLayersDiv {
     padding-left: 10px;
+}
+body.rtl .olControlLayerSwitcher .layersDiv .baseLayersDiv,
+body.rtl .olControlLayerSwitcher .layersDiv .dataLayersDiv {
+    padding-right: 10px;
 }
 
 .olControlLayerSwitcher .maximizeDiv,
@@ -345,8 +480,15 @@ div.olControlSaveFeaturesItemInactive {
     width: 18px;
     height: 18px;
     top: 5px;
-    right: 0;
     cursor: pointer;
+}
+body.ltr .olControlLayerSwitcher .maximizeDiv,
+body.ltr .olControlLayerSwitcher .minimizeDiv {
+    right: 0;
+}
+body.rtl .olControlLayerSwitcher .maximizeDiv,
+body.rtl .olControlLayerSwitcher .minimizeDiv {
+    right: 0;
 }
 
 .olBingAttribution {
@@ -373,31 +515,55 @@ span.olGoogleAttribution.hybrid a, span.olGoogleAttribution.satellite a {
  * Editing and navigation icons.
  * (using the editing_tool_bar.png sprint image)
  */
-.olControlNavToolbar ,
-.olControlEditingToolbar {
+body.ltr .olControlNavToolbar ,
+body.ltr .olControlEditingToolbar {
     margin: 5px 5px 0 0;
+}
+body.rtl .olControlNavToolbar ,
+body.rtl .olControlEditingToolbar {
+    margin: 5px 0 0 5px;
 }
 .olControlNavToolbar div,
 .olControlEditingToolbar div {
     background-image: url(../../img/gis/openlayers/theme_default/editing_tool_bar.png);
     background-repeat: no-repeat;
-    margin: 0 0 5px 5px;
     width: 24px;
     height: 22px;
     cursor: pointer
 }
+body.ltr .olControlNavToolbar div,
+body.ltr .olControlEditingToolbar div {
+    margin: 0 0 5px 5px;
+}
+body.rtl .olControlNavToolbar div,
+body.rtl .olControlEditingToolbar div {
+    margin: 0 5px 5px 0;
+}
 /* positions */
 .olControlEditingToolbar {
-    right: 0;
     top: 0;
+}
+body.ltr .olControlEditingToolbar {
+    right: 0;
+}
+body.rtl .olControlEditingToolbar {
+    left: 0;
 }
 .olControlNavToolbar {
     top: 295px;
+}
+body.ltr .olControlNavToolbar {
     left: 9px;
 }
+body.rtl .olControlNavToolbar {
+    right: 9px;
+}
 /* layouts */
-.olControlEditingToolbar div {
+body.ltr .olControlEditingToolbar div {
     float: right;
+}
+body.rtl .olControlEditingToolbar div {
+    float: left;
 }
 /* individual controls */
 .olControlNavToolbar .olControlNavigationItemInactive,
@@ -436,10 +602,15 @@ span.olGoogleAttribution.hybrid a, span.olGoogleAttribution.satellite a {
 div.olControlZoom {
     position: absolute;
     top: 8px;
-    left: 8px;
     background: rgba(255,255,255,0.4);
     border-radius: 4px;
     padding: 2px;
+}
+body.ltr div.olControlZoom {
+    left: 8px;
+}
+body.rtl div.olControlZoom {
+    right: 8px;
 }
 div.olControlZoom a {
     display: block;

@@ -366,6 +366,7 @@ def config(settings):
     PMI = "Indonesian Red Cross Society (Palang Merah Indonesia)"
     PRC = "Philippine Red Cross"
     VNRC = "Viet Nam Red Cross"
+    YRCS = "Yemen Red Crescent Society"
 
     # -------------------------------------------------------------------------
     def airegex(default):
@@ -426,6 +427,8 @@ def config(settings):
             currencies["PHP"] = "Philippine Pesos"
         elif root_org == VNRC:
             currencies["VND"] = "Vietnamese Dong"
+        elif root_org == YRCS:
+            currencies["YER"] = "Yemeni Rial"
         else:
             currencies["GBP"] = "Great British Pounds"
             currencies["CAD"] = "Canadian Dollars"
@@ -457,6 +460,8 @@ def config(settings):
             default = "PHP"
         elif root_org == VNRC:
             default = "VND"
+        elif root_org == YRCS:
+            default = "YER"
         #else:
             #default = "USD"
         return default
@@ -468,7 +473,7 @@ def config(settings):
         """ NS-specific selection of whether to support BiDi in PDF output """
 
         root_org = current.auth.root_org_name()
-        if root_org in (ARCS, IRCS):
+        if root_org in (ARCS, IRCS, YRCS):
             default = True
         return default
 
@@ -479,7 +484,7 @@ def config(settings):
         """ NS-specific selection of which font to use in PDF output """
 
         root_org = current.auth.root_org_name()
-        if root_org in (ARCS, IRCS):
+        if root_org in (ARCS, IRCS, YRCS):
             # Use Unifont even in English since there is data stored with non-English characters
             default = ["unifont", "unifont"]
         return default
@@ -491,7 +496,7 @@ def config(settings):
         """ NS-specific selection of whether to show Postcode """
 
         root_org = current.auth.root_org_name()
-        if root_org in (ARCS, IRCS, VNRC):
+        if root_org in (ARCS, IRCS, VNRC, YRCS):
             default = False
         return default
 

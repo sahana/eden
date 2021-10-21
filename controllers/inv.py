@@ -756,7 +756,7 @@ def req_controller(template = False):
                                                                 ).first()
                 site_id = inv_item.site_id
                 # @ToDo: Avoid DB updates in GETs
-                #        - JS to catch the GET & convert to POST (like searchRewriteAjaxOptions in s3.filter.js)
+                #        see s3.inv_send_rheader.js
                 db(s3db.inv_req_item.id == req_item_id).update(site_id = site_id)
                 onaccepts = s3db.get_config("inv_req_item", "onaccept")
                 if onaccepts:
@@ -1156,8 +1156,8 @@ $.filterOptionsS3({
                             # Items
                             s3.actions.append({"label": s3_str(T("Prepare Shipment")),
                                                "url": URL(c = "inv",
-                                                          f = "send_commit",
-                                                          args = ["[id]"],
+                                                          f = "commit",
+                                                          args = ["[id]", "send"],
                                                           ),
                                                "_class": "action-btn send-btn",
                                                })
@@ -1507,6 +1507,12 @@ def commit():
         RESTful CRUD controller for Commits
     """
 
+    from s3db.inv import inv_commit_send
+    s3db.set_method("inv", "commit",
+                    method = "send",
+                    action = inv_commit_send,
+                    )
+
     def prep(r):
         if r.interactive and r.record:
             # Commitments created through UI should be done via components
@@ -1582,7 +1588,7 @@ $.filterOptionsS3({
                                                 fields = ["req_item_id",
                                                           "item_pack_id",
                                                           "quantity",
-                                                          "comments"
+                                                          "comments",
                                                           ]
                                                 ),
                                             "comments",
@@ -1600,11 +1606,12 @@ $.filterOptionsS3({
                 # Items
                 s3_action_buttons(r)
                 s3.actions.append({"label": s3_str(T("Prepare Shipment")),
-                                   "url": URL(f = "send_commit",
-                                              args = ["[id]"],
+                                   "url": URL(f = "commit",
+                                              args = ["[id]", "send"],
                                               ),
                                    "_class": "action-btn send-btn dispatch",
                                    })
+                # @ToDo: Switch to POST
                 confirm = T("Are you sure you want to send this shipment?")
                 s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
 
@@ -1643,29 +1650,18 @@ def commit_rheader(r):
                                    ),
                                 ),
                             )
+            # @ToDo: Switch to POST
             prepare_btn = A(T("Prepare Shipment"),
-                            _href = URL(f = "send_commit",
-                                        args = [record.id]
+                            _href = URL(f = "commit",
+                                        args = [record.id,
+                                                "send",
+                                                ]
                                         ),
                             _id = "send-commit",
                             _class = "action-btn"
                             )
 
             s3.rfooter = TAG[""](prepare_btn)
-
-            #send_btn = A(T("Send Commitment as Shipment"),
-            #             _href = URL(f = "send_commit",
-            #                         args = [record.id]
-            #                         ),
-            #             _id = "send-commit",
-            #             _class = "action-btn"
-            #             )
-
-            #send_btn_confirm = SCRIPT("S3.confirmClick('#send-commit', '%s')" %
-            #                          T("Do you want to send these Committed items?") )
-            #s3.rfooter = TAG[""](send_btn,send_btn_confirm)
-            #rheader.append(send_btn)
-            #rheader.append(send_btn_confirm)
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
             rheader.append(rheader_tabs)
@@ -1910,6 +1906,7 @@ def commit_req():
         vars: site_id
 
         @ToDo: Rewrite as Method
+        @ToDo: Avoid Writes in GETs
     """
 
     req_id = request.args[0]
@@ -1985,17 +1982,6 @@ def commit_req():
                  ))
 
 # -----------------------------------------------------------------------------
-def send_commit():
-    """
-        Send a Shipment containing all items in a Commitment
-
-        @ToDo: Rewrite as Method
-    """
-
-    from s3db.inv import inv_send_commit
-    return inv_send_commit()
-
-# -----------------------------------------------------------------------------
 def req_match():
     """ Match Requests """
 
@@ -2015,6 +2001,7 @@ def send_req():
 
         @ToDo: Update for inv_inv_item_bin
         @ToDo: Rewrite as Method
+        @ToDo: Avoid Writes in GETs
     """
 
     req_id = request.args[0]
@@ -2233,120 +2220,6 @@ def send_req():
     # Redirect to view the list of items in the Send
     redirect(URL(c="inv", f="send",
                  args = [send_id, "track_item"],
-                 ))
-
-# -----------------------------------------------------------------------------
-def recv_cancel():
-    """
-        Cancel a Received Shipment
-
-        @ToDo: Rewrite as Method
-        @todo what to do if the quantity cancelled doesn't exist?
-    """
-
-    try:
-        recv_id = request.args[0]
-    except:
-        redirect(URL(f="recv"))
-
-    rtable = s3db.inv_recv
-    if not auth.s3_has_permission("delete", rtable, record_id=recv_id):
-        session.error = T("You do not have permission to cancel this received shipment.")
-        redirect(URL(c="inv", f="recv",
-                     args = [recv_id],
-                     ))
-
-    recv_record = db(rtable.id == recv_id).select(rtable.status,
-                                                  rtable.site_id,
-                                                  limitby = (0, 1),
-                                                  ).first()
-
-    from s3db.inv import inv_ship_status
-    if recv_record.status != inv_ship_status["RECEIVED"]:
-        session.error = T("This shipment has not been received - it has NOT been canceled because it can still be edited.")
-        redirect(URL(c="inv", f="recv", args=[recv_id]))
-
-    stable = s3db.inv_send
-    tracktable = s3db.inv_track_item
-    inv_item_table = s3db.inv_inv_item
-    ritable = s3db.inv_req_item
-    siptable = s3db.supply_item_pack
-
-    # Go through each item in the shipment remove them from the site store
-    # and put them back in the track item record
-    query = (tracktable.recv_id == recv_id) & \
-            (tracktable.deleted == False)
-    recv_items = db(query).select(tracktable.recv_inv_item_id,
-                                  tracktable.recv_quantity,
-                                  tracktable.send_id,
-                                  )
-    send_id = None
-    for recv_item in recv_items:
-        inv_item_id = recv_item.recv_inv_item_id
-        # This assumes that the inv_item has the quantity
-        quantity = inv_item_table.quantity - recv_item.recv_quantity
-        if quantity == 0:
-            db(inv_item_table.id == inv_item_id).delete()
-        else:
-            db(inv_item_table.id == inv_item_id).update(quantity = quantity)
-        db(tracktable.recv_id == recv_id).update(status = 2) # In transit
-        # @todo potential problem in that the send id should be the same for all track items but is not explicitly checked
-        if send_id is None and recv_item.send_id is not None:
-            send_id = recv_item.send_id
-    track_rows = db(tracktable.recv_id == recv_id).select(tracktable.req_item_id,
-                                                          tracktable.item_pack_id,
-                                                          tracktable.recv_quantity,
-                                                          )
-    from s3db.inv import inv_req_update_status
-    for track_item in track_rows:
-        # If this is linked to a request
-        # then remove these items from the quantity in fulfil
-        if track_item.req_item_id:
-            req_id = track_item.req_item_id
-            req_item = db(ritable.id == req_id).select(ritable.quantity_fulfil,
-                                                       ritable.item_pack_id,
-                                                       limitby = (0, 1),
-                                                       ).first()
-            req_quantity = req_item.quantity_fulfil
-            # @ToDo: Optimise by reading these 2 in a single DB query
-            req_pack_quantity = db(siptable.id == req_item.item_pack_id).select(siptable.quantity,
-                                                                                limitby = (0, 1),
-                                                                                ).first().quantity
-            track_pack_quantity = db(siptable.id == track_item.item_pack_id).select(siptable.quantity,
-                                                                                    limitby = (0, 1),
-                                                                                    ).first().quantity
-            quantity_fulfil = s3db.supply_item_add(req_quantity,
-                                                   req_pack_quantity,
-                                                   - track_item.recv_quantity,
-                                                   track_pack_quantity
-                                                   )
-            db(ritable.id == req_id).update(quantity_fulfil = quantity_fulfil)
-            inv_req_update_status(req_id)
-
-    # Now set the recv record to cancelled and the send record to sent
-    #ADMIN = auth.get_system_roles().ADMIN
-    db(rtable.id == recv_id).update(date = request.utcnow,
-                                    status = inv_ship_status["CANCEL"],
-                                    #owned_by_user = None,
-                                    #owned_by_group = ADMIN
-                                    )
-    if send_id != None:
-        # The sent record is now set back to SENT so the source warehouse can
-        # now cancel this record to get the stock back into their warehouse.
-        # IMPORTANT reports need to locate this record otherwise it can be
-        # a mechanism to circumvent the auditing of stock
-        db(stable.id == send_id).update(status = inv_ship_status["SENT"],
-                                        #owned_by_user = None,
-                                        #owned_by_group = ADMIN
-                                        )
-
-    if settings.get_inv_warehouse_free_capacity_calculated():
-        # Update the Warehouse Free capacity
-        from s3db.inv import inv_warehouse_free_capacity
-        inv_warehouse_free_capacity(recv_record.site_id)
-
-    redirect(URL(c="inv", f="recv",
-                 args = [recv_id]
                  ))
 
 # -----------------------------------------------------------------------------

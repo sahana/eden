@@ -9,7 +9,8 @@ $(document).ready(function() {
     var ajaxURL,
         $button,
         buttonID,
-        buttons = ['recv-process'
+        buttons = ['recv-process',
+                   'recv-cancel'
                    ],
         buttonsLength = buttons.length,
         message;
