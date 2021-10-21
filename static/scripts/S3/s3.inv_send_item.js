@@ -188,8 +188,6 @@ $(document).ready(function() {
                     // Hide the Buttons on the readRow
                     $('#read-row-defaultsend_bin-0 > .subform-action').hide();
                 } else {
-                    // Show the Bins
-                    binRow.show();
                     // Populate the Bin fields
                     updateBinQuantity();
                     var onTreeReady = function() {
@@ -278,10 +276,14 @@ $(document).ready(function() {
                             var ReqQuantity = req_item.q / PackQuantity;
                             if (ReqQuantity <= stockQuantity) {
                                 // We can send the full quantity requested
-                                QuantityField.val(ReqQuantity);
+                                totalQuantity = ReqQuantity;
                             } else {
                                 // We can only send what we have in stock!
-                                QuantityField.val(stockQuantity);
+                                totalQuantity = stockQuantity;
+                            }
+                            QuantityField.val(totalQuantity);
+                            if (binsLength == 1) {
+                                updateBinQuantity();
                             }
                         }
 

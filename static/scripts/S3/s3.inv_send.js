@@ -27,7 +27,7 @@ $(document).ready(function() {
                 return;
             }
             // Add options
-            for (var i=0; i < fromSitesLength; i++) {
+            for (var i = 0; i < fromSitesLength; i++) {
                 site = fromSites[i];
                 fromField.append(new Option(site[1], site[0]))
             }
@@ -42,7 +42,7 @@ $(document).ready(function() {
                 return;
             }
             // Add options
-            for (var i=0; i < toSitesLength; i++) {
+            for (var i = 0; i < toSitesLength; i++) {
                 site = toSites[i];
                 toField.append(new Option(site[1], site[0]))
             }
