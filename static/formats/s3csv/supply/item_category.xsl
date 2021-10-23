@@ -6,7 +6,7 @@
          Item Categories - CSV Import Stylesheet
 
          CSV fields:
-         Catalogue.......................supply_catalog.name
+         Catalog.........................supply_catalog.name
          Parent Category.................supply_item_category.parent_item_category_id$name
          Category........................supply_item_category.name
          Code............................supply_item_category.code
@@ -17,7 +17,7 @@
     *********************************************************************** -->
     <xsl:output method="xml"/>
     
-    <xsl:key name="catalog" match="row" use="col[@field='Catalogue']"/>
+    <xsl:key name="catalog" match="row" use="col[@field='Catalog']"/>
 
     <!-- ****************************************************************** -->
 
@@ -26,8 +26,8 @@
              <!-- Catalogues -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('catalog',
-                                                        col[@field='Catalogue'])[1])]">
-                <xsl:call-template name="Catalogue" />
+                                                        col[@field='Catalog'])[1])]">
+                <xsl:call-template name="Catalog" />
             </xsl:for-each>
 
             <xsl:apply-templates select="table/row"/>
@@ -48,7 +48,7 @@
 
             <reference field="catalog_id" resource="supply_catalog">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="col[@field='Catalogue']"/>
+                    <xsl:value-of select="col[@field='Catalog']"/>
                 </xsl:attribute>
             </reference>
 
@@ -95,9 +95,9 @@
 
     <!-- ****************************************************************** -->
     <!-- Catalogues -->
-    <xsl:template name="Catalogue">
+    <xsl:template name="Catalog">
         <xsl:variable name="CatalogName">
-            <xsl:value-of select="col[@field='Catalogue']"/>
+            <xsl:value-of select="col[@field='Catalog']"/>
         </xsl:variable>
 
         <resource name="supply_catalog">

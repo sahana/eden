@@ -215,8 +215,8 @@
         </resource>
 
     </xsl:template>
-    <!-- ****************************************************************** -->
 
+    <!-- ****************************************************************** -->
     <xsl:template name="SupplyItemPack">
         <xsl:variable name="item" select="concat(col[@field='Item Name'],
                                                  col[@field='Item Code'])"/>
@@ -225,7 +225,6 @@
                 <xsl:with-param name="colhdrs" select="$Units"/>
             </xsl:call-template>
         </xsl:variable>
-        <xsl:variable name="model" select="col[@field='Model']/text()"/>
         <xsl:variable name="item_tuid" select="concat('supply_item/',$item, '/', $um)"/>
         <xsl:variable name="um_tuid" select="concat('supply_item_pack/',$item, '/', $um)"/>
 
@@ -243,6 +242,7 @@
             <data field="name"><xsl:value-of select="$um"/></data>
         </resource>
     </xsl:template>
+
     <!-- ****************************************************************** -->
 
 </xsl:stylesheet>

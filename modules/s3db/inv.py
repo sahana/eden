@@ -2109,14 +2109,20 @@ class InventoryKittingModel(S3Model):
         #
         tablename = "inv_kitting_item"
         define_table(tablename,
-                     Field("site_id", "reference org_site",
-                           readable = False,
-                           writable = False,
-                           ),
+                     # Component
                      Field("kitting_id", "reference inv_kitting",
                            readable = False,
                            writable = False,
                            ),
+                     # @ToDo: Why duplicate this here?
+                     Field("site_id", "reference org_site",
+                           readable = False,
+                           writable = False,
+                           ),
+                     self.inv_item_id(ondelete = "RESTRICT",
+                                      readable = False,
+                                      writable = False,
+                                      ),
                      item_id(writable = False),
                      item_pack_id(writable = False),
                      Field("quantity", "double",
@@ -2134,10 +2140,6 @@ class InventoryKittingModel(S3Model):
                                        IS_NOT_EMPTY_STR(),
                                        ]
                            ),
-                     self.inv_item_id(ondelete = "RESTRICT",
-                                      readable = False,
-                                      writable = False,
-                                      ),
                      #s3_comments(),
                      *s3_meta_fields())
 
@@ -11366,7 +11368,7 @@ def inv_req_rheader(r, check_page=False):
             if possibly_complete:
                 if use_commit:
                     tabs.append((T("Commitments"), "commit"))
-                if user_site_id:
+                if user_site_id and user_site_id != site_id:
                     tabs.append((T("Check"), "check"))
                 if use_workflow:
                     if workflow_status == 1: # Draft

@@ -116,6 +116,7 @@ def config(settings):
                          "hrm_job_title",
                          "hrm_course",
                          "hrm_programme",
+                         "inv_package",
                          "member_membership_type",
                          "vol_award",
                          ):
