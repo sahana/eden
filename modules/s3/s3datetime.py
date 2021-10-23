@@ -186,12 +186,12 @@ class S3DateTime(object):
                 bp = cls.to_utc(combine(dt, datetime.time(8, 0, 0))).time()
                 dt = combine(dt, bp)
             if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=dateutil.tz.tzutc())
-            dt = dt.astimezone(tz=tzinfo).replace(tzinfo=None)
+                dt = dt.replace(tzinfo = dateutil.tz.tzutc())
+            dt = dt.astimezone(tz = tzinfo).replace(tzinfo = None)
         else:
             offset = cls.get_offset_value(cls.get_utc_offset())
             if offset:
-                delta = datetime.timedelta(seconds=offset)
+                delta = datetime.timedelta(seconds = offset)
             else:
                 delta = datetime.timedelta(0)
             if not isinstance(dt, datetime.datetime):
@@ -200,7 +200,7 @@ class S3DateTime(object):
                 bp = (combine(dt, datetime.time(8, 0, 0)) - delta).time()
                 dt = combine(dt, bp)
             if dt.tzinfo is not None:
-                dt = dt.astimezone(tz=dateutil.tz.tzutc()).replace(tzinfo=None)
+                dt = dt.astimezone(tz = dateutil.tz.tzutc()).replace(tzinfo = None)
             dt = dt + delta
 
         return dt
@@ -227,16 +227,16 @@ class S3DateTime(object):
                 if date_only:
                     # Compute UTC date for 08:00 local time
                     dt = datetime.datetime.combine(dt, datetime.time(8, 0, 0))
-                dt = dt.replace(tzinfo=tzinfo)
+                dt = dt.replace(tzinfo = tzinfo)
             else:
                 offset = cls.get_offset_value(cls.get_utc_offset())
                 if date_only:
                     # Compute UTC date for 08:00 local time
                     dt = datetime.datetime.combine(dt, datetime.time(8, 0, 0))
-                dt = dt - datetime.timedelta(seconds=offset)
+                dt = dt - datetime.timedelta(seconds = offset)
 
         if dt.tzinfo:
-            dt = dt.astimezone(tz=dateutil.tz.tzutc()).replace(tzinfo=None)
+            dt = dt.astimezone(tz = dateutil.tz.tzutc()).replace(tzinfo = None)
 
         return dt
 
@@ -551,7 +551,7 @@ class S3Calendar(object):
         # Remove microseconds
         # - for the case that the calendar falls back to .isoformat
         if isinstance(dt, datetime.datetime):
-            dt = dt.replace(microsecond=0)
+            dt = dt.replace(microsecond = 0)
 
         return self.calendar._format(dt, dtfmt)
 
@@ -674,7 +674,7 @@ class S3Calendar(object):
                 # Dates < 1900 not supported by strftime
                 year = "%04i" % dt.year
                 fmt = fmt.replace("%Y", year).replace("%y", year[-2:])
-                dtstr = dt.replace(year=1900).strftime(fmt)
+                dtstr = dt.replace(year = 1900).strftime(fmt)
             except AttributeError:
                 # Invalid argument type
                 raise TypeError("Invalid argument type: %s" % type(dt))
@@ -1644,7 +1644,7 @@ def s3_decode_iso_datetime(dtstr):
         raise ValueError("Invalid date/time string: %s (%s)" % (dtstr, type(dtstr)))
 
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=dateutil.tz.tzutc())
+        dt = dt.replace(tzinfo = dateutil.tz.tzutc())
 
     return dt
 
@@ -1658,7 +1658,7 @@ def s3_encode_iso_datetime(dt):
     """
 
     if isinstance(dt, (datetime.datetime, datetime.time)):
-        dx = dt.replace(microsecond=0)
+        dx = dt.replace(microsecond = 0)
     else:
         dx = dt
     return dx.isoformat()
@@ -1676,7 +1676,7 @@ def s3_utc(dt):
 
     if dt:
         if dt.tzinfo is None:
-            return dt.replace(tzinfo=dateutil.tz.tzutc())
+            return dt.replace(tzinfo = dateutil.tz.tzutc())
         return dt.astimezone(dateutil.tz.tzutc())
     else:
         return None
@@ -1696,7 +1696,7 @@ class S3DefaultTZ(datetime.tzinfo):
 
         if offset:
             offset_sec = S3DateTime.get_offset_value(offset)
-            self._offset = datetime.timedelta(seconds=offset_sec)
+            self._offset = datetime.timedelta(seconds = offset_sec)
         else:
             self._offset = datetime.timedelta(0)
 
@@ -1739,7 +1739,7 @@ def s3_get_tzinfo():
         if not tzinfo:
             offset = S3DateTime.get_utc_offset()
             if offset:
-                tzinfo = S3DefaultTZ(offset=offset)
+                tzinfo = S3DefaultTZ(offset = offset)
 
         # 3rd choice: use the timezone specified in deployment settings
         if not tzinfo:

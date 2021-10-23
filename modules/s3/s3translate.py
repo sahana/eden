@@ -28,7 +28,11 @@
 """
 
 import os
-import parser
+try:
+    import parser
+except ImportError:
+    # Python 3.10: parser is deprecated
+    import ast
 import pickle
 import token
 
@@ -657,10 +661,20 @@ class TranslateReadFiles(object):
         try:
             st = parser.suite(fileContent)
         except:
-            return []
-
-        # Create a parse tree list for traversal
-        stList = parser.st2list(st, line_info=1)
+            try:
+                # Python 3.10
+                tree = ast.parse(fileContent)
+            except:
+                return []
+            else:
+                # Create a parse tree list for traversal
+                # NB This needs more work...this is not a drop-in replacement!
+                # https://docs.python.org/3.10/library/ast.html
+                # https://greentreesnakes.readthedocs.io/en/latest/index.html
+                stList = ast.walk(tree)
+        else:
+            # Create a parse tree list for traversal
+            stList = parser.st2list(st, line_info=1)
 
         P = TranslateParseFiles()
 
