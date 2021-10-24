@@ -230,10 +230,24 @@ inv_tracking_status = {"UNKNOWN"    : TRACK_STATUS_UNKNOWN,
                        }
 
 # =============================================================================
-def inv_itn_label():
-    # Overwrite the label until we have a better way to do this
-    #return current.T("Item Source Tracking Number")
-    return current.T("CTN")
+def inv_itn_field(**attr):
+    label = current.deployment_settings.get_inv_itn_label()
+    if label:
+        NONE = current.messages["NONE"]
+        return S3ReusableField("item_source_no", length=16,
+                               label = label,
+                               represent = lambda v: v or NONE,
+                               requires = [IS_LENGTH(16),
+                                           # Prevent storing "" (always store None in this case)
+                                           # - makes for easier matching
+                                           IS_NOT_EMPTY_STR(),
+                                           ],
+                               **attr)
+    else:
+        return S3ReusableField("item_source_no", length=16,
+                               readable = False,
+                               writable = False,
+                               **attr)
 
 # =============================================================================
 class WarehouseModel(S3Model):
@@ -645,13 +659,7 @@ class InventoryModel(S3Model):
                      s3_currency(readable = track_pack_values,
                                  writable = track_pack_values,
                                  ),
-                     Field("item_source_no", length=16,
-                           label = inv_itn_label(),
-                           represent = lambda v: v or NONE,
-                           requires = [IS_LENGTH(16),
-                                       IS_NOT_EMPTY_STR(),
-                                       ]
-                           ),
+                     inv_itn_field()(),
                      # Organisation that owns this item
                      organisation_id("owner_org_id",
                                      label = owner_org_id_label,
@@ -945,22 +953,16 @@ $.filterOptionsS3({
         data = item.data
         data_get = data.get
 
-        site_id = data_get("site_id")
-        item_id = data_get("item_id")
-        pack_id = data_get("item_pack_id")
-        owner_org_id = data_get("owner_org_id")
-        supply_org_id = data_get("supply_org_id")
-        pack_value = data_get("pack_value")
-        currency = data_get("currency")
-
         # Must match all of these exactly
-        query = (table.site_id == site_id) & \
-                (table.item_id == item_id) & \
-                (table.item_pack_id == pack_id) & \
-                (table.owner_org_id == owner_org_id) & \
-                (table.supply_org_id == supply_org_id) & \
-                (table.pack_value == pack_value) & \
-                (table.currency == currency)
+        query = (table.site_id == data_get("site_id")) & \
+                (table.item_id == data_get("item_id")) & \
+                (table.item_pack_id == data_get("item_pack_id")) & \
+                (table.owner_org_id == data_get("owner_org_id")) & \
+                (table.supply_org_id == data_get("supply_org_id")) & \
+                (table.pack_value == data_get("pack_value")) & \
+                (table.currency == data_get("currency"))
+        #if current.deployment_settings.get_inv_itn_label():
+        #    query &= (table.item_source_no == data_get("item_source_no"))
 
         duplicate = current.db(query).select(table.id,
                                              table.quantity,
@@ -1281,13 +1283,27 @@ class InventoryAdjustModel(S3Model):
             old_owner_org_id_label = T("Currently Owned by Organization")
             new_owner_org_id_label = T("Transfer Ownership to Organization")
 
+        itn_label = settings.get_inv_itn_label()
+        if itn_label:
+            # Display Inv Item as the CTN
+            inv_item_readable = True
+            inv_item_represent = S3Represent(lookup = "inv_inv_item",
+                                             fields = ("item_source_no",),
+                                             )
+        else:
+            inv_item_readable = False
+            inv_item_represent = None
+
         tablename = "inv_adj_item"
         define_table(tablename,
                      adj_id(),
                      # Original inventory item
                      self.inv_item_id(ondelete = "RESTRICT",
-                                      readable = False,
+                                      label = itn_label,
+                                      represent = inv_item_represent,
+                                      readable = inv_item_readable,
                                       writable = False,
+                                      comment = None,
                                       ),
                      self.supply_item_id(ondelete = "RESTRICT"),
                      self.supply_item_pack_id(ondelete = "SET NULL"),
@@ -1357,6 +1373,7 @@ class InventoryAdjustModel(S3Model):
                      *s3_meta_fields())
 
         crud_form = S3SQLCustomForm("item_id",
+                                    "inv_item_id",
                                     "item_pack_id",
                                     "reason",
                                     "old_quantity",
@@ -2133,13 +2150,7 @@ class InventoryKittingModel(S3Model):
                      self.org_site_layout_id(label = T("Bin"),
                                              writable = False,
                                              ),
-                     Field("item_source_no", length=16,
-                           label = inv_itn_label(),
-                           represent = string_represent,
-                           requires = [IS_LENGTH(16),
-                                       IS_NOT_EMPTY_STR(),
-                                       ]
-                           ),
+                     inv_itn_field()(),
                      #s3_comments(),
                      *s3_meta_fields())
 
@@ -4580,13 +4591,7 @@ class InventoryStockCardModel(S3Model):
                      self.supply_item_pack_id(ondelete = "RESTRICT",
                                               required = True,
                                               ),
-                     Field("item_source_no", length=16,
-                           label = inv_itn_label(),
-                           represent = lambda v: v or NONE,
-                           requires = [IS_LENGTH(16),
-                                       IS_NOT_EMPTY_STR(),
-                                       ]
-                           ),
+                     inv_itn_field()(),
                      s3_date("expiry_date",
                              label = T("Expiry Date"),
                              represent = inv_expiry_date_represent,
@@ -5419,13 +5424,7 @@ class InventoryTrackingModel(S3Model):
                                  readable = False,
                                  writable = False,
                                  ),
-                     Field("item_source_no", length=16,
-                           label = inv_itn_label(),
-                           represent = string_represent,
-                           requires = [IS_LENGTH(16),
-                                       IS_NOT_EMPTY_STR(),
-                                       ]
-                           ),
+                     inv_itn_field()(),
                      # Organisation which originally supplied/donated item(s)
                      organisation_id("supply_org_id",
                                      label = T("Supplier/Donor"),

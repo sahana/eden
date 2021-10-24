@@ -4748,6 +4748,20 @@ class S3Config(Storage):
         """
         return self.inv.get("facility_manage_staff", True)
 
+    def get_inv_itn_label(self):
+        """
+            Label for a field used to uniquely identify Items
+            - Item Source Tracking Number
+            - defaults to CTN (Commodity Tracking Number), which is the Red Cross term
+            - can also be called Serial Number or Lot Number
+            - set to None to disable the field
+        """
+        label = self.inv.get("itn_label", "CTN")
+        if label:
+            return current.T(label)
+        else:
+            return None
+
     def get_inv_minimums(self):
         """
             Manage Minimum Stock Levels

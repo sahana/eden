@@ -639,7 +639,7 @@ class IS_HTML_COLOUR(IS_MATCH):
 class IS_NOT_EMPTY_STR(Validator):
     """
         Prevent storing empty string "" in fields (use None instead)
-            - this allows more accurate matching without complex ity
+            - this allows more accurate matching without complexity
 
         Used by inv: item_source_no
     """

@@ -153,7 +153,9 @@ class S3ReusableField(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def dummy(fname="dummy_id", ftype="integer"):
+    def dummy(fname = "dummy_id",
+              ftype = "integer",
+              ):
         """
             Provide a dummy reusable field; for safe defaults in models
 
