@@ -446,11 +446,35 @@ def recv():
     return inv_recv_controller()
 
 # -----------------------------------------------------------------------------
+def recv_item_bin():
+    """
+        RESTful CRUD controller
+        - just used for options.s3json lookups
+    """
+
+    s3.prep = lambda r: \
+        r.representation == "s3json" and r.method == "options"
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def send():
     """ RESTful CRUD controller """
 
     from s3db.inv import inv_send_controller
     return inv_send_controller()
+
+# -----------------------------------------------------------------------------
+def send_item_bin():
+    """
+        RESTful CRUD controller
+        - just used for options.s3json lookups
+    """
+
+    s3.prep = lambda r: \
+        r.representation == "s3json" and r.method == "options"
+
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def track_item():

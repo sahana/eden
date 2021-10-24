@@ -601,17 +601,18 @@ class OrganisationModel(S3Model):
                                            # "actuate": "replace",
                                            # },
                                            # 'Supporting' Organisation
-                                           #{"name": "supported_by",
-                                           # "link": "org_organisation_organisation",
-                                           # "joinby": "organisation_id",
-                                           # "key": "parent_id",
-                                           # # Hide better
-                                           # # - gives us a form to select existing Orgs, rather than create new ones
-                                           # # - allows deleting links
-                                           # # - but this doesn't show any results!
-                                           # #"actuate": "hide",
-                                           # "actuate": "replace",
-                                           # },
+                                           # - we need 1 in here for 'Parent' field import in organisation.xsl (used by RMS)
+                                           {"name": "supported_by",
+                                            "link": "org_organisation_organisation",
+                                            "joinby": "organisation_id",
+                                            "key": "parent_id",
+                                            # Hide better
+                                            # - gives us a form to select existing Orgs, rather than create new ones
+                                            # - allows deleting links
+                                            # - but this doesn't show any results!
+                                            #"actuate": "hide",
+                                            "actuate": "replace",
+                                            },
                                            ),
 
                        # Population Outreach (referral agencies)

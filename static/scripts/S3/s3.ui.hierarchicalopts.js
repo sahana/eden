@@ -806,7 +806,8 @@
          */
         addNode: function(parent, id, title, check) {
 
-            var tree = this.tree,
+            var manual,
+                tree = this.tree,
                 treeID = this.treeID,
                 nodeID = treeID + '-' + id,
                 inst = jQuery.jstree.reference(tree);
@@ -817,12 +818,14 @@
 
                 // Get parent node
                 if (parent) {
-                    parentNode = $('#' + treeID + '-' + parent + '_anchor');
+                    var parentNode = $('#' + treeID + '-' + parent + '_anchor');
                     if (!parentNode.length) {
-                        parentNode = '#';
+                        // parentNode not yet in the tree, so need to open it
+                        //tree.jstree('open_all', '#'); // Would be better if we knew which root node to open, but we don't, so need to open all
+                        tree.jstree('open_all');
+                        parentNode = $('#' + treeID + '-' + parent + '_anchor');
                     }
                 }
-
                 // Insert the node
                 tree.jstree('create_node', parentNode, {
                     id: nodeID,
@@ -833,8 +836,8 @@
                     }
                 }, "last");
 
-                // Update the parent relationship and open the parent node
                 if (parent) {
+                    // Update the parent relationship and open the parent node
                     parentNode.attr({rel: 'parent'});
                     tree.jstree('open_node', parentNode);
                 }
@@ -844,6 +847,7 @@
                 $('#' + treeID).append(node);
                 this.refresh();
             }
+
             if (check) {
                 tree.jstree('check_node', $('#' + nodeID));
             }

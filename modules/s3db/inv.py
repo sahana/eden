@@ -5381,7 +5381,9 @@ class InventoryTrackingModel(S3Model):
 #})''',
                                  ),
                      self.supply_item_id(ondelete = "RESTRICT"),
-                     self.supply_item_pack_id(),
+                     self.supply_item_pack_id(# We replace filterOptionsS3
+                                              script = None,
+                                              ),
                      # Now done as a VirtualField instead (looks better & updates closer to real-time, so less of a race condition)
                      #Field("req_quantity", "double",
                      #      # This isn't the Quantity requested, but rather the quantity still needed
@@ -8698,13 +8700,25 @@ def inv_recv_controller():
                                                     )
                     return crud_form
 
-                # Configure which fields in track_item are readable/writable
-                # depending on track_item.status:
-                if r.component_id:
-                    track_record = db(tracktable.id == r.component_id).select(tracktable.status,
-                                                                              limitby = (0, 1),
-                                                                              ).first()
+                track_item_id = r.component_id
+                if track_item_id:
+                    track_record = db(tracktable.id == track_item_id).select(tracktable.item_id,
+                                                                             tracktable.status,
+                                                                             limitby = (0, 1),
+                                                                             ).first()
                     crud_form = set_track_attr(track_record.status)
+                    update_item_id = track_record.item_id
+                    if r.http == "GET" and \
+                       track_record.status == TRACK_STATUS_PREPARING:
+                        # Provide initial options for Pack in Update forms
+                        # Don't include in the POSTs as we want to be able to select alternate Items, and hance packs
+                        f = tracktable.item_pack_id
+                        f.requires = IS_ONE_OF(db, "supply_item_pack.id",
+                                               f.represent,
+                                               sort = True,
+                                               filterby = "item_id",
+                                               filter_opts = (update_item_id,),
+                                               )
                 else:
                     crud_form = set_track_attr(TRACK_STATUS_PREPARING)
                     tracktable.status.readable = False
@@ -8722,30 +8736,41 @@ def inv_recv_controller():
                     list_fields.insert(4, "pack_value")
                     list_fields.insert(4, "currency")
 
-                if status == SHIP_STATUS_SENT:
-                    # Lock the record so it can't be fiddled with
-                    # - other than being able to edit Quantity Received & Bin
-                    deletable = False
-                    editable = True
-                    insertable = False
-                elif status:
+                if status:
                     # Lock the record so it can't be fiddled with
                     deletable = False
-                    editable = False
                     insertable = False
+                    if status == SHIP_STATUS_SENT:
+                        # Lock the record so it can't be fiddled with
+                        # - other than being able to edit Quantity Received & Bin
+                        editable = True
+                    else:
+                        editable = False
                 else:
                     # status == SHIP_STATUS_IN_PROCESS
                     deletable = True
                     editable = True
                     insertable = True
                     if r.interactive:
-                        # Adjust CRUD strings
                         s3.crud_strings.inv_recv.title_update = \
                         s3.crud_strings.inv_recv.title_display = T("Process Received Shipment")
                         if r.method in (None, "update"):
                             # Limit to Bins from this site
                             from .org import org_site_layout_config
-                            org_site_layout_config(record.site_id, s3db.inv_recv_item_bin.layout_id)
+                            irbtable = s3db.inv_recv_item_bin
+                            org_site_layout_config(record.site_id, irbtable.layout_id)
+
+                            # Default the Supplier/Donor to the Org sending the shipment
+                            tracktable.supply_org_id.default = record.organisation_id
+
+                            # Replace filterOptionsS3
+                            # Update req_item_id & quantity when item_id selected
+                            if s3.debug:
+                                s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_item.js" % r.application)
+                            else:
+                                s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_item.min.js" % r.application)
+                            js_global_append = s3.js_global.append
+                            packs = {}
                             if settings.get_inv_recv_req():
                                 rrtable = s3db.inv_recv_req
                                 reqs = db(rrtable.recv_id == r.id).select(rrtable.req_id)
@@ -8759,12 +8784,6 @@ def inv_recv_controller():
                                     f = tracktable.item_id
                                     f.comment = None # Cannot create new Items here
                                     f.widget = None
-                                    # We replace filterOptionsS3
-                                    tracktable.item_pack_id.comment = None
-                                    if s3.debug:
-                                        s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_item.js" % r.application)
-                                    else:
-                                        s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_item.min.js" % r.application)
                                     # Filter to Items in the Request(s) which have not yet been received
                                     rtable = s3db.inv_req
                                     ritable = s3db.inv_req_item
@@ -8789,28 +8808,27 @@ def inv_recv_controller():
                                                           )
                                     item_data = {}
                                     for row in items:
-                                        req_pack_quantity = row["supply_item_pack.quantity"]
-                                        req_ref = row["inv_req.req_ref"]
                                         req_row = row["inv_req_item"]
                                         item_id = req_row.item_id
                                         if item_id in item_data:
-                                            item_data[item_id]["req_items"].append({"req_item_id": req_row.id,
-                                                                                    "req_quantity": req_row.quantity * req_pack_quantity,
-                                                                                    "req_ref": req_ref,
-                                                                                    })
+                                            item_data[item_id].append({"i": req_row.id,
+                                                                       "q": req_row.quantity * row["supply_item_pack.quantity"],
+                                                                       "r": row["inv_req.req_ref"],
+                                                                       })
                                         else:
-                                            item_data[item_id] = {"req_items": [{"req_item_id": req_row.id,
-                                                                                 "req_quantity": req_row.quantity * req_pack_quantity,
-                                                                                 "req_ref": req_ref,
-                                                                                 }],
-                                                                  }
+                                            item_data[item_id] = [{"i": req_row.id,
+                                                                   "q": req_row.quantity * row["supply_item_pack.quantity"],
+                                                                   "r": row["inv_req.req_ref"],
+                                                                   }]
                                     # Remove req_ref when there are no duplicates to distinguish
                                     for item_id in item_data:
-                                        req_items = item_data[item_id]["req_items"]
+                                        req_items = item_data[item_id]
                                         if len(req_items) == 1:
                                             req_items[0].pop("req_ref")
 
-                                    # Add Packs to replace the filterOptionsS3 lookup
+                                    js_global_append('''S3.supply.req_items=%s''' % json.dumps(item_data, separators=SEPARATORS))
+
+                                    # Add Packs for all Req Items to avoid AJAX lookups
                                     rows = db(iptable.item_id.belongs(item_ids)).select(iptable.id,
                                                                                         iptable.item_id,
                                                                                         iptable.name,
@@ -8818,25 +8836,40 @@ def inv_recv_controller():
                                                                                         )
                                     for row in rows:
                                         item_id = row.item_id
-                                        this_data = item_data[item_id]
-                                        packs = this_data.get("packs")
-                                        if not packs:
-                                            this_data["packs"] = [{"id": row.id,
-                                                                   "name": row.name,
-                                                                   "quantity": row.quantity,
-                                                                   },
-                                                                  ]
+                                        if item_id in packs:
+                                            packs[item_id].append({"i": row.id,
+                                                                   "n": row.name,
+                                                                   "q": row.quantity,
+                                                                   })
                                         else:
-                                            this_data["packs"].append({"id": row.id,
-                                                                       "name": row.name,
-                                                                       "quantity": row.quantity,
-                                                                       })
-                                    # Pass data to inv_recv_item.js
-                                    # to Apply req_item_id & quantity when item_id selected
-                                    s3.js_global.append('''S3.supply.item_data=%s''' % json.dumps(item_data, separators=SEPARATORS))
+                                            packs[item_id] = [{"i": row.id,
+                                                               "n": row.name,
+                                                               "q": row.quantity,
+                                                               }]
 
-                # Default the Supplier/Donor to the Org sending the shipment
-                tracktable.supply_org_id.default = record.organisation_id
+                            if track_item_id:
+                                # Update form
+                                # add binnedQuantity if there are multiple Bins to manage
+                                # @ToDo: Do we also need to do this if 1 Bin + unbinned?
+                                bins = db(irbtable.track_item_id == track_item_id).select(irbtable.quantity)
+                                if len(bins) > 1:
+                                    js_global_append('''S3.supply.binnedQuantity=%s''' % sum([row.quantity for row in bins]))
+
+                                if update_item_id not in packs:
+                                    # Also send the current pack details to avoid an AJAX call
+                                    iptable = s3db.supply_item_pack
+                                    rows = db(iptable.item_id == update_item_id).select(iptable.id,
+                                                                                        iptable.name,
+                                                                                        iptable.quantity,
+                                                                                        )
+
+                                    # Simplify format
+                                    packs[update_item_id] = [{"i": row.id,
+                                                              "n": row.name,
+                                                              "q": row.quantity,
+                                                              } for row in rows]
+                            if len(packs):
+                                js_global_append('''S3.supply.packs=%s''' % json.dumps(packs, separators=SEPARATORS))
 
                 s3db.configure("inv_track_item",
                                crud_form = crud_form,
@@ -12607,7 +12640,6 @@ def inv_send_controller():
                     tracktable.send_id.readable = False
                     tracktable.recv_id.readable = False
                     tracktable.item_id.readable = False
-                    tracktable.item_pack_id.comment = None # No filterOptionsS3
                     tracktable.recv_quantity.readable = False
                     tracktable.return_quantity.readable = False
                     tracktable.expiry_date.readable = False
@@ -12817,7 +12849,8 @@ def inv_send_controller():
                     if r.method in (None, "update"):
                         # Limit to Bins from this site
                         from .org import org_site_layout_config
-                        org_site_layout_config(r.record.site_id, s3db.inv_send_item_bin.layout_id)
+                        isbtable = s3db.inv_send_item_bin
+                        org_site_layout_config(r.record.site_id, isbtable.layout_id)
 
                         # We replace filterOptionsS3
                         if s3.debug:
@@ -13014,7 +13047,6 @@ def inv_send_controller():
                             # Update form
                             # add binnedQuantity if there are multiple Bins to manage
                             # @ToDo: Do we also need to do this if 1 Bin + unbinned?
-                            isbtable = s3db.inv_send_item_bin
                             bins = db(isbtable.track_item_id == track_item_id).select(isbtable.quantity)
                             if len(bins) > 1:
                                 binned_quantity = '''
