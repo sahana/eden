@@ -2232,15 +2232,17 @@ def config(settings):
     def customise_cr_shelter_registration_resource(r, tablename):
 
         #from s3 import S3AddPersonWidget
+        #from s3db.org import org_SiteRepresent
 
         s3db = current.s3db
         table = s3db.cr_shelter_registration
         #table.person_id.widget = S3AddPersonWidget(pe_label = True)
-        f = table.registration_status
-        f.default = 2 # Checked-in
+        #f = table.registration_status
+        table.registration_status.default = 2 # Checked-in
         #f.readable = f.writable = False
         #table.check_out_date.readable = table.check_out_date.writable = False
         #table.comments.readable = table.comments.writable = False
+        #table.site_id.represent = org_SiteRepresent(show_type = False)
 
     settings.customise_cr_shelter_registration_resource = customise_cr_shelter_registration_resource
 
@@ -2852,6 +2854,9 @@ def config(settings):
                                                                     show_map = False,
                                                                     )
 
+        from s3db.org import org_SiteRepresent
+        s3db.cr_shelter_registration.site_id.represent = org_SiteRepresent(show_type = False)
+
         if r.method == "report":
 
             s3.crud_strings["pr_person"].title_report = T("Clients Report")
@@ -2865,9 +2870,9 @@ def config(settings):
                                                },
                                     ),
                     S3LocationFilter("shelter_registration.site_id$location_id",
-                        label = T("Location"),
-                        levels = ("L3", "L4"),
-                        ),
+                                     label = T("Location"),
+                                     levels = ("L3", "L4"),
+                                     ),
                     S3OptionsFilter("shelter_registration.site_id",
                                     ),
                     S3OptionsFilter("age_group",

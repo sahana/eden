@@ -1665,7 +1665,6 @@ class ShelterRegistrationModel(S3Model):
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("person_id",
                                                        "site_id",
-                                                       "shelter_unit_id",
                                                        ),
                                             ),
                   onaccept = registration_onaccept,
@@ -2473,6 +2472,14 @@ def cr_update_shelter_population(site_id):
                                                   dtable.capacity_night,
                                                   limitby = (0, 1),
                                                   ).first()
+
+    if not record:
+        dtable.insert(site_id = site_id)
+        record = db(dtable.site_id == site_id).select(dtable.id,
+                                                      dtable.capacity_day,
+                                                      dtable.capacity_night,
+                                                      limitby = (0, 1),
+                                                      ).first()
 
     # Get population numbers
     rtable = s3db.cr_shelter_registration
