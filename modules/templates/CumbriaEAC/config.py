@@ -1250,18 +1250,20 @@ def config(settings):
 
         dtable = s3db.cr_shelter_details
 
-        record = r.record
-        if record:
-            details = db(dtable.site_id == record.site_id).select(dtable.status,
-                                                                  limitby = (0, 1),
-                                                                  ).first()
+        if not current.auth.override and \
+           r.method != "import":
+            record = r.record
+            if record:
+                details = db(dtable.site_id == record.site_id).select(dtable.status,
+                                                                      limitby = (0, 1),
+                                                                      ).first()
 
-        # Only have a single Status option visible
-        shelter_status_opts = dict(cr_shelter_status_opts)
-        if record and details.status == 6:
-            del shelter_status_opts[1]
-        elif r.interactive and not current.auth.override:
-            del shelter_status_opts[6]
+            # Only have a single Status option visible
+            shelter_status_opts = dict(cr_shelter_status_opts)
+            if record and details.status == 6:
+                del shelter_status_opts[1]
+            elif r.interactive:
+                del shelter_status_opts[6]
 
         table = s3db.cr_shelter
         table.name.requires = [IS_NOT_EMPTY(),
