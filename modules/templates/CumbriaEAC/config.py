@@ -2172,10 +2172,14 @@ def config(settings):
                 stable = current.s3db.cr_shelter
                 query = (stable.site_id == site_id)
             else:
+                record_id = form_vars.id
+                if not record_id:
+                    # Create form
+                    return
                 s3db = current.s3db
                 stable = s3db.cr_shelter
                 dtable = s3db.cr_shelter_details
-                query = (dtable.id == form_vars.id) & \
+                query = (dtable.id == record_id) & \
                         (dtable.site_id == stable.site_id)
             shelter = current.db(query).select(stable.obsolete,
                                                limitby = (0, 1),
