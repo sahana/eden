@@ -820,7 +820,7 @@
                 if (parent) {
                     var parentNode = $('#' + treeID + '-' + parent + '_anchor');
                     if (!parentNode.length) {
-                        // parentNode not yet in the tree, so need to open it
+                        // parentNode not yet in the tree, so need to open it's parent
                         //tree.jstree('open_all', '#'); // Would be better if we knew which root node to open, but we don't, so need to open all
                         tree.jstree('open_all');
                         parentNode = $('#' + treeID + '-' + parent + '_anchor');

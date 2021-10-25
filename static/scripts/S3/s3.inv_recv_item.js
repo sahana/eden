@@ -22,7 +22,7 @@ $(document).ready(function() {
             first,
             inlineComponent = $('#sub-defaultrecv_bin'),
             itemID = ItemField.val(),
-            ItemPackField = $('#inv_inv_item_item_pack_id'),
+            ItemPackField = $('#inv_track_item_item_pack_id'),
             itemPackID,
             message,
             newBinQuantityField = $('#sub_defaultrecv_bin_defaultrecv_bin_i_quantity_edit_none'),
@@ -38,11 +38,13 @@ $(document).ready(function() {
             packsLength,
             PackQuantity,
             QuantityField = $('#inv_track_item_quantity'),
+            RecvQuantityField = $('#inv_track_item_recv_quantity'),
+            recvQuantity, // Value in RecvQuantityField (or QuantityField, if that isn't set). Needs to be multiplied by PackQuantity for comparisons
             ReqItemRow = $('#inv_track_item_req_item_id__row'),
+            sendQuantity, // Value in QuantityField. Needs to be multiplied by PackQuantity for comparisons
             startingQuantity, // Needs to be multiplied by startingPackQuantity for comparisons
             startingPackID,
             startingPackQuantity = 1,
-            totalQuantity, // Value in QuantityField. Needs to be multiplied by PackQuantity for comparisons
             update,
             updatePacks,
             updateQuantity;
@@ -86,7 +88,8 @@ $(document).ready(function() {
             } else {
                 update = false;
                 QuantityField.val('');
-                totalQuantity = 0;
+                RecvQuantityField.val('');
+                sendQuantity = recvQuantity = 0;
                 // Empty the Bins field
                 inlineComponent.inlinecomponent('removeRows');
                 binnedQuantity = 0;
@@ -116,21 +119,27 @@ $(document).ready(function() {
             // Update form
             update = true;
             startingItemPackID = itemPackID = ItemPackField.val();
-            if (totalQuantity) {
-                totalQuantity = parseFloat(totalQuantity);
-            } else {
-                totalQuantity = 0;
-            }
             ItemField.trigger('change.s3', true);
         }
 
         ItemPackField.on('change.s3', function() {
             itemPackID = ItemPackField.val();
             PackQuantity = packsByID[itemPackID];
-            // Adjust Total Quantity
-            totalQuantity = totalQuantityField.val();
-            totalQuantity = totalQuantity * oldPackQuantity / PackQuantity;
-            totalQuantityField.val(totalQuantity);
+            // Adjust Total Quantities
+            sendQuantity = QuantityField.val();
+            if (sendQuantity) {
+                sendQuantity = parseFloat(sendQuantity);
+                sendQuantity = sendQuantity * oldPackQuantity / PackQuantity;
+                QuantityField.val(totalQuantity);
+                recvQuantity = RecvQuantityField.val();
+                if (recvQuantity) {
+                    recvQuantity = parseFloat(recvQuantity);
+                    recvQuantity = recvQuantity * oldPackQuantity / PackQuantity;
+                    RecvQuantityField.val(recvQuantity);
+                } else {
+                    recvQuantity = sendQuantity;
+                }
+            }
             // Adjust Bins
             binQuantity = newBinQuantityField.val();
             binQuantity = binQuantity * oldPackQuantity / PackQuantity;
@@ -171,11 +180,45 @@ $(document).ready(function() {
         });
 
         QuantityField.change(function() {
-            totalQuantity = QuantityField.val();
-            if (totalQuantity) {
-                totalQuantity = parseFloat(totalQuantity);
+            sendQuantity = QuantityField.val();
+            if (sendQuantity) {
+                sendQuantity = parseFloat(sendQuantity);
+                recvQuantity = RecvQuantityField.val();
+                if (recvQuantity) {
+                    if (recvQuantity > sendQuantity) {
+                        // @ToDo: i18n
+                        message = 'Quantity Sent increased to Quantity Received';
+                        error = $('<div class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
+                        QuantityField.val(recvQuantity)
+                                     .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                            $(this).fadeOut('slow').remove();
+                            return false;
+                        });
+                    }
+                } else {
+                    recvQuantity = sendQuantity;
+                }
             } else {
-                totalQuantity = 0;
+                sendQuantity = recvQuantity = 0;
+            }
+        });
+
+        RecvQuantityField.change(function() {
+            recvQuantity = RecvQuantityField.val();
+            if (recvQuantity) {
+                recvQuantity = parseFloat(recvQuantity);
+                if (recvQuantity > sendQuantity) {
+                    // @ToDo: i18n
+                    message = 'Quantity Received reduced to Quantity Sent';
+                    error = $('<div class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
+                    RecvQuantityField.val(sendQuantity)
+                                     .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                        $(this).fadeOut('slow').remove();
+                        return false;
+                    });
+                }
+            } else {
+                recvQuantity = sendQuantity;
             }
         });
 
@@ -184,7 +227,7 @@ $(document).ready(function() {
             if (binQuantity) {
                 binQuantity = parseFloat(binQuantity);
                 binnedQuantityPacked = binnedQuantity * startingPackQuantity / PackQuantity;
-                availableQuantity = totalQuantity - binnedQuantityPacked;
+                availableQuantity = recvQuantity - binnedQuantityPacked;
                 if (binQuantity > availableQuantity) {
                     // @ToDo: i18n
                     message = 'Bin Quantity reduced to Quantity remaining to be Received';
@@ -203,7 +246,7 @@ $(document).ready(function() {
             if (binQuantity) {
                 binQuantity = parseFloat(binQuantity);
                 binnedQuantityPacked = binnedQuantity * startingPackQuantity / PackQuantity;
-                availableQuantity = totalQuantity - binnedQuantityPacked;
+                availableQuantity = recvQuantity - binnedQuantityPacked;
                 if (binQuantity > availableQuantity) {
                     // @ToDo: i18n
                     message = 'Bin Quantity reduced to Quantity remaining to be Received';
