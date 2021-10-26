@@ -315,15 +315,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
         ADMIN = current.auth.get_system_roles().ADMIN
 
         return M(c="hms")(
-                    M("Hospitals", f="hospital", m="summary")(
+                    M("Medical Facilities", f="hospital", m="summary")(
+                        M("Create", m="create"),
+                        ),
+                    M("Medical Personnel", f="person")(
                         M("Create", m="create"),
                         ),
                     M("Pharmacies", f="pharmacy")(
                         M("Create", m="create"),
                         M("Map", m="map"),
-                        ),
-                    M("Doctors", f="person")(
-                        M("Create", m="create"),
                         ),
                     M("Administration", link=False, restrict=ADMIN)(
                         M("Qualifications", c="hrm", f="skill"),

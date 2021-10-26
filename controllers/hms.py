@@ -371,16 +371,16 @@ def person():
 
     # @ToDo: Move to Template
     s3.crud_strings["pr_person"] = Storage(
-        label_create = T("Create Doctor"),
-        title_display = T("Doctor Details"),
-        title_list = T("Doctors"),
-        title_update = T("Edit Doctor"),
-        label_list_button = T("List Doctors"),
-        label_delete_button = T("Delete Doctor"),
-        msg_record_created = T("Doctor added"),
-        msg_record_modified = T("Doctor updated"),
-        msg_record_deleted = T("Doctor deleted"),
-        msg_list_empty = T("No Doctors currently defined"),
+        label_create = T("Create Medical Personnel"),
+        title_display = T("Medical Personnel Details"),
+        title_list = T("Medical Personnel"),
+        title_update = T("Edit Medical Personnel"),
+        label_list_button = T("List Medical Personnel"),
+        label_delete_button = T("Delete Medical Personnel"),
+        msg_record_created = T("Medical Personnel added"),
+        msg_record_modified = T("Medical Personnel updated"),
+        msg_record_deleted = T("Medical Personnel deleted"),
+        msg_list_empty = T("No Medical Personnel currently defined"),
         )
 
     list_fields = ["first_name",
