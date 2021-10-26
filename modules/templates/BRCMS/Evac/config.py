@@ -34,12 +34,13 @@ def config(settings):
                                         )
 
     modules = settings.modules
-    modules["asset"] = {"name_nice": T("Assets"), "module_type": 10}
-    #modules["fin"] = {"name_nice": T("Finances"), "module_type": 10}
-    modules["hms"] = {"name_nice": T("Hospitals"), "module_type": 10}
-    #modules["security"] = {"name_nice": T("Security"), "module_type": 10}
+    modules["asset"] = {"name_nice": T("Assets"), "module_type": None}
+    #modules["fin"] = {"name_nice": T("Finances"), "module_type": None}
+    modules["hms"] = {"name_nice": T("Hospitals"), "module_type": None}
+    modules["inv"] = {"name_nice": T("Inventory"), "module_type": None}
+    modules["security"] = {"name_nice": T("Security"), "module_type": None}
     modules["supply"] = {"name_nice": T("Supply"), "module_type": None}
-    modules["transport"] = {"name_nice": T("Transport"), "module_type": 10}
+    modules["transport"] = {"name_nice": T("Transport"), "module_type": None}
 
     # -------------------------------------------------------------------------
     # BR Settings

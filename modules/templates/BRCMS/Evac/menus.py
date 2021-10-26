@@ -396,7 +396,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         ADMIN = current.auth.get_system_roles().ADMIN
 
-        return M()(M("CheckPoints", c="security", f="checkpoint")(
+        return M()(M("Checkpoints", c="security", f="checkpoint")(
                         M("Create", m="create"),
                         M("Map", m="map"),
                         ),
@@ -408,8 +408,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
                        M("Create", m="create"),
                        M("Map", m="map"),
                        ),
-                    M("Administration", link=False, restrict=ADMIN)(
+                   M("Security Zones", c="security", f="zone")(
+                        M("Create", m="create"),
+                        M("Map", m="map"),
+                        ),
+                   M("Administration", link=False, restrict=ADMIN)(
                         M("Incident Types", c="event", f="incident_type"),
+                        M("Zone Types", c="security", f="zone_type"),
                         ),
                    )
 
