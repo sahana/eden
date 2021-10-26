@@ -9,6 +9,6 @@ Built-in CRUD Methods
    CRUD <crud>
    Pivottable Reports <report>
    Timeplot Reports <timeplot>
-   Spreadsheet Importer <ssi>
+   Spreadsheet Importer <import>
 
 
