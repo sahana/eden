@@ -224,6 +224,7 @@ Thank you"""
                                "edu_school": T("School"),
                                "fire_station": T("Fire Station"),
                                "hms_hospital": T("Hospital"),
+                               "hms_pharmacy": T("Pharmacy"),
                                "inv_warehouse": T("Warehouse"),
                                "msg_basestation": T("Cell Tower"),
                                "org_facility": T("Facility"), # @ToDo: Use deployment setting for label

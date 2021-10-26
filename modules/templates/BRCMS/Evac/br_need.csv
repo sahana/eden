@@ -1,4 +1,6 @@
 Type,Comments
-Money,
-Logistics,
+Flight,Flight Manifests
+Logistics,"Money, Supplies, Local Transport"
+Medical,"Doctors, Hospitals, Telehealth"
+Security,
 Visa / Refugee Application,

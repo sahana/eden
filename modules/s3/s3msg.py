@@ -682,47 +682,62 @@ class S3Msg(object):
         if not rows:
             return
 
-        htable = s3db.table("hrm_human_resource")
-        otable = s3db.org_organisation
         ptable = s3db.pr_person
-        gtable = s3db.pr_group
-        mtable = db.pr_group_membership
-        ftable = s3db.pr_forum
-        fmtable = db.pr_forum_membership
 
         # Left joins for multi-recipient lookups
-        gleft = [mtable.on((mtable.group_id == gtable.id) & \
-                           (mtable.person_id != None) & \
-                           (mtable.deleted == False)),
-                 ptable.on((ptable.id == mtable.person_id) & \
-                           (ptable.deleted == False))
-                 ]
-        fleft = [fmtable.on((fmtable.forum_id == ftable.id) & \
-                           (fmtable.person_id != None) & \
-                           (fmtable.deleted == False)),
-                 ptable.on((ptable.id == fmtable.person_id) & \
-                           (ptable.deleted == False))
-                 ]
+        instance_types = set([row["pr_pentity.instance_type"] for row in rows])
 
-        if htable:
-            oleft = [htable.on((htable.organisation_id == otable.id) & \
-                               (htable.person_id != None) & \
-                               (htable.deleted == False)),
-                     ptable.on((ptable.id == htable.person_id) & \
-                               (ptable.deleted == False)),
+        if "pr_forum" in instance_types:
+            ftable = s3db.pr_forum
+            fmtable = db.pr_forum_membership
+            fleft = [fmtable.on((fmtable.forum_id == ftable.id) & \
+                               (fmtable.person_id != None) & \
+                               (fmtable.deleted == False)),
+                     ptable.on((ptable.id == fmtable.person_id) & \
+                               (ptable.deleted == False))
                      ]
 
-            etable = s3db.hrm_training_event
-            ttable = s3db.hrm_training
-            tleft = [ttable.on((ttable.training_event_id == etable.id) & \
-                               (ttable.person_id != None) & \
-                               (ttable.deleted == False)),
-                     ptable.on((ptable.id == ttable.person_id) & \
-                               (ptable.deleted == False)),
+        if "pr_group" in instance_types:
+            gtable = s3db.pr_group
+            mtable = db.pr_group_membership
+            gleft = [mtable.on((mtable.group_id == gtable.id) & \
+                               (mtable.person_id != None) & \
+                               (mtable.deleted == False)),
+                     ptable.on((ptable.id == mtable.person_id) & \
+                               (ptable.deleted == False))
                      ]
 
+        if "hrm_human_resource" in instance_types or \
+           "org_organisation" in instance_types:
+            htable = s3db.table("hrm_human_resource")
+            if htable:
+                otable = s3db.org_organisation
+                oleft = [htable.on((htable.organisation_id == otable.id) & \
+                                   (htable.person_id != None) & \
+                                   (htable.deleted == False)),
+                         ptable.on((ptable.id == htable.person_id) & \
+                                   (ptable.deleted == False)),
+                         ]
+        else:
+            htable = False
+
+        if "hrm_training_event" in instance_types:
+            etable = s3db.table("hrm_training_event")
+            if etable:
+                ttable = s3db.hrm_training
+                tleft = [ttable.on((ttable.training_event_id == etable.id) & \
+                                   (ttable.person_id != None) & \
+                                   (ttable.deleted == False)),
+                         ptable.on((ptable.id == ttable.person_id) & \
+                                   (ptable.deleted == False)),
+                         ]
+        else:
+            etable = False
+
+        if "deploy_alert" in instance_types:
             atable = s3db.table("deploy_alert")
             if atable:
+                htable = s3db.table("hrm_human_resource")
                 ltable = db.deploy_alert_recipient
                 aleft = [ltable.on(ltable.alert_id == atable.id),
                          htable.on((htable.id == ltable.human_resource_id) & \
@@ -731,6 +746,8 @@ class S3Msg(object):
                          ptable.on((ptable.id == htable.person_id) & \
                                    (ptable.deleted == False))
                          ]
+        else:
+            atable = False
 
         # chainrun: used to fire process_outbox again,
         # when messages are sent to groups or organisations
@@ -863,7 +880,7 @@ class S3Msg(object):
                     chainrun = True
                 status = True
 
-            elif entity_type == "hrm_training_event":
+            elif etable and entity_type == "hrm_training_event":
                 # Re-queue the message for each participant
                 recipients = db(etable.pe_id == pe_id).select(ptable.pe_id,
                                                               left = tleft,

@@ -1,0 +1,6 @@
+uuid,Name,Type,Comments
+FLIGHTS,Flight Manifests,2,
+LEGAL,Legal,2,
+LOGISTICS,Logistics,2,
+MEDICAL,Medical,2,
+SECURITY,Security,2,

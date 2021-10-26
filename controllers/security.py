@@ -20,6 +20,12 @@ def level():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def checkpoint():
+    """ Checkpoints: RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def zone():
     """ Security Zones: RESTful CRUD controller """
 

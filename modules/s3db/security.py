@@ -27,7 +27,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("SecurityLevelModel",
+__all__ = ("SecurityCheckpointsModel",
+           "SecurityLevelModel",
            "SecuritySeizedItemsModel",
            "SecurityStaffModel",
            "SecurityZonesModel",
@@ -37,6 +38,50 @@ from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
 from s3layouts import S3PopupLink
+
+# =============================================================================
+class SecurityCheckpointsModel(S3Model):
+    """ Model for Security Checkpoints """
+
+    names = ("security_checkpoint",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # -----------------------------------------------------------
+        # Security Checkpoints
+        #
+
+        tablename = "security_checkpoint"
+        self.define_table(tablename,
+                          Field("name",
+                                label = T("Name"),
+                                ),
+                          self.gis_location_id(),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # CRUD strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Checkpoint"),
+            title_display = T("Checkpoint Details"),
+            title_list = T("Checkpoints"),
+            title_update = T("Edit Checkpoint"),
+            title_upload = T("Import Checkpoints"),
+            label_list_button = T("List Checkpoints"),
+            label_delete_button = T("Delete Checkpoint"),
+            msg_record_created = T("Checkpoint added"),
+            msg_record_modified = T("Checkpoint updated"),
+            msg_record_deleted = T("Checkpoint deleted"),
+            msg_list_empty = T("No Checkpoints currently registered"),
+            )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class SecurityLevelModel(S3Model):

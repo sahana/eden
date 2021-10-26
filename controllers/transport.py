@@ -15,6 +15,12 @@ def index():
     return s3db.cms_index(c)
 
 # -----------------------------------------------------------------------------
+def airplane():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def airport():
     """ RESTful CRUD controller """
 
@@ -54,6 +60,13 @@ def border_control_point():
 
 # -----------------------------------------------------------------------------
 def bridge():
+    """ RESTful CRUD controller """
+
+    from s3db.transport import transport_rheader
+    return s3_rest_controller(rheader = transport_rheader)
+
+# -----------------------------------------------------------------------------
+def flight():
     """ RESTful CRUD controller """
 
     from s3db.transport import transport_rheader

@@ -30,8 +30,9 @@
 __all__ = ("LocationModel",
            "LocationNameModel",
            "LocationTagModel",
-           "LocationGroupModel",
+           #"LocationGroupModel",
            "LocationHierarchyModel",
+           "LocationRouteModel",
            "GISConfigModel",
            "LayerEntityModel",
            "LayerFeatureModel",
@@ -1508,8 +1509,8 @@ class LocationHierarchyModel(S3Model):
             msg_record_created = T("Location Hierarchy added"),
             msg_record_modified = T("Location Hierarchy updated"),
             msg_record_deleted = T("Location Hierarchy deleted"),
-            msg_list_empty = T("No Location Hierarchies currently defined")
-        )
+            msg_list_empty = T("No Location Hierarchies currently defined"),
+            )
 
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary = ("location_id",)),
@@ -1541,6 +1542,107 @@ class LocationHierarchyModel(S3Model):
                 hierarchy_gap = current.T("A strict location hierarchy cannot have gaps.")
                 for gap in gaps:
                     form.errors[gap] = hierarchy_gap
+
+# =============================================================================
+class LocationRouteModel(S3Model):
+    """
+        Routes model
+        - collection of WayPoints
+
+        e.g. for Evacuation Routes (could then link it to a specific Hazard, or Risk)
+
+        @ToDo: Rdedraw Route location if a WayPoint is added/removed/reordered
+        @ToDo: Set WayPoints to posn=0 if a new Route is drawn
+        @ToDo: Custom Method to draw LineString with WayPoints visible & snap to them
+        @ToDo: GPX Import/Export
+    """
+
+    names = ("gis_route",
+             "gis_waypoint",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        location_id = self.gis_location_id
+
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Location Groups
+        #
+        tablename = "gis_route"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Name"),
+                           ),
+                     # LineString for the overall Route
+                     location_id(empty = False,
+                                 ondelete = "CASCADE",
+                                 widget = S3LocationSelector(lines = True,
+                                                             points = False,
+                                                             ),
+                                 ),
+                     # @ToDo: Field for uploaded GPX file?
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        self.add_components(tablename,
+                            gis_waypoint = "route_id",
+                            )
+
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Route"),
+            title_display = T("Route"),
+            title_list = T("Routes"),
+            title_update = T("Edit Route"),
+            label_list_button = T("List Routes"),
+            label_delete_button = T("Delete Route"),
+            msg_record_created = T("Route added"),
+            msg_record_modified = T("Route updated"),
+            msg_record_deleted = T("Route deleted"),
+            msg_list_empty = T("No Routes currently defined"),
+            )
+
+        # ---------------------------------------------------------------------
+        # Location WayPoint
+        #
+        tablename = "gis_waypoint"
+        define_table(tablename,
+                     # Optional link to a Route
+                     Field("route_id", "reference gis_route",
+                           label = T("Route"),
+                           ondelete = "CASCADE",
+                           ),
+                     # None => Not active in the Route
+                     Field("posn", "integer",
+                           label = T("Position"),
+                           ),
+                     location_id(empty = False,
+                                 label = T("WayPoint"),
+                                 ondelete = "CASCADE",
+                                 ),
+                     # @ToDo: Field for uploaded GPX file?
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        crud_strings[tablename] = Storage(
+            label_create = T("Create WayPoint"),
+            title_display = T("WayPoint"),
+            title_list = T("WayPoints"),
+            title_update = T("Edit WayPoint"),
+            label_list_button = T("List WayPoints"),
+            label_delete_button = T("Delete WayPoint"),
+            msg_record_created = T("WayPoint added"),
+            msg_record_modified = T("WayPoint updated"),
+            msg_record_deleted = T("WayPoint deleted"),
+            msg_list_empty = T("No WayPoints currently defined"),
+            )
+
+        # Pass names back to global scope (s3.*)
+        return {}
 
 # =============================================================================
 class GISConfigModel(S3Model):
@@ -2772,7 +2874,8 @@ class LayerFeatureModel(S3Model):
             msg_record_created = T("Feature Layer added"),
             msg_record_modified = T("Feature Layer updated"),
             msg_record_deleted = T("Feature Layer deleted"),
-            msg_list_empty = T("No Feature Layers currently defined"))
+            msg_list_empty = T("No Feature Layers currently defined"),
+            )
 
         self.configure(tablename,
                        deduplicate = self.gis_layer_feature_deduplicate,
@@ -2939,30 +3042,6 @@ class LayerMapModel(S3Model):
                            ),
                      gis_opacity()(),
                      *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # GPS Waypoints
-        #tablename = "gis_waypoint"
-        #define_table(tablename,
-        #             Field("name", length=128, notnull=True,
-        #                   label = T("Name"),
-        #                   ),
-        #             Field("description", length=128,
-        #                   label = DESCRIPTION,
-        #                   ),
-        #             Field("category", length=128,
-        #                   label = T("Category"),
-        #                   ),
-        #             location_id(),
-        #             *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # GPS Tracks (stored as 1 record per point)
-        #tablename = "gis_trackpoint"
-        #define_table(tablename,
-        #             location_id(),
-        #             #track_id(),        # link to the uploaded file?
-        #             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # ArcGIS REST

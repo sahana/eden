@@ -1505,9 +1505,37 @@ def style():
 
     return s3_rest_controller()
 
+# =============================================================================
+def route():
+    """ RESTful CRUD controller for Routes """
+
+    def rheader(r):
+        if r.representation != "html":
+            # RHeaders only used in interactive views
+            return None
+        record = r.record
+        if record is None:
+            # List or Create form: rheader makes no sense here
+            return None
+
+        tabs = [(T("Route Details"), None),
+                (T("WayPoints"), "waypoint"),
+                ]
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+
+        rheader = DIV(TABLE(TR(TH("%s: " % r.table.name.label),
+                               record.name,
+                               ),
+                            ),
+                      rheader_tabs,
+                      )
+        return rheader
+
+    return s3_rest_controller(rheader = rheader)
+
 # -----------------------------------------------------------------------------
 def waypoint():
-    """ RESTful CRUD controller for GPS Waypoints """
+    """ RESTful CRUD controller for Waypoints """
 
     return s3_rest_controller()
 
@@ -1518,19 +1546,8 @@ def waypoint_upload():
         Temporary: Likely to be refactored into the main waypoint controller
     """
 
+    # Uses custom view
     return {}
-
-# -----------------------------------------------------------------------------
-def trackpoint():
-    """ RESTful CRUD controller for GPS Track points """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def track():
-    """ RESTful CRUD controller for GPS Tracks (uploaded as files) """
-
-    return s3_rest_controller()
 
 # =============================================================================
 def inject_enable(output):

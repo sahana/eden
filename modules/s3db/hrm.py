@@ -791,7 +791,9 @@ class HRModel(S3Model):
         if settings.get_hrm_multiple_job_titles():
             add_components(tablename,
                            # Job Titles
-                           hrm_job_title_human_resource = "human_resource_id",
+                           hrm_job_title_human_resource = {"name": "job_title",
+                                                           "joinby": "human_resource_id",
+                                                           }
                            )
 
         crud_fields = ["organisation_id",
@@ -805,7 +807,8 @@ class HRModel(S3Model):
             crud_fields.insert(2, "code")
 
         filter_widgets = hrm_human_resource_filters(resource_type = group,
-                                                    hrm_type_opts = hrm_type_opts)
+                                                    hrm_type_opts = hrm_type_opts,
+                                                    )
 
         report_fields = ["organisation_id",
                          "person_id",
@@ -858,6 +861,7 @@ class HRModel(S3Model):
                                   ))
             # Needed for Age Group VirtualField to avoid extra DB calls
             report_fields_extra = ["person_id$date_of_birth"]
+
         elif group == "volunteer":
             # This gets copied to hrm_human_resource.location_id onaccept, faster to lookup without joins
             #location_context = "person_id$address.location_id" # When not using S3Track()
@@ -1094,22 +1098,21 @@ class HRModel(S3Model):
             human_resource.job_title_id accordingly
         """
 
-        formvars = form.vars
+        form_vars = form.vars
 
-        if formvars.main:
+        if form_vars.main:
             # Read the record
             # (safer than relying on vars which might be missing on component tabs)
             db = current.db
             ltable = db.hrm_job_title_human_resource
-            record = db(ltable.id == formvars.id).select(ltable.human_resource_id,
-                                                         ltable.job_title_id,
-                                                         limitby = (0, 1),
-                                                         ).first()
+            record = db(ltable.id == form_vars.id).select(ltable.human_resource_id,
+                                                          ltable.job_title_id,
+                                                          limitby = (0, 1),
+                                                          ).first()
 
             # Set the HR's job_title_id to the new job title
             htable = db.hrm_human_resource
-            db(htable.id == record.human_resource_id).update(job_title_id = record.job_title_id,
-                                                             )
+            db(htable.id == record.human_resource_id).update(job_title_id = record.job_title_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -8533,21 +8536,23 @@ def hrm_person_controller(**attr):
 
     # Custom Method(s) for Contacts
     contacts_tabs = settings.get_pr_contacts_tabs()
-    if "all" in contacts_tabs:
-        set_method("pr", "person",
-                   method = "contacts",
-                   action = s3db.pr_Contacts,
-                   )
-    if "public" in contacts_tabs:
-        set_method("pr", "person",
-                   method = "public_contacts",
-                   action = s3db.pr_Contacts,
-                   )
-    if "private" in contacts_tabs:
-        set_method("pr", "person",
-                   method = "private_contacts",
-                   action = s3db.pr_Contacts,
-                   )
+    if contacts_tabs:
+        from .pr import pr_Contacts
+        if "all" in contacts_tabs:
+            set_method("pr", "person",
+                       method = "contacts",
+                       action = pr_Contacts,
+                       )
+        if "public" in contacts_tabs:
+            set_method("pr", "person",
+                       method = "public_contacts",
+                       action = pr_Contacts,
+                       )
+        if "private" in contacts_tabs:
+            set_method("pr", "person",
+                       method = "private_contacts",
+                       action = pr_Contacts,
+                       )
 
     # Custom Method for CV
     set_method("pr", "person",

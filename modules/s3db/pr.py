@@ -1054,6 +1054,10 @@ class PersonModel(S3Model):
                                        "pkey": "id",
                                        "actuate": "replace",
                                        },
+                       hms_contact = {"name": "hms_contact",
+                                      "joinby": "person_id",
+                                      "multiple": False,
+                                      },
                        # Skills
                        pr_language = "person_id",
                        hrm_certification = "person_id",
@@ -2216,9 +2220,10 @@ class PersonModel(S3Model):
                 rfilter.transformed = None
                 query = (FS("date_of_birth") == dob)
                 resource.add_filter(query)
-                rows = resource.select(fields=fields,
-                                       start=0,
-                                       limit=MAX_SEARCH_RESULTS)["rows"]
+                rows = resource.select(fields = fields,
+                                       start = 0,
+                                       limit = MAX_SEARCH_RESULTS,
+                                       )["rows"]
             if not len(rows) and email:
                 # Try Email
                 # Remove the name or DoB filter (last one in)
@@ -2227,9 +2232,10 @@ class PersonModel(S3Model):
                 rfilter.transformed = None
                 query = (FS("contact.value") == email) & (FS("contact.contact_method") == "EMAIL")
                 resource.add_filter(query)
-                rows = resource.select(fields=fields,
-                                       start=0,
-                                       limit=MAX_SEARCH_RESULTS)["rows"]
+                rows = resource.select(fields = fields,
+                                       start = 0,
+                                       limit = MAX_SEARCH_RESULTS,
+                                       )["rows"]
             if not len(rows) and mobile_phone:
                 # Try Mobile Phone
                 # Remove the name or DoB or email filter (last one in)
@@ -3242,7 +3248,8 @@ class ForumModel(S3Model):
                            default = 1,
                            label = T("Type"),
                            represent = S3Represent(options = pr_forum_types),
-                           requires = IS_IN_SET(pr_forum_types, zero=None),
+                           requires = IS_IN_SET(pr_forum_types,
+                                                zero = None),
                            ),
                      s3_comments(),
                      *s3_meta_fields())

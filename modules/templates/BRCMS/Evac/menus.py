@@ -40,7 +40,7 @@ class S3MainMenu(default.S3MainMenu):
 
         case_vars = {"closed": "0"}
         if auth.s3_logged_in_human_resource() and \
-           auth.s3_has_role("CASE_MANAGEMENT"):
+           auth.s3_has_role("CASE_MANAGER"):
             case_vars["mine"] = "1"
 
         labels = current.s3db.br_terminology()
@@ -51,13 +51,15 @@ class S3MainMenu(default.S3MainMenu):
                    ),
                 MM("ToDo", c="project", f="task"),
                 MM("More", link=False)(
+                    MM("Accommodation", c="cr", f="shelter"),
+                    MM("Financial Facilities", c="org", f="facility"),
+                    MM("Flights", c="transport", f="flight"),
+                    MM("Medical", c="hms", f="hospital"),
                     MM("Organizations", c="org", f="organisation"),
-                    MM("Banks", c="org", f="facility"),
-                    MM("Hospitals", c="hms", f="hospital"),
-                    MM("Security Zones", c="security", f="zone"),
-                    MM("Shelters", c="cr", f="shelter"),
+                    MM("Security", c="event", f="incident_report"),
                     MM("Staff", c="hrm", f="staff"),
-                    MM("Vehicles", c="vehicle", f="vehicle"),
+                    # Just Admins:
+                    #MM("Working Groups", c="pr", f="forum"),
                     ),
                 ]
 
@@ -175,7 +177,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         sysroles = auth.get_system_roles()
         ADMIN = sysroles.ADMIN
-        ORG_GROUP_ADMIN = sysroles.ORG_GROUP_ADMIN
 
         s3db = current.s3db
         labels = s3db.br_terminology()
@@ -247,9 +248,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
         # Archive- and Administration sub-menus (common for all roles)
         menu(M("Archive", link=False)(
                 M(labels.CLOSED, f="person", vars={"closed": "1"}),
-                M("Invalid Cases", f="person", vars={"invalid": "1"}, restrict=[ADMIN]),
+                M("Invalid Cases", f="person", vars={"invalid": "1"}, restrict=ADMIN),
                 ),
-             M("Administration", link=False, restrict=[ADMIN, ORG_GROUP_ADMIN])(
+             M("Administration", link=False, restrict=ADMIN)(
                 M("Case Statuses", f="case_status"),
                 M("Case Activity Statuses", f="case_activity_status",
                   check = lambda i: use_activities and settings.get_br_case_activity_status(),
@@ -282,14 +283,52 @@ class S3OptionsMenu(default.S3OptionsMenu):
         ADMIN = current.auth.get_system_roles().ADMIN
 
         return M(c="cr")(
-                    M("Shelters", f="shelter")(
+                    M("Accommodation", f="shelter")(
                         M("Create", m="create"),
                         M("Map", m="map"),
                         ),
-                    M("Administration", link=False, restrict=(ADMIN,))(
+                    M("Administration", link=False, restrict=ADMIN)(
                         M("Shelter Types", f="shelter_type"),
                         ),
-                )
+                    )
+
+    # -------------------------------------------------------------------------
+    def event(self):
+        """ Events """
+
+        return self.security()
+
+    # -------------------------------------------------------------------------
+    def gis(self):
+        """ Maps """
+
+        if current.function == "route":
+            return self.security()
+        else:
+            return super(S3OptionsMenu, self).gis()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hms():
+        """ Medical """
+
+        ADMIN = current.auth.get_system_roles().ADMIN
+
+        return M(c="hms")(
+                    M("Hospitals", f="hospital", m="summary")(
+                        M("Create", m="create"),
+                        ),
+                    M("Pharmacies", f="pharmacy")(
+                        M("Create", m="create"),
+                        M("Map", m="map"),
+                        ),
+                    M("Doctors", f="person")(
+                        M("Create", m="create"),
+                        ),
+                    M("Administration", link=False, restrict=ADMIN)(
+                        M("Qualifications", c="hrm", f="skill"),
+                        ),
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -299,20 +338,19 @@ class S3OptionsMenu(default.S3OptionsMenu):
         sysroles = current.auth.get_system_roles()
 
         ADMIN = sysroles.ADMIN
-        ORG_GROUP_ADMIN = sysroles.ORG_GROUP_ADMIN
+        #ORG_GROUP_ADMIN = sysroles.ORG_GROUP_ADMIN
 
         return M(c="org")(
                     M("Organizations", f="organisation")(
-                        M("Hierarchy", m="hierarchy"),
-                        M("Create", m="create", restrict=(ADMIN, ORG_GROUP_ADMIN)),
+                        #M("Hierarchy", m="hierarchy"),
+                        M("Create", m="create", restrict=ADMIN),
                         ),
-                    M("Facilities", f="facility")(
-                        M("Create", m="create"),
-                        ),
-                    M("Administration", restrict=(ADMIN, ORG_GROUP_ADMIN))(
-                        M("Facility Types", f="facility_type"),
+                    #M("Facilities", f="facility")(
+                    #    M("Create", m="create"),
+                    #    ),
+                    M("Administration", restrict=ADMIN)(
+                        #M("Facility Types", f="facility_type"),
                         M("Organization Types", f="organisation_type"),
-                        M("Sectors", f="sector"),
                         )
                     )
 
@@ -321,43 +359,22 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def hrm():
         """ HRM / Human Resources Management """
 
-        settings = current.deployment_settings
+        #settings = current.deployment_settings
 
-        teams = settings.get_hrm_teams()
-        use_teams = lambda i: teams
+        #teams = settings.get_hrm_teams()
+        #use_teams = lambda i: teams
 
         return M(c="hrm")(
-                    M(settings.get_hrm_staff_label(), f="staff")(
-                        M("Create", m="create"),
+                    M("Staff", f="staff")( # settings.get_hrm_staff_label()
+                        # Always create via User
+                        #M("Create", m="create"),
                         ),
-                    M(teams, f="group", check=use_teams)(
-                        M("Create", m="create"),
-                        ),
-                    M("Job Titles", f="job_title")(
-                        M("Create", m="create"),
-                        ),
-                    )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def vol():
-        """ VOL / Volunteer Management """
-
-        settings = current.deployment_settings
-
-        teams = settings.get_hrm_teams()
-        use_teams = lambda i: teams
-
-        return M(c="vol")(
-                    M("Volunteers", f="volunteer")(
-                        M("Create", m="create"),
-                        ),
-                    M(teams, f="group", check=use_teams)(
-                        M("Create", m="create"),
-                        ),
-                    M("Job Titles", f="job_title")(
-                        M("Create", m="create"),
-                        ),
+                    #M(teams, f="group", check=use_teams)(
+                    #    M("Create", m="create"),
+                    #    ),
+                    #M("Job Titles", f="job_title")(
+                    #    M("Create", m="create"),
+                    #    ),
                     )
 
     # -------------------------------------------------------------------------
@@ -369,6 +386,50 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Tasks", f="task")(
                         M("Create", m="create"),
                         M("My Open Tasks", vars={"mine":1}),
+                        ),
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def security():
+        """ Security """
+
+        ADMIN = current.auth.get_system_roles().ADMIN
+
+        return M()(M("CheckPoints", c="security", f="checkpoint")(
+                        M("Create", m="create"),
+                        M("Map", m="map"),
+                        ),
+                   # View from inside Activity?
+                   #M("Evacuation Routes", c="gis", f="route")(
+                   #     M("Create", m="create"),
+                   #     ),
+                   M("Incident Reports", c="event", f="incident_report")(
+                       M("Create", m="create"),
+                       M("Map", m="map"),
+                       ),
+                    M("Administration", link=False, restrict=ADMIN)(
+                        M("Incident Types", c="event", f="incident_type"),
+                        ),
+                   )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def transport():
+        """ Transport """
+
+        return M(c="transport")(
+                    M("Airports", f="airport")(
+                        M("Create", m="create"),
+                        M("Map", m="map"),
+                        ),
+                    M("Flights", f="flight")(
+                        M("Create", m="create"),
+                        M("Map", m="map"),
+                        ),
+                    M("Airplane Types", f="airplane")(
+                        M("Create", m="create"),
+                        M("Map", m="map"),
                         ),
                     )
 

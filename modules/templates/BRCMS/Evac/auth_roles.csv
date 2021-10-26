@@ -1,0 +1,80 @@
+uid,role,description,controller,function,table,uacl,oacl,hidden,entity,Notes
+AUTHENTICATED,Authenticated,,,org,organisation,,READ,,
+AUTHENTICATED,Authenticated,,,,,org_organisation,READ,,
+AUTHENTICATED,Authenticated,,,transport,airport,,READ,,
+AUTHENTICATED,Authenticated,,,transport,airplane,,READ,,
+ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,admin,user,,CREATE|READ|UPDATE|DELETE,,
+ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,br,,,CREATE|READ|UPDATE|DELETE,,true
+ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,,,br_activity,CREATE|READ|UPDATE|DELETE,,true
+ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,,,br_case,CREATE|READ|UPDATE|DELETE,,true
+ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,,,gis_route,CREATE|READ|UPDATE|DELETE,,true
+ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,hrm,person,,CREATE|READ|UPDATE|DELETE,,true
+ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,hrm,staff,,CREATE|READ|UPDATE|DELETE,,true
+ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,,,hrm_human_resource,CREATE|READ|UPDATE|DELETE,,true
+ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,org,organisation,,CREATE|READ|UPDATE,,true
+ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,,,org_organisation,READ|UPDATE,,true
+ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,,,pr_address,CREATE|READ|UPDATE|DELETE,,true
+ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,,,pr_contact,CREATE|READ|UPDATE|DELETE,,true
+ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,,,pr_contact_emergency,CREATE|READ|UPDATE|DELETE,,true
+ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,,,pr_person,CREATE|READ|UPDATE|DELETE,,true
+ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,true
+ORG_ADMIN_RW,Organisation Admin (RW),Permission assigned at Organization Forum Level,cr,,,CREATE|READ|UPDATE|DELETE,,true
+ORG_ADMIN_RW,Organisation Admin (RW),Permission assigned at Organization Forum Level,event,incident_report,,CREATE|READ|UPDATE|DELETE,,true
+ORG_ADMIN_RW,Organisation Admin (RW),Permission assigned at Organization Forum Level,,,gis_route,CREATE|READ|UPDATE|DELETE,,true
+ORG_ADMIN_RW,Organisation Admin (RW),Permission assigned at Organization Forum Level,hms,,,CREATE|READ|UPDATE|DELETE,,true
+ORG_ADMIN_RW,Organisation Admin (RW),Permission assigned at Organization Forum Level,inv,,,CREATE|READ|UPDATE|DELETE,,true
+ORG_ADMIN_RW,Organisation Admin (RW),Permission assigned at Organization Forum Level,org,facility,,CREATE|READ|UPDATE,,true
+ORG_ADMIN_RW,Organisation Admin (RW),Permission assigned at Organization Forum Level,security,,,CREATE|READ|UPDATE|DELETE,,true
+ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,cr,,,READ,,true
+ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,event,incident_report,,READ,,true
+ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,hms,,,READ,,true
+ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,inv,,,READ,,true
+ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,org,facility,,READ,,true
+ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,security,,,READ,,true
+ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,project,task,,CREATE|READ|UPDATE,READ|UPDATE|DELETE,true
+ORG_MEMBER,Organization Member,Organization Level Permissions,cr,,,READ,,true
+ORG_MEMBER,Organization Member,Organization Level Permissions,event,incident_report,,CREATE|READ,READ|UPDATE,true
+ORG_MEMBER,Organization Member,Organization Level Permissions,hms,,,READ,,true
+ORG_MEMBER,Organization Member,Organization Level Permissions,inv,,,READ,,true
+ORG_MEMBER,Organization Member,Organization Level Permissions,org,facility,,READ,,true
+ORG_MEMBER,Organization Member,Organization Level Permissions,vehicle,,,READ,,true
+CASE_MANAGER,Case Manager,Permission assigned at Personal Level,br,,,READ|UPDATE|DELETE,,
+CASE_MANAGER,Case Manager,Permission assigned at Personal Level,,,br_activity,READ|UPDATE,,
+CASE_MANAGER,Case Manager,Permission assigned at Personal Level,,,br_case,READ|UPDATE,,
+CASE_MANAGER,Case Manager,Permission assigned at Personal Level,,,gis_route,CREATE|READ|UPDATE|DELETE,,
+CASE_MANAGER,Case Manager,Permission assigned at Personal Level,project,task,,CREATE|READ|UPDATE,,
+CASE_SUPER,Case Supervisor,Permission assigned at either Personal or Organizational Level,br,,,READ|UPDATE|DELETE,,
+CASE_SUPER,Case Supervisor,Permission assigned at either Personal or Organizational Level,,,br_activity,READ|UPDATE,,
+CASE_SUPER,Case Supervisor,Permission assigned at either Personal or Organizational Level,,,br_case,READ|UPDATE,,
+CASE_SUPER,Case Supervisor,Permission assigned at either Personal or Organizational Level,,,gis_route,CREATE|READ|UPDATE|DELETE,,
+CASE_SUPER,Case Supervisor,Permission assigned at either Personal or Organizational Level,project,task,,CREATE|READ|UPDATE|DELETE,,
+FLIGHTS,Flight Manifests Working Group Member (Personal),Permission assigned at Personal Level,br,,,CREATE|READ|UPDATE,,
+FLIGHTS,Flight Manifests Working Group Member (Personal),Permission assigned at Personal Level,,,br_activity,CREATE|READ|UPDATE,,
+FLIGHTS,Flight Manifests Working Group Member (Personal),Permission assigned at Personal Level,transport,airport,,CREATE|READ|UPDATE,,,any
+FLIGHTS,Flight Manifests Working Group Member (Personal),Permission assigned at Personal Level,transport,airplane,,CREATE|READ|UPDATE,,,any
+FLIGHTS_RW,Flight Manifests Working Group Member (Organizational RW),Read/Write Permission assigned at Organizational Level,transport,flight,,CREATE|READ|UPDATE|DELETE,,true
+FLIGHTS_RO,Flight Manifests Working Group Member (Organizational OW),Read-Only Permission assigned at Organizational Level,transport,flight,,READ,,true
+FLIGHTS_RO,Flight Manifests Working Group Member (Organizational OW),Read-Only Permission assigned at Organizational Level,project,task,,CREATE|READ|UPDATE,READ|UPDATE|DELETE,true
+LEGAL,Legal Working Group Member (Personal),Permission assigned at Personal Level,br,,,CREATE|READ|UPDATE,,
+LEGAL,Legal Working Group Member (Personal),Permission assigned at Personal Level,,,br_activity,CREATE|READ|UPDATE,,
+LEGAL_RO,Legal Working Group Member (Organizational RO),Read-Only Permission assigned at Organizational WG Level,project,task,,CREATE|READ|UPDATE,READ|UPDATE|DELETE,true
+LOGISTICS,Logistics Working Group Member (Personal),Permission assigned at Personal Level,br,,,CREATE|READ|UPDATE,,
+LOGISTICS,Logistics Working Group Member (Personal),Permission assigned at Personal Level,,,br_activity,CREATE|READ|UPDATE,,
+LOGISTICS_RW,Logistics Working Group Member (Organizational RW),Read/Write Permission assigned at Organizational WG Level,cr,,,CREATE|READ|UPDATE|DELETE,,true
+LOGISTICS_RW,Logistics Working Group Member (Organizational RW),Read/Write Permission assigned at Organizational WG Level,inv,,,CREATE|READ|UPDATE|DELETE,,true
+LOGISTICS_RW,Logistics Working Group Member (Organizational RW),Read/Write Permission assigned at Organizational WG Level,org,facility,,CREATE|READ|UPDATE|DELETE,,true,,Financial
+LOGISTICS_RO,Logistics Working Group Member (Organizational RO),Read-Only Permission assigned at Organizational WG Level,cr,,,READ,,true
+LOGISTICS_RO,Logistics Working Group Member (Organizational RO),Read-Only Permission assigned at Organizational WG Level,inv,,,READ,,true
+LOGISTICS_RO,Logistics Working Group Member (Organizational RO),Read-Only Permission assigned at Organizational WG Level,org,facility,,READ,,true,,Financial
+LOGISTICS_RO,Logistics Working Group Member (Organizational RO),Read-Only Permission assigned at Organizational WG Level,project,task,,CREATE|READ|UPDATE,READ|UPDATE|DELETE,true
+MEDICAL,Medical Working Group Member (Personal),Permission assigned at Personal Level,br,,,CREATE|READ|UPDATE,,
+MEDICAL,Medical Working Group Member (Personal),Permission assigned at Personal Level,,,br_activity,CREATE|READ|UPDATE,,
+MEDICAL_RW,Medical Working Group Member (Organizational RW),Read/Write Permission assigned at Organizational WG Level,hms,,,CREATE|READ|UPDATE|DELETE,,true
+MEDICAL_RO,Medical Working Group Member (Organizational RO),Read-Only Permission assigned at Organizational WG Level,hms,,,READ,,true
+MEDICAL_RO,Medical Working Group Member (Organizational RO),Read-Only Permission assigned at Organizational WG Level,project,task,,CREATE|READ|UPDATE,READ|UPDATE|DELETE,true
+SECURITY,Security Working Group Member (Personal),Permission assigned at Personal Level,br,,,CREATE|READ|UPDATE,,
+SECURITY,Security Working Group Member (Personal),Permission assigned at Personal Level,,,br_activity,CREATE|READ|UPDATE,,
+SECURITY,Security Working Group Member (Personal),Permission assigned at Personal Level,,,gis_route,CREATE|READ|UPDATE,,
+SECURITY_RW,Security Working Group Member (Organizational RW),Read/Write Permission assigned at Organizational WG Level,security,,,CREATE|READ|UPDATE|DELETE,,true
+SECURITY_RO,Security Working Group Member (Organizational RO),Read-only Permission assigned at Organizational WG Level,security,,,READ,,true
+SECURITY_RO,Security Working Group Member (Organizational RO),Read-only Permission assigned at Organizational WG Level,project,task,,CREATE|READ|UPDATE,READ|UPDATE|DELETE,true

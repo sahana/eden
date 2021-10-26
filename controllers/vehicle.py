@@ -114,7 +114,8 @@ def vehicle():
         msg_record_created = T("Vehicle added"),
         msg_record_modified = T("Vehicle updated"),
         msg_record_deleted = T("Vehicle deleted"),
-        msg_list_empty = T("No Vehicles currently registered"))
+        msg_list_empty = T("No Vehicles currently registered"),
+        )
 
     # @ToDo: Tweak the search comment
 

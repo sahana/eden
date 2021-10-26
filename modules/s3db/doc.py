@@ -138,7 +138,8 @@ class DocumentLibrary(S3Model):
                         readable = False,
                         writable = False,
                         comment = person_comment(T("Author"),
-                                                 T("The Author of this Document (optional)"))
+                                                 T("The Author of this Document (optional)"),
+                                                 )
                         ),
                      organisation_id(# Enable when-required
                                      readable = False,
@@ -174,8 +175,8 @@ class DocumentLibrary(S3Model):
             msg_record_created = T("Document added"),
             msg_record_modified = T("Document updated"),
             msg_record_deleted = T("Document deleted"),
-            msg_list_empty = T("No Documents found")
-        )
+            msg_list_empty = T("No Documents found"),
+            )
 
         # Filter Widgets
         # - define in-template if-required
@@ -303,7 +304,8 @@ class DocumentLibrary(S3Model):
             msg_record_created = T("Photo added"),
             msg_record_modified = T("Photo updated"),
             msg_record_deleted = T("Photo deleted"),
-            msg_list_empty = T("No Photos found"))
+            msg_list_empty = T("No Photos found"),
+            )
 
         # Resource Configuration
         configure(tablename,
