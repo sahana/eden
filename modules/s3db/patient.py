@@ -37,7 +37,7 @@ from ..s3 import *
 # =============================================================================
 class PatientModel(S3Model):
     """
-        Patents
+        Patients
 
         @ToDo: Move to Medical module
     """

@@ -22,6 +22,10 @@ def config(settings):
     settings.base.prepopulate.append("BRCMS/Evac")
     #settings.base.prepopulate_demo.append("BRCMS/Evac/Demo")
 
+    # Custom Models
+    settings.base.custom_models = {"dissemination": "BRCMS.Evac",
+                                   }
+
     # Enable password-retrieval feature
     settings.auth.password_retrieval = True
 
@@ -35,6 +39,7 @@ def config(settings):
 
     modules = settings.modules
     modules["asset"] = {"name_nice": T("Assets"), "module_type": None}
+    modules["dissemination"] = {"name_nice": T("Dissemination"), "module_type": None}
     modules["fin"] = {"name_nice": T("Finances"), "module_type": None}
     modules["inv"] = {"name_nice": T("Inventory"), "module_type": None}
     modules["med"] = {"name_nice": T("Hospitals"), "module_type": None}
@@ -45,8 +50,6 @@ def config(settings):
     # -------------------------------------------------------------------------
     # BR Settings
     #
-    #settings.org.default_organisation = "The Collective"
-    #settings.br.case_global_default_org = True
     settings.br.case_activity_need_details = True
     settings.br.case_activity_updates = True
     settings.br.case_activity_documents = True
@@ -142,7 +145,8 @@ def config(settings):
         elif tablename == "br_activity":
             # Has a unique pr_realm with appropriate multiple inheritance
             pass
-        elif tablename in ("event_incident_report",
+        elif tablename in ("cr_shelter",
+                           "event_incident_report",
                            "fin_broker",
                            "med_contact",
                            "inv_inv_item",
@@ -608,12 +612,11 @@ def config(settings):
     # =========================================================================
     def customise_med_contact_resource(r, tablename):
 
-        # @ToDo crud_form & postprocess for Dissemination
-
         from gluon import A, URL
 
-        table = current.s3db.med_contact
-        f = table.person_id
+        s3db = current.s3db
+
+        f = s3db.med_contact.person_id
         f.label = T("Person Record")
         f.represent = lambda v: A(v,
                                   _href = URL(c="br", f="person",
@@ -621,6 +624,41 @@ def config(settings):
                                               )) if v else current.messages["NONE"]
         f.comment = None
         f.writable = False
+
+        s3db.add_components(tablename,
+                            dissemination_med_contact = {"name": "dissemination",
+                                                         "joinby": "contact_id",
+                                                         "multiple": False,
+                                                         },
+                            )
+
+        from s3 import S3SQLCustomForm, S3SQLInlineLink
+        crud_fields = ["dissemination.dissemination",
+                       "name",
+                       "operational",
+                       S3SQLInlineLink("skill",
+                                       label = T("Qualifications"),
+                                       field = "skill_id",
+                                       ),
+                       "location_id",
+                       "phone",
+                       "email",
+                       "person_id",
+                       "comments",
+                       ]
+        if r.function != "hospital":
+            crud_fields.insert(-2, S3SQLInlineLink("hospital",
+                                                   label = T("Hospital"),
+                                                   field = "hospital_id",
+                                                   ))
+
+        from .dissemination import disseminate
+        crud_form = S3SQLCustomForm(postprocess = disseminate,
+                                    *crud_fields)
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
 
     settings.customise_med_contact_resource = customise_med_contact_resource
 

@@ -1163,6 +1163,7 @@ class MedicalContactsModel(S3Model):
     """
 
     names = ("med_contact",
+             "med_contact_id",
              "med_contact_hospital",
              "med_contact_skill",
              )
@@ -1256,14 +1257,17 @@ class MedicalContactsModel(S3Model):
                                             },
                             )
 
+        # Reusable field
+        contact_id = S3ReusableField("contact_id", "reference %s" % tablename,
+                                     ondelete = "CASCADE",
+                                     )
+
         # ---------------------------------------------------------------------
         # Med Contact <> Hospital link table
         #
         tablename = "med_contact_hospital"
         define_table(tablename,
-                     Field("contact_id", "reference med_contact",
-                           ondelete = "CASCADE",
-                           ),
+                     contact_id(),
                      self.med_hospital_id(empty = False,
                                           ondelete = "CASCADE",
                                           ),
@@ -1274,9 +1278,7 @@ class MedicalContactsModel(S3Model):
         #
         tablename = "med_contact_skill"
         define_table(tablename,
-                     Field("contact_id", "reference med_contact",
-                           ondelete = "CASCADE",
-                           ),
+                     contact_id(),
                      self.hrm_skill_id(empty = False,
                                        ondelete = "CASCADE",
                                        ),
@@ -1285,7 +1287,8 @@ class MedicalContactsModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3db
         #
-        return {}
+        return {"med_contact_id": contact_id,
+                }
 
 # =============================================================================
 class PharmacyModel(S3Model):
