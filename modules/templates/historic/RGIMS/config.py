@@ -226,29 +226,11 @@ def config(settings):
         #        restricted = True,
         #        module_type = 10
         #    )),
-        #("survey", Storage(
-        #        name_nice = T("Surveys"),
-        #        #description = "Create, enter, and manage surveys.",
-        #        restricted = True,
-        #        module_type = 10,
-        #    )),
         #("cr", Storage(
         #        name_nice = T("Shelters"),
         #        #description = "Tracks the location, capacity and breakdown of victims in Shelters",
         #        restricted = True,
         #       module_type = 10
-        #    )),
-        #("hms", Storage(
-        #        name_nice = T("Hospitals"),
-        #        #description = "Helps to monitor status of hospitals",
-        #        restricted = True,
-        #        module_type = 10
-        #    )),
-        #("irs", Storage(
-        #        name_nice = T("Incidents"),
-        #        #description = "Incident Reporting System",
-        #        restricted = False,
-        #        module_type = 10
         #    )),
     ])
 

@@ -1348,9 +1348,12 @@ class S3Model(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def get_method(cls, prefix, name,
-                   component_name=None,
-                   method=None):
+    def get_method(cls,
+                   prefix,
+                   name,
+                   component_name = None,
+                   method = None,
+                   ):
         """
             Retrieves a custom method for a resource or component
 

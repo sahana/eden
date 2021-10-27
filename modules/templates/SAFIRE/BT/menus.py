@@ -224,7 +224,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
                        ),
-                   M("Health Facilities", c="hms", f="hospital", m="summary")(
+                   M("Health Facilities", c="med", f="hospital", m="summary")(
                        M("Create", m="create"),
                        #M("Import", m="import", p="create"),
                        ),
@@ -246,7 +246,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return self.transport()
 
     # -------------------------------------------------------------------------
-    def hms(self):
+    def med(self):
         """ Hospitals menu """
 
         return self.transport()

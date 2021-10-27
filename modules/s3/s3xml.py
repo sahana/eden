@@ -121,85 +121,85 @@ class S3XML(S3Codec):
         ]
 
     TAG = Storage(
-        col="col",
-        contents="contents",
-        data="data",
-        description="description",
-        field="field",
-        fields="fields",
-        item="item",
-        list="list",
-        meta="meta",
-        object="object",
-        option="option",
-        options="options",
-        reference="reference",
-        resource="resource",
-        root="s3xml",
-        row="row",
-        select="select",
-        table="table",
+        col = "col",
+        contents = "contents",
+        data = "data",
+        description = "description",
+        field = "field",
+        fields = "fields",
+        item = "item",
+        list = "list",
+        meta = "meta",
+        object = "object",
+        option = "option",
+        options = "options",
+        reference = "reference",
+        resource = "resource",
+        root = "s3xml",
+        row = "row",
+        select = "select",
+        table = "table",
         )
 
     ATTRIBUTE = Storage(
-        alias="alias",
-        attributes="attributes", # for GeoJSON exports
-        comment="comment",
-        domain="domain",
-        error="error",
-        field="field",
-        filename="filename",
-        has_options="has_options",
-        hashtag="hashtag",
-        id="id",
-        label="label",
-        lat="lat",
-        latmin="latmin",
-        latmax="latmax",
-        limit="limit",
-        llrepr="llrepr",
-        lon="lon",
-        lonmin="lonmin",
-        lonmax="lonmax",
-        marker="marker",
-        marker_url="marker_url",
-        marker_height="marker_height",
-        marker_width="marker_width",
-        name="name",
-        parent="parent",
-        #popup="popup", # for GIS Feature Layers/Queries
-        #popup_url="popup_url", # for map popups
-        ref="ref",
-        replaced_by="replaced_by",
-        resource="resource",
-        results="results",
-        sym="sym", # for GPS
-        start="start",
-        style="style", # For GeoJSON exports
-        success="success",
-        table="table",
-        tuid="tuid",
-        type="type",
-        readable="readable",
-        url="url",
-        value="value",
-        writable="writable",
-        wkt="wkt",
+        alias = "alias",
+        attributes = "attributes", # for GeoJSON exports
+        comment = "comment",
+        domain = "domain",
+        error = "error",
+        field = "field",
+        filename = "filename",
+        has_options = "has_options",
+        hashtag = "hashtag",
+        id = "id",
+        label = "label",
+        lat = "lat",
+        latmin = "latmin",
+        latmax = "latmax",
+        limit = "limit",
+        llrepr = "llrepr",
+        lon = "lon",
+        lonmin = "lonmin",
+        lonmax = "lonmax",
+        marker = "marker",
+        marker_url = "marker_url",
+        marker_height = "marker_height",
+        marker_width = "marker_width",
+        name = "name",
+        parent = "parent",
+        #popup = "popup", # for GIS Feature Layers/Queries
+        #popup_url = "popup_url", # for map popups
+        ref = "ref",
+        replaced_by = "replaced_by",
+        resource = "resource",
+        results = "results",
+        sym = "sym", # for GPS
+        start = "start",
+        style = "style", # For GeoJSON exports
+        success = "success",
+        table = "table",
+        tuid = "tuid",
+        type = "type",
+        readable = "readable",
+        url = "url",
+        value = "value",
+        writable = "writable",
+        wkt = "wkt",
         )
 
     ACTION = Storage(
-        create="create",
-        read="read",
-        update="update",
-        delete="delete",
+        create = "create",
+        read = "read",
+        update = "update",
+        delete = "delete",
         )
 
     PREFIX = Storage(
-        attribute="@",
-        options="$o",
-        reference="$k",
-        resource="$",
-        text="$",
+        attribute = "@",
+        options = "$o",
+        reference = "$k",
+        resource = "$",
+        text = "$",
         )
 
     # -------------------------------------------------------------------------
@@ -360,7 +360,8 @@ class S3XML(S3Codec):
              start = None,
              limit = None,
              results = None,
-             maxbounds = False):
+             maxbounds = False,
+             ):
         """
             Builds a S3XML tree from a list of elements
 
@@ -468,15 +469,18 @@ class S3XML(S3Codec):
         if f in (self.CUSER, self.MUSER, self.OUSER):
             represent = current.cache.ram("auth_user_%s" % v,
                                           lambda: self.represent_user(v),
-                                          time_expire=60)
+                                          time_expire = 60,
+                                          )
         elif f in (self.OGROUP):
             represent = current.cache.ram("auth_group_%s" % v,
                                           lambda: self.represent_role(v),
-                                          time_expire=60)
+                                          time_expire = 60,
+                                          )
         else:
             represent = s3_represent_value(table[f],
-                                           value=v,
-                                           strip_markup=True)
+                                           value = v,
+                                           strip_markup = True,
+                                           )
         return represent
 
     # -------------------------------------------------------------------------
@@ -486,7 +490,7 @@ class S3XML(S3Codec):
         #user = None
         #if "email" in utable:
         user = current.db(utable.id == user_id).select(utable.email,
-                                                       limitby=(0, 1)
+                                                       limitby = (0, 1)
                                                        ).first()
         if user:
             return user.email
@@ -499,9 +503,10 @@ class S3XML(S3Codec):
         #role = None
         #if "role" in gtable:
         role = current.db(gtable.id == role_id).select(gtable.role,
-                                                       limitby=(0, 1),
-                                                       cache=(current.cache.ram,
-                                                              S3XML.CACHE_TTL)
+                                                       cache = (current.cache.ram,
+                                                                S3XML.CACHE_TTL,
+                                                                ),
+                                                       limitby = (0, 1),
                                                        ).first()
         if role:
             return role.role
@@ -589,12 +594,20 @@ class S3XML(S3Codec):
         if locations:
             location_ids = set(locations.keys())
             ltable = current.s3db.gis_location
-            rows = current.db(ltable._id.belongs(location_ids)) \
-                             .select(ltable.id,
-                                     ltable.lat,
-                                     ltable.lon,
-                                     limitby = (0, len(location_ids)),
-                                     ).as_dict()
+            fields = [ltable.id,
+                      ltable.lat,
+                      ltable.lon,
+                      ]
+                                                                       
+            have = current.auth.permission.format == "have"
+            if have:
+                # HAVE needs @address & @postcode as well
+                fields += [ltable.addr_street,
+                           ltable.addr_postcode,
+                           ]
+
+            rows = current.db(ltable._id.belongs(location_ids)).select(limitby = (0, len(location_ids)),
+                                                                       *fields).as_dict()
 
             for location_id, row in rows.items():
                 lat = row["lat"]
@@ -605,6 +618,17 @@ class S3XML(S3Codec):
                         attr = reference.element.attrib
                         attr[ATTRIBUTE.lat] = "%.4f" % lat
                         attr[ATTRIBUTE.lon] = "%.4f" % lon
+                if have:
+                    address = row["addr_street"]
+                    postcode = row["addr_postcode"]
+                    if address or postcode:
+                        references = locations.get(location_id, ())
+                        for reference in references:
+                            attr = reference.element.attrib
+                            if address:
+                                attr["address"] = address
+                            if postcode:
+                                attr["postcode"] = postcode
         return
 
     # -------------------------------------------------------------------------
@@ -929,10 +953,12 @@ class S3XML(S3Codec):
                 else:
                     # Assume being used outside the Sahana Mapping client
                     # so use public URLs
-                    download_url = "%s/%s/static/img/markers" % \
-                        (settings.get_base_public_url(), request.application)
+                    download_url = "%s/%s/static/img/markers" % (settings.get_base_public_url(),
+                                                                 request.application,
+                                                                 )
                     attr[ATTRIBUTE.marker] = "%s/%s" % (download_url,
-                                                        m["image"])
+                                                        m["image"],
+                                                        )
 
     # -------------------------------------------------------------------------
     def resource(self,
@@ -944,7 +970,8 @@ class S3XML(S3Codec):
                  url = None,
                  lazy = None,
                  llrepr = None,
-                 postprocess = None):
+                 postprocess = None,
+                 ):
         """
             Creates a <resource> element from a record
 
@@ -1218,7 +1245,8 @@ class S3XML(S3Codec):
                original = None,
                files = None,
                skip = None,
-               postprocess = None):
+               postprocess = None,
+               ):
         """
             Creates a record (Storage) from a <resource> element and validates
             it
@@ -1299,7 +1327,9 @@ class S3XML(S3Codec):
                 v = element.get(f, None)
                 if v and utable and "email" in utable:
                     query = (utable.email == v)
-                    user = db(query).select(utable.id, limitby=(0, 1)).first()
+                    user = db(query).select(utable.id,
+                                            limitby = (0, 1),
+                                            ).first()
                     if user:
                         record[f] = user.id
                 continue
@@ -1308,7 +1338,9 @@ class S3XML(S3Codec):
                 v = element.get(f, None)
                 if v and gtable and "role" in gtable:
                     query = (gtable.role == v)
-                    role = db(query).select(gtable.id, limitby=(0, 1)).first()
+                    role = db(query).select(gtable.id,  
+                                            limitby = (0, 1),
+                                            ).first()
                     if role:
                         record[f] = role.id
                 continue
@@ -1319,7 +1351,7 @@ class S3XML(S3Codec):
                     field_type = str(table[f].type)
                     if field_type in ("datetime", "date", "time"):
                         (value, error) = cls._dtparse(v,
-                                                      field_type=field_type)
+                                                      field_type = field_type)
                     else:
                         try:
                             (value, error) = s3_validate(table, f, v, original)
@@ -1427,7 +1459,7 @@ class S3XML(S3Codec):
             if value is not None:
                 if field_type in ("datetime", "date", "time"):
                     (value, error) = cls._dtparse(value,
-                                                  field_type=field_type)
+                                                  field_type = field_type)
                     skip_validation = True
                     v = value
                 elif field_type == "upload":
@@ -1740,12 +1772,15 @@ class S3XML(S3Codec):
         return fields
 
     # -------------------------------------------------------------------------
-    def get_struct(self, prefix, name,
+    def get_struct(self,
+                   prefix,
+                   name,
                    alias = None,
                    parent = None,
                    meta = False,
                    options = True,
-                   references = False):
+                   references = False,
+                   ):
         """
             Get the table structure as XML tree
 
@@ -1775,7 +1810,8 @@ class S3XML(S3Codec):
                             meta = meta,
                             options = options,
                             references = references,
-                            labels = True)
+                            labels = True,
+                            )
             return e
         else:
             raise AttributeError("No table like %s" % tablename)

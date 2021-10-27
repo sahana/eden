@@ -61,6 +61,11 @@ class SecurityCheckpointsModel(S3Model):
                                 ),
                           self.gis_location_id(),
                           s3_comments(),
+                          Field("active", "boolean",
+                                default = True,
+                                label = T("Active"),
+                                represent = s3_yes_no_represent,
+                                ),
                           *s3_meta_fields())
 
         # CRUD strings

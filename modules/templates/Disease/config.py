@@ -192,7 +192,7 @@ def config(settings):
             restricted = True,
             module_type = 10,
         )),
-        ("hms", Storage(
+        ("med", Storage(
             name_nice = T("Hospitals"),
             #description = "Helps to monitor status of hospitals",
             restricted = True,
@@ -293,15 +293,15 @@ def config(settings):
     ])
 
     # -----------------------------------------------------------------------------
-    def customise_hms_hospital_resource(r, tablename):
+    def customise_med_hospital_resource(r, tablename):
 
         if r.representation == "geojson":
             # Don't represent the facility_status as numbers are smaller to xmit
-            current.s3db.hms_status.facility_status.represent = None
+            current.s3db.med_status.facility_status.represent = None
             return
 
         # Limit options to just those used & relabel them for context
-        hms_facility_type_opts = {
+        med_facility_type_opts = {
             1: T("Hospital"),
             #2: T("Field Hospital"),
             #3: T("Specialized Hospital"),
@@ -319,7 +319,7 @@ def config(settings):
             99: T("Unknown"),
         }
 
-        hms_facility_status_opts = {
+        med_facility_status_opts = {
             #1: T("Normal"),
             1: T("Functioning"),
             #2: T("Compromised"),
@@ -330,19 +330,19 @@ def config(settings):
         }
 
         from gluon import IS_EMPTY_OR, IS_IN_SET
+        from s3 import S3Represent
 
         s3db = current.s3db
-        NONE = current.messages["NONE"]
 
-        field = s3db.hms_hospital.facility_type
-        field.represent = lambda opt: hms_facility_type_opts.get(opt, NONE)
-        field.requires = IS_EMPTY_OR(IS_IN_SET(hms_facility_type_opts))
+        field = s3db.med_hospital.facility_type
+        field.represent = S3Represent(options = med_facility_type_opts)
+        field.requires = IS_EMPTY_OR(IS_IN_SET(med_facility_type_opts))
 
-        field = s3db.hms_status.facility_status
-        field.represent = lambda opt: hms_facility_status_opts.get(opt, NONE)
-        field.requires = IS_EMPTY_OR(IS_IN_SET(hms_facility_status_opts))
+        field = s3db.med_status.facility_status
+        field.represent = S3Represent(options = med_facility_status_opts)
+        field.requires = IS_EMPTY_OR(IS_IN_SET(med_facility_status_opts))
 
-    settings.customise_hms_hospital_resource = customise_hms_hospital_resource
+    settings.customise_med_hospital_resource = customise_med_hospital_resource
 
     # -----------------------------------------------------------------------------
     def customise_disease_stats_data_resource(r, tablename):

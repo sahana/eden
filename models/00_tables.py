@@ -13,7 +13,7 @@ current.models = models
 
 # Explicit import statements to have them reload automatically in debug mode
 # - still needed when not running debug
-import s3db.assess
+#import s3db.assess
 import s3db.asset
 import s3db.auth
 import s3db.br
@@ -34,9 +34,9 @@ import s3db.event
 import s3db.fin
 import s3db.fire
 import s3db.gis
-import s3db.hms
 import s3db.hrm
 import s3db.inv
+import s3db.med
 import s3db.member
 import s3db.msg
 import s3db.ocr

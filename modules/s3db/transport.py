@@ -344,6 +344,7 @@ class TransportModel(S3Model):
         represent = S3Represent(lookup = tablename)
         airport_id = S3ReusableField("airport_id", "reference %s" % tablename,
                                      label = T("Airport"),
+                                     ondelete = "SET NULL",
                                      represent = represent,
                                      requires = IS_ONE_OF(db, "%s.id" % tablename,
                                                           represent,
@@ -738,11 +739,13 @@ class TransportAirplaneModel(S3Model):
     """
 
     names = ("transport_airplane",
+             "transport_airplane_id",
              )
 
     def model(self):
 
         T = current.T
+        db = current.db
 
         # ---------------------------------------------------------------------
         # Airplanes
@@ -752,11 +755,15 @@ class TransportAirplaneModel(S3Model):
                           Field("name",
                                 label = T("Name"),
                                 ),
+                          Field("capacity", "integer",
+                                label = T("Capacity"),
+                                ),
                           *s3_meta_fields())
 
         # CRUD Strings
+        CREATE_AIRPLANE = T("Create Airplane")
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Create Airplane"),
+            label_create = CREATE_AIRPLANE,
             title_display = T("Airplane Details"),
             title_list = T("Airplanes"),
             title_update = T("Edit Airplane"),
@@ -767,10 +774,30 @@ class TransportAirplaneModel(S3Model):
             msg_list_empty = T("No Airplanes currently defined"),
             )
 
+        # Reusable field
+        represent = S3Represent(lookup = tablename)
+        airplane_id = S3ReusableField("airplane_id", "reference %s" % tablename,
+                                      label = T("Airplane"),
+                                      ondelete = "SET NULL",
+                                      represent = represent,
+                                      requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "%s.id" % tablename,
+                                                              represent,
+                                                              ),
+                                                    ),
+                                      sortby = "name",
+                                      comment = S3PopupLink(c = "transport",
+                                                            f = "airplane",
+                                                            tooltip = CREATE_AIRPLANE,
+                                                            ),
+                                      )
+
+
         # ---------------------------------------------------------------------
         # Return global names to s3db
         #
-        return {}
+        return {"transport_airplane_id": airplane_id,
+                }
 
 # =============================================================================
 class TransportBorderModel(S3Model):
@@ -1007,6 +1034,8 @@ class TransportFlightModel(S3Model):
                      airport_id("to_airport",
                                 label = T("To"),
                                 ),
+                     self.transport_airplane_id(),
+                     # @ToDo: Capacity Remaining
                      *s3_meta_fields())
 
         # CRUD Strings

@@ -327,11 +327,6 @@ def config(settings):
         #    restricted = True,
         #    module_type = None
         #)),
-        #("hms", Storage(
-        #    name_nice = "Hospitals",
-        #    restricted = True,
-        #    module_type = None
-        #)),
         #("cr", Storage(
         #    name_nice = "Shelters",
         #    restricted = True,

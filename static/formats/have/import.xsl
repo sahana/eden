@@ -57,7 +57,7 @@
     <!-- ****************************************************************** -->
     <!-- Hospital -->
     <xsl:template match="have:Hospital">
-        <resource name="hms_hospital">
+        <resource name="med_hospital">
             <!-- LastUpdateTime -->
             <xsl:if test="./have:LastUpdateTime/text()">
                 <xsl:attribute name="modified_on">
@@ -93,7 +93,7 @@
     <!-- ****************************************************************** -->
     <!-- Status report -->
     <xsl:template name="StatusReport">
-        <resource name="hms_status">
+        <resource name="med_hospital_status">
             <xsl:apply-templates select="./have:EmergencyDepartmentStatus"/>
             <xsl:apply-templates select="have:HospitalFacilityStatus/have:FacilityStatus"/>
             <xsl:apply-templates select="have:HospitalFacilityStatus/have:ClinicalStatus"/>
@@ -134,7 +134,7 @@
     </xsl:template>
 
     <xsl:template match="have:BedCapacity">
-        <resource name="hms_bed_capacity">
+        <resource name="med_bed_capacity">
             <xsl:variable name="bedtype">
                 <xsl:call-template name="lowercase">
                     <xsl:with-param name="string" select="./have:BedType/text()"/>
@@ -186,7 +186,7 @@
     <!-- ****************************************************************** -->
     <!-- ServiceCoverageStatus -->
     <xsl:template match="have:ServiceCoverageStatus">
-        <resource name="hms_services">
+        <resource name="med_services">
             <xsl:if test=".//have:AmbulanceServices/text()='true'">
                 <data field="tran" value="True"/>
             </xsl:if>
@@ -259,13 +259,19 @@
     <!-- ****************************************************************** -->
     <!-- OrganizationGeoLocation -->
     <xsl:template match="have:OrganizationGeoLocation">
-        <xsl:variable name="location"
+        <xsl:variable name="latlon"
                       select="./gml:Point/gml:coordinates/text()"/>
         <xsl:variable name="location_id"
                       select="./gml:Point/@gml:id"/>
         <xsl:variable name="name"
                       select="../have:OrganizationInformation/xnl:OrganisationName/xnl:NameElement[1]/text()"/>
-        <xsl:if test="$location">
+        <xsl:variable name="address">
+            <xsl:value-of select="../have:OrganizationInformation/xpil:Addresses[1]/xal:Address[1]/xal:FreeTextAddress[1]/xal:AddressLine/text()"/>
+        </xsl:variable>
+        <xsl:variable name="postcode">
+            <xsl:value-of select="../have:OrganizationInformation/xpil:Addresses[1]/xal:Address[1]/xal:PostCode[1]/xal:Identifier/text()"/>
+        </xsl:variable>
+        <xsl:if test="$address!='' or $postcode!='' or $latlon!=''">
             <reference field="location_id" resource="gis_location">
                 <resource name="gis_location">
                     <xsl:if test="$location_id">
@@ -277,12 +283,24 @@
                         <xsl:value-of select="$name"/>
                     </data>
                     <data field="gis_feature_type" value="1">Point</data>
-                    <data field="lat">
-                        <xsl:value-of select="normalize-space(substring-before($location, ','))"/>
-                    </data>
-                    <data field="lon">
-                        <xsl:value-of select="normalize-space(substring-after($location, ','))"/>
-                    </data>
+                    <xsl:if test="$address!=''">
+                        <data field="addr_street">
+                            <xsl:value-of select="$address"/>
+                        </data>
+                    </xsl:if>
+                    <xsl:if test="$postcode!=''">
+                        <data field="addr_postcode">
+                            <xsl:value-of select="$postcode"/>
+                        </data>
+                    </xsl:if>
+                    <xsl:if test="$latlon!=''">
+                        <data field="lat">
+                            <xsl:value-of select="normalize-space(substring-before($latlon, ','))"/>
+                        </data>
+                        <data field="lon">
+                            <xsl:value-of select="normalize-space(substring-after($latlon, ','))"/>
+                        </data>
+                    </xsl:if>
                 </resource>
             </reference>
         </xsl:if>
@@ -297,9 +315,12 @@
         <xsl:variable name="uuid_provided"
                       select="./@xnl:ID"/>
         <xsl:if test="$uuid_provided">
-            <data field="gov_uuid">
-                <xsl:value-of select="$uuid_provided"/>
-            </data>
+            <resource name="org_site_tag" alias="tag">
+                <data field="tag">gov_uuid</data>
+                <data field="value">
+                    <xsl:value-of select="$uuid_provided"/>
+                </data>
+            </resource>
         </xsl:if>
         <data field="name">
             <xsl:value-of select="$name"/>
@@ -326,15 +347,9 @@
     <!-- ****************************************************************** -->
     <!-- Addresses -->
     <xsl:template match="xpil:Addresses">
-        <xsl:for-each select=".//xal:FreeTextAddress[1]">
-            <data field="address"><xsl:value-of select=".//text()"/></data>
-        </xsl:for-each>
-        <xsl:for-each select=".//xal:Locality[1]">
-            <data field="city"><xsl:value-of select=".//text()"/></data>
-        </xsl:for-each>
-        <xsl:for-each select=".//xal:PostCode[1]">
-            <data field="postcode"><xsl:value-of select=".//text()"/></data>
-        </xsl:for-each>
+        <data field="town">
+            <xsl:value-of select="./xal:Address[1]/xal:Locality[1]/xal:NameElement/text()"/>
+        </data>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -438,7 +453,7 @@
     <!-- Activity24Hr -->
     <xsl:template match="have:Activity24Hr">
         <xsl:if test="../../have:LastUpdateTime/text()">
-            <resource name="hms_activity">
+            <resource name="med_hospital_activity">
                 <data field="date">
                     <xsl:choose>
                         <xsl:when test="contains(../../have:LastUpdateTime/text(), 'T')">

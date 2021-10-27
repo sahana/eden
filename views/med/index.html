@@ -6,7 +6,7 @@
     {{=OL(
       LI(
         SPAN(A(T("Hospital Status Report"),
-          _href=URL(c="hms", f="hospital")), _style="font-weight:bold;"),
+          _href=URL(c="med", f="hospital")), _style="font-weight:bold;"),
         P(T("View or update the status of a hospital."), _style="padding-left:0;"),
           _style="margin-top:1em;"),
 
@@ -24,7 +24,7 @@
 
       LI(
         SPAN(A(T("Map of Hospitals"),
-          _href=URL(c="gis", f="map_viewing_client", vars={"kml_feed" : "%s/hms/hospital.kml" % s3.base_url, "kml_name" : "Hospitals_"})), _style="font-weight:bold;"),
+          _href=URL(c="gis", f="map_viewing_client", vars={"kml_feed" : "%s/med/hospital.kml" % s3.base_url, "kml_name" : "Hospitals_"})), _style="font-weight:bold;"),
         P(T("View the hospitals on a map."), _style="padding-left:0;"),
           _style="margin-top:1em;"),
           _style="list-style-type: none;"
@@ -37,22 +37,22 @@
       {{=DIV(T("Use these links to download data that is currently in the database."))}}
       {{=UL(
         LI(A("CSV",
-          _href=URL(c="hms", f="hospital.csv")),
+          _href=URL(c="med", f="hospital.csv")),
           _style="padding:3px; margin-left: 18px;"),
        LI(A("JSON",
-          _href=URL(c="hms", f="hospital.json")),
+          _href=URL(c="med", f="hospital.json")),
           _style="padding:3px; margin-left: 18px;"),
         LI(A("KML",
-          _href=URL(c="hms", f="hospital.kml")),
+          _href=URL(c="med", f="hospital.kml")),
           _style="padding:3px; margin-left: 18px;"),
         LI(A("RSS",
-          _href=URL(c="hms", f="hospital.rss")),
+          _href=URL(c="med", f="hospital.rss")),
           _style="padding:3px; margin-left: 18px;"),
         LI(A("XML",
-          _href=URL(c="hms", f="hospital.xml")),
+          _href=URL(c="med", f="hospital.xml")),
           _style="padding:3px; margin-left: 18px;"),
         LI(A("EDXL-HAVE",
-          _href=URL(c="hms", f="hospital.have")),
+          _href=URL(c="med", f="hospital.have")),
           _style="padding:3px; margin-left: 18px;"))
       }}
 

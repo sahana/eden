@@ -4,7 +4,7 @@ Demographics,For summary page,stats,demographic_data,,,{location_id}: {value},"l
 Events,All Open Events,event,event,incident,Danger Area,{name} (T('Event'))<br />{event_type_id},"name,event_type_id",~.closed=0,,True,,,,,False,,,
 Fire Stations,All Active Fire Stations,fire,station,fire_station,Water Hydrant,{name} (T('Fire Station')),name,~.obsolete=False,,True,,,,,False,,,0
 Heliports,All Active Heliports,transport,heliport,helicopter,Heliport,{name} (T('Heliport')),name,~.obsolete=False,,True,,,,,False,,,0
-Hospitals,All Active Medical Facilities,hms,hospital,hospital,Medical Facility,{name} (T('Hospital')),name,~.obsolete=False,,True,,,,,False,,,0
+Hospitals,All Active Medical Facilities,med,hospital,hospital,Medical Facility,{name} (T('Hospital')),name,~.obsolete=False,,True,,,,,False,,,0
 Incidents,All Open Incidents,event,incident,incident,Danger Area,{name} (T('Incident'))<br />{incident_type_id},"name,incident_type_id",~.closed=0,,True,,,,,False,,,
 Locations,Used by Location Details,gis,location,,,{name},"name,gis_feature_type",~.level__ne=None&~.end_date=None,,,,"[{'prop':'gis_feature_type','cat':1,'externalGraphic':'img/markers/marker_red.png'},{'prop':'gis_feature_type','cat':3,'fill':'00BFFF','fillOpacity':0.5},{'prop':'gis_feature_type','cat':6,'fill':'00BFFF','fillOpacity':0.5}]",0.9,,False,False,0,0
 Offices,All Active Offices,org,office,office,Building,{name} (T('Office'))<br />{organisation_id},"name,organisation_id",~.obsolete=False,,True,,,,,False,False,,0

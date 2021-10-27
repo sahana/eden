@@ -135,7 +135,7 @@ def index():
     #    SHELTERS = ""
     #facility_box = HM("Facilities", _id="facility_box")(
     #    HM("Facilities", c="org", f="facility"),
-    #    HM("Hospitals", c="hms", f="hospital"),
+    #    HM("Hospitals", c="med", f="hospital"),
     #    HM("Offices", c="org", f="office"),
     #    HM(SHELTERS, c="cr", f="shelter"),
     #    HM("Warehouses", c="inv", f="warehouse"),

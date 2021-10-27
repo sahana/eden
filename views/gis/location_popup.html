@@ -27,16 +27,9 @@ $(function() {
             $('#gis_location_name').val(location_name);
             $('#gis_location_name__row').hide();
         }
-{{elif "hms_hospital" in caller:}}
+{{elif "med_hospital" in caller:}}
         // Populate Name & Hide
-        var location_name = self.parent.$('#hms_hospital_name').val();
-        if (location_name) {
-            $('#gis_location_name').val(location_name);
-            $('#gis_location_name__row').hide();
-        }
-{{elif "irs_ireport" in caller:}}
-        // Populate Name & Hide
-        var location_name = self.parent.$('#ir_ireport_name').val();
+        var location_name = self.parent.$('#med_hospital_name').val();
         if (location_name) {
             $('#gis_location_name').val(location_name);
             $('#gis_location_name__row').hide();

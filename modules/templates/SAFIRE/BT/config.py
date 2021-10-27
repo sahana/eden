@@ -329,11 +329,11 @@ def config(settings):
     settings.customise_edu_school_resource = customise_edu_school_resource
 
     # -------------------------------------------------------------------------
-    def customise_hms_hospital_resource(r, tablename):
+    def customise_med_hospital_resource(r, tablename):
 
         s3db = current.s3db
 
-        #s3db.hms_hospital.
+        #s3db.med_hospital.
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Create Health Facility"),
@@ -359,7 +359,7 @@ def config(settings):
                        list_fields = list_fields,
                        )
 
-    settings.customise_hms_hospital_resource = customise_hms_hospital_resource
+    settings.customise_med_hospital_resource = customise_med_hospital_resource
 
     # -------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):

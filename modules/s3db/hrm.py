@@ -140,7 +140,7 @@ class HRModel(S3Model):
                 group = "volunteer"
             elif controller == "deploy":
                 group = None
-            #elif controller in ("hrm", "org", "inv", "cr", "hms", "req"):
+            #elif controller in ("hrm", "org", "inv", "cr", "med", "req"):
             else:
                 group = "staff"
 

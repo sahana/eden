@@ -385,7 +385,7 @@ class DiseaseMonitoringModel(S3Model):
                      self.super_link("site_id", "org_site",
                                      empty = False,
                                      instance_types = ("org_facility",
-                                                       "hms_hospital",
+                                                       "med_hospital",
                                                        ),
                                      label = T("Test Station"),
                                      represent = self.org_SiteRepresent(show_link = False,
@@ -1057,7 +1057,7 @@ class CaseTrackingModel(S3Model):
                      # Optional link to test station
                      self.super_link("site_id", "org_site",
                                      instance_types = ("org_facility",
-                                                       "hms_hospital",
+                                                       "med_hospital",
                                                        ),
                                      label = T("Test Station"),
                                      ondelete = "SET NULL",

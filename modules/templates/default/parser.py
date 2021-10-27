@@ -427,8 +427,8 @@ class S3Parser(object):
         result = []
 
         #  Hospital Search [example: get name hospital facility status ]
-        table = s3db.hms_hospital
-        stable = s3db.hms_status
+        table = s3db.med_hospital
+        stable = s3db.med_hospital_status
         query = (table.deleted == False) & \
                 (current.auth.s3_accessible_query("read", table))
         rows = db(query).select(table.id,

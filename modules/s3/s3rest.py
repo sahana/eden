@@ -306,7 +306,8 @@ class S3Request(object):
     def set_handler(self, method, handler,
                     http = None,
                     representation = None,
-                    transform = False):
+                    transform = False,
+                    ):
         """
             Set a method handler for this request
 
@@ -806,7 +807,7 @@ class S3Request(object):
             Get the PUT method handler
         """
 
-        transform = self.transformable(method="import")
+        transform = self.transformable(method = "import")
 
         method = self.method
         if not method and transform:

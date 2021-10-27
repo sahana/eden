@@ -1,6 +1,6 @@
 uid,role,description,controller,function,table,uacl,oacl,entity,Notes
-ORG_ADMIN,Organisation Administrator,,hms,,,"READ|CREATE|UPDATE|DELETE",,,
+ORG_ADMIN,Organisation Administrator,,med,,,"READ|CREATE|UPDATE|DELETE",,,
 ORG_ADMIN,Organisation Administrator,,inv,,,"READ|CREATE|UPDATE|DELETE",,,
-HMS_ADMIN,Hospital Administrator,,hms,,,"READ|CREATE|UPDATE|DELETE",,,
+MED_ADMIN,Hospital Administrator,,med,,,"READ|CREATE|UPDATE|DELETE",,,
 DISEASE_ADMIN,Disease Administrator,,disease,,,"READ|CREATE|UPDATE|DELETE",,,
 WAREHOUSE_ADMIN,Warehouse Administrator,,inv,,,"READ|CREATE|UPDATE|DELETE",,,

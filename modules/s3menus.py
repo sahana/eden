@@ -1081,12 +1081,12 @@ class S3OptionsMenu(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def hms():
-        """ HMS / Hospital Status Assessment and Request Management """
+    def med():
+        """ MED / Hospital Status Assessment and Request Management """
 
         #s3 = current.response.s3
 
-        return M(c="hms")(
+        return M(c="med")(
                     M("Hospitals", f="hospital")(
                         M("Create", m="create"),
                         M("Map", m="map"),
@@ -1094,7 +1094,7 @@ class S3OptionsMenu(object):
                         M("Import", m="import", p="create"),
                         #SEP(),
                         #M("Show Map", c="gis", f="map_viewing_client",
-                          #vars={"kml_feed" : "%s/hms/hospital.kml" %
+                          #vars={"kml_feed" : "%s/med/hospital.kml" %
                                 #s3.base_url, "kml_name" : "Hospitals_"})
                     )
                 )

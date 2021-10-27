@@ -1322,7 +1322,8 @@ def cms_index(module,
               resource = None,
               page_name = None,
               alt_function = None,
-              view = None):
+              view = None,
+              ):
     """
         Return a module index page retrieved from CMS
         - or run an alternate function if not found
@@ -1397,12 +1398,13 @@ def cms_index(module,
             from gluon.compileapp import build_environment, run_controller_in, run_view_in
             request = current.request
             environment = build_environment(request, response, current.session)
+            environment["c"] = module
             environment["settings"] = settings
             environment["s3db"] = current.s3db
             # Retain certain globals (extend as needed):
             g = globals()
             environment["s3base"] = g.get("s3base")
-            environment["s3_redirect_default"] = g.get("s3_redirect_default")
+            environment["s3_redirect_default"] = s3_redirect_default
             page = run_controller_in(request.controller, alt_function, environment)
             if isinstance(page, dict):
                 response._vars = page

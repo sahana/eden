@@ -3,7 +3,7 @@ Airports,All Active Airports,transport,airport,airport,Airport,{name} (T('Airpor
 Bridges,All Bridges,transport,bridge,bridge,Bridge,{name} (T('Bridge')),name,,,True,,,,,False,,,
 Cultural Sites,All Active Cultural Sites,org,facility,temple,Church,{name} (T('Cultural Site')),name,"~.obsolete=False&site_facility_type.facility_type_id$name=Cultural Site",,True,,,,,False,,,
 Education Facilities,All Active Schools,edu,school,school,School,{name} (T('Education Facility')),name,~.obsolete=False,,True,,,,,False,,,
-Health Facilities,All Active Hospitals,hms,hospital,hospital,Medical Facility,{name} (T('Health Facility')),name,~.obsolete=False,,True,,,,,False,,,
+Health Facilities,All Active Hospitals,med,hospital,hospital,Medical Facility,{name} (T('Health Facility')),name,~.obsolete=False,,True,,,,,False,,,
 Population,For summary page,stats,demographic_data,,,{location_id}: {value},"location_id,value",,,,,"[{'prop':'value','fillOpacity':0.5}]",0.5,,,False,0,0
 Heliports,All Active Heliports,transport,heliport,helicopter,Heliport,{name} (T('Heliport')),name,~.obsolete=False,,True,,,,,False,,,
 Projects,,project,location,project,,{name} (T('Project'))<br />{location_id},"name,location_id",,,,,,,,False,,,

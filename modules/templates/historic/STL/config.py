@@ -3396,12 +3396,6 @@ def config(settings):
         #    restricted = True,
         #    module_type = 10
         #)),
-        #("hms", Storage(
-        #    name_nice = T("Hospitals"),
-        #    #description = "Helps to monitor status of hospitals",
-        #    restricted = True,
-        #    module_type = 10
-        #)),
         ("dvr", Storage(
           name_nice = T("Case Management"),
           #description = "Allow affected individuals & households to register to receive compensation and distributions",
@@ -3413,11 +3407,6 @@ def config(settings):
         #    #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
         #    restricted = True,
         #    module_type = 10,
-        #)),
-        #("tr", Storage(
-        #   name_nice = "Turkish Extensions",
-        #   restricted = True,
-        #   module_type = None,
         #)),
         #("transport", Storage(
         #   name_nice = T("Transport"),

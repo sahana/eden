@@ -1360,7 +1360,7 @@ class GIS(object):
                       "pr_address",
                       "cr_shelter",
                       "asset_asset",
-                      #"hms_hospital",
+                      #"med_hospital",
                       ]
 
             for tablename in tables:

@@ -1045,9 +1045,9 @@ def s3_redirect_default(location="", how=303, client_side=False, headers=None):
     s3_keep_messages()
 
     redirect(location,
-             how=how,
-             client_side=client_side,
-             headers=headers,
+             how = how,
+             client_side = client_side,
+             headers = headers,
              )
 
 # =============================================================================

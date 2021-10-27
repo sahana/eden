@@ -7,15 +7,15 @@
          Hospitals - CSV Import Stylesheet
 
          CSV fields:
-         Name....................hms_hospital
-         Code....................hms_hospital.code
-         Type....................hms_hospital.facility_type
-         Status..................hms_status.facility_status
-         Reopening Date..........hms_status.date_reopening
-         Power...................hms_status.power_supply_type
-         Services................hms_services (Comma-separated List)
-         Beds Total..............hms_hospital.total_beds
-         Beds Available..........hms_hospital.available_beds
+         Name....................med_hospital
+         Code....................med_hospital.code
+         Type....................med_hospital.facility_type
+         Status..................med_hospital_status.facility_status
+         Reopening Date..........med_hospital_status.date_reopening
+         Power...................med_hospital_status.power_supply_type
+         Services................med_hospital_services (Comma-separated List)
+         Beds Total..............med_hospital.total_beds
+         Beds Available..........med_hospital.available_beds
          Organisation............org_organisation
          Branch..................org_organisation[_branch]
          Country.................gis_location.L0 Name or ISO2
@@ -28,13 +28,13 @@
          Postcode................gis_location.addr_postcode
          Lat.....................gis_location.lat
          Lon.....................gis_location.lon
-         Phone Switchboard.......hms_hospital
-         Phone Business..........hms_hospital
-         Phone Emergency.........hms_hospital
-         Email...................hms_hospital
-         Website.................hms_hospital
-         Fax.....................hms_hospital
-         Comments................hms_hospital
+         Phone Switchboard.......med_hospital
+         Phone Business..........med_hospital
+         Phone Emergency.........med_hospital
+         Email...................med_hospital
+         Website.................med_hospital
+         Fax.....................med_hospital
+         Comments................med_hospital
          KV:XXX..................org_site_tag Key/Value (Key = XX in column name, value = cell in row. Multiple allowed)
 
     *********************************************************************** -->
@@ -233,7 +233,7 @@
             <xsl:call-template name="Location"/>
         </xsl:if>
 
-        <resource name="hms_hospital">
+        <resource name="med_hospital">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$HospitalName"/>
             </xsl:attribute>
@@ -341,7 +341,7 @@
             <xsl:variable name="Status" select="col[@field='Status']/text()"/>
             <xsl:variable name="ReopeningDate" select="col[@field='Reopening Date']/text()"/>
             <xsl:if test="$Status!='' or $ReopeningDate!='' or $Power!=''">
-                <resource name="hms_status">
+                <resource name="med_hospital_status">
                     <xsl:if test="$Status!=''">
                         <data field="facility_status">
                             <xsl:choose>
@@ -372,7 +372,7 @@
 
             <xsl:variable name="Services" select="col[@field='Services']/text()"/>
             <xsl:if test="$Services!=''">
-                <resource name="hms_services">
+                <resource name="med_hospital_services">
                     <xsl:call-template name="Services">
                         <xsl:with-param name="list">
                             <xsl:value-of select="$Services"/>
@@ -462,21 +462,6 @@
                 </resource>
             </xsl:when>
         </xsl:choose>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="HospitalType">
-
-        <xsl:variable name="Type" select="col[@field='Type']"/>
-
-        <xsl:if test="$Type!=''">
-            <resource name="hms_hospital_type">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('HospitalType:', $Type)"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$Type"/></data>
-            </resource>
-        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->

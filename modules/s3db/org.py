@@ -4504,13 +4504,14 @@ class FacilityModel(S3Model):
                            readable = hierarchical_facility_types,
                            writable = hierarchical_facility_types,
                            ),
-                     Field("vol_deployments", "boolean",
-                           default = False,
-                           label = T("Volunteer Deployment Sites"),
-                           represent = s3_yes_no_represent,
-                           readable = False,
-                           writable = False,
-                           ),
+                     # Was used by RLP
+                     #Field("vol_deployments", "boolean",
+                     #      default = False,
+                     #      label = T("Volunteer Deployment Sites"),
+                     #      represent = s3_yes_no_represent,
+                     #      readable = False,
+                     #      writable = False,
+                     #      ),
                      s3_comments(),
                      *s3_meta_fields()
                      )
@@ -4558,26 +4559,27 @@ class FacilityModel(S3Model):
             msg_record_created = T("Facility Type added"),
             msg_record_modified = T("Facility Type updated"),
             msg_record_deleted = T("Facility Type deleted"),
-            msg_list_empty = T("No Facility Types currently registered"))
+            msg_list_empty = T("No Facility Types currently registered"),
+            )
 
         facility_type_id = S3ReusableField("facility_type_id",
-            "reference %s" % tablename,
-            label = T("Facility Type"),
-            ondelete = "CASCADE",
-            represent = type_represent,
-            # Only used by org_site_facility_type
-            requires = IS_ONE_OF(db, "org_facility_type.id",
-                                 type_represent,
-                                 sort = True,
-                                 ),
-            sortby = "name",
-            comment = S3PopupLink(c = "org",
-                                  f = "facility_type",
-                                  label = ADD_FAC,
-                                  title = T("Facility Type"),
-                                  tooltip = T("If you don't see the Type in the list, you can add a new one by clicking link 'Create Facility Type'."),
-                                  ),
-            )
+                                           "reference %s" % tablename,
+                                           label = T("Facility Type"),
+                                           ondelete = "CASCADE",
+                                           represent = type_represent,
+                                           # Only used by org_site_facility_type
+                                           requires = IS_ONE_OF(db, "org_facility_type.id",
+                                                                type_represent,
+                                                                sort = True,
+                                                                ),
+                                           sortby = "name",
+                                           comment = S3PopupLink(c = "org",
+                                                                 f = "facility_type",
+                                                                 label = ADD_FAC,
+                                                                 title = T("Facility Type"),
+                                                                 tooltip = T("If you don't see the Type in the list, you can add a new one by clicking link 'Create Facility Type'."),
+                                                                 ),
+                                           )
 
         configure(tablename,
                   deduplicate = S3Duplicate(),
@@ -4616,9 +4618,8 @@ class FacilityModel(S3Model):
                            represent = lambda v: v or NONE,
                            requires = code_requires,
                            ),
-                     self.org_organisation_id(
-                        requires = org_organisation_requires(updateable = True),
-                        ),
+                     self.org_organisation_id(requires = org_organisation_requires(updateable = True),
+                                              ),
                      self.gis_location_id(),
                      Field("opening_times",
                            label = T("Opening Times"),
@@ -4680,7 +4681,8 @@ class FacilityModel(S3Model):
             msg_record_created = T("Facility added"),
             msg_record_modified = T("Facility updated"),
             msg_record_deleted = T("Facility deleted"),
-            msg_list_empty = T("No Facilities currently registered"))
+            msg_list_empty = T("No Facilities currently registered"),
+            )
 
         text_fields = ["name",
                        "code",
@@ -4814,13 +4816,12 @@ class FacilityModel(S3Model):
             type_widget = "groupedopts"
         crud_form = S3SQLCustomForm("name",
                                     "code",
-                                    S3SQLInlineLink(
-                                          "facility_type",
-                                          label = T("Facility Type"),
-                                          field = "facility_type_id",
-                                          widget = type_widget,
-                                          cols = 3,
-                                    ),
+                                    S3SQLInlineLink("facility_type",
+                                                    label = T("Facility Type"),
+                                                    field = "facility_type_id",
+                                                    widget = type_widget,
+                                                    cols = 3,
+                                                    ),
                                     "organisation_id",
                                     "location_id",
                                     "opening_times",

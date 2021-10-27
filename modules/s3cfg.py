@@ -188,7 +188,6 @@ class S3Config(Storage):
         self.gis = Storage()
         # Allow templates to append rather than replace
         self.gis.countries = []
-        self.hms = Storage()
         self.hrm = Storage()
         self.inv = Storage()
         self.L10n = Storage()
@@ -196,6 +195,7 @@ class S3Config(Storage):
         self.L10n.languages = {"en": "English"}
         self.log = Storage()
         self.mail = Storage()
+        self.med = Storage()
         self.member = Storage()
         self.mobile = Storage()
         self.msg = Storage()
@@ -1677,7 +1677,7 @@ class S3Config(Storage):
             - KML & OpenStreetMap formats
         """
         return self.gis.get("poi_export_resources",
-                            ["cr_shelter", "hms_hospital", "org_office"])
+                            ["cr_shelter", "med_hospital", "org_office"])
 
     def get_gis_popup_open_new_page(self):
         """
@@ -2094,7 +2094,7 @@ class S3Config(Storage):
 
         excluded_fields = self.pdf.get("excluded_fields")
         if excluded_fields is None:
-            excluded_fields = {"hms_hospital": ["hrm_human_resource",
+            excluded_fields = {"med_hospital": ["hrm_human_resource",
                                                 ],
                                "pr_group": ["pr_group_membership",
                                             ],
@@ -4210,15 +4210,6 @@ class S3Config(Storage):
         return self.fire.get("fire_station_unique", False)
 
     # -------------------------------------------------------------------------
-    # Hospital Registry
-    #
-    def get_hms_track_ctc(self):
-        return self.hms.get("track_ctc", False)
-
-    def get_hms_activity_reports(self):
-        return self.hms.get("activity_reports", False)
-
-    # -------------------------------------------------------------------------
     # Human Resource Management
 
     def get_hrm_course_grades(self):
@@ -5110,6 +5101,21 @@ class S3Config(Storage):
             Whether to use Workflow for Inventory Requisitions
         """
         return self.inv.get("req_workflow", False)
+
+    # -------------------------------------------------------------------------
+    # Medical
+    #
+    def get_med_activity_reports(self):
+        return self.med.get("activity_reports", False)
+
+    def get_med_have(self):
+        """
+            Whether to show HAVE-related fields
+        """
+        return self.med.get("have", False)
+
+    def get_med_track_ctc(self):
+        return self.med.get("track_ctc", False)
 
     # -------------------------------------------------------------------------
     # Members

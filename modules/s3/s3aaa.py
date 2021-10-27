@@ -222,10 +222,11 @@ Thank you"""
                                # Not commonly used, so can be added in template if-required:
                                #"dvi_morgue": T("Morgue"),
                                "edu_school": T("School"),
+                               "fin_bank": T("Bank"),
                                "fire_station": T("Fire Station"),
-                               "hms_hospital": T("Hospital"),
-                               "hms_pharmacy": T("Pharmacy"),
                                "inv_warehouse": T("Warehouse"),
+                               "med_hospital": T("Hospital"),
+                               "med_pharmacy": T("Pharmacy"),
                                "msg_basestation": T("Cell Tower"),
                                "org_facility": T("Facility"), # @ToDo: Use deployment setting for label
                                "org_office": T("Office"),
@@ -7694,7 +7695,7 @@ class S3EntityRoleManager(S3Method):
     ENTITY_TYPES = ["org_organisation",
                     "org_office",
                     "inv_warehouse",
-                    "hms_hospital",
+                    "med_hospital",
                     #"po_area",
                     "pr_group",
                     ]

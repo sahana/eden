@@ -93,7 +93,7 @@ class S3MainMenu(default.S3MainMenu):
                     M("Items", c="supply", f="distribution_item"),
                     M("Beneficiaries", c="dvr", f="person"),
                     M("Staff", c="hrm", f="human_resource"),
-                    M("Clinics", c="hms", f="hospital"),
+                    M("Clinics", c="med", f="hospital"),
                     M("Offices", c="org", f="office"),
                     M("Schools", c="edu", f="school"),
                     M("Warehouses", c="inv", f="warehouse"),

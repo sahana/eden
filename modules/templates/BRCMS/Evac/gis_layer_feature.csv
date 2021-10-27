@@ -1,0 +1,10 @@
+Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Site,Points,Trackable,Style,Opacity,Folder,Visible,Enabled,Cluster Threshold,Refresh
+Accomodation,All Active Shelters,cr,shelter,shelter,Campground,{name} (T('Shelter'))<br />T('Population') {population_day}<br />T('Capacity') {capacity_day},"name,shelter_details.population_day,shelter_details.capacity_day",shelter_details.status__ne=1,,True,,,,,False,,,
+Airports,All Active Airports,transport,airport,airport,Airport,{name} (T('Airport')),name,~.obsolete=False,,True,,,,,False,,,
+Banks,All Active Banks,fin,bank,bank,Bank,{name} (T('Bank')),name,~.obsolete=False,,True,,,,Finances,False,,,
+Brokers,All Operational Brokers,fin,broker,broker,Bank,{name} (T('Broker')),name,~.operational=True,,True,,,,Finances,False,,,
+Checkpoints,All Active Checkpoints,security,checkpoint,checkpoint,Toll Booth,{name} (T('Checkpoint')),name,~.active=True,,True,,,,Security,False,,,
+Incident Reports,,event,incident_report,incident,Danger Area,{name} (T('Incident'))<br />{incident_type_id},"name,incident_type_id",,,True,,,,Security,False,,,
+Medical Facilities,All Active Medical Facilities,med,hospital,hospital,Medical Facility,{name} (T('Medical Facility')),name,~.obsolete=False,,True,,,,Medical,False,,,
+Medical Personnel,All Operational Medical Personnel,med,contact,med_contact,Medical Facility,{name} (T('Medical Personnel')),name,~.operational=True,,True,,,,Medical,False,,,
+Pharmacies,All Active Pharmacies,med,pharmacy,pharmacy,Pharmacy,{name} (T('Pharmacy')),name,~.obsolete=False,,True,,,,Medical,False,,,

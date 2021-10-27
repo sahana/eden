@@ -11471,9 +11471,9 @@ def inv_req_match(rheader = None):
         elif tablename == "cr_shelter":
             from .cr import cr_shelter_rheader
             rheader = cr_shelter_rheader
-        elif tablename == "hms_hospital":
-            from .hms import hms_hospital_rheader
-            rheader = hms_hospital_rheader
+        elif tablename == "med_hospital":
+            from .med import med_hospital_rheader
+            rheader = med_hospital_rheader
 
     s3.filter = (s3db.inv_req.site_id != site_id)
     s3db.configure("inv_req",

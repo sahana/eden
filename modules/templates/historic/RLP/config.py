@@ -2871,12 +2871,6 @@ def config(settings):
         #    restricted = True,
         #    module_type = 10
         #)),
-        #("hms", Storage(
-        #    name_nice = T("Hospitals"),
-        #    #description = "Helps to monitor status of hospitals",
-        #    restricted = True,
-        #    module_type = 10
-        #)),
         #("br", Storage(
         #   name_nice = T("Beneficiary Registry"),
         #   #description = "Allow affected individuals & households to register to receive compensation and distributions",

@@ -14,8 +14,8 @@
   {{if settings.has_module("cr"):}}
     <li><a href='{{=URL(c="cr", f="shelter")}}'>{{=s3.crud_strings["cr_shelter"].name_nice_plural}}</a>
   {{pass}}
-  {{if settings.has_module("hms"):}}
-    <li><a href='{{=URL(c="hms", f="hospital")}}'>{{=T("Hospitals")}}</a>
+  {{if settings.has_module("med"):}}
+    <li><a href='{{=URL(c="med", f="hospital")}}'>{{=T("Hospitals")}}</a>
   {{pass}}
   </ul>
 </ul>

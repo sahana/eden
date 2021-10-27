@@ -110,12 +110,11 @@ class FireZoneModel(S3Model):
                                                  tooltip = T("Select a Zone Type from the list or click 'Add Zone Type'"),
                                                  ),
                            ),
-                     self.gis_location_id(
-                       widget = S3LocationSelector(catalog_layers = True,
-                                                   points = False,
-                                                   polygons = True,
-                                                   ),
-                     ),
+                     self.gis_location_id(widget = S3LocationSelector(catalog_layers = True,
+                                                                      points = False,
+                                                                      polygons = True,
+                                                                      ),
+                                          ),
                      s3_comments(),
                      *s3_meta_fields())
 

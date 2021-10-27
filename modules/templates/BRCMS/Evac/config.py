@@ -35,9 +35,9 @@ def config(settings):
 
     modules = settings.modules
     modules["asset"] = {"name_nice": T("Assets"), "module_type": None}
-    #modules["fin"] = {"name_nice": T("Finances"), "module_type": None}
-    modules["hms"] = {"name_nice": T("Hospitals"), "module_type": None}
+    modules["fin"] = {"name_nice": T("Finances"), "module_type": None}
     modules["inv"] = {"name_nice": T("Inventory"), "module_type": None}
+    modules["med"] = {"name_nice": T("Hospitals"), "module_type": None}
     modules["security"] = {"name_nice": T("Security"), "module_type": None}
     modules["supply"] = {"name_nice": T("Supply"), "module_type": None}
     modules["transport"] = {"name_nice": T("Transport"), "module_type": None}
@@ -119,7 +119,10 @@ def config(settings):
             # Realm is own PE ID
             # => use Default Rules
             pass
-        elif tablename in ("transport_airport",
+        elif tablename in ("fin_bank",
+                           "med_hospital",
+                           "med_pharmacy",
+                           "transport_airport",
                            "transport_airplane",
                            ):
             # No Realm 
@@ -140,14 +143,12 @@ def config(settings):
             # Has a unique pr_realm with appropriate multiple inheritance
             pass
         elif tablename in ("event_incident_report",
-                           "hms_contact",
-                           "hms_hospital",
-                           "hms_pharmacy",
+                           "fin_broker",
+                           "med_contact",
                            "inv_inv_item",
-                           "org_facility",
+                           "security_checkpoint",
                            "security_zone",
                            "transport_flight",
-                           "vehicle_vehicle",
                            ):
             # Has a unique pr_realm with appropriate multiple inheritance
             pass
@@ -526,6 +527,12 @@ def config(settings):
         update_super(ftable, record)
         master_rw = record["pe_id"]
 
+        # Read all the top-level WG Forums
+        forums = db(ftable.uuid.belongs(WORKING_GROUPS)).select(ftable.uuid,
+                                                                ftable.pe_id,
+                                                                )
+        forums = {row.uuid: row.pe_id for row in forums}
+
         for WG in WORKING_GROUPS:
             # Create the WG RO Forum
             uuid = "%s_RO_%s" % (WG,
@@ -538,10 +545,13 @@ def config(settings):
                                      )
             record = Storage(id = forum_id)
             update_super(ftable, record)
-            affiliate = record["pe_id"]
+            org_wg_ro = record["pe_id"]
 
-            # Have the WG inherit from the top-level
-            pr_add_affiliation(master_ro, affiliate, role="Realm Hierarchy")
+            # Have the WG inherit from the top-level Org
+            pr_add_affiliation(master_ro, org_wg_ro, role="Realm Hierarchy")
+
+            # Have the top-level WG inherit from this
+            pr_add_affiliation(org_wg_ro, forums[WG], role="Realm Hierarchy")
 
             # Create the WG RW Forum
             uuid = "%s_RW_%s" % (WG,
@@ -554,10 +564,10 @@ def config(settings):
                                      )
             record = Storage(id = forum_id)
             update_super(ftable, record)
-            affiliate = record["pe_id"]
+            org_wg_rw = record["pe_id"]
 
             # Have the WG inherit from the top-level
-            pr_add_affiliation(master_rw, affiliate, role="Realm Hierarchy")
+            pr_add_affiliation(master_rw, org_wg_rw, role="Realm Hierarchy")
 
     # =========================================================================
     def customise_org_organisation_resource(r, tablename):
@@ -594,5 +604,24 @@ def config(settings):
                                          )
 
     settings.customise_br_case_resource = customise_br_case_resource
+
+    # =========================================================================
+    def customise_med_contact_resource(r, tablename):
+
+        # @ToDo crud_form & postprocess for Dissemination
+
+        from gluon import A, URL
+
+        table = current.s3db.med_contact
+        f = table.person_id
+        f.label = T("Person Record")
+        f.represent = lambda v: A(v,
+                                  _href = URL(c="br", f="person",
+                                              args = v,
+                                              )) if v else current.messages["NONE"]
+        f.comment = None
+        f.writable = False
+
+    settings.customise_med_contact_resource = customise_med_contact_resource
 
 # END =========================================================================

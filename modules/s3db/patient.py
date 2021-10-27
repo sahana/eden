@@ -37,6 +37,9 @@ from ..s3 import *
 # =============================================================================
 class PatientModel(S3Model):
     """
+        Patents
+
+        @ToDo: Move to Medical module
     """
 
     names = ("patient_patient",
@@ -76,10 +79,9 @@ class PatientModel(S3Model):
                                            lambda: gis.get_countries(key_type="code"),
                                            zero = messages.SELECT_LOCATION)),
                                 ),
-                          self.hms_hospital_id(
-                                empty = False,
-                                label = T("Current Location Treating Hospital")
-                                ),
+                          self.med_hospital_id(empty = False,
+                                               label = T("Current Location Treating Hospital")
+                                               ),
                           Field("phone", requires=IS_PHONE_NUMBER_MULTI(),
                                 label = T("Current Location Phone Number"),
                                 ),
@@ -107,7 +109,8 @@ class PatientModel(S3Model):
             msg_record_created = T("Patient added"),
             msg_record_modified = T("Patient updated"),
             msg_record_deleted = T("Patient deleted"),
-            msg_list_empty = T("No Patients currently registered"))
+            msg_list_empty = T("No Patients currently registered"),
+            )
 
         patient_represent = patient_PatientRepresent(lookup = "patient_patient")
 
@@ -186,7 +189,8 @@ class PatientModel(S3Model):
             msg_record_created = T("Relative added"),
             msg_record_modified = T("Relative updated"),
             msg_record_deleted = T("Relative deleted"),
-            msg_list_empty = T("No Relatives currently registered"))
+            msg_list_empty = T("No Relatives currently registered"),
+            )
 
         # ---------------------------------------------------------------------
         # Homes
@@ -226,7 +230,8 @@ class PatientModel(S3Model):
             msg_record_created = T("Home added"),
             msg_record_modified = T("Home updated"),
             msg_record_deleted = T("Home deleted"),
-            msg_list_empty = T("No Homes currently registered"))
+            msg_list_empty = T("No Homes currently registered"),
+            )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -263,8 +268,9 @@ class patient_PatientRepresent(S3Represent):
                                 ptable.first_name,
                                 ptable.middle_name,
                                 ptable.last_name,
+                                left = left,
                                 limitby = (0, count),
-                                left = left)
+                                )
 
         self.queries += 1
         return rows

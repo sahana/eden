@@ -9,7 +9,10 @@ asset,40,40,"ersSymbolsV0202/Operations_S1/Emergency_Staging_Areas_S1.png"
 asset_green,40,40,"ersSymbolsV0202/Operations_S1/Emergency_Staging_Areas_S1_green.png"
 asset_red,40,40,"ersSymbolsV0202/Operations_S1/Emergency_Staging_Areas_S1_red.png"
 asset_yellow,40,40,"ersSymbolsV0202/Operations_S1/Emergency_Staging_Areas_S1_yellow.png"
+bank,33,44,"ersSymbolsV0202/Infrastructures_S1/Bank_Banks_S1.png
 bridge,33,44,"ersSymbolsV0202/Infrastructures_S1/Trans_Bridge_S1.png"
+broker,33,44,"ersSymbolsV0202/Infrastructures_S1/Bank_Financial_Services_Other_S1.png"
+checkpoint,40,40,"ersSymbolsV0202/Operations_S1/Law_Border_Patrol_S1.png"
 church,33,44,"ersSymbolsV0202/Infrastructures_S1/Public_Venue_Church_S1.png"
 earthquake,50,50,"ersSymbolsV0202/Natural_Events/Geo_Earth_Quake_Epicenter.png"
 elderly,33,44,"ersSymbolsV0202/Infrastructures_S1/Special_Needs_Elder_Care_S1.png"
@@ -31,6 +34,7 @@ hospital_red,40,40,"ersSymbolsV0202/Operations_S1/E_Med_Hospital_S1_Red.png"
 hospital_yellow,40,40,"ersSymbolsV0202/Operations_S1/E_Med_Hospital_S1_Yellow.png"
 incident,50,50,"ersSymbolsV0202/Incidents/Incident_Theme.png"
 information,32,32,Information.png
+med_contact,40,40,40,40,"ersSymbolsV0202/Operations_S1/E_Med_Triage_S1.png"
 mobile_phone,40,40,Mobile_Phone.png
 mosque,33,44,"ersSymbolsV0202/Infrastructures_S1/Public_Venue_Mosque_S1.png"
 news,48,48,News.png
@@ -39,6 +43,7 @@ office_green,40,40,"ersSymbolsV0202/Operations_S1/Emergency_Operations_Center_S1
 office_red,40,40,"ersSymbolsV0202/Operations_S1/Emergency_Operations_Center_S1_red.png"
 office_yellow,40,40,"ersSymbolsV0202/Operations_S1/Emergency_Operations_Center_S1_yellow.png"
 orphanage,33,44,"ersSymbolsV0202/Infrastructures_S1/Special_Needs_Child_Day_Care_S1.png"
+pharmacy,40,40,40,40,"ersSymbolsV0202/Operations_S1/E_Med_Pharmacies_S1.png"
 phone,10,5,SMS_Message_Phone.png
 police_station,40,40,"ersSymbolsV0202/Operations_S1/Law_Enforcement_Theme_S1.png"
 port,33,44,"ersSymbolsV0202/Infrastructures_S1/Trans_Port_S1.png"

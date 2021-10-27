@@ -27,7 +27,7 @@ ANONYMOUS,Anonymous,,,,event_event_location,,READ,,,,,Public access to Responses
 ANONYMOUS,Anonymous,,project,activity,,,READ,,,,,Public access to 4W information
 ANONYMOUS,Anonymous,,,,project_activity,,READ,,,,,
 ANONYMOUS,Anonymous,,edu,school,,,READ,,,,,Public access to Schools information
-ANONYMOUS,Anonymous,,hms,hospital,,,READ,,,,,Public access to Clinics information
+ANONYMOUS,Anonymous,,med,hospital,,,READ,,,,,Public access to Clinics information
 ANONYMOUS,Anonymous,,org,office,,,READ,,,,,Public access to Offices information
 ANONYMOUS,Anonymous,,inv,warehouse,,,READ,,,,,Public access to Warehouses information
 AUTHENTICATED,Authenticated,SC Staff inc ERT Members,cms,,,,READ,,,,,Weekly Schedule

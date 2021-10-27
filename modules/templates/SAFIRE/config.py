@@ -197,16 +197,11 @@ def config(settings):
             #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
             module_type = 10,
         )),
-        ("hms", Storage(
+        ("med", Storage(
             name_nice = T("Hospitals"),
             #description = "Helps to monitor status of hospitals",
             module_type = 10
         )),
-        #("dvr", Storage(
-        #   name_nice = T("Disaster Victim Registry"),
-        #   #description = "Allow affected individuals & households to register to receive compensation and distributions",
-        #   module_type = 10,
-        #)),
         ("event", Storage(
             name_nice = "Events",
             #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",

@@ -14,6 +14,39 @@ def index():
     return s3db.cms_index(c)
 
 # -----------------------------------------------------------------------------
+def bank():
+    """
+        RESTful CRUD controller
+    """
+
+    # Pre-processor
+    def prep(r):
+        # Function to call for all Site Instance Types
+        from s3db.org import org_site_prep
+        org_site_prep(r)
+
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def bank_service():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def broker():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def expense():
     """ RESTful CRUD controller """
 

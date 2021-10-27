@@ -4158,11 +4158,6 @@ def config(settings):
         #    restricted = True,
         #    module_type = None
         #)),
-        #("hms", Storage(
-        #    name_nice = "Hospitals",
-        #    restricted = True,
-        #    module_type = None
-        #)),
     ])
 
 # END =========================================================================

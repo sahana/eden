@@ -1675,7 +1675,8 @@ class S3Resource(object):
                         base_url = current.response.s3.base_url,
                         prefix = self.prefix,
                         name = self.name,
-                        utcnow = s3_format_datetime())
+                        utcnow = s3_format_datetime(),
+                        )
 
             # Build import tree
             if not isinstance(source, (list, tuple)):

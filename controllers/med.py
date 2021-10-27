@@ -1,38 +1,12 @@
 # -*- coding: utf-8 -*-
 
 """
-    HMS Hospital Status Assessment and Request Management System
+    Medical
+    - Hospital Status Assessment and Request Management System
 """
 
 if not settings.has_module(c):
     raise HTTP(404, body="Module disabled: %s" % c)
-
-# -----------------------------------------------------------------------------
-#def s3_menu_postp():
-#    # @todo: rewrite this for new framework
-#    if len(request.args) > 0 and request.args[0].isdigit():
-#        newreq = dict(from_record="hms_hospital.%s" % request.args[0],
-#                      from_fields="hospital_id$id")
-#        #selreq = {"req.hospital_id":request.args[0]}
-#    else:
-#        newreq = dict()
-#    selreq = {"req.hospital_id__ne":"NONE"}
-#    menu_selected = []
-#    hospital_id = s3base.s3_get_last_record_id("hms_hospital")
-#    if hospital_id:
-#        hospital = s3db.hms_hospital
-#        query = (hospital.id == hospital_id)
-#        record = db(query).select(hospital.id,
-#                                  hospital.name,
-#                                  limitby=(0, 1)).first()
-#        if record:
-#            name = record.name
-#            menu_selected.append(["%s: %s" % (T("Hospital"), name), False,
-#                                 URL(f="hospital",
-#                                     args=[record.id])])
-#    if menu_selected:
-#        menu_selected = [T("Open recent"), True, None, menu_selected]
-#        response.menu_options.append(menu_selected)
 
 # -----------------------------------------------------------------------------
 def index():
@@ -53,6 +27,14 @@ def index_alt():
                             ))
 
 # =============================================================================
+def contact():
+    """
+        RESTful CRUD controller for Medical Contacts
+    """
+
+    return s3_rest_controller()
+
+# =============================================================================
 def hospital():
     """
         Main REST controller for Hospitals
@@ -60,7 +42,7 @@ def hospital():
 
     # Custom Method to Assign HRs
     from s3db.hrm import hrm_AssignMethod
-    s3db.set_method("hms", "hospital",
+    s3db.set_method("med", "hospital",
                     method = "assign",
                     action = hrm_AssignMethod(component = "human_resource_site"),
                     )
@@ -75,7 +57,7 @@ def hospital():
             if r.component:
                 cname = r.component_name
                 if cname == "status":
-                    table = db.hms_status
+                    table = db.med_hospital_status
                     table.facility_status.comment = DIV(_class = "tooltip",
                                                         _title = "%s|%s" % (T("Facility Status"),
                                                                             T("Status of the facility."),
@@ -143,7 +125,7 @@ def hospital():
                                                       )
 
                 elif cname == "bed_capacity":
-                    table = db.hms_bed_capacity
+                    table = db.med_bed_capacity
                     table.bed_type.comment = DIV(_class = "tooltip",
                                                  _title = "%s|%s" % (T("Bed Type"),
                                                                      T("Specify the bed type of this unit."),
@@ -165,7 +147,7 @@ def hospital():
                                                                        ),
                                                    )
                 elif cname == "activity":
-                    table = db.hms_activity
+                    table = db.med_hospital_activity
                     table.date.comment = DIV(_class = "tooltip",
                                              _title = "%s|%s" % (T("Date & Time"),
                                                                  T("Date and time this report relates to."),
@@ -193,14 +175,6 @@ def hospital():
                                                                      ),
                                                  )
 
-                elif cname == "contact":
-                    table = db.hms_contact
-                    table.title.comment = DIV(_class = "tooltip",
-                                              _title = "%s|%s" % (T("Title"),
-                                                                  T("The Role this person plays within this hospital."),
-                                                                  ),
-                                              )
-
                 elif cname == "image":
                     table = s3db.doc_image
                     table.location_id.readable = table.location_id.writable = False
@@ -208,7 +182,7 @@ def hospital():
                     table.person_id.readable = table.person_id.writable = False
 
                 elif cname == "ctc":
-                    table = db.hms_ctc
+                    table = db.med_ctc
                     table.ctc.comment = DIV(_class = "tooltip",
                                             _title = "%s|%s" % (T("Cholera Treatment Center"),
                                                                 T("Does this facility provide a cholera treatment center?"),
@@ -273,8 +247,28 @@ def hospital():
                                                         )
             else:
                 # No Component
+                table = r.table
+
+                if settings.get_med_have():
+                    # HAVE compliance
+                    table.town.label = T("Town")
+
+                    components_get = s3db.resource("med_hospital").components.get
+
+                    # UID assigned by Local Government
+                    gov_uuid = components_get("gov_uuid")
+                    f = gov_uuid.table.value
+                    f.requires = IS_EMPTY_OR([IS_LENGTH(128),
+                                              IS_NOT_ONE_OF(db, "org_site_tag.value"),
+                                              ])
+                    f.comment = DIV(_class = "tooltip",
+                                    _title = "%s|%s" % (T("Government UID"),
+                                                        T("The Unique Identifier (UUID) as assigned to this facility by the government."),
+                                                        ),
+                                    )
+
                 from s3 import S3LocationFilter, S3OptionsFilter, S3RangeFilter, S3TextFilter
-                stable = s3db.hms_status
+                stable = s3db.med_hospital_status
                 filter_widgets = [
                         S3TextFilter(["name",
                                       "code",
@@ -311,7 +305,7 @@ def hospital():
                                         ),
                         S3OptionsFilter("bed_capacity.bed_type",
                                         label = T("Bed Type"),
-                                        options = s3db.hms_bed_capacity.bed_type.represent.options,
+                                        options = s3db.med_bed_capacity.bed_type.represent.options,
                                         #represent = "%(name)s",
                                         #hidden = True,
                                         ),
@@ -322,18 +316,12 @@ def hospital():
                                       ),
                         ]
 
-                s3db.configure("hms_hospital",
+                s3db.configure("med_hospital",
                                filter_widgets = filter_widgets,
                                )
 
                 s3.formats["have"] = r.url() # .have added by JS
                 # Add comments
-                table = r.table
-                table.gov_uuid.comment = DIV(_class = "tooltip",
-                                             _title = "%s|%s" % (T("Government UID"),
-                                                                 T("The Unique Identifier (UUID) as assigned to this facility by the government."),
-                                                                 ),
-                                             )
                 table.total_beds.comment = DIV(_class = "tooltip",
                                                _title = "%s|%s" % (T("Total Beds"),
                                                                    T("Total number of beds in this facility. Automatically updated from daily reports."),
@@ -352,94 +340,8 @@ def hospital():
         return True
     s3.prep = prep
 
-    from s3db.hms import hms_hospital_rheader
-    return s3_rest_controller(rheader = hms_hospital_rheader)
-
-# =============================================================================
-def person():
-    """
-        RESTful CRUD controller for Hospital Contacts (e.g. Doctors)
-    """
-
-    s3.filter = (FS("hms_contact.hospital_id") != None)
-
-    from s3db.pr import pr_Contacts
-    s3db.set_method("pr", "person",
-                    method = "contacts",
-                    action = pr_Contacts,
-                    )
-
-    # @ToDo: Move to Template
-    s3.crud_strings["pr_person"] = Storage(
-        label_create = T("Create Medical Personnel"),
-        title_display = T("Medical Personnel Details"),
-        title_list = T("Medical Personnel"),
-        title_update = T("Edit Medical Personnel"),
-        label_list_button = T("List Medical Personnel"),
-        label_delete_button = T("Delete Medical Personnel"),
-        msg_record_created = T("Medical Personnel added"),
-        msg_record_modified = T("Medical Personnel updated"),
-        msg_record_deleted = T("Medical Personnel deleted"),
-        msg_list_empty = T("No Medical Personnel currently defined"),
-        )
-
-    list_fields = ["first_name",
-                   "middle_name",
-                   "last_name",
-                   (T("Qualifications"), "competency.skill_id"),
-                   "hms_contact.hospital_id",
-                   ]
-
-    from s3 import S3SQLCustomForm, S3SQLInlineComponent
-
-    crud_form = S3SQLCustomForm("first_name",
-                                "middle_name",
-                                "last_name",
-                                "hms_contact.hospital_id",
-                                S3SQLInlineComponent("competency",
-                                                     label = T("Qualifications"),
-                                                     fields = [("", "skill_id"),
-                                                               ]
-                                                     ),
-                                )
-
-    s3db.configure("pr_person",
-                   crud_form = crud_form,
-                   list_fields = list_fields,
-                   )
-
-    def rheader(r):
-        if r.representation != "html":
-            # RHeaders only used in interactive views
-            return None
-        record = r.record
-        if record is None:
-            # List or Create form: rheader makes no sense here
-            return None
-
-        tabs = [(T("Person Details"), None),
-                (T("Contacts"), "contacts"),
-                ]
-        rheader_tabs = s3_rheader_tabs(r, tabs)
-
-        from s3 import s3_fullname
-
-        #hospital_field = r.table.hospital_id
-
-        rheader = DIV(TABLE(TR(TH("%s: " % T("Name")),
-                               s3_fullname(record),
-                               ),
-                            #TR(TH("%s: " % hospital_field.label),
-                            #   hospital_field.represent(record.hospital_id),
-                            #   ),
-                            ),
-                      rheader_tabs,
-                      )
-        return rheader
-
-    return s3_rest_controller("pr", "person",
-                              rheader = rheader,
-                              )
+    from s3db.med import med_hospital_rheader
+    return s3_rest_controller(rheader = med_hospital_rheader)
 
 # =============================================================================
 def pharmacy():

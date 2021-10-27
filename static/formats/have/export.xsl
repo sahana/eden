@@ -50,13 +50,13 @@
     <!-- Hospital Status -->
     <xsl:template match="s3xml">
         <have:HospitalStatus>
-            <xsl:apply-templates select="./resource[@name='hms_hospital']"/>
+            <xsl:apply-templates select="./resource[@name='med_hospital']"/>
         </have:HospitalStatus>
     </xsl:template>
 
     <!-- ****************************************************************** -->
     <!-- Hospital -->
-    <xsl:template match="resource[@name='hms_hospital']">
+    <xsl:template match="resource[@name='med_hospital']">
         <xsl:if test="./data[@field='facility_type']/@value=1 or
                       ./data[@field='facility_type']/@value=2 or
                       ./data[@field='facility_type']/@value=3">
@@ -70,14 +70,14 @@
                 </have:Organization>
 
                 <!-- Services and Capacity -->
-                <xsl:apply-templates select="./resource[@name='hms_status']"
+                <xsl:apply-templates select="./resource[@name='med_hospital_status']"
                                      mode="EmergencyDeptStatus"/>
                 <xsl:call-template name="BedCapacityStatus"/>
                 <xsl:call-template name="ServiceCoverageStatus"/>
 
                 <!-- Facility Status -->
                 <have:HospitalFacilityStatus>
-                    <xsl:apply-templates select="resource[@name='hms_status']"
+                    <xsl:apply-templates select="resource[@name='med_hospital_status']"
                                          mode="FacilityStatus"/>
                     <xsl:call-template name="Activity24Hr"/>
                 </have:HospitalFacilityStatus>
@@ -108,27 +108,30 @@
     <!-- ****************************************************************** -->
     <!-- GeoLocation -->
     <xsl:template name="GeoLocation">
-        <xsl:if test="./reference[@field='location_id']/@lat!='' and
-                      ./reference[@field='location_id']/@lon!=''">
+        <xsl:variable name="lat" select="./reference[@field='location_id']/@lat"/>
+        <xsl:variable name="lon" select="./reference[@field='location_id']/@lon"/>
+        <xsl:if test="$lat!='' and
+                      $lon!=''">
             <have:OrganizationGeoLocation>
+                <xsl:variable name="uuid" select="./reference[@field='location_id']/@uuid"/>
                 <gml:Point>
                     <xsl:attribute name="gml:id">
                         <xsl:choose>
-                            <xsl:when test="starts-with(./reference[@field='location_id']/@uuid, 'urn:')">
-                                <xsl:value-of select="./reference[@field='location_id']/@uuid"/>
+                            <xsl:when test="starts-with($uuid, 'urn:')">
+                                <xsl:value-of select="$uuid"/>
                             </xsl:when>
-                            <xsl:when test="contains(./reference[@field='location_id']/@uuid, '/')">
-                                <xsl:value-of select="./reference[@field='location_id']/@uuid"/>
+                            <xsl:when test="contains($uuid, '/')">
+                                <xsl:value-of select="$uuid"/>
                             </xsl:when>
                             <xsl:otherwise>
-                                <xsl:value-of select="concat(/s3xml/@domain, '/', ./reference[@field='location_id']/@uuid)"/>
+                                <xsl:value-of select="concat(/s3xml/@domain, '/', $uuid)"/>
                             </xsl:otherwise>
                         </xsl:choose>
                     </xsl:attribute>
                     <gml:coordinates>
-                        <xsl:value-of select="./reference[@field='location_id']/@lat"/>
+                        <xsl:value-of select="$lat"/>
                         <xsl:text>, </xsl:text>
-                        <xsl:value-of select="./reference[@field='location_id']/@lon"/>
+                        <xsl:value-of select="$lon"/>
                     </gml:coordinates>
                 </gml:Point>
             </have:OrganizationGeoLocation>
@@ -138,11 +141,18 @@
     <!-- ****************************************************************** -->
     <!-- Organization Name and ID -->
     <xsl:template name="OrganizationName">
+        <xsl:variable name="gov_uuid">
+            <xsl:for-each select="./resource[@name='org_site_tag']">
+                <xsl:if test="./data[@field='tag']/text()='gov_uuid'">
+                     <xsl:value-of select="normalize-space(./data[@field='value']/text())"/>
+                </xsl:if>
+            </xsl:for-each>
+        </xsl:variable>
         <xnl:OrganisationName>
             <xsl:attribute name="xnl:ID">
                 <xsl:choose>
-                    <xsl:when test="normalize-space(./data[@field='gov_uuid']/text())">
-                        <xsl:value-of select="normalize-space(./data[@field='gov_uuid']/text())"/>
+                    <xsl:when test="$gov_uuid!=''">
+                        <xsl:value-of select="$gov_uuid"/>
                     </xsl:when>
                     <xsl:otherwise>
                         <xsl:value-of select="./@uuid" />
@@ -223,28 +233,28 @@
     <!-- ****************************************************************** -->
     <!-- Addresses -->
     <xsl:template name="Addresses">
-        <xsl:variable name="address" select="./data[@field='address']"/>
-        <xsl:variable name="city" select="./data[@field='city']"/>
-        <xsl:variable name="postcode" select="./data[@field='postcode']"/>
-        <xsl:if test="$city/text()!=''">
+        <xsl:variable name="address" select="./reference[@field='location_id']/@address"/>
+        <xsl:variable name="town" select="./data[@field='town']/text()"/>
+        <xsl:variable name="postcode" select="./reference[@field='location_id']/@postcode"/>
+        <xsl:if test="$town!=''">
             <xpil:Addresses>
                 <xal:Address>
-                    <xsl:if test="$address/text()!=''">
+                    <xsl:if test="$address!=''">
                         <xal:FreeTextAddress>
                             <xal:AddressLine>
-                                <xsl:value-of select="$address/text()"/>
+                                <xsl:value-of select="$address"/>
                             </xal:AddressLine>
                         </xal:FreeTextAddress>
                     </xsl:if>
                     <xal:Locality xal:Type="town">
                         <xal:NameElement xal:NameType="Name">
-                            <xsl:value-of select="$city/text()"/>
+                            <xsl:value-of select="$town"/>
                         </xal:NameElement>
                     </xal:Locality>
-                    <xsl:if test="$postcode/text()!=''">
+                    <xsl:if test="$postcode!=''">
                         <xal:PostCode>
                             <xal:Identifier>
-                                <xsl:value-of select="$postcode/text()"/>
+                                <xsl:value-of select="$postcode"/>
                             </xal:Identifier>
                         </xal:PostCode>
                     </xsl:if>
@@ -258,7 +268,7 @@
     <!-- @todo: export broken down by bed type -->
     <xsl:template name="BedCapacityStatus">
         <have:HospitalBedCapacityStatus>
-            <xsl:for-each select="./resource[@name='hms_bed_capacity']">
+            <xsl:for-each select="./resource[@name='med_bed_capacity']">
                 <have:BedCapacity>
                     <have:BedType>
                         <xsl:choose>
@@ -295,14 +305,14 @@
     <!-- ****************************************************************** -->
     <!-- Service Coverage -->
     <xsl:template name="ServiceCoverageStatus">
-        <xsl:apply-templates select="./resource[@name='hms_services']"/>
+        <xsl:apply-templates select="./resource[@name='med_hospital_services']"/>
     </xsl:template>
 
     <!-- ****************************************************************** -->
     <!-- Activites 24hrs -->
     <!-- @todo: check for modification date - current? -->
     <xsl:template name="Activity24Hr">
-        <xsl:for-each select="./resource[@name='hms_activity']">
+        <xsl:for-each select="./resource[@name='med_hospital_activity']">
             <xsl:sort select="./data[@field='date']" order="descending"/>
             <xsl:if test="position()=1">
                 <have:Activity24Hr>
@@ -325,7 +335,7 @@
     <!-- Resource Information -->
     <xsl:template name="HospitalResourceStatus">
         <have:HospitalResourceStatus>
-            <xsl:apply-templates select="resource[@name='hms_status']"
+            <xsl:apply-templates select="resource[@name='med_hospital_status']"
                                  mode="FacilityOperations"/>
 
             <xsl:if test="./data[@field='doctors']/text()">
@@ -350,14 +360,14 @@
             </xsl:if>
 
             <!--
-            <xsl:if test="./resource[@name='hms_ctc_capability']/data[@field='ctc']/@value='True'">
+            <xsl:if test="./resource[@name='med_ctc_capability']/data[@field='ctc']/@value='True'">
                 <have:ResourceInformationText>
                     <xsl:text>CTC Information: </xsl:text>
                 </have:ResourceInformationText>
             </xsl:if>
             -->
 
-            <xsl:apply-templates select="./resource[@name='hms_shortage']"/>
+            <xsl:apply-templates select="./resource[@name='med_hospital_shortage']"/>
         </have:HospitalResourceStatus>
     </xsl:template>
 
@@ -380,7 +390,7 @@
 
     <!-- Emergency Department Status -->
 
-    <xsl:template match="resource[@name='hms_status']" mode="EmergencyDeptStatus">
+    <xsl:template match="resource[@name='med_hospital_status']" mode="EmergencyDeptStatus">
         <have:EmergencyDepartmentStatus>
             <have:EMSTraffic>
                 <have:EMSTrafficStatus>
@@ -410,7 +420,7 @@
 
     <!-- Facility Status -->
 
-    <xsl:template match="resource[@name='hms_status']" mode="FacilityStatus">
+    <xsl:template match="resource[@name='med_hospital_status']" mode="FacilityStatus">
         <have:FacilityStatus>
             <xsl:choose>
                 <xsl:when test="./data[@field='facility_status']/@value='1'">
@@ -509,7 +519,7 @@
 
     <!-- Facility operations -->
 
-    <xsl:template match="resource[@name='hms_status']" mode="FacilityOperations">
+    <xsl:template match="resource[@name='med_hospital_status']" mode="FacilityOperations">
         <have:FacilityOperations>
             <xsl:call-template name="ResourceStatusOptions">
                 <xsl:with-param name="value" select="./data[@field='facility_operations']/@value"/>
@@ -529,7 +539,7 @@
 
     <!-- ****************************************************************** -->
     <!-- Helper for Comments -->
-    <xsl:template match="resource[@name='hms_shortage']">
+    <xsl:template match="resource[@name='med_hospital_shortage']">
         <xsl:if test="./data[@field='status']/@value='1' or ./data[@field='status']/@value='2'">
             <have:CommentText>
                 <xsl:text>[Priority: </xsl:text>
@@ -547,7 +557,7 @@
 
     <!-- ****************************************************************** -->
     <!-- Service Coverage Status -->
-    <xsl:template match="resource[@name='hms_services']">
+    <xsl:template match="resource[@name='med_hospital_services']">
         <have:ServiceCoverageStatus>
             <xsl:if test="starts-with(./data[@field='tran']/text(), 'T') or
                           starts-with(./data[@field='tair']/text(), 'T')">

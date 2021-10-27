@@ -271,7 +271,7 @@ def config(settings):
         #    restricted = True,
         #    module_type = 10
         #)),
-        #("hms", Storage(
+        #("med", Storage(
         #    name_nice = T("Hospitals"),
         #    #description = "Helps to monitor status of hospitals",
         #    restricted = True,

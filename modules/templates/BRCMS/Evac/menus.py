@@ -52,9 +52,9 @@ class S3MainMenu(default.S3MainMenu):
                 MM("ToDo", c="project", f="task"),
                 MM("More", link=False)(
                     MM("Accommodation", c="cr", f="shelter"),
-                    MM("Financial Facilities", c="org", f="facility"),
+                    MM("Finances", c="fin", f="index"),
                     MM("Flights", c="transport", f="flight"),
-                    MM("Medical", c="hms", f="hospital"),
+                    MM("Medical", c="med", f="index"),
                     MM("Organizations", c="org", f="organisation"),
                     MM("Security", c="event", f="incident_report"),
                     MM("Staff", c="hrm", f="staff"),
@@ -299,26 +299,61 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return self.security()
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def fin():
+        """ Finances """
+
+        ADMIN = current.auth.get_system_roles().ADMIN
+
+        return M(c="fin")(
+                    M("Banks", f="bank")(
+                        M("Create", m="create"),
+                        M("Map", m="map"),
+                        ),
+                    M("Brokers", f="broker")(
+                        M("Create", m="create"),
+                        M("Map", m="map"),
+                        ),
+                    M("Administration", link=False, restrict=ADMIN)(
+                        M("Bank Services", f="bank_service"),
+                        ),
+                    )
+
+    # -------------------------------------------------------------------------
     def gis(self):
         """ Maps """
 
-        if current.function == "route":
+        if current.request.function == "route":
             return self.security()
         else:
             return super(S3OptionsMenu, self).gis()
 
     # -------------------------------------------------------------------------
+    def hrm(self):
+        """ HRM / Human Resources Management """
+
+        if current.request.function == "skill":
+            return self.med()
+
+        return M(c="hrm")(
+                    M("Staff", f="staff")(
+                        # Always create via User
+                        #M("Create", m="create"),
+                        ),
+                    )
+
+    # -------------------------------------------------------------------------
     @staticmethod
-    def hms():
+    def med():
         """ Medical """
 
         ADMIN = current.auth.get_system_roles().ADMIN
 
-        return M(c="hms")(
+        return M(c="med")(
                     M("Medical Facilities", f="hospital", m="summary")(
                         M("Create", m="create"),
                         ),
-                    M("Medical Personnel", f="person")(
+                    M("Medical Personnel", f="contact")(
                         M("Create", m="create"),
                         ),
                     M("Pharmacies", f="pharmacy")(
@@ -352,29 +387,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #M("Facility Types", f="facility_type"),
                         M("Organization Types", f="organisation_type"),
                         )
-                    )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def hrm():
-        """ HRM / Human Resources Management """
-
-        #settings = current.deployment_settings
-
-        #teams = settings.get_hrm_teams()
-        #use_teams = lambda i: teams
-
-        return M(c="hrm")(
-                    M("Staff", f="staff")( # settings.get_hrm_staff_label()
-                        # Always create via User
-                        #M("Create", m="create"),
-                        ),
-                    #M(teams, f="group", check=use_teams)(
-                    #    M("Create", m="create"),
-                    #    ),
-                    #M("Job Titles", f="job_title")(
-                    #    M("Create", m="create"),
-                    #    ),
                     )
 
     # -------------------------------------------------------------------------
@@ -428,11 +440,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                         M("Map", m="map"),
                         ),
-                    M("Flights", f="flight")(
-                        M("Create", m="create"),
-                        M("Map", m="map"),
-                        ),
                     M("Airplane Types", f="airplane")(
+                        M("Create", m="create"),
+                        ),
+                    M("Flights", f="flight")(
                         M("Create", m="create"),
                         M("Map", m="map"),
                         ),
