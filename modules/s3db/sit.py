@@ -59,11 +59,7 @@ class SituationModel(S3Model):
         # ---------------------------------------------------------------------
         # Situation Super-Entity
         #
-        situation_types = Storage(# @ToDo: Deprecate
-                                  #irs_incident = T("Incident"),
-                                  rms_req = T("Request"),
-                                  pr_presence = T("Presence"),
-                                  )
+        situation_types = {} # This can be an empty list as sit_situation is never exposed to end-users {"pr_presence": T("Presence"),}
 
         tablename = "sit_situation"
         super_entity(tablename, "sit_id", situation_types,
@@ -82,14 +78,15 @@ class SituationModel(S3Model):
         #
         # Use:
         #   - add a field with super_link("track_id", "sit_trackable")
-        #   - add as super-entity in configure (super_entity=s3db.sit_trackable)
+        #   - add as super-entity in configure(super_entity = s3db.sit_trackable)
         #
-        trackable_types = Storage(asset_asset = T("Asset"),
-                                  dvi_body = T("Dead Body"),
-                                  event_resource = T("Event Resource"),
-                                  hrm_human_resource = T("Human Resource"),
-                                  pr_person = T("Person"),
-                                  )
+        #trackable_types = Storage(asset_asset = T("Asset"),
+        #                          dvi_body = T("Dead Body"),
+        #                          event_resource = T("Event Resource"),
+        #                          hrm_human_resource = T("Human Resource"),
+        #                          pr_person = T("Person"),
+        #                          )
+        trackable_types = {} # This can be an empty list as sit_trackable is never exposed to end-users
 
         tablename = "sit_trackable"
         super_entity(tablename, "track_id",
@@ -124,12 +121,11 @@ class SituationModel(S3Model):
                           s3_datetime("timestmp",
                                       label = T("Date/Time"),
                                       ),
-                          location_id(
-                            widget = S3LocationSelector(show_address = False,
-                                                        show_postcode = False,
-                                                        show_latlon = True,
-                                                        ),
-                            ),
+                          location_id(widget = S3LocationSelector(show_address = False,
+                                                                  show_postcode = False,
+                                                                  show_latlon = True,
+                                                                  ),
+                                      ),
                           Field("direction",
                                 label = T("Direction"),
                                 ),
@@ -162,7 +158,7 @@ class SituationModel(S3Model):
 
         s3db = current.s3db
         tracker = S3Tracker()(s3db[tablename], row[tablename].id)
-        location = tracker.get_location(as_rows=True).first()
+        location = tracker.get_location(as_rows = True).first()
 
         return s3db.gis_location_represent(None, row=location)
 

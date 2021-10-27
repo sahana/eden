@@ -66,6 +66,10 @@ class VehicleModel(S3Model):
         # ---------------------------------------------------------------------
         # Vehicle Types
         #
+        # @ToDo: Deprecate this.
+        #         These attributes are all in supply_item & inv_package
+        #           => link supply_items to packages?
+        #
         tablename = "vehicle_vehicle_type"
         define_table(tablename,
                      # @ToDo: deployment_setting for use of Code

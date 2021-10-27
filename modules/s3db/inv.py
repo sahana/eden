@@ -3724,7 +3724,7 @@ class InventoryRequisitionModel(S3Model):
             req_status = record.req_status
             if req_status is not None:
                 status_requires = table.req_status.requires
-                if status_requires.has_attr("other"):
+                if hasattr(status_requires, "other"):
                     status_requires = status_requires.other
                 opts = [opt[0] for opt in status_requires.options()]
                 if str(REQ_STATUS_CANCEL) in opts:

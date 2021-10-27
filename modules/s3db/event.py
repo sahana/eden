@@ -1712,7 +1712,8 @@ class EventAssetModel(S3Model):
             msg_record_created = T("Asset added"),
             msg_record_modified = T("Asset updated"),
             msg_record_deleted = T("Asset removed"),
-            msg_list_empty = T("No Assets currently registered for this incident"))
+            msg_list_empty = T("No Assets currently registered for this incident"),
+            )
 
         if current.deployment_settings.has_module("budget"):
             crud_form = S3SQLCustomForm("incident_id",
