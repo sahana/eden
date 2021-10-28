@@ -207,6 +207,15 @@ class BRCaseModel(S3Model):
         #       thereby linking the person record to the registry
         #
 
+        # Priority options
+        priority_opts = [#(0, T("Urgent")),
+                         (1, T("High")),
+                         (2, T("Normal")),
+                         (3, T("Low")),
+                         ]
+        if settings.get_br_case_activity_urgent_option():
+            priority_opts.insert(0, (0, T("Urgent")))
+
         # Case assignment options
         if settings.get_br_case_global_default_org():
             default_organisation = settings.get_org_default_organisation()
@@ -240,6 +249,23 @@ class BRCaseModel(S3Model):
                                                 readable = case_manager,
                                                 writable = case_manager,
                                                 ),
+
+                     # Priority
+                     # - not in the default crud_form
+                     Field("priority", "integer",
+                           default = 2, # normal
+                           label = T("Priority"),
+                           represent = S3PriorityRepresent(priority_opts,
+                                                           {0: "red",
+                                                            1: "blue",
+                                                            2: "lightblue",
+                                                            3: "grey",
+                                                            }).represent,
+                           requires = IS_IN_SET(priority_opts,
+                                                sort = False,
+                                                zero = None,
+                                                ),
+                           ),
 
                      # The beneficiary
                      self.pr_person_id(ondelete = "CASCADE",

@@ -1188,6 +1188,7 @@ def config(settings):
             crud_form = S3SQLCustomForm("case.date",
                                         "case.organisation_id",
                                         "case.human_resource_id",
+                                        "case.priority",
                                         "case.status_id",
                                         "pe_label",
                                         "first_name",
@@ -1221,8 +1222,21 @@ def config(settings):
                                         postprocess = pr_person_postprocess,
                                         )
 
+            list_fields = ["case.priority",
+                           "pe_label",
+                           "first_name",
+                           "middle_name",
+                           "last_name",
+                           "gender",
+                           "date_of_birth",
+                           "case.status_id",
+                           "case.human_resource_id",
+                           "case.organisation_id",
+                           ]
+
             s3db.configure(r.tablename,
                            crud_form = crud_form,
+                           list_fields = list_fields,
                            )
 
             return result

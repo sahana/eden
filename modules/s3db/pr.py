@@ -2556,7 +2556,8 @@ class PersonGroupModel(S3Model):
             msg_record_created = T("Group added"),
             msg_record_modified = T("Group updated"),
             msg_record_deleted = T("Group deleted"),
-            msg_list_empty = T("No Groups currently registered"))
+            msg_list_empty = T("No Groups currently registered"),
+            )
 
         # CRUD Strings
         mailing_list_crud_strings = Storage(
@@ -2569,11 +2570,12 @@ class PersonGroupModel(S3Model):
             msg_record_created = T("Mailing list added"),
             msg_record_modified = T("Mailing list updated"),
             msg_record_deleted = T("Mailing list deleted"),
-            msg_list_empty = T("No Mailing List currently established"))
+            msg_list_empty = T("No Mailing List currently established"),
+            )
 
         # Resource configuration
         configure(tablename,
-                  deduplicate = S3Duplicate(ignore_deleted=True),
+                  deduplicate = S3Duplicate(ignore_deleted = True),
                   extra = "description",
                   main = "name",
                   super_entity = ("doc_entity",
@@ -2810,7 +2812,8 @@ class PersonGroupModel(S3Model):
                 msg_record_created = T("Added to Group"),
                 msg_record_modified = T("Membership updated"),
                 msg_record_deleted = T("Removed from Group"),
-                msg_list_empty = T("Not yet a Member of any Group"))
+                msg_list_empty = T("Not yet a Member of any Group"),
+                )
 
         elif function in ("group", "group_membership"):
             crud_strings[tablename] = Storage(
@@ -2823,7 +2826,8 @@ class PersonGroupModel(S3Model):
                 msg_record_created = T("Person added to Group"),
                 msg_record_modified = T("Membership updated"),
                 msg_record_deleted = T("Person removed from Group"),
-                msg_list_empty = T("This Group has no Members yet"))
+                msg_list_empty = T("This Group has no Members yet"),
+                )
 
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
