@@ -33,12 +33,14 @@ def person():
     """ Case File: RESTful CRUD Controller """
 
     # Set the default case status
-    s3db.br_case_default_status()
+    from s3db.br import br_case_default_status, br_terminology
+    br_case_default_status()
 
+    from s3db.pr import pr_Contacts
     # Set contacts-method for tab
     s3db.set_method("pr", "person",
                     method = "contacts",
-                    action = s3db.pr_Contacts,
+                    action = pr_Contacts,
                     )
 
     # ID Card Export
@@ -56,7 +58,7 @@ def person():
         resource = r.resource
         resource.add_filter(FS("case.id") != None)
 
-        labels = s3db.br_terminology()
+        labels = br_terminology()
         CASES = labels.CASES
 
         human_resource_id = auth.s3_logged_in_human_resource()
@@ -130,7 +132,8 @@ def person():
                         )
 
         # Update resource configuration for perspective
-        resource.configure(anonymize = s3db.br_person_anonymize(),
+        from s3db.br import br_person_anonymize
+        resource.configure(anonymize = br_person_anonymize(),
                            deletable = False,
                            insertable = insertable,
                            )
@@ -140,7 +143,7 @@ def person():
             if r.representation == "card":
                 # Configure ID card layout
                 resource.configure(pdf_card_layout = id_card_layout,
-                                   #pdf_card_pagesize="A4",
+                                   #pdf_card_pagesize = "A4",
                                    )
 
             if not r.id and not r.component:
@@ -153,12 +156,13 @@ def person():
         if not r.component:
 
             # Module-specific field and form configuration
-            from s3 import S3SQLInlineComponent
+            from s3 import S3SQLCustomForm, S3SQLInlineComponent
 
             # Adapt fields to module context
+            from s3db.br import br_case_read_orgs
             table = resource.table
             ctable = s3db.br_case
-            multiple_orgs = s3db.br_case_read_orgs()[0]
+            multiple_orgs = br_case_read_orgs()[0]
 
             # Configure pe_label
             field = table.pe_label
@@ -276,13 +280,14 @@ def person():
                 list_fields.insert(-2, "case.organisation_id")
 
             # Insert name fields in name-format order
+            from s3 import StringTemplateParser
             NAMES = ("first_name", "middle_name", "last_name")
-            keys = s3base.StringTemplateParser.keys(settings.get_pr_name_format())
+            keys = StringTemplateParser.keys(settings.get_pr_name_format())
             name_fields = [fn for fn in keys if fn in NAMES]
             crud_fields[5:5] = name_fields
             list_fields[1:1] = name_fields
 
-            resource.configure(crud_form = s3base.S3SQLCustomForm(*crud_fields),
+            resource.configure(crud_form = S3SQLCustomForm(*crud_fields),
                                list_fields = list_fields,
                                )
 
@@ -320,9 +325,10 @@ def person():
                 resource.configure(filter_widgets = filter_widgets)
 
             # Autocomplete search-method
+            from s3db.pr import pr_PersonSearchAutocomplete
             s3db.set_method("pr", "person",
                             method = "search_ac",
-                            action = s3db.pr_PersonSearchAutocomplete(name_fields),
+                            action = pr_PersonSearchAutocomplete(name_fields),
                             )
 
         elif r.component_name == "case_activity":
@@ -335,7 +341,8 @@ def person():
 
             # Default status
             if settings.get_br_case_activity_status():
-                s3db.br_case_activity_default_status()
+                from s3db.br import br_case_activity_default_status
+                br_case_activity_default_status()
 
             # Default human_resource_id
             if human_resource_id:
@@ -357,7 +364,8 @@ def person():
             org_specific_needs = settings.get_br_case_activity_need() and \
                                  settings.get_br_needs_org_specific()
             if org_specific_needs:
-                root_org = s3db.br_case_root_org(r.id)
+                from s3db.br import br_case_root_org
+                root_org = br_case_root_org(r.id)
                 if not root_org:
                     root_org = auth.root_org()
 
@@ -378,7 +386,8 @@ def person():
                 if settings.get_br_assistance_themes() and root_org:
                     # Limit selectable themes to the case root org
                     field = mtable.theme_ids
-                    dbset = s3db.br_org_assistance_themes(root_org)
+                    from s3db.br import br_org_assistance_themes
+                    dbset = br_org_assistance_themes(root_org)
                     field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "br_assistance_theme.id",
                                                            field.represent,
                                                            multiple = True,
@@ -415,11 +424,13 @@ def person():
                                             )
 
             # Filter theme_id selectors to case root org
-            root_org = s3db.br_case_root_org(r.id)
+            from s3db.br import br_case_root_org
+            root_org = br_case_root_org(r.id)
             if not root_org:
                 root_org = auth.root_org()
             if root_org:
-                dbset = s3db.br_org_assistance_themes(root_org)
+                from s3db.br import br_org_assistance_themes
+                dbset = br_org_assistance_themes(root_org)
                 field = mtable.theme_ids
                 field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "br_assistance_theme.id",
                                                        field.represent,
@@ -439,9 +450,11 @@ def person():
         elif r.component_name == "br_note":
 
             # Represent the note author by their name (rather than email)
+            from s3db.auth import auth_UserRepresent
             ntable = r.component.table
-            ntable.modified_by.represent = s3db.auth_UserRepresent(show_email = False,
-                                                                   show_link = False)
+            ntable.modified_by.represent = auth_UserRepresent(show_email = False,
+                                                              show_link = False,
+                                                              )
 
         return True
     s3.prep = prep
@@ -458,7 +471,9 @@ def person():
 
             # Anonymize-button
             from s3 import S3AnonymizeWidget
-            anonymize = S3AnonymizeWidget.widget(r, _class="action-btn anonymize-btn")
+            anonymize = S3AnonymizeWidget.widget(r,
+                                                 _class = "action-btn anonymize-btn",
+                                                 )
 
             # ID-Card button
             if id_card_export:
@@ -480,10 +495,10 @@ def person():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller("pr", "person",
-                                rheader = s3db.br_rheader,
-                                )
-    return output
+    from s3db.br import br_rheader
+    return s3_rest_controller("pr", "person",
+                              rheader = br_rheader,
+                              )
 
 # -----------------------------------------------------------------------------
 def person_search():
@@ -503,15 +518,17 @@ def person_search():
         r.resource.add_filter(query)
 
         # Auto-detect name parts from current name format
+        from s3 import StringTemplateParser
         NAMES = ("first_name", "middle_name", "last_name")
-        keys = s3base.StringTemplateParser.keys(settings.get_pr_name_format())
+        keys = StringTemplateParser.keys(settings.get_pr_name_format())
         name_fields = [fn for fn in keys if fn in NAMES]
 
         # Autocomplete search-method including pe_label
+        from s3db.pr import pr_PersonSearchAutocomplete
         search_fields = tuple(name_fields) + ("pe_label",)
         s3db.set_method("pr", "person",
                         method = "search_ac",
-                        action = s3db.pr_PersonSearchAutocomplete(search_fields),
+                        action = pr_PersonSearchAutocomplete(search_fields),
                         )
         return True
     s3.prep = prep
@@ -540,9 +557,10 @@ def group_membership():
             if vtablename == "pr_person":
 
                 # Set contacts-method to retain the tab
+                from s3db.pr import pr_Contacts
                 s3db.set_method("pr", "person",
                                 method = "contacts",
-                                action = s3db.pr_Contacts,
+                                action = pr_Contacts,
                                 )
 
                 # Get all group_ids with this person_id
@@ -552,7 +570,7 @@ def group_membership():
                         (gtable.group_type == 7) & \
                         (table.deleted != True)
                 rows = db(query).select(table.group_id,
-                                        join=join,
+                                        join = join,
                                         )
                 group_ids = set(row.group_id for row in rows)
                 # Hide the link for this person (to prevent changes/deletion)
@@ -587,10 +605,10 @@ def group_membership():
             field = table.role_id
             field.readable = field.writable = True
             field.label = ROLE
-            field.comment = DIV(_class="tooltip",
-                                _title="%s|%s" % (T("Role"),
-                                                  T("The role of the person within the family"),
-                                                  ))
+            field.comment = DIV(_class = "tooltip",
+                                _title = "%s|%s" % (T("Role"),
+                                                    T("The role of the person within the family"),
+                                                    ))
             field.requires = IS_EMPTY_OR(
                                 IS_ONE_OF(db, "pr_group_member_role.id",
                                           field.represent,
@@ -651,7 +669,7 @@ def group_membership():
                 msg_record_created = T("Family Member added"),
                 msg_record_modified = T("Family Member updated"),
                 msg_record_deleted = T("Family Member removed"),
-                msg_list_empty = T("No Family Members currently registered")
+                msg_list_empty = T("No Family Members currently registered"),
                 )
 
         # Do not allow update of person_id
@@ -668,8 +686,9 @@ def group_membership():
     settings.pr.request_home_phone = False
     settings.hrm.email_required = False
 
+    from s3db.br import br_rheader
     return s3_rest_controller("pr", "group_membership",
-                              rheader = s3db.br_rheader,
+                              rheader = br_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -704,9 +723,10 @@ def document():
                 r.unauthorised()
 
             # Set contacts-method to retain the tab
+            from s3db.pr import pr_Contacts
             s3db.set_method("pr", "person",
                             method = "contacts",
-                            action = s3db.pr_Contacts,
+                            action = pr_Contacts,
                             )
 
             include_activity_docs = settings.get_br_case_include_activity_docs()
@@ -795,8 +815,9 @@ def document():
         if include_activity_docs or include_group_docs:
 
             # Make doc_id readable and visible in table
+            from s3db.br import br_DocEntityRepresent
             field = table.doc_id
-            field.represent = s3db.br_DocEntityRepresent()
+            field.represent = br_DocEntityRepresent()
             field.label = T("Attachment of")
             field.readable = True
             list_fields.insert(1, (T("Attachment of"), "doc_id"))
@@ -829,8 +850,9 @@ def document():
         return True
     s3.prep = prep
 
+    from s3db.br import br_rheader
     return s3_rest_controller("doc", "document",
-                              rheader = s3db.br_rheader,
+                              rheader = br_rheader,
                               )
 
 # =============================================================================

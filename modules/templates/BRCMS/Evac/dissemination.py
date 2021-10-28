@@ -27,7 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("DisseminationFinBrokerModel",
+__all__ = ("CaseActivityRouteModel",
+           "CaseActivityTaskModel",
+           "DisseminationFinBrokerModel",
            "DisseminationIncidentReportModel",
            "DisseminationInvItemModel",
            "DisseminationMedContactModel",
@@ -70,6 +72,62 @@ WORKING_GROUPS = {"cr_shelter": "LOGISTICS",
                   "security_zone": "SECURITY",
                   "transport_flight": "FLIGHTS",
                   }
+
+# =============================================================================
+class CaseActivityTaskModel(S3Model):
+
+    names = ("dissemination_case_activity_task",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Link Case Activities to Tasks
+        #
+        tablename = "dissemination_case_activity_task"
+        self.define_table(tablename,
+                          self.br_case_activity_id(empty = False,
+                                                   #ondelete = "CASCADE",
+                                                   ),
+                          self.project_task_id(empty = False,
+                                               #ondelete = "CASCADE",
+                                               ),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class CaseActivityRouteModel(S3Model):
+
+    names = ("dissemination_case_activity_route",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Link Cases to Routes
+        #
+        tablename = "dissemination_case_activity_route"
+        self.define_table(tablename,
+                          self.br_case_activity_id(empty = False,
+                                                   #ondelete = "CASCADE",
+                                                   ),
+                          self.gis_route_id(empty = False,
+                                            #ondelete = "CASCADE",
+                                            ),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class DisseminationFinBrokerModel(S3Model):

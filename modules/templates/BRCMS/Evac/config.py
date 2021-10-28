@@ -122,15 +122,51 @@ def config(settings):
 
         from s3dal import original_tablename
 
-        #db = current.db
-        #s3db = current.s3db
-
         tablename = original_tablename(table)
 
-        if tablename == "org_organisation":
-            # Realm is own PE ID
+        if tablename == "br_case":
+            # Has a unique pr_realm with appropriate multiple inheritance
+            # - handled by crud_form.postprocess
+            return None
+        elif tablename == "br_activity":
+            # Has a unique pr_realm with appropriate multiple inheritance
+            # - handled by onaccept
+            return None
+        elif tablename == "pr_person":
+            # Is this a Case or Staff?
+            db = current.db
+            s3db = current.s3db
+            person_id = row.id
+
+            # Try Case 1st (we expect more of these)
+            ctable = s3db.br_case
+            case = db(ctable.person_id == person_id).select(ctable.realm_entity,
+                                                            limitby = (0, 1),
+                                                            ).first()
+            if case:
+                # => Inherit from Case
+                return case.realm_entity
+
+            # Try Staff 2nd (we expect less of these)
+            htable = s3db.hrm_human_resource
+            otable = s3db.org_organisation
+            query = (htable.person_id == person_id) & \
+                    (htable.organisation_id == otable.id)
+            org = db(query).select(otable.pe_id,
+                                   limitby = (0, 1),
+                                   ).first()
+            if org:
+                # => Inherit from Org
+                return org.pe_id
+
+            # Hmm, what kind of person could this be?
+            current.log.warning("Person %s is neither Case nor Staff...using default rules" % person_id)
             # => use Default Rules
             return 0
+        elif tablename == "gis_route":
+            # Inherits realm from the Case
+            # @ToDo
+            pass
         elif tablename in ("fin_bank",
                            "med_hospital",
                            "med_pharmacy",
@@ -150,24 +186,19 @@ def config(settings):
                            "transport_flight",
                            ):
             # Has a unique pr_realm with appropriate multiple inheritance
-            # => Leave this to disseminate
+            # => Leave this to disseminate (called from crud_form.postprocess)
             return None
-        elif tablename == "pr_person":
-            # Staff?
-            # Case?
-            pass
-        elif tablename == "br_case":
-            # Has a unique pr_realm with appropriate multiple inheritance
-            pass
-        elif tablename == "gis_route":
-            # Inherits realm from the Case
-            pass
-        elif tablename == "br_activity":
-            # Has a unique pr_realm with appropriate multiple inheritance
-            pass
         elif tablename == "transport_flight_manifest":
             # Inherit from passenger
-            pass
+            ptable = current.s3db.pr_person
+            person = current.db(ptable.id == row.person_id).select(ptable.realm_entity,
+                                                                   limitby = (0, 1),
+                                                                   ).first()
+            return person.realm_entity
+        elif tablename == "org_organisation":
+            # Realm is own PE ID
+            # => use Default Rules
+            return 0
 
         # Use default rules
         realm_entity = 0
@@ -505,102 +536,11 @@ def config(settings):
     settings.auth.remove_role = auth_remove_role
 
     # =========================================================================
-    def org_organisation_create_onaccept(form):
+    def br_case_activity_onaccept(form):
         """
-            Create an RO & RW Forum for the Org Admin to be granted permissions to
-            Create a RO & RW Forum for each Working Group for the Working Group members of this Organisation to be granted permission to
-            Have the WG Forums inherit from the Org-level Forums
-        """
-
-        from s3db.pr import pr_add_affiliation
-
-        db = current.db
-        s3db = current.s3db
-
-        organisation_id = form.vars.id
-
-        ftable = s3db.pr_forum
-        update_super = s3db.update_super
-
-        # Create the top-level RO Forum
-        uuid = "ORG_ADMIN_RO_%s" % organisation_id
-        forum_id = ftable.insert(name = uuid,
-                                 uuid = uuid,
-                                 organisation_id = organisation_id,
-                                 forum_type = 2,
-                                 )
-        record = Storage(id = forum_id)
-        update_super(ftable, record)
-        master_ro = record["pe_id"]
-
-        # Create the top-level RW Forum
-        uuid = "ORG_ADMIN_RW_%s" % organisation_id
-        forum_id = ftable.insert(name = uuid,
-                                 uuid = uuid,
-                                 organisation_id = organisation_id,
-                                 forum_type = 2,
-                                 )
-        record = Storage(id = forum_id)
-        update_super(ftable, record)
-        master_rw = record["pe_id"]
-
-        # Read all the top-level WG Forums
-        forums = db(ftable.uuid.belongs(WORKING_GROUPS)).select(ftable.uuid,
-                                                                ftable.pe_id,
-                                                                )
-        forums = {row.uuid: row.pe_id for row in forums}
-
-        for WG in WORKING_GROUPS:
-            # Create the WG RO Forum
-            uuid = "%s_RO_%s" % (WG,
-                                 organisation_id,
-                                 )
-            forum_id = ftable.insert(name = uuid,
-                                     uuid = uuid,
-                                     organisation_id = organisation_id,
-                                     forum_type = 2,
-                                     )
-            record = Storage(id = forum_id)
-            update_super(ftable, record)
-            org_wg_ro = record["pe_id"]
-
-            # Have the WG inherit from the top-level Org
-            pr_add_affiliation(master_ro, org_wg_ro, role="Realm Hierarchy")
-
-            # Have the top-level WG inherit from this
-            pr_add_affiliation(org_wg_ro, forums[WG], role="Realm Hierarchy")
-
-            # Create the WG RW Forum
-            uuid = "%s_RW_%s" % (WG,
-                                 organisation_id,
-                                 )
-            forum_id = ftable.insert(name = uuid,
-                                     uuid = uuid,
-                                     organisation_id = organisation_id,
-                                     forum_type = 2,
-                                     )
-            record = Storage(id = forum_id)
-            update_super(ftable, record)
-            org_wg_rw = record["pe_id"]
-
-            # Have the WG inherit from the top-level
-            pr_add_affiliation(master_rw, org_wg_rw, role="Realm Hierarchy")
-
-    # =========================================================================
-    def customise_org_organisation_resource(r, tablename):
-
-        current.s3db.add_custom_callback(tablename,
-                                         "create_onaccept",
-                                         org_organisation_create_onaccept,
-                                         )
-
-    settings.customise_org_organisation_resource = customise_org_organisation_resource
-
-    # =========================================================================
-    def br_case_onaccept(form):
-        """
-            Have a Realm for the Case
-            Ensure the correct Inheritance
+            Have a Realm for the Activity
+            - ensure the correct Inheritance
+            Create a Task for new Activities
         """
 
         from s3db.pr import pr_add_affiliation
@@ -608,17 +548,24 @@ def config(settings):
         db = current.db
         s3db = current.s3db
 
-        case_id = form.vars.id
+        activity_id = form.vars.id
 
         # @ToDo: complete
 
     # =========================================================================
+    def customise_br_case_activity_resource(r, tablename):
+
+        s3db.add_custom_callback(tablename,
+                                 "onaccept",
+                                 br_case_activity_onaccept,
+                                 )
+
+    settings.customise_br_case_activity_resource = customise_br_case_activity_resource
+
+    # =========================================================================
     def customise_br_case_resource(r, tablename):
 
-        current.s3db.add_custom_callback(tablename,
-                                         "onaccept",
-                                         br_case_onaccept,
-                                         )
+        current.s3db.br_case.household_size.label = T("Group Size")
 
     settings.customise_br_case_resource = customise_br_case_resource
 
@@ -721,6 +668,16 @@ def config(settings):
                        )
 
     settings.customise_fin_broker_resource = customise_fin_broker_resource
+
+    # =========================================================================
+    def customise_hrm_human_resource_resource(r, tablename):
+
+        current.s3db.configure(tablename,
+                               # Always create via User Account
+                               insertable = False,
+                               )
+
+    settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
     # =========================================================================
     def customise_inv_inv_item_resource(r, tablename):
@@ -868,6 +825,303 @@ def config(settings):
                        )
 
     settings.customise_med_contact_resource = customise_med_contact_resource
+
+    # =========================================================================
+    def org_organisation_create_onaccept(form):
+        """
+            Create an RO & RW Forum for the Org Admin to be granted permissions to
+            Create a RO & RW Forum for each Working Group for the Working Group members of this Organisation to be granted permission to
+            Have the WG Forums inherit from the Org-level Forums
+        """
+
+        from s3db.pr import pr_add_affiliation
+
+        db = current.db
+        s3db = current.s3db
+
+        organisation_id = form.vars.id
+
+        ftable = s3db.pr_forum
+        update_super = s3db.update_super
+
+        # Create the top-level RO Forum
+        uuid = "ORG_ADMIN_RO_%s" % organisation_id
+        forum_id = ftable.insert(name = uuid,
+                                 uuid = uuid,
+                                 organisation_id = organisation_id,
+                                 forum_type = 2,
+                                 )
+        record = Storage(id = forum_id)
+        update_super(ftable, record)
+        master_ro = record["pe_id"]
+
+        # Create the top-level RW Forum
+        uuid = "ORG_ADMIN_RW_%s" % organisation_id
+        forum_id = ftable.insert(name = uuid,
+                                 uuid = uuid,
+                                 organisation_id = organisation_id,
+                                 forum_type = 2,
+                                 )
+        record = Storage(id = forum_id)
+        update_super(ftable, record)
+        master_rw = record["pe_id"]
+
+        # Read all the top-level WG Forums
+        forums = db(ftable.uuid.belongs(WORKING_GROUPS)).select(ftable.uuid,
+                                                                ftable.pe_id,
+                                                                )
+        forums = {row.uuid: row.pe_id for row in forums}
+
+        for WG in WORKING_GROUPS:
+            # Create the WG RO Forum
+            uuid = "%s_RO_%s" % (WG,
+                                 organisation_id,
+                                 )
+            forum_id = ftable.insert(name = uuid,
+                                     uuid = uuid,
+                                     organisation_id = organisation_id,
+                                     forum_type = 2,
+                                     )
+            record = Storage(id = forum_id)
+            update_super(ftable, record)
+            org_wg_ro = record["pe_id"]
+
+            # Have the WG inherit from the top-level Org
+            pr_add_affiliation(master_ro, org_wg_ro, role="Realm Hierarchy")
+
+            # Have the top-level WG inherit from this
+            pr_add_affiliation(org_wg_ro, forums[WG], role="Realm Hierarchy")
+
+            # Create the WG RW Forum
+            uuid = "%s_RW_%s" % (WG,
+                                 organisation_id,
+                                 )
+            forum_id = ftable.insert(name = uuid,
+                                     uuid = uuid,
+                                     organisation_id = organisation_id,
+                                     forum_type = 2,
+                                     )
+            record = Storage(id = forum_id)
+            update_super(ftable, record)
+            org_wg_rw = record["pe_id"]
+
+            # Have the WG inherit from the top-level
+            pr_add_affiliation(master_rw, org_wg_rw, role="Realm Hierarchy")
+
+    # =========================================================================
+    def customise_org_organisation_resource(r, tablename):
+
+        current.s3db.add_custom_callback(tablename,
+                                         "create_onaccept",
+                                         org_organisation_create_onaccept,
+                                         )
+
+    settings.customise_org_organisation_resource = customise_org_organisation_resource
+
+    # =========================================================================
+    def customise_org_organisation_controller(**attr):
+
+        attr["rheader"] = None
+
+        return attr
+
+    settings.customise_org_organisation_controller = customise_org_organisation_controller
+
+    # =========================================================================
+    def pr_person_postprocess(form):
+        """
+            Set the Correct Realm for the Case and then the Person
+        """
+
+        form_vars = form.vars
+        human_resource_id = form_vars.sub_case_human_resource_id
+        organisation_id = form_vars.sub_case_organisation_id
+
+        record = form.record
+        if record:
+            # Update form
+
+            # Have either the Case Manager or Organisation changed?
+            if human_resource_id == record.sub_case_human_resource_id and \
+               organisation_id == record.sub_case_organisation_id:
+                # No change
+                return
+
+            db = current.db
+            s3db = current.s3db
+
+            # Lookup Case
+            person_id = form_vars.id
+            ctable = s3db.br_case
+            case = db(ctable.person_id == person_id).select(ctable.id,
+                                                            ctable.realm_entity,
+                                                            limitby = (0, 1),
+                                                            ).first()
+
+            # Read current realm_entity
+            realm_entity = case.realm_entity
+
+            if realm_entity:
+                # Check it's a pr_realm record
+                petable = s3db.pr_pentity
+                pe = db(petable.pe_id == realm_entity).select(petable.instance_type,
+                                                              limitby = (0, 1)
+                                                              ).first()
+                if pe.instance_type == "pr_realm":
+                    # Set the person to use this for it's realm
+                    ptable = s3db.pr_person
+                    db(ptable.id == person_id).update_record(realm_entity = realm_entity)
+                else:
+                    current.log.debug("Disseminate: record %s in %s had a realm of type %s" % (record_id,
+                                                                                               tablename,
+                                                                                               pe.instance_type,
+                                                                                               ))
+                    realm_entity = None
+
+        else:
+            # Create form
+            db = current.db
+            s3db = current.s3db
+
+            # Lookup Case
+            person_id = form_vars.id
+            ctable = s3db.br_case
+            case = db(ctable.person_id == person_id).select(ctable.id,
+                                                            limitby = (0, 1),
+                                                            ).first()
+
+            realm_entity = None
+
+        if realm_entity:
+            # Delete all current affiliations
+            from s3db.pr import pr_remove_affiliation
+            pr_remove_affiliation(None, realm_entity)
+        else:
+            # Create a pr_realm record
+            realm_id = s3db.pr_realm.insert(name = "%s_%s" % ("br_case",
+                                                              case.id,
+                                                              ))
+            realm = Storage(id = realm_id)
+            s3db.update_super(rtable, realm)
+            realm_entity = realm["pe_id"]
+            # Set this Case to use this for it's realm
+            case.update_record(realm_entity = realm_entity)
+            # Set the person to use this for it's realm
+            ptable = s3db.pr_person
+            db(ptable.id == person_id).update_record(realm_entity = realm_entity)
+
+        # Set appropriate affiliations
+        from s3db.pr import pr_add_affiliation
+
+        # Org
+        otable = s3db.org_organisation
+        org = db(otable.id == organisation_id).select(otable.pe_id,
+                                                      limitby = (0, 1),
+                                                      ).first()
+        pr_add_affiliation(org.pe_id, realm_entity, role="Realm Hierarchy")
+
+        if human_resource_id:
+            # Case Manager
+            htable = s3db.hrm_human_resource
+            query = (htable.id == human_resource_id) & \
+                    (htable.person_id == ptable.id)
+            person = db(query).select(ptable.pe_id,
+                                      limitby = (0, 1),
+                                      ).first()
+            pr_add_affiliation(person.pe_id, realm_entity, role="Realm Hierarchy")
+
+    # =========================================================================
+    def customise_pr_person_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.component or r.controller == "hrm":
+                return
+
+            from s3 import S3SQLCustomForm, S3SQLInlineComponent
+
+            crud_form = S3SQLCustomForm("case.date",
+                                        "case.organisation_id",
+                                        "case.human_resource_id",
+                                        "case.status_id",
+                                        "pe_label",
+                                        "first_name",
+                                        "middle_name",
+                                        "last_name",
+                                        "person_details.nationality",
+                                        "date_of_birth",
+                                        "gender",
+                                        "person_details.marital_status",
+                                        "case.household_size",
+                                        S3SQLInlineComponent("address",
+                                                             label = T("Current Address"),
+                                                             fields = [("", "location_id")],
+                                                             filterby = {"field": "type",
+                                                                         "options": "1",
+                                                                         },
+                                                             link = False,
+                                                             multiple = False,
+                                                             ),
+                                        S3SQLInlineComponent("contact",
+                                                             fields = [("", "value")],
+                                                             filterby = {"field": "contact_method",
+                                                                         "options": "SMS",
+                                                                         },
+                                                             label = T("Mobile Phone"),
+                                                             multiple = False,
+                                                             name = "phone",
+                                                             ),
+                                        "case.comments",
+                                        "case.invalid",
+                                        postprocess = pr_person_postprocess,
+                                        )
+
+            current.s3db.configure(r.tablename,
+                                   crud_form = crud_form,
+                                   )
+
+            return result
+        s3.prep = prep
+
+        return attr
+
+    settings.customise_pr_person_controller = customise_pr_person_controller
+
+    # =========================================================================
+    def project_task_onaccept(form):
+        """
+            Have a Realm for the Task
+            - ensure the correct Inheritance
+            Update the Activity inheritances when Task is Assigned
+        """
+
+        from s3db.pr import pr_add_affiliation
+
+        db = current.db
+        s3db = current.s3db
+
+        task_id = form.vars.id
+
+        # @ToDo: complete
+
+    # =========================================================================
+    def customise_project_task_resource(r, tablename):
+
+        current.s3db.add_custom_callback(tablename,
+                                         "create_onaccept",
+                                         project_task_onaccept,
+                                         )
+
+    settings.customise_project_task_resource = customise_project_task_resource
 
     # =========================================================================
     def customise_security_checkpoint_resource(r, tablename):

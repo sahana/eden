@@ -1551,19 +1551,21 @@ class LocationRouteModel(S3Model):
 
         e.g. for Evacuation Routes (could then link it to a specific Hazard, or Risk)
 
-        @ToDo: Rdedraw Route location if a WayPoint is added/removed/reordered
+        @ToDo: Redraw Route location if a WayPoint is added/removed/reordered
         @ToDo: Set WayPoints to posn=0 if a new Route is drawn
         @ToDo: Custom Method to draw LineString with WayPoints visible & snap to them
         @ToDo: GPX Import/Export
     """
 
     names = ("gis_route",
+             "gis_route_id",
              "gis_waypoint",
              )
 
     def model(self):
 
         T = current.T
+        db = current.db
 
         location_id = self.gis_location_id
 
@@ -1606,6 +1608,20 @@ class LocationRouteModel(S3Model):
             msg_list_empty = T("No Routes currently defined"),
             )
 
+        represent = S3Represent(lookup = tablename)
+
+        route_id = S3ReusableField("route_id", "reference %s" % tablename,
+                                   label = T("Route"),
+                                   ondelete = "CASCADE",
+                                   represent = represent,
+                                   requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "%s.id" % tablename,
+                                                          represent,
+                                                          sort = True
+                                                          )),
+                                   sortby = "name",
+                                   )
+
         # ---------------------------------------------------------------------
         # Location WayPoint
         #
@@ -1642,7 +1658,8 @@ class LocationRouteModel(S3Model):
             )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return {"gis_route_id": route_id,
+                }
 
 # =============================================================================
 class GISConfigModel(S3Model):
