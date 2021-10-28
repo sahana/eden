@@ -169,7 +169,7 @@ class AssetModel(S3Model):
                            # @ToDo: We could set this automatically based on Item Category
                            default = ASSET_TYPE_OTHER,
                            label = T("Type"),
-                           represent = S3Represent(options = asset_type_opts),
+                           represent = s3_options_represent(asset_type_opts),
                            requires = IS_IN_SET(asset_type_opts),
                            readable = types,
                            writable = types,
@@ -255,7 +255,7 @@ class AssetModel(S3Model):
                      # Populated onaccept of the log for reporting/filtering
                      Field("cond", "integer",
                            label = T("Condition"),
-                           represent = S3Represent(options = asset_condition_opts),
+                           represent = s3_options_represent(asset_condition_opts),
                            #readable = False,
                            writable = False,
                            ),
@@ -535,7 +535,7 @@ $.filterOptionsS3({
                      asset_id(),
                      Field("status", "integer",
                            label = T("Status"),
-                           represent = S3Represent(options = asset_log_status_opts),
+                           represent = s3_options_represent(asset_log_status_opts),
                            requires = IS_IN_SET(asset_log_status_opts),
                            ),
                      s3_datetime(default = "now",
@@ -605,7 +605,7 @@ $.filterOptionsS3({
                            ),
                      Field("cond", "integer",  # condition is a MySQL reserved word
                            label = T("Condition"),
-                           represent = S3Represent(options = asset_condition_opts),
+                           represent = s3_options_represent(asset_condition_opts),
                            requires = IS_IN_SET(asset_condition_opts,
                                                 zero = "%s..." % T("Please select")),
                            ),

@@ -210,7 +210,7 @@ class SyncRepositoryModel(S3Model):
                      Field("apitype",
                            default = "eden",
                            label = T("Repository Type"),
-                           represent = S3Represent(options=sync_repository_types),
+                           represent = s3_options_represent(sync_repository_types),
                            requires = IS_IN_SET(sync_repository_types,
                                                 sort = True,
                                                 ),
@@ -218,7 +218,7 @@ class SyncRepositoryModel(S3Model):
                      Field("backend",
                            default = "eden",
                            label = T("Data Format"),
-                           represent = S3Represent(options=sync_backend_types),
+                           represent = s3_options_represent(sync_backend_types),
                            requires = IS_IN_SET(sync_backend_types),
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" % (
@@ -665,10 +665,12 @@ class SyncDatasetModel(S3Model):
            msg_record_modified = T("Data Set updated"),
            msg_record_deleted = T("Data Set deleted"),
            msg_list_empty = T("No Public Data Sets currently registered"),
-        )
+           )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename, show_link=True)
+        represent = S3Represent(lookup = tablename,
+                                show_link = True,
+                                )
         dataset_id = S3ReusableField("dataset_id", "reference %s" % tablename,
                                      label = T("Data Set"),
                                      represent = represent,

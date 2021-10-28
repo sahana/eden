@@ -51,6 +51,7 @@ from gluon.tools import addrow
 from s3dal import Expression, Field, Row, S3DAL
 from .s3datetime import ISOFORMAT, s3_decode_iso_datetime, s3_relative_datetime
 
+NONE = "-"
 RCVARS = "rcvars"
 URLSCHEMA = re.compile(r"((?:(())(www\.([^/?#\s]*))|((http(s)?|ftp):)"
                        r"(//([^/?#\s]*)))([^?#\s]*)(\?([^#\s]*))?(#([^\s]*))?)")
@@ -208,7 +209,7 @@ def s3_represent_value(field,
 
     xml_encode = current.xml.xml_encode
 
-    NONE = current.response.s3.crud_labels["NONE"]
+    #NONE = current.response.s3.crud_labels["NONE"]
     cache = current.cache
     fname = field.name
 
@@ -602,7 +603,7 @@ def s3_text_represent(text, truncate=True, lines=5, _class=None):
     """
 
     if not text:
-        text = current.messages["NONE"]
+        text = NONE # current.messages["NONE"]
     if _class is None:
         selector = ".text-body"
         _class = "text-body"
@@ -752,15 +753,27 @@ def s3_comments_represent(text, show_link=True):
         unique =  uuid.uuid4()
         represent = DIV(
                 DIV(text,
-                    _id=unique,
-                    _class="hide showall",
-                    _onmouseout="$('#%s').hide()" % unique
+                    _id = unique,
+                    _class = "hide showall",
+                    _onmouseout = "$('#%s').hide()" % unique
                    ),
                 A("%s..." % text[:76],
-                  _onmouseover="$('#%s').removeClass('hide').show()" % unique,
+                  _onmouseover = "$('#%s').removeClass('hide').show()" % unique,
                  ),
                 )
         return represent
+
+# =============================================================================
+def s3_options_represent(options):
+    """
+        Representation function for option dicts
+        :param options: the options dict
+        :returns function: the representation function
+    """
+
+    def represent(value, row=None):
+        return options.get(value, NONE)
+    return represent
 
 # =============================================================================
 def s3_phone_represent(value):
@@ -770,7 +783,7 @@ def s3_phone_represent(value):
     """
 
     if not value:
-        return current.messages["NONE"]
+        return NONE # current.messages["NONE"]
     return s3_str("%s%s" % (chr(8206), s3_str(value)))
 
 # =============================================================================
@@ -780,7 +793,7 @@ def s3_url_represent(url):
     """
 
     if not url:
-        return current.messages["NONE"]
+        return NONE # current.messages["NONE"]
 
     url_, error = IS_URL(allowed_schemes = ["http", "https", None],
                          prepend_scheme = "http",
@@ -961,7 +974,7 @@ def s3_auth_user_represent(user_id, row=None):
     if row:
         return row.email
     elif not user_id:
-        return current.messages["NONE"]
+        return NONE # current.messages["NONE"]
 
     db = current.db
     table = db.auth_user
@@ -984,7 +997,7 @@ def s3_auth_user_represent_name(user_id, row=None):
 
     if not row:
         if not user_id:
-            return current.messages["NONE"]
+            return NONE # current.messages["NONE"]
         db = current.db
         table = db.auth_user
         row = db(table.id == user_id).select(table.first_name,
@@ -1009,7 +1022,7 @@ def s3_yes_no_represent(value):
     elif value is False:
         return current.T("No")
     else:
-        return current.messages["NONE"]
+        return NONE # current.messages["NONE"]
 
 # =============================================================================
 def s3_keep_messages():

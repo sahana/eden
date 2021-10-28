@@ -542,8 +542,9 @@ def newsfeed():
                 pass
                 # @ToDo: deployment_setting
                 #if not auth.s3_has_role("ADMIN"):
-                #    represent = S3Represent(lookup="cms_series",
-                #                            translate=settings.get_L10n_translate_cms_series())
+                #    represent = S3Represent(lookup = "cms_series",
+                #                            translate = settings.get_L10n_translate_cms_series(),
+                #                            )
                 #    field.requires = IS_ONE_OF(db,
                 #                               "cms_series.id",
                 #                               represent,

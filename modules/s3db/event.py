@@ -137,7 +137,9 @@ class EventModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        type_represent = S3Represent(lookup=tablename, translate=True)
+        type_represent = S3Represent(lookup = tablename,
+                                     translate = True,
+                                     )
 
         if hierarchical_event_types:
             hierarchy = "parent"
@@ -1299,7 +1301,9 @@ class IncidentTypeModel(S3Model):
                           s3_comments(),
                           *s3_meta_fields())
 
-        type_represent = S3Represent(lookup=tablename, translate=True)
+        type_represent = S3Represent(lookup = tablename,
+                                     translate = True,
+                                     )
 
         if hierarchical_incident_types:
             hierarchy = "parent"
@@ -1684,7 +1688,7 @@ class EventAssetModel(S3Model):
                                               ),
                           Field("status", "integer",
                                 label = T("Status"),
-                                represent = S3Represent(options = status_opts),
+                                represent = s3_options_represent(status_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(status_opts),
                                             ),
@@ -2212,7 +2216,7 @@ class EventHRModel(S3Model):
                           # reportsToAgency in EDXL-SitRep: person_id$human_resource.organisation_id
                           Field("status", "integer",
                                 label = T("Status"),
-                                represent = S3Represent(options = status_opts),
+                                represent = s3_options_represent(status_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(status_opts),
                                             ),
@@ -2932,7 +2936,7 @@ class EventSitRepModel(S3Model):
                                                  ),
                           #Field("phase", "integer",
                           #      label = T("Incident Lifecycle Phase"),
-                          #      represent = S3Represent(options = phase_opts),
+                          #      represent = s3_options_represent(phase_opts),
                           #      requires = IS_EMPTY_OR(
                           #                  IS_IN_SET(phase_opts)
                           #                  ),
@@ -2949,7 +2953,7 @@ class EventSitRepModel(S3Model):
                                 ),
                           #Field("version", length=16,
                           #      label = T("Version"),
-                          #      represent = S3Represent(options = version_opts),
+                          #      represent = s3_options_represent(version_opts),
                           #      requires = IS_IN_SET(version_opts) if sitrep_edxl else IS_EMPTY_OR(IS_IN_SET(version_opts)),
                           #      readable = sitrep_edxl,
                           #      writable = sitrep_edxl,
@@ -2981,7 +2985,7 @@ class EventSitRepModel(S3Model):
                           #      ),
                           #Field("urgency", length=16,
                           #      label = T("Urgency"),
-                          #      represent = S3Represent(options = urgency_opts),
+                          #      represent = s3_options_represent(urgency_opts),
                           #      requires = IS_EMPTY_OR(
                           #                  IS_IN_SET(urgency_opts)
                           #                  ),
@@ -2990,14 +2994,14 @@ class EventSitRepModel(S3Model):
                           #      ),
                           #Field("Confidence", length=16,
                           #      label = T("Confidence"),
-                          #      represent = S3Represent(options = confidence_opts),
+                          #      represent = s3_options_represent(confidence_opts),
                           #      requires = IS_IN_SET(confidence_opts) if sitrep_edxl else IS_EMPTY_OR(IS_IN_SET(confidence_opts)),
                           #      readable = sitrep_edxl,
                           #      writable = sitrep_edxl,
                           #      ),
                           #Field("severity", length=16,
                           #      label = T("Severity"),
-                          #      represent = S3Represent(options = severity_opts),
+                          #      represent = s3_options_represent(severity_opts),
                           #      requires = IS_IN_SET(severity_opts) if sitrep_edxl else IS_EMPTY_OR(IS_IN_SET(severity_opts)),
                           #      readable = sitrep_edxl,
                           #      writable = sitrep_edxl,
@@ -3050,7 +3054,8 @@ class EventSitRepModel(S3Model):
                 msg_record_created = T("Situation Report added"),
                 msg_record_modified = T("Situation Report updated"),
                 msg_record_deleted = T("Situation Report deleted"),
-                msg_list_empty = T("No Situation Reports currently registered"))
+                msg_list_empty = T("No Situation Reports currently registered"),
+                )
 
         if sitrep_edxl:
             # All writable fields
@@ -3122,7 +3127,7 @@ class EventSitRepModel(S3Model):
         #self.add_components(tablename,
         #                    )
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
 
         sitrep_id = S3ReusableField("sitrep_id", "reference %s" % tablename,
                                     label = T("Situation Report"),
@@ -3131,8 +3136,8 @@ class EventSitRepModel(S3Model):
                                     requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(current.db, "event_sitrep.id",
                                                           represent,
-                                                          orderby="event_sitrep.name",
-                                                          sort=True,
+                                                          orderby = "event_sitrep.name",
+                                                          sort = True,
                                                           )),
                                     sortby = "name",
                                     )
@@ -3363,7 +3368,7 @@ class IncidentModel(S3Model):
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(severity_opts)
                                             ),
-                                represent = S3Represent(options = severity_opts),
+                                represent = s3_options_represent(severity_opts),
                                 # Enable this field in templates if-required
                                 readable = False,
                                 writable = False,
@@ -3373,7 +3378,7 @@ class IncidentModel(S3Model):
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(level_opts)
                                             ),
-                                represent = S3Represent(options = level_opts),
+                                represent = s3_options_represent(level_opts),
                                 # Enable this field in templates if-required
                                 readable = False,
                                 writable = False,
@@ -4581,7 +4586,7 @@ class ScenarioModel(S3Model):
                                            },
                             )
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         scenario_id = S3ReusableField("scenario_id", "reference %s" % tablename,
                                       label = T("Scenario"),
                                       ondelete = "SET NULL",
@@ -4595,9 +4600,11 @@ class ScenarioModel(S3Model):
                                       sortby = "name",
                                       # Comment these to use a Dropdown & not an Autocomplete
                                       #widget = S3AutocompleteWidget()
-                                      #comment = DIV(_class="tooltip",
-                                      #              _title="%s|%s" % (T("Scenario"),
-                                      #                                current.messages.AUTOCOMPLETE_HELP))
+                                      #comment = DIV(_class = "tooltip",
+                                      #              _title = "%s|%s" % (T("Scenario"),
+                                      #                                  current.messages.AUTOCOMPLETE_HELP
+                                      #                                  ),
+                                      #              )
                                     )
 
         filter_widgets = [S3TextFilter("name",
@@ -4738,7 +4745,7 @@ class ScenarioHRModel(S3Model):
 
         if current.deployment_settings.has_module("hrm"):
             # Proper field
-            job_title_represent = S3Represent(lookup="hrm_job_title")
+            job_title_represent = S3Represent(lookup = "hrm_job_title")
         else:
             # Dummy field - probably this model not being used but others from Event are
             job_title_represent = None

@@ -376,7 +376,7 @@ class PersonEntityModel(S3Model):
                       # Role type
                       Field("role_type", "integer",
                             default = 1,
-                            represent = S3Represent(options = role_types),
+                            represent = s3_options_represent(role_types),
                             requires = IS_IN_SET(role_types,
                                                  zero = None),
                             ),
@@ -391,7 +391,7 @@ class PersonEntityModel(S3Model):
                             ),
                       # Type filter, type of entities which can have this role
                       Field("entity_type", "string",
-                            represent = S3Represent(options = pe_types),
+                            represent = s3_options_represent(pe_types),
                             requires = IS_EMPTY_OR(IS_IN_SET(pe_types,
                                                              zero = T("ANY"))),
                             ),
@@ -804,9 +804,7 @@ class PersonModel(S3Model):
         pr_gender = S3ReusableField("gender", "integer",
                                     default = 1,
                                     label = T("Sex"),
-                                    represent = S3Represent(options = pr_gender_opts,
-                                                            default = current.messages["NONE"],
-                                                            ),
+                                    represent = s3_options_represent(pr_gender_opts),
                                     requires = IS_PERSON_GENDER(pr_gender_opts,
                                                                 sort = True,
                                                                 zero = None,
@@ -2470,7 +2468,9 @@ class PersonGroupModel(S3Model):
                   )
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         status_id = S3ReusableField("status_id", "reference %s" % tablename,
                                     comment = S3PopupLink(c = "pr",
                                                           f = "group_status",
@@ -2508,7 +2508,7 @@ class PersonGroupModel(S3Model):
                      Field("group_type", "integer",
                            default = 4,
                            label = T("Group Type"),
-                           represent = S3Represent(options = pr_group_types),
+                           represent = s3_options_represent(pr_group_types),
                            requires = IS_IN_SET(pr_group_types, zero=None),
                            ),
                      Field("system", "boolean",
@@ -2720,7 +2720,7 @@ class PersonGroupModel(S3Model):
                      Field("group_type", "integer",
                            default = 4,
                            label = T("Group Type"),
-                           represent = S3Represent(options=pr_group_types),
+                           represent = s3_options_represent(pr_group_types),
                            requires = IS_IN_SET(pr_group_types, zero=None),
                            ),
                      s3_comments(),
@@ -2750,7 +2750,9 @@ class PersonGroupModel(S3Model):
                   )
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         role_id = S3ReusableField("role_id", "reference %s" % tablename,
                                   comment = S3PopupLink(c = "pr",
                                                         f = "group_member_role",
@@ -3247,7 +3249,7 @@ class ForumModel(S3Model):
                      Field("forum_type", "integer",
                            default = 1,
                            label = T("Type"),
-                           represent = S3Represent(options = pr_forum_types),
+                           represent = s3_options_represent(pr_forum_types),
                            requires = IS_IN_SET(pr_forum_types,
                                                 zero = None),
                            ),
@@ -3274,7 +3276,7 @@ class ForumModel(S3Model):
                   )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         forum_id = S3ReusableField("forum_id", "reference %s" % tablename,
                                    sortby = "name",
                                    comment = S3PopupLink(c = "pr",
@@ -3647,7 +3649,7 @@ class PersonEntityAddressModel(S3Model):
                           Field("type", "integer",
                                 default = 1,
                                 label = T("Address Type"),
-                                represent = S3Represent(options = pr_address_type_opts),
+                                represent = s3_options_represent(pr_address_type_opts),
                                 requires = IS_IN_SET(pr_address_type_opts,
                                                      zero = None),
                                 widget = RadioWidget.widget,
@@ -4153,7 +4155,7 @@ class PersonEntityContactModel(S3Model):
                            label = T("Type"),
                            requires = IS_EMPTY_OR(IS_LENGTH(8)),
                            # Define in template as-required
-                           #represent = S3Represent(options = contact_person_types),
+                           #represent = s3_options_represent(contact_person_types),
                            #requires = IS_EMPTY_OR(IS_IN_SET(contact_person_types)),
                            ),
                      Field("phone",
@@ -4308,7 +4310,7 @@ class PersonEntityImageModel(S3Model):
                           Field("type", "integer",
                                 default = 1,
                                 label = T("Image Type"),
-                                represent = S3Represent(options = pr_image_type_opts),
+                                represent = s3_options_represent(pr_image_type_opts),
                                 requires = IS_IN_SET(pr_image_type_opts,
                                                      zero = None,
                                                      ),
@@ -4519,7 +4521,7 @@ class PersonEntityNoteModel(S3Model):
                           Field("status", "integer",
                                 default = 9,
                                 label = T("Status"),
-                                represent = S3Represent(options = person_status_opts),
+                                represent = s3_options_represent(person_status_opts),
                                 requires = IS_IN_SET(person_status_opts,
                                                      zero = None),
                                 ),
@@ -5052,7 +5054,7 @@ class PersonAvailabilityModel(S3Model):
                      # "interval" is a reserved word in MySQL
                      Field("date_interval", "integer",
                            default = 1,
-                           represent = S3Represent(options = interval_opts),
+                           represent = s3_options_represent(interval_opts),
                            requires = IS_IN_SET(interval_opts),
                            ),
                      Field("rate", "integer"), # Repeat Frequency
@@ -5071,7 +5073,9 @@ class PersonAvailabilityModel(S3Model):
                   deduplicate = S3Duplicate(),
                   )
 
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         date_formula_id = S3ReusableField("date_formula_id", "reference %s" % tablename,
                                           label = T("Date Formula"),
                                           ondelete = "CASCADE",
@@ -5106,7 +5110,9 @@ class PersonAvailabilityModel(S3Model):
                   deduplicate = S3Duplicate(),
                   )
 
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         time_formula_id = S3ReusableField("time_formula_id", "reference %s" % tablename,
                                           label = T("Time Formula"),
                                           ondelete = "CASCADE",
@@ -5132,7 +5138,9 @@ class PersonAvailabilityModel(S3Model):
                   deduplicate = S3Duplicate(),
                   )
 
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         slot_id = S3ReusableField("slot_id", "reference %s" % tablename,
                                   label = T("Slot"),
                                   ondelete = "CASCADE",
@@ -5175,7 +5183,7 @@ class PersonAvailabilityModel(S3Model):
             options_requires = None
         else:
             options_readable = True
-            options_represent = S3Represent(options=availability_options)
+            options_represent = s3_options_represent(availability_options)
             options_requires = IS_EMPTY_OR(IS_IN_SET(availability_options))
 
         tablename = "pr_person_availability"
@@ -5299,7 +5307,7 @@ class PersonAvailabilityModel(S3Model):
                            default = "WEEKLY",
                            label = T("Repeat"),
                            requires = IS_IN_SET(freq_options, sort=False),
-                           represent = S3Represent(options=dict(freq_options)),
+                           represent = s3_options_represent(dict(freq_options)),
                            ),
                      Field("interv", "integer",
                            default = 1,
@@ -5532,7 +5540,7 @@ class PersonDescriptionModel(S3Model):
         pr_age_group = S3ReusableField("age_group", "integer",
                                        default = 1,
                                        label = T("Age Group"),
-                                       represent = S3Represent(options = pr_age_group_opts),
+                                       represent = s3_options_represent(pr_age_group_opts),
                                        requires = IS_IN_SET(pr_age_group_opts,
                                                             zero = None),
                                        )
@@ -5628,7 +5636,7 @@ class PersonDescriptionModel(S3Model):
         ethnicity_opts = current.deployment_settings.get_L10n_ethnicity()
         if ethnicity_opts:
             # Dropdown
-            ethnicity_represent = S3Represent(options = ethnicity_opts)
+            ethnicity_represent = s3_options_represent(ethnicity_opts)
             ethnicity_requires = IS_EMPTY_OR(IS_IN_SET(ethnicity_opts))
         else:
             # Free-text
@@ -5649,12 +5657,12 @@ class PersonDescriptionModel(S3Model):
                           # Race and complexion
                           Field("race", "integer",
                                 label = T("Race"),
-                                represent = S3Represent(options = pr_race_opts),
+                                represent = s3_options_represent(pr_race_opts),
                                 requires = IS_EMPTY_OR(IS_IN_SET(pr_race_opts)),
                                 ),
                           Field("complexion", "integer",
                                 label = T("Complexion"),
-                                represent = S3Represent(options = pr_complexion_opts),
+                                represent = s3_options_represent(pr_complexion_opts),
                                 requires = IS_EMPTY_OR(IS_IN_SET(pr_complexion_opts)),
                                 ),
                           Field("ethnicity", #length=64, # Mayon Compatibility
@@ -5671,7 +5679,7 @@ class PersonDescriptionModel(S3Model):
                           # Height and weight
                           Field("height", "integer",
                                 label = T("Height"),
-                                represent = S3Represent(options = pr_height_opts),
+                                represent = s3_options_represent(pr_height_opts),
                                 requires = IS_EMPTY_OR(IS_IN_SET(pr_height_opts)),
                                 ),
                           Field("height_cm", "integer",
@@ -5683,7 +5691,7 @@ class PersonDescriptionModel(S3Model):
                                 ),
                           Field("weight", "integer",
                                 label = T("Weight"),
-                                represent = S3Represent(options = pr_weight_opts),
+                                represent = s3_options_represent(pr_weight_opts),
                                 requires = IS_EMPTY_OR(IS_IN_SET(pr_weight_opts)),
                                 ),
                           Field("weight_kg", "integer",
@@ -5701,29 +5709,29 @@ class PersonDescriptionModel(S3Model):
                                 ),
                           Field("eye_color", "integer",
                                 label = T("Eye Color"),
-                                represent = S3Represent(options = pr_eye_color_opts),
+                                represent = s3_options_represent(pr_eye_color_opts),
                                 requires = IS_EMPTY_OR(IS_IN_SET(pr_eye_color_opts)),
                                 ),
 
                           # Hair of the head
                           Field("hair_color", "integer",
                                 label = T("Hair Color"),
-                                represent = S3Represent(options = pr_hair_color_opts),
+                                represent = s3_options_represent(pr_hair_color_opts),
                                 requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_color_opts)),
                                 ),
                           Field("hair_style", "integer",
                                 label = T("Hair Style"),
-                                represent = S3Represent(options = pr_hair_style_opts),
+                                represent = s3_options_represent(pr_hair_style_opts),
                                 requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_style_opts)),
                                 ),
                           Field("hair_length", "integer",
                                 label = T("Hair Length"),
-                                represent = S3Represent(options = pr_hair_length_opts),
+                                represent = s3_options_represent(pr_hair_length_opts),
                                 requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_length_opts)),
                                 ),
                           Field("hair_baldness", "integer",
                                 label = T("Baldness"),
-                                represent = S3Represent(options = pr_hair_baldness_opts),
+                                represent = s3_options_represent(pr_hair_baldness_opts),
                                 requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_baldness_opts)),
                                 ),
                           Field("hair_comment",
@@ -5733,17 +5741,17 @@ class PersonDescriptionModel(S3Model):
                           # Facial hair
                           Field("facial_hair_type", "integer",
                                 label = T("Facial hair, type"),
-                                represent = S3Represent(options = pr_facial_hair_type_opts),
+                                represent = s3_options_represent(pr_facial_hair_type_opts),
                                 requires = IS_EMPTY_OR(IS_IN_SET(pr_facial_hair_type_opts)),
                                 ),
                           Field("facial_hair_color", "integer",
                                 label = T("Facial hair, color"),
-                                represent = S3Represent(options = pr_hair_color_opts),
+                                represent = s3_options_represent(pr_hair_color_opts),
                                 requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_color_opts)),
                                 ),
                           Field("facial_hair_length", "integer",
                                 label = T("Facial hair, length"),
-                                represent = S3Represent(options = pr_facial_hair_length_opts),
+                                represent = s3_options_represent(pr_facial_hair_length_opts),
                                 requires = IS_EMPTY_OR(IS_IN_SET(pr_facial_hair_length_opts)),
                                 ),
                           Field("facial_hair_comment",
@@ -5904,10 +5912,10 @@ class PersonEducationModel(S3Model):
                            ),
                      Field("country",
                            label = T("Country"),
-                           represent = S3Represent(options=country_opts),
+                           represent = s3_options_represent(country_opts),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(country_opts,
-                                                  zero=messages.SELECT_LOCATION),
+                                                  zero = messages.SELECT_LOCATION),
                                         ),
                            # Enable in template as-required
                            readable = False,
@@ -6022,7 +6030,7 @@ class PersonIdentityModel(S3Model):
                           Field("type", "integer",
                                 default = 1,
                                 label = T("ID Type"),
-                                represent = S3Represent(options=pr_id_type_opts),
+                                represent = s3_options_represent(pr_id_type_opts),
                                 requires = IS_IN_SET(pr_id_type_opts,
                                                      zero=None),
                                 ),
@@ -6139,19 +6147,19 @@ class PersonLanguageModel(S3Model):
                           Field("writing", "integer",
                                 #default = None,
                                 label = T("Writing"),
-                                represent = S3Represent(options=fluency_opts),
+                                represent = s3_options_represent(fluency_opts),
                                 requires = IS_IN_SET(fluency_opts),
                                 ),
                           Field("speaking", "integer",
                                 #default = None,
                                 label = T("Speaking"),
-                                represent = S3Represent(options=fluency_opts),
+                                represent = s3_options_represent(fluency_opts),
                                 requires = IS_IN_SET(fluency_opts),
                                 ),
                           Field("understanding", "integer",
                                 #default = None,
                                 label = T("Understanding"),
-                                represent = S3Represent(options=fluency_opts),
+                                represent = s3_options_represent(fluency_opts),
                                 requires = IS_IN_SET(fluency_opts),
                                 ),
                           #s3_comments(),
@@ -6405,7 +6413,7 @@ class PersonDetailsModel(S3Model):
                           Field("marital_status", "integer",
                                 default = 1,
                                 label = T("Marital Status"),
-                                represent = S3Represent(options = marital_status_opts),
+                                represent = s3_options_represent(marital_status_opts),
                                 requires = IS_IN_SET(marital_status_opts,
                                                      zero=None,
                                                      ),
@@ -6415,7 +6423,7 @@ class PersonDetailsModel(S3Model):
                                 ),
                           Field("religion", length=128,
                                 label = T("Religion"),
-                                represent = S3Represent(options = religion_opts),
+                                represent = s3_options_represent(religion_opts),
                                 requires = IS_EMPTY_OR(IS_IN_SET(religion_opts)),
                                 ),
                           # This field can either be used as a free-text version of religion, or to provide details of the 'other'
@@ -6486,7 +6494,7 @@ class PersonDetailsModel(S3Model):
                           Field("literacy", "integer",
                                 default = 3,
                                 label = T("Literacy"),
-                                represent = S3Represent(options = literacy_opts),
+                                represent = s3_options_represent(literacy_opts),
                                 requires = IS_IN_SET(literacy_opts,
                                                      zero=None,
                                                      ),
@@ -6956,7 +6964,7 @@ class SubscriptionModel(S3Model):
                            ),
                      Field("frequency",
                            default = "daily",
-                           represent = S3Represent(options = FREQUENCY_OPTS),
+                           represent = s3_options_represent(FREQUENCY_OPTS),
                            requires = IS_IN_SET(frequency_opts,
                                                 zero = None),
                            ),
@@ -6972,7 +6980,7 @@ class SubscriptionModel(S3Model):
                            widget = S3MultiSelectWidget(),
                            ),
                      Field("email_format",
-                           represent = S3Represent(options = email_format_opts),
+                           represent = s3_options_represent(email_format_opts),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(email_format_opts,
                                                   zero = None)),

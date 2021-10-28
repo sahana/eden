@@ -636,7 +636,7 @@ class ShelterDetailsModel(S3Model):
                           Field("status", "integer",
                                 label = T("Status"),
                                 default = 2, # Open
-                                represent = S3Represent(options = shelter_status_opts),
+                                represent = s3_options_represent(shelter_status_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(shelter_status_opts)
                                             ),
@@ -759,7 +759,7 @@ class ShelterHousingUnitModel(S3Model):
                           Field("status", "integer",
                                 default = 1,
                                 label = T("Status"),
-                                represent = S3Represent(options = housing_unit_status_opts),
+                                represent = s3_options_represent(housing_unit_status_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(housing_unit_status_opts)
                                             ),
@@ -790,7 +790,7 @@ class ShelterHousingUnitModel(S3Model):
                           Field("handicap_bath", "integer",
                                 default = 1,
                                 label = T("Bath with handicap facilities"),
-                                represent = S3Represent(options = housing_unit_handicap_facilities),
+                                represent = s3_options_represent(housing_unit_handicap_facilities),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(housing_unit_handicap_facilities)
                                             ),
@@ -813,7 +813,7 @@ class ShelterHousingUnitModel(S3Model):
                           Field("handicap_shower", "integer",
                                 default = 1,
                                 label = T("Shower with handicap facilities"),
-                                represent = S3Represent(options = housing_unit_handicap_facilities),
+                                represent = s3_options_represent(housing_unit_handicap_facilities),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(housing_unit_handicap_facilities)
                                             ),
@@ -1117,7 +1117,7 @@ class ShelterInspectionModel(S3Model):
                      Field("task_priority", "integer",
                            default = 3,
                            label = T("Priority"),
-                           represent = S3Represent(options = task_priority_opts),
+                           represent = s3_options_represent(task_priority_opts),
                            requires = IS_IN_SET(task_priority_opts,
                                                 zero = None,
                                                 ),
@@ -1579,7 +1579,7 @@ class ShelterRegistrationModel(S3Model):
                            default = 3,
                            label = T("Status"),
                            requires = IS_IN_SET(allocation_status_opts),
-                           represent = S3Represent(options = allocation_status_opts),
+                           represent = s3_options_represent(allocation_status_opts),
                            ),
                      Field("group_size_day", "integer",
                            default = 0,
@@ -1618,7 +1618,7 @@ class ShelterRegistrationModel(S3Model):
 
         reg_status = S3ReusableField("registration_status", "integer",
                                      label = T("Status"),
-                                     represent = S3Represent(options = reg_status_opts),
+                                     represent = s3_options_represent(reg_status_opts),
                                      requires = IS_IN_SET(reg_status_opts,
                                                           zero = None),
                                      )
@@ -1642,7 +1642,7 @@ class ShelterRegistrationModel(S3Model):
                      Field("day_or_night", "integer",
                            default = DAY_AND_NIGHT,
                            label = T("Presence in the shelter"),
-                           represent = S3Represent(options = cr_day_or_night_opts),
+                           represent = s3_options_represent(cr_day_or_night_opts),
                            requires = IS_IN_SET(cr_day_or_night_opts,
                                                 zero = None),
                            readable = day_and_night,

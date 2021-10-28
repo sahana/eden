@@ -128,7 +128,7 @@ class SecurityLevelModel(S3Model):
                       5: T("High"),
                       6: T("Extreme"),
                       }
-        level_represent = S3Represent(options = level_opts)
+        level_represent = s3_options_represent(level_opts)
 
         tablename = "security_level"
         self.define_table(tablename,
@@ -346,7 +346,7 @@ class SecuritySeizedItemsModel(S3Model):
                      # Status
                      Field("status",
                            default = "DEP",
-                           represent = S3Represent(options = seized_item_status),
+                           represent = s3_options_represent(seized_item_status),
                            requires = IS_IN_SET(seized_item_status,
                                                 zero = None),
                            ),

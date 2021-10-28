@@ -129,7 +129,7 @@ class StatsModel(S3Model):
                          6 : T("Projection"),
                          }
         accuracy = S3ReusableField("accuracy", "integer",
-                                   represent = S3Represent(options = accuracy_opts),
+                                   represent = s3_options_represent(accuracy_opts),
                                    requires = IS_EMPTY_OR(IS_IN_SET(accuracy_opts,
                                                                     zero = None),
                                                           ),
@@ -488,7 +488,7 @@ class StatsDemographicModel(S3Model):
                      Field("agg_type", "integer",
                            default = 1,
                            label = T("Aggregation Type"),
-                           represent = S3Represent(options = aggregate_types),
+                           represent = s3_options_represent(aggregate_types),
                            requires = IS_IN_SET(aggregate_types),
                            ),
                      s3_date("date",

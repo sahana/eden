@@ -107,7 +107,7 @@ class AuthConsentModel(S3Model):
                        )
 
         # Representation
-        type_represent = S3Represent(lookup=tablename)
+        type_represent = S3Represent(lookup = tablename)
 
         # CRUD Strings
         ADD_TYPE = T("Create Processing Type")
@@ -249,7 +249,7 @@ class AuthConsentModel(S3Model):
                      Field("vhash", "text"),
                      Field("option_id", "reference auth_consent_option",
                            ondelete = "RESTRICT",
-                           represent = S3Represent(lookup="auth_consent_option"),
+                           represent = S3Represent(lookup = "auth_consent_option"),
                            ),
                      Field("consenting", "boolean",
                            default = False,
@@ -279,7 +279,7 @@ class AuthConsentModel(S3Model):
                      Field("context", "text"),
                      Field("option_id", "reference auth_consent_option",
                            ondelete = "RESTRICT",
-                           represent = S3Represent(lookup="auth_consent_option"),
+                           represent = S3Represent(lookup = "auth_consent_option"),
                            ),
                      Field("consented", "boolean",
                            default = False,
@@ -480,7 +480,7 @@ class AuthMasterKeyModel(S3Model):
                      Field("user_id", current.auth.settings.table_user),
                      *s3_meta_fields())
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
 
         masterkey_id = S3ReusableField("masterkey_id", "reference %s" % tablename,
                                        #label = T("Master Key"),

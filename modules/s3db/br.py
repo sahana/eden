@@ -1073,7 +1073,9 @@ class BRAppointmentModel(S3Model):
             )
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         appointment_type_id = S3ReusableField("type_id", "reference %s" % tablename,
                                               label = T("Appointment Type"),
                                               ondelete = "RESTRICT",
@@ -1114,7 +1116,7 @@ class BRAppointmentModel(S3Model):
                                                 ),
                      Field("status", "integer",
                            default = 1, # Planning
-                           represent = S3Represent(options = appointment_status_opts),
+                           represent = s3_options_represent(appointment_status_opts),
                            requires = IS_IN_SET(appointment_status_opts,
                                                 zero = None,
                                                 ),
@@ -1248,7 +1250,9 @@ class BRNeedsModel(S3Model):
             )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         need_id = S3ReusableField("need_id", "reference %s" % tablename,
                                   label = T("Need Type"),
                                   ondelete = "RESTRICT",
@@ -2207,7 +2211,7 @@ class BRAssistanceOfferModel(S3Model):
                      Field("availability",
                            default = "AVL",
                            label = T("Availability"),
-                           represent = S3Represent(options = dict(offer_availability)),
+                           represent = s3_options_represent(dict(offer_availability)),
                            requires = IS_IN_SET(offer_availability,
                                                 zero = None,
                                                 sort = False,
@@ -2224,7 +2228,7 @@ class BRAssistanceOfferModel(S3Model):
                      Field("status",
                            default = "NEW",
                            label = T("Status"),
-                           represent = S3Represent(options = dict(offer_status)),
+                           represent = s3_options_represent(dict(offer_status)),
                            requires = IS_IN_SET(offer_status,
                                                 zero = None,
                                                 sort = False,
@@ -2530,7 +2534,7 @@ class BRLanguageModel(S3Model):
                           Field("quality",
                                 default = "N",
                                 label = T("Quality/Mode"),
-                                represent = S3Represent(options = dict(lang_quality_opts)),
+                                represent = s3_options_represent(dict(lang_quality_opts)),
                                 requires = IS_IN_SET(lang_quality_opts,
                                                      sort = False,
                                                      zero = None,
@@ -2752,7 +2756,9 @@ class BRNotesModel(S3Model):
             )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         note_type_id = S3ReusableField("note_type_id", "reference %s" % tablename,
                                        label = T("Note Type"),
                                        ondelete = "RESTRICT",

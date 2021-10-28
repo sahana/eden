@@ -696,8 +696,8 @@ def config(settings):
                                 "SMS"  : T("SMS"),
                                 "FTP"  : T("FTP"),
                                 }
-            table.method.represent = S3Represent(options=MSG_CONTACT_OPTS,
-                                                 multiple=True,
+            table.method.represent = S3Represent(options = MSG_CONTACT_OPTS,
+                                                 multiple = True,
                                                  ),
             if r.representation == "html":
                 table.filter_id.represent = S3Represent(\

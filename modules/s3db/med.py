@@ -114,7 +114,7 @@ class HospitalModel(S3Model):
                           Field("facility_type", "integer",
                                 default = 1,
                                 label = T("Facility Type"),
-                                represent = S3Represent(options = med_facility_type_opts),
+                                represent = s3_options_represent(med_facility_type_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(med_facility_type_opts)
                                             ),
@@ -522,7 +522,7 @@ class HospitalBedsModel(S3Model):
                           Field("bed_type", "integer",
                                 default = 6,
                                 label = T("Bed Type"),
-                                represent = S3Represent(options = med_bed_type_opts),
+                                represent = s3_options_represent(med_bed_type_opts),
                                 requires = IS_IN_SET(med_bed_type_opts,
                                                      zero = None),
                                 ),
@@ -1026,7 +1026,7 @@ class HospitalStatusModel(S3Model):
                           # Status of the facility and facility operations
                           Field("facility_status", "integer",
                                 label = T("Facility Status"),
-                                represent = S3Represent(options = med_facility_status_opts),
+                                represent = s3_options_represent(med_facility_status_opts),
                                 requires = IS_EMPTY_OR(
                                              IS_IN_SET(med_facility_status_opts)),
                                 ),
@@ -1035,7 +1035,7 @@ class HospitalStatusModel(S3Model):
                                   ),
                           Field("facility_operations", "integer",
                                 label = T("Facility Operations"),
-                                represent = S3Represent(options = med_resource_status_opts),
+                                represent = s3_options_represent(med_resource_status_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(med_resource_status_opts)),
                                 ),
@@ -1051,14 +1051,14 @@ class HospitalStatusModel(S3Model):
                                 ),
                           Field("power_supply_type", "integer",
                                 label = T("Power Supply Type"),
-                                represent = S3Represent(options = med_power_supply_type_opts),
+                                represent = s3_options_represent(med_power_supply_type_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(med_power_supply_type_opts,
                                                       zero = None)),
                                 ),
                           Field("gas_supply_type", "integer",
                                 label = T("Gas Supply Type"),
-                                represent = S3Represent(options = med_gas_supply_type_opts),
+                                represent = s3_options_represent(med_gas_supply_type_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(med_gas_supply_type_opts,
                                                       zero = None)),
@@ -1071,19 +1071,19 @@ class HospitalStatusModel(S3Model):
                           # Clinical status and clinical operations
                           Field("clinical_status", "integer",
                                 label = T("Clinical Status"),
-                                represent = S3Represent(options = med_clinical_status_opts),
+                                represent = s3_options_represent(med_clinical_status_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(med_clinical_status_opts)),
                                 ),
                           Field("clinical_operations", "integer",
                                 label = T("Clinical Operations"),
-                                represent = S3Represent(options = med_resource_status_opts),
+                                represent = s3_options_represent(med_resource_status_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(med_resource_status_opts)),
                                 ),
                           Field("security_status", "integer",
                                 label = T("Security Status"),
-                                represent = S3Represent(options = med_security_status_opts),
+                                represent = s3_options_represent(med_security_status_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(med_security_status_opts)),
                                 ),
@@ -1091,7 +1091,7 @@ class HospitalStatusModel(S3Model):
                           # Staffing status
                           Field("staffing", "integer",
                                 label = T("Staffing Level"),
-                                represent = S3Represent(options = med_resource_status_opts),
+                                represent = s3_options_represent(med_resource_status_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(med_resource_status_opts)),
                                 ),
@@ -1099,7 +1099,7 @@ class HospitalStatusModel(S3Model):
                           # Emergency Room Status
                           Field("ems_status", "integer",
                                 label = T("ER Status"),
-                                represent = S3Represent(options = med_ems_traffic_opts),
+                                represent = s3_options_represent(med_ems_traffic_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(med_ems_traffic_opts)),
                                 ),
@@ -1111,7 +1111,7 @@ class HospitalStatusModel(S3Model):
                           # Operating Room Status
                           Field("or_status", "integer",
                                 label = T("OR Status"),
-                                represent = S3Represent(options = med_or_status_opts),
+                                represent = s3_options_represent(med_or_status_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(med_or_status_opts)),
                                 ),
@@ -1123,7 +1123,7 @@ class HospitalStatusModel(S3Model):
                           # Morgue status and capacity
                           Field("morgue_status", "integer",
                                 label = T("Morgue Status"),
-                                represent = S3Represent(options = med_morgue_status_opts),
+                                represent = s3_options_represent(med_morgue_status_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(med_morgue_status_opts)),
                                 ),

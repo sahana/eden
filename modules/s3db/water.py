@@ -81,9 +81,10 @@ class WaterModel(S3Model):
             msg_record_created = T("Zone Type added"),
             msg_record_modified = T("Zone Type updated"),
             msg_record_deleted = T("Zone Type deleted"),
-            msg_list_empty = T("No Zone Types currently registered"))
+            msg_list_empty = T("No Zone Types currently registered"),
+            )
 
-        zone_type_represent = S3Represent(lookup=tablename)
+        zone_type_represent = S3Represent(lookup = tablename)
 
         self.configure(tablename,
                        deduplicate = S3Duplicate(),
@@ -162,7 +163,8 @@ class WaterModel(S3Model):
             msg_record_created = T("River added"),
             msg_record_modified = T("River updated"),
             msg_record_deleted = T("River deleted"),
-            msg_list_empty = T("No Rivers currently registered"))
+            msg_list_empty = T("No Rivers currently registered"),
+            )
 
         #represent = S3Represent(lookup = tablename)
         #river_id = S3ReusableField("river_id", "reference %s" % tablename,

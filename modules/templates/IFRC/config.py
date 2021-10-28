@@ -3321,7 +3321,9 @@ def config(settings):
 
         # Restrict Location to just Countries
         field = s3db.deploy_mission.location_id
-        field.represent = S3Represent(lookup="gis_location", translate=True)
+        field.represent = S3Represent(lookup = "gis_location",
+                                      translate = True,
+                                      )
 
         has_role = current.auth.s3_has_role
         if has_role("AP_RDRT_ADMIN") and not has_role("ADMIN"):
@@ -3380,7 +3382,9 @@ def config(settings):
         COUNTRY = messages.COUNTRY
         field = table.location_id
         field.label = COUNTRY
-        field.represent = S3Represent(lookup="gis_location", translate=True)
+        field.represent = S3Represent(lookup = "gis_location",
+                                      translate = True,
+                                      )
         countries = _countries_for_region()
         if countries:
             # Limit to just this region's countries
@@ -3388,14 +3392,15 @@ def config(settings):
                                        field.represent,
                                        filterby = "id",
                                        filter_opts = countries,
-                                       sort=True)
+                                       sort = True,
+                                       )
             # Filter to just the user's region
             # (we filter on organisation_id now)
             #s3.filter = (field.belongs(countries))
         else:
             # Allow all countries
             field.requires = s3db.gis_country_requires
-        field.widget = S3MultiSelectWidget(multiple=False)
+        field.widget = S3MultiSelectWidget(multiple = False)
 
         rtable = s3db.deploy_response
         rtable.human_resource_id.label = MEMBER
@@ -3805,10 +3810,13 @@ def config(settings):
                                                        filterby = "id",
                                                        filter_opts = filter_opts,
                                                        orderby = "org_organisation.name",
-                                                       sort = True)
+                                                       sort = True,
+                                                       )
             f = table.comments
             f.comment = None
-            country_represent = S3Represent(lookup="gis_location", translate=True)
+            country_represent = S3Represent(lookup = "gis_location",
+                                            translate = True,
+                                            )
             f = table.location_id
             f.default = None
             f.represent = country_represent
@@ -3816,7 +3824,8 @@ def config(settings):
                                                country_represent,
                                                filterby = "level",
                                                filter_opts = ["L0"],
-                                               sort=True))
+                                               sort = True,
+                                               ))
             f.widget = None
             #f.widget = S3MultiSelectWidget(multiple=False)
             table.responsibilities.widget = s3_comments_widget
@@ -4170,8 +4179,9 @@ def config(settings):
                 field = current.s3db.vol_details.volunteer_type
                 field.readable = field.writable = True
                 from gluon.validators import IS_EMPTY_OR, IS_IN_SET
+                from s3 import s3_options_represent
                 field.requires = IS_EMPTY_OR(IS_IN_SET(types))
-                field.represent = S3Represent(options=types)
+                field.represent = s3_options_represent(types)
 
         elif controller == "hrm":
             if root_org == IRCS:

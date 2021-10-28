@@ -2771,11 +2771,13 @@ $('.copy-link').click(function(e){
                 gtable = s3db.gis_location
                 districts = db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
                                                                                          gtable.name,
-                                                                                         cache = s3db.cache)
+                                                                                         cache = s3db.cache,
+                                                                                         )
                 districts = {d.id:d.name for d in districts}
 
                 s3db.pr_group_membership.group_id.represent = S3Represent(lookup = "pr_group",
-                                                                          show_link = True)
+                                                                          show_link = True,
+                                                                          )
 
                 actions = [{"label": s3_str(T("Open")),
                             "url": URL(c = "pr",
@@ -2917,10 +2919,10 @@ $('.copy-link').click(function(e){
 
         from gluon import IS_EMAIL, IS_EMPTY_OR, IS_IN_SET, IS_URL, SQLFORM
 
-        from s3 import S3LocationFilter, S3OptionsFilter, S3Represent, \
+        from s3 import S3LocationFilter, S3OptionsFilter, \
                        S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink, \
                        S3TextFilter#, \
-                       #S3HierarchyWidget
+                       #S3Represent, S3HierarchyWidget
 
         s3db = current.s3db
 
@@ -4422,25 +4424,25 @@ $('.copy-link').click(function(e){
                                                                   },
                                                                  ),
                                                 )
-                            from s3 import S3Represent
+                            from s3 import s3_options_represent
                             yes_no_options = {"0": T("No"),
                                               "1": T("Yes"),
                                               }
                             components_get = s3db.resource("pr_person").components.get
                             workplace = components_get("workplace")
                             f = workplace.table.value
-                            f.represent = S3Represent(options = yes_no_options)
+                            f.represent = s3_options_represent(yes_no_options)
                             list_fields+= [(T("Workplace Volunteering Scheme"), "workplace.value"),
                                            (T("Employer"), "workplace_details.value"),
                                            ]
                             dbs = components_get("dbs")
                             f = dbs.table.value
-                            f.represent = S3Represent(options = yes_no_options)
+                            f.represent = s3_options_represent(yes_no_options)
                             list_fields.append((T("DBS"), "dbs.value"))
                             # Convictions
                             #convictions = components_get("convictions")
                             #f = convictions.table.value
-                            #f.represent = S3Represent(options = yes_no_options)
+                            #f.represent = s3_options_represent(yes_no_options)
                             #list_fields.append((T("Convictions"), "convictions.value"))
 
                     # Registration Date
@@ -4687,7 +4689,7 @@ $('.copy-link').click(function(e){
     def customise_pr_person_location_resource(r, tablename):
 
         from gluon import IS_EMPTY_OR, IS_IN_SET
-        from s3 import S3Represent
+        from s3 import s3_options_represent
 
         s3db = current.s3db
         gtable = s3db.gis_location
@@ -4697,7 +4699,7 @@ $('.copy-link').click(function(e){
         districts = {d.id:d.name for d in districts}
 
         f = s3db.pr_person_location.location_id
-        f.represent = S3Represent(options = districts)
+        f.represent = s3_options_represent(districts)
         f.requires = IS_EMPTY_OR(IS_IN_SET(districts))
         f.widget = None
 
@@ -6178,11 +6180,13 @@ $('.copy-link').click(function(e){
                 gtable = s3db.gis_location
                 districts = db((gtable.level == "L3") & (gtable.L2 == "Cumbria")).select(gtable.id,
                                                                                          gtable.name,
-                                                                                         cache = s3db.cache)
+                                                                                         cache = s3db.cache,
+                                                                                         )
                 districts = {d.id:d.name for d in districts}
 
                 s3db.pr_group_membership.group_id.represent = S3Represent(lookup = "pr_group",
-                                                                          show_link = True)
+                                                                          show_link = True,
+                                                                          )
 
                 actions = [{"label": s3_str(T("Open")),
                             "url": URL(c = "pr",

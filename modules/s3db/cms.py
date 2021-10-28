@@ -145,7 +145,9 @@ class CMSContentModel(S3Model):
 
         # Reusable field
         translate = settings.get_L10n_translate_cms_series()
-        represent = S3Represent(lookup=tablename, translate=translate)
+        represent = S3Represent(lookup = tablename,
+                                translate = translate,
+                                )
         series_id = S3ReusableField("series_id", "reference %s" % tablename,
                                     label = T("Type"), # Even if this isn't always the use-case
                                     ondelete = "CASCADE",
@@ -154,7 +156,8 @@ class CMSContentModel(S3Model):
                                     represent = represent,
                                     requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "cms_series.id",
-                                                          represent)),
+                                                          represent,
+                                                          )),
                                     )
 
         # Resource Configuration
@@ -199,8 +202,10 @@ class CMSContentModel(S3Model):
             msg_list_empty = T("No Statuses currently registered"))
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename, translate=True)
-                                #none = T("Unknown"))
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                #none = T("Unknown"),
+                                )
         status_id = S3ReusableField("status_id", "reference %s" % tablename,
                         comment = S3PopupLink(title = ADD_STATUS,
                                               c = "cms",
@@ -212,7 +217,8 @@ class CMSContentModel(S3Model):
                         requires = IS_EMPTY_OR(
                                     IS_ONE_OF(db, "cms_status.id",
                                               represent,
-                                              sort=True)),
+                                              sort = True,
+                                              )),
                         sortby = "name",
                         )
 
@@ -321,10 +327,11 @@ class CMSContentModel(S3Model):
             msg_record_created = T("Post added"),
             msg_record_modified = T("Post updated"),
             msg_record_deleted = T("Post deleted"),
-            msg_list_empty = T("No posts currently available"))
+            msg_list_empty = T("No posts currently available"),
+            )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         post_id = S3ReusableField("post_id", "reference %s" % tablename,
                                   comment = S3PopupLink(c = "cms",
                                                         f = "post",
@@ -336,7 +343,8 @@ class CMSContentModel(S3Model):
                                   represent = represent,
                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "cms_post.id",
-                                                          represent)),
+                                                          represent,
+                                                          )),
                                   sortby = "name",
                                   )
 

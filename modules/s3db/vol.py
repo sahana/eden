@@ -175,15 +175,17 @@ class VolunteerActivityModel(S3Model):
                               title = T("Activity Type"),
                               )
 
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         activity_type_id = S3ReusableField("activity_type_id", "reference %s" % tablename,
                                            label = T("Activity Type"),
                                            requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db,
                                                                   "vol_activity_type.id",
                                                                   represent,
-                                                                  #filterby="organisation_id",
-                                                                  #filter_opts=filter_opts,
+                                                                  #filterby = "organisation_id",
+                                                                  #filter_opts = filter_opts,
                                                                   )),
                                            ondelete = "CASCADE",
                                            represent = represent,
@@ -258,16 +260,19 @@ class VolunteerActivityModel(S3Model):
             msg_record_created = T("Activity added"),
             msg_record_modified = T("Activity updated"),
             msg_record_deleted = T("Activity deleted"),
-            msg_list_empty = T("No Activities found"))
+            msg_list_empty = T("No Activities found"),
+            )
 
-        represent = S3Represent(lookup=tablename, show_link=True)
+        represent = S3Represent(lookup = tablename,
+                                show_link = True,
+                                )
         activity_id = S3ReusableField("activity_id", "reference %s" % tablename,
                                       label = T("Activity"),
                                       requires = IS_ONE_OF(db,
                                                            "vol_activity.id",
                                                            represent,
-                                                           #filterby="organisation_id",
-                                                           #filter_opts=filter_opts,
+                                                           #filterby = "organisation_id",
+                                                           #filter_opts = filter_opts,
                                                            ),
                                       represent = represent,
                                       #comment = comment
@@ -642,7 +647,8 @@ class VolunteerAwardModel(S3Model):
             msg_record_created = T("Award added"),
             msg_record_modified = T("Award updated"),
             msg_record_deleted = T("Award deleted"),
-            msg_list_empty = T("No Awards found"))
+            msg_list_empty = T("No Awards found"),
+            )
 
         comment = S3PopupLink(c = "vol",
                               f = "award",
@@ -650,15 +656,16 @@ class VolunteerAwardModel(S3Model):
                               title = T("Award"),
                               )
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         award_id = S3ReusableField("award_id", "reference %s" % tablename,
                                    label = T("Award"),
                                    requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db,
                                                           "vol_award.id",
                                                           represent,
-                                                          filterby="organisation_id",
-                                                          filter_opts=filter_opts)),
+                                                          filterby = "organisation_id",
+                                                          filter_opts = filter_opts),
+                                                          ),
                                    represent = represent,
                                    comment = comment
                                    )
@@ -780,7 +787,8 @@ class VolunteerClusterModel(S3Model):
             msg_record_created = T("Volunteer Cluster Type added"),
             msg_record_modified = T("Volunteer Cluster Type updated"),
             msg_record_deleted = T("Volunteer Cluster Type deleted"),
-            msg_list_empty = T("No Volunteer Cluster Types"))
+            msg_list_empty = T("No Volunteer Cluster Types"),
+            )
 
         comment = S3PopupLink(c = "vol",
                               f = "cluster_type",
@@ -791,13 +799,14 @@ class VolunteerClusterModel(S3Model):
                               title = T("Volunteer Cluster Type"),
                               )
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         vol_cluster_type_id = S3ReusableField("vol_cluster_type_id", "reference %s" % tablename,
                                               label = T("Volunteer Cluster Type"),
                                               requires = IS_EMPTY_OR(
                                                             IS_ONE_OF(db,
                                                                       "vol_cluster_type.id",
-                                                                      represent)),
+                                                                      represent,
+                                                                      )),
                                               represent = represent,
                                               comment = comment
                                               )
@@ -826,7 +835,8 @@ class VolunteerClusterModel(S3Model):
             msg_record_created = T("Volunteer Cluster added"),
             msg_record_modified = T("Volunteer Cluster updated"),
             msg_record_deleted = T("Volunteer Cluster deleted"),
-            msg_list_empty = T("No Volunteer Clusters"))
+            msg_list_empty = T("No Volunteer Clusters"),
+            )
 
         comment = S3PopupLink(c = "vol",
                               f = "cluster",
@@ -837,13 +847,14 @@ class VolunteerClusterModel(S3Model):
                               title = T("Volunteer Cluster"),
                               )
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         vol_cluster_id = S3ReusableField("vol_cluster_id", "reference %s" % tablename,
                                          label = T("Volunteer Cluster"),
                                          requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db,
                                                                   "vol_cluster.id",
-                                                                  represent)),
+                                                                  represent,
+                                                                  )),
                                          represent = represent,
                                          comment = comment
                                          )
@@ -872,7 +883,8 @@ class VolunteerClusterModel(S3Model):
             msg_record_created = T("Volunteer Cluster Position added"),
             msg_record_modified = T("Volunteer Cluster Position updated"),
             msg_record_deleted = T("Volunteer Cluster Position deleted"),
-            msg_list_empty = T("No Volunteer Cluster Positions"))
+            msg_list_empty = T("No Volunteer Cluster Positions"),
+            )
 
         comment = S3PopupLink(c = "vol",
                               f = "cluster_position",
@@ -883,13 +895,14 @@ class VolunteerClusterModel(S3Model):
                               title = T("Volunteer Cluster Position"),
                               )
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         vol_cluster_position_id = S3ReusableField("vol_cluster_position_id", "reference %s" % tablename,
                                                 label = T("Volunteer Cluster Position"),
                                                 requires = IS_EMPTY_OR(
                                                             IS_ONE_OF(db,
                                                                       "vol_cluster_position.id",
-                                                                      represent)),
+                                                                      represent,
+                                                                      )),
                                                 represent = represent,
                                                 comment = comment
                                                 )

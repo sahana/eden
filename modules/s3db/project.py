@@ -1778,7 +1778,9 @@ class ProjectActivityTypeModel(S3Model):
         )
 
         # Reusable Fields
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         activity_type_id = S3ReusableField("activity_type_id", "reference %s" % tablename,
                                            label = T("Activity Type"),
                                            ondelete = "SET NULL",
@@ -2827,7 +2829,7 @@ class ProjectCampaignModel(S3Model):
         )
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         campaign_id = S3ReusableField("campaign_id", "reference %s" % tablename,
                                       sortby = "name",
                                       requires = IS_EMPTY_OR(
@@ -2884,11 +2886,11 @@ class ProjectCampaignModel(S3Model):
             msg_record_created = T("Campaign Message Added"),
             msg_record_modified = T("Campaign Message Updated"),
             msg_record_deleted = T("Campaign Message Deleted"),
-            msg_list_empty = T("No Campaign Messages Found")
-        )
+            msg_list_empty = T("No Campaign Messages Found"),
+            )
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         message_id = S3ReusableField("campaign_message_id", "reference %s" % tablename,
                                      sortby = "name",
                                      requires = IS_EMPTY_OR(
@@ -2960,7 +2962,7 @@ class ProjectCampaignModel(S3Model):
         #             super_link("parameter_id", "stats_parameter",
         #                        label = T("Keyword"),
         #                        instance_types = ("project_campaign_keyword",),
-        #                        represent = S3Represent(lookup="stats_parameter"),
+        #                        represent = S3Represent(lookup = "stats_parameter"),
         #                        readable = True,
         #                        writable = True,
         #                        empty = False,
@@ -3002,7 +3004,7 @@ class ProjectCampaignModel(S3Model):
                      super_link("parameter_id", "stats_parameter",
                                 label = T("Keyword"),
                                 instance_types = ("project_campaign_keyword",),
-                                represent = S3Represent(lookup="stats_parameter"),
+                                represent = S3Represent(lookup = "stats_parameter"),
                                 readable = True,
                                 writable = True,
                                 empty = False,
@@ -3149,7 +3151,7 @@ class ProjectFrameworkModel(S3Model):
                                       ]
                        )
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         framework_id = S3ReusableField("framework_id", "reference %s" % tablename,
                                        label = ORGANISATION,
                                        ondelete = "CASCADE",
@@ -3242,7 +3244,9 @@ class ProjectHazardModel(S3Model):
             msg_list_empty = T("No Hazards currently registered"))
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         hazard_id = S3ReusableField("hazard_id", "reference %s" % tablename,
                                     sortby = "name",
                                     label = T("Hazards"),
@@ -3474,8 +3478,8 @@ class ProjectIndicatorModel(S3Model):
                                 empty = False,
                                 instance_types = ("project_indicator",),
                                 label = T("Indicator"),
-                                represent = S3Represent(lookup="stats_parameter",
-                                                        translate=True,
+                                represent = S3Represent(lookup = "stats_parameter",
+                                                        translate = True,
                                                         ),
                                 readable = True,
                                 writable = True,
@@ -4526,7 +4530,9 @@ class ProjectPlanningModel(S3Model):
                   )
 
         # Reusable Field
-        goal_represent = S3Represent(lookup=tablename, fields=("code", "name"))
+        goal_represent = S3Represent(lookup = tablename,
+                                     fields = ("code", "name"),
+                                     )
         goal_id = S3ReusableField("goal_id", "reference %s" % tablename,
                                   label = T("Goal"),
                                   ondelete = ondelete,
@@ -4645,7 +4651,9 @@ class ProjectPlanningModel(S3Model):
                   )
 
         # Reusable Field
-        outcome_represent = S3Represent(lookup=tablename, fields=("code", "name"))
+        outcome_represent = S3Represent(lookup = tablename,
+                                        fields = ("code", "name"),
+                                        )
         outcome_id = S3ReusableField("outcome_id", "reference %s" % tablename,
                                      label = T("Outcome"),
                                      ondelete = ondelete,
@@ -4782,7 +4790,9 @@ class ProjectPlanningModel(S3Model):
                   )
 
         # Reusable Field
-        output_represent = S3Represent(lookup=tablename, fields=("code", "name"))
+        output_represent = S3Represent(lookup = tablename,
+                                       fields = ("code", "name"),
+                                       )
         output_id = S3ReusableField("output_id", "reference %s" % tablename,
                                     label = T("Output"),
                                     ondelete = ondelete,
@@ -4945,7 +4955,9 @@ class ProjectPlanningModel(S3Model):
         # Reusable Field
         # @ToDo: deployment_setting as to whether to show hierarchy or not
         #        (HNRC add the hierarchy manually in codes, so no need for them)
-        indicator_represent = S3Represent(lookup=tablename, fields=("code", "name"))
+        indicator_represent = S3Represent(lookup = tablename,
+                                          fields = ("code", "name"),
+                                          )
         indicator_id = S3ReusableField("indicator_id", "reference %s" % tablename,
                                        label = T("Indicator"),
                                        ondelete = ondelete,
@@ -9917,10 +9929,12 @@ class ProjectProgrammeModel(S3Model):
             msg_record_created = T("Program created"),
             msg_record_modified = T("Program updated"),
             msg_record_deleted = T("Program deleted"),
-            msg_list_empty = T("No Programs found")
-        )
+            msg_list_empty = T("No Programs found"),
+            )
 
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         programme_id = S3ReusableField("programme_id", "reference %s" % tablename,
                                        label = T("Program"),
                                        ondelete = "CASCADE",
@@ -10080,11 +10094,14 @@ class ProjectStatusModel(S3Model):
             msg_record_created = T("Status added"),
             msg_record_modified = T("Status updated"),
             msg_record_deleted = T("Status deleted"),
-            msg_list_empty = T("No Statuses currently defined"))
+            msg_list_empty = T("No Statuses currently defined"),
+            )
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename, translate=True)
-                                #none = T("Unknown"))
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                #none = T("Unknown"),
+                                )
         status_id = S3ReusableField("status_id", "reference %s" % tablename,
                                     comment = S3PopupLink(title = ADD_STATUS,
                                                           c = "project",
@@ -10159,10 +10176,11 @@ class ProjectStrategyModel(S3Model):
             msg_record_created = T("Strategy added"),
             msg_record_modified = T("Strategy updated"),
             msg_record_deleted = T("Strategy deleted"),
-            msg_list_empty = T("No Strategies currently registered"))
+            msg_list_empty = T("No Strategies currently registered"),
+            )
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         strategy_id = S3ReusableField("strategy_id", "reference %s" % tablename,
                                       comment = S3PopupLink(title = ADD_STRATEGY,
                                                             c = "project",
@@ -10293,10 +10311,13 @@ class ProjectThemeModel(S3Model):
             msg_record_created = T("Theme added"),
             msg_record_modified = T("Theme updated"),
             msg_record_deleted = T("Theme deleted"),
-            msg_list_empty = T("No Themes currently registered"))
+            msg_list_empty = T("No Themes currently registered"),
+            )
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         theme_id = S3ReusableField("theme_id", "reference %s" % tablename,
                                    label = T("Theme"),
                                    ondelete = "CASCADE",
@@ -10553,8 +10574,9 @@ class ProjectDRRModel(S3Model):
                           self.project_project_id(empty=False),
                           Field("hfa", "list:integer",
                                 label = T("HFA Priorities"),
-                                represent = S3Represent(options=options,
-                                                        multiple=True),
+                                represent = S3Represent(options = options,
+                                                        multiple = True,
+                                                        ),
                                 requires = IS_EMPTY_OR(IS_IN_SET(
                                             options,
                                             multiple = True)),
@@ -10697,11 +10719,12 @@ class ProjectDRRPPModel(S3Model):
                                 ),
                           Field("L1", "list:integer",
                                 label = T("Cook Islands"),
-                                represent = S3Represent(lookup="gis_location",
-                                                        multiple=True),
+                                represent = S3Represent(lookup = "gis_location",
+                                                        multiple = True,
+                                                        ),
                                 requires = IS_EMPTY_OR(
                                             IS_ONE_OF(db, "gis_location.id",
-                                                      S3Represent(lookup="gis_location"),
+                                                      S3Represent(lookup = "gis_location"),
                                                       filterby = "L0",
                                                       filter_opts = ("Cook Islands",),
                                                       not_filterby = "name",
@@ -11015,7 +11038,7 @@ class ProjectTaskModel(S3Model):
                      Field("priority", "integer",
                            default = 3,
                            label = T("Priority"),
-                           represent = S3Represent(options = project_task_priority_opts),
+                           represent = s3_options_represent(project_task_priority_opts),
                            requires = IS_IN_SET(project_task_priority_opts,
                                                 zero = None),
                            ),
@@ -11081,7 +11104,7 @@ class ProjectTaskModel(S3Model):
                      Field("status", "integer",
                            default = 2,
                            label = T("Status"),
-                           represent = S3Represent(options = project_task_status_opts),
+                           represent = s3_options_represent(project_task_status_opts),
                            requires = IS_IN_SET(project_task_status_opts,
                                                 zero = None),
                            readable = staff,

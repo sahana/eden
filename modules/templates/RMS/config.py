@@ -3504,11 +3504,12 @@ Thank you"""
                                                             filter_opts = org_ids,
                                                             )
 
+        from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineLink, s3_options_represent
+
         f = table.transport_type
         f.requires = IS_IN_SET(transport_opts)
-        f.represent = S3Represent(options = transport_opts)
+        f.represent = s3_options_represent(transport_opts)
 
-        from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineLink
         crud_form = S3SQLCustomForm(S3SQLInlineLink("req",
                                                     field = "req_id",
                                                     label = T("Request Number"),
@@ -3583,9 +3584,9 @@ Thank you"""
                                       "GRN": T("GRN"),
                                       "WB": T("Waybill"),
                                       }
-                #from s3 import S3Represent
+                from s3 import s3_options_represent
                 field.requires = IS_IN_SET(document_type_opts)
-                field.represent = S3Represent(options = document_type_opts)
+                field.represent = s3_options_represent(document_type_opts)
 
             elif r.get_vars.get("incoming"):
                 s3.crud_strings.inv_recv.title_list = T("Incoming Shipments")
@@ -3679,11 +3680,12 @@ Thank you"""
         from .controllers import org_SiteRepresent
         table.to_site_id.requires.other.label = org_SiteRepresent()
 
+        from s3 import S3SQLCustomForm, S3SQLInlineLink, s3_options_represent
+
         f = table.transport_type
         f.requires = IS_IN_SET(transport_opts)
-        f.represent = S3Represent(options = transport_opts)
+        f.represent = s3_options_represent(transport_opts)
 
-        from s3 import S3SQLCustomForm, S3SQLInlineLink
         crud_form = S3SQLCustomForm(S3SQLInlineLink("req",
                                                     field = "req_id",
                                                     label = T("Request Number"),
@@ -3762,9 +3764,9 @@ Thank you"""
                                       "WB": T("Waybill"),
                                       }
                 #from gluon import IS_IN_SET
-                #from s3 import S3Represent
+                from s3 import s3_options_represent
                 field.requires = IS_IN_SET(document_type_opts)
-                field.represent = S3Represent(options = document_type_opts)
+                field.represent = s3_options_represent(document_type_opts)
 
             elif r.get_vars.get("draft"):
                 s3.crud_strings.inv_recv.title_list = T("Outbound Shipments")
@@ -6133,7 +6135,8 @@ Thank you"""
                 transport_type = components_get("transport_type")
                 f = transport_type.table.value
                 f.requires = IS_EMPTY_OR(IS_IN_SET(transport_opts))
-                f.represent = S3Represent(options = transport_opts)
+                from s3 import s3_options_represent
+                f.represent = s3_options_represent(transport_opts)
                 f.widget = S3GroupedOptionsWidget(options = transport_opts,
                                                   multiple = False,
                                                   cols = 4,

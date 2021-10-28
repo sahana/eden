@@ -452,7 +452,7 @@ def config(settings):
     def customise_dc_question_resource(r, tablename):
 
         from gluon import IS_IN_SET
-        from s3 import S3Represent, S3SQLCustomForm
+        from s3 import s3_options_represent, S3SQLCustomForm
 
         crud_form = S3SQLCustomForm((T("Type"), "field_type"),
                                     (T("Question"), "name"),
@@ -470,7 +470,7 @@ def config(settings):
 
         s3db = current.s3db
         table = s3db.dc_question
-        table.field_type.represent = S3Represent(options=type_opts)
+        table.field_type.represent = Ss3_options_represent(type_opts)
         table.field_type.requires = IS_IN_SET(type_opts)
         table.require_not_empty.comment = None
 

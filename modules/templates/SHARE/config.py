@@ -1659,7 +1659,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
 
         from gluon import IS_EMPTY_OR, IS_IN_SET, SPAN
 
-        from s3 import S3Represent
+        from s3 import S3Represent, s3_options_represent
 
         s3db = current.s3db
 
@@ -1683,7 +1683,7 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
 
         f = table.status
         f.requires = IS_EMPTY_OR(IS_IN_SET(need_status_opts, zero = None))
-        f.represent = S3Represent(options = need_status_opts)
+        f.represent = s3_options_represent(need_status_opts)
 
         f = table.coarse_location_id
         f.label = T("Division")

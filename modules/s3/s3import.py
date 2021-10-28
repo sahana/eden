@@ -62,11 +62,10 @@ from gluon.tools import callback, fetch
 
 from s3dal import Field
 from .s3datetime import s3_utc
-from .s3fields import S3Represent
 from .s3rest import S3Method, S3Request
 from .s3resource import S3Resource
 from .s3utils import s3_get_foreign_key, s3_has_foreign_key, \
-                     s3_mark_required, s3_str
+                     s3_mark_required, s3_str, s3_options_represent
 from .s3validators import IS_JSONS3
 
 KNOWN_SPREADSHEET_EXTENSIONS = (".csv", ".xls", ".xlsx", ".xlsm")
@@ -1688,7 +1687,7 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
                                  )
         table.file.label = messages.import_file
         table.status.requires = IS_IN_SET(import_upload_status, zero=None)
-        table.status.represent = S3Represent(options = import_upload_status)
+        table.status.represent = s3_options_represent(import_upload_status)
         table.user_id.label = messages.user_name
         table.user_id.represent = current.s3db.auth_UserRepresent(show_email = False,
                                                                   show_link = False,

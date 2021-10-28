@@ -93,7 +93,7 @@ class DataCollectionTemplateModel(S3Model):
                      Field("master", length=32,
                            default = "dc_response",
                            label = T("Used for"),
-                           represent = S3Represent(options = master_opts),
+                           represent = s3_options_represent(master_opts),
                            requires = IS_IN_SET(master_opts),
                            # Either set via Controller or on Import
                            readable = False,
@@ -263,7 +263,7 @@ class DataCollectionTemplateModel(S3Model):
                      Field("field_type", "integer", notnull=True,
                            default = 1, # string
                            label = T("Field Type"),
-                           represent = S3Represent(options = type_opts),
+                           represent = s3_options_represent(type_opts),
                            requires = IS_IN_SET(type_opts),
                            ),
                      Field("options", "json",
@@ -1058,7 +1058,7 @@ class DataCollectionModel(S3Model):
                      Field("status", "integer",
                            default = default_status,
                            label = T("Status"),
-                           represent = S3Represent(options = status_opts),
+                           represent = s3_options_represent(status_opts),
                            requires = IS_IN_SET(status_opts),
                            readable = target_status,
                            writable = target_status,
@@ -1343,7 +1343,7 @@ class TrainingEventAssessmentModel(S3Model):
                                 default = 1,
                                 label = T("Type"),
                                 requires = IS_EMPTY_OR(IS_IN_SET(type_opts)),
-                                represent = S3Represent(options = type_opts),
+                                represent = s3_options_represent(type_opts),
                                 ),
                           *s3_meta_fields())
 

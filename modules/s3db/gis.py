@@ -164,7 +164,7 @@ class LocationModel(S3Model):
             Field("gis_feature_type", "integer", notnull=True,
                   default = 1,
                   label = T("Feature Type"),
-                  represent = S3Represent(options = gis_feature_type_opts),
+                  represent = s3_options_represent(gis_feature_type_opts),
                   requires = IS_IN_SET(gis_feature_type_opts,
                                        zero = None),
                   ),
@@ -1863,7 +1863,7 @@ class GISConfigModel(S3Model):
             msg_list_empty = T("No Projections currently defined"))
 
         # Reusable field to include in other table definitions
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         projection_id = S3ReusableField("projection_id", "reference %s" % tablename,
                                         sortby="name",
                                         requires = IS_EMPTY_OR(
@@ -1872,15 +1872,15 @@ class GISConfigModel(S3Model):
                                                               )),
                                         represent = represent,
                                         label = T("Projection"),
-                                        comment=S3PopupLink(c = "gis",
-                                                            f = "projection",
-                                                            label = ADD_PROJECTION,
-                                                            title = T("Projection"),
-                                                            tooltip = "%s|%s|%s" % (T("The system supports 2 projections by default:"),
-                                                                                    T("Spherical Mercator (900913) is needed to use OpenStreetMap/Google/Bing base layers."),
-                                                                                    T("WGS84 (EPSG 4236) is required for many WMS servers."),
-                                                                                    ),
-                                                            ),
+                                        comment = S3PopupLink(c = "gis",
+                                                              f = "projection",
+                                                              label = ADD_PROJECTION,
+                                                              title = T("Projection"),
+                                                              tooltip = "%s|%s|%s" % (T("The system supports 2 projections by default:"),
+                                                                                      T("Spherical Mercator (900913) is needed to use OpenStreetMap/Google/Bing base layers."),
+                                                                                      T("WGS84 (EPSG 4236) is required for many WMS servers."),
+                                                                                      ),
+                                                              ),
                                         ondelete = "RESTRICT",
                                         )
 
@@ -3139,7 +3139,7 @@ class LayerMapModel(S3Model):
                      desc_field()(),
                      Field("type", length=32,
                            label = TYPE,
-                           represent = S3Represent(options = bing_layer_types),
+                           represent = s3_options_represent(bing_layer_types),
                            requires = IS_IN_SET(bing_layer_types),
                            ),
                      s3_role_required(),       # Single Role
@@ -3296,7 +3296,7 @@ class LayerMapModel(S3Model):
                      desc_field()(),
                      Field("type", length=16,
                            label = TYPE,
-                           represent = S3Represent(options = google_layer_types),
+                           represent = s3_options_represent(google_layer_types),
                            requires = IS_IN_SET(google_layer_types),
                            ),
                      s3_role_required(),       # Single Role
@@ -3575,7 +3575,7 @@ class LayerMapModel(S3Model):
                            ),
                      Field("gis_feature_type", "integer",
                            label = T("Feature Type"),
-                           represent = S3Represent(options = gis_feature_type_opts),
+                           represent = s3_options_represent(gis_feature_type_opts),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(gis_feature_type_opts,
                                                   zero = None)),
@@ -4479,7 +4479,7 @@ class LayerThemeModel(S3Model):
                             gis_theme_data = "layer_theme_id",
                             )
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         layer_theme_id = S3ReusableField("layer_theme_id", "reference %s" % tablename,
                                          label = "Theme Layer",
                                          ondelete = "CASCADE",
@@ -4691,7 +4691,7 @@ class PoIModel(S3Model):
             msg_record_deleted = T("Point of Interest deleted"),
             msg_list_empty = T("No Points of Interest currently available"))
 
-        #represent = S3Represent(lookup=tablename)
+        #represent = S3Represent(lookup = tablename)
         #poi_id = S3ReusableField("poi_id", "reference %s" % tablename,
         #                         label = T("Point of Interest"),
         #                         ondelete = "RESTRICT",

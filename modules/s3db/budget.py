@@ -147,12 +147,12 @@ class BudgetModel(S3Model):
                           Field("monitoring_frequency", "integer",
                                 default = 1,
                                 label = T("Monitoring Frequency"),
-                                represent = S3Represent(options = monitoring_opts),
+                                represent = s3_options_represent(monitoring_opts),
                                 requires = IS_IN_SET(monitoring_opts),
                                 ),
                           Field("status", "integer",
                                 default = 1,
-                                represent = S3Represent(options = status_opts),
+                                represent = s3_options_represent(status_opts),
                                 requires = IS_IN_SET(status_opts),
                                 ),
                           s3_comments(),
@@ -176,7 +176,9 @@ class BudgetModel(S3Model):
         )
 
         # Represent
-        #budget_budget_represent = S3Represent(lookup=tablename, show_link=True)
+        #budget_budget_represent = S3Represent(lookup = tablename,
+        #                                      show_link = True,
+        #                                      )
 
         # Reusable Field
         #budget_budget_id = S3ReusableField("budget_id", "reference %s" % tablename,
@@ -273,7 +275,7 @@ class BudgetAllocationModel(S3Model):
                                      #        type defined, so using that as
                                      #        label for now)
                                      label = T("Project"),
-                                     represent = S3Represent(lookup="budget_entity"),
+                                     represent = S3Represent(lookup = "budget_entity"),
                                      ),
                           # Component not instance
                           super_link("cost_item_id", "budget_cost_item",
@@ -696,7 +698,7 @@ class BudgetItemModel(S3Model):
                      Field("category_type", "integer", notnull=True,
                            #default = 1,
                            label = T("Category"),
-                           represent = S3Represent(options = budget_category_type_opts),
+                           represent = s3_options_represent(budget_category_type_opts),
                            requires = IS_IN_SET(budget_category_type_opts,
                                                 zero = None),
                            ),
@@ -714,7 +716,7 @@ class BudgetItemModel(S3Model):
                      Field("cost_type", "integer", notnull=True,
                            #default = 1,
                            label = T("Cost Type"),
-                           represent = S3Represent(options = budget_cost_type_opts),
+                           represent = s3_options_represent(budget_cost_type_opts),
                            requires = IS_IN_SET(budget_cost_type_opts,
                                                 zero = None),
                            ),
@@ -955,8 +957,7 @@ class BudgetItemModel(S3Model):
                             )
 
         # Represent
-        budget_bundle_represent = S3Represent(lookup=tablename,
-                                             fields=["name"])
+        budget_bundle_represent = S3Represent(lookup = tablename)
 
         # Reusable Field
         budget_bundle_id = S3ReusableField("bundle_id", "reference %s" % tablename,

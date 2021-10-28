@@ -420,7 +420,9 @@ def project():
                 #    from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 #    field = s3db.budget_allocation.budget_entity_id
                 #    field.readable = field.writable = True
-                #    field.represent = S3Represent(lookup="budget_budget", key="budget_entity_id")
+                #    field.represent = S3Represent(lookup = "budget_budget",
+                #                                  key = "budget_entity_id",
+                #                                  )
                 #    field.requires = IS_ONE_OF()
                 #
                 #    crud_form = S3SQLCustomForm("project_id",
@@ -557,9 +559,9 @@ def set_theme_requires(sector_ids):
     field = table.theme_id
     field.requires = IS_EMPTY_OR(IS_ONE_OF(db, "project_theme.id",
                                            field.represent,
-                                           filterby="id",
-                                           filter_opts=theme_ids,
-                                           sort=True,
+                                           filterby = "id",
+                                           filter_opts = theme_ids,
+                                           sort = True,
                                            )
                                  )
 
@@ -582,12 +584,13 @@ def set_activity_type_requires(tablename, sector_ids):
                         row.project_activity_type_sector.sector_id in sector_ids]
     else:
         activity_type_ids = []
+    from s3 import S3Represent
     s3db[tablename].activity_type_id.requires = IS_EMPTY_OR(
                                     IS_ONE_OF(db, "project_activity_type.id",
-                                              s3base.S3Represent(lookup="project_activity_type"),
-                                              filterby="id",
-                                              filter_opts=activity_type_ids,
-                                              sort=True,
+                                              S3Represent(lookup = "project_activity_type"),
+                                              filterby = "id",
+                                              filter_opts = activity_type_ids,
+                                              sort = True,
                                               )
                                     )
 

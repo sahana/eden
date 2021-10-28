@@ -54,7 +54,7 @@ def dissemination():
     return S3ReusableField("dissemination",
                            default = "NONE",
                            label = T("Dissemination Level"),
-                           represent = S3Represent(options = dict(dissemination_opts)),
+                           represent = s3_options_represent(dict(dissemination_opts)),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(dissemination_opts,
                                                   zero = None,

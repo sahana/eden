@@ -138,7 +138,7 @@ class DeploymentModel(S3Model):
                      Field("status", "integer",
                            default = 2,
                            label = T("Status"),
-                           represent = S3Represent(options = mission_status_opts),
+                           represent = s3_options_represent(mission_status_opts),
                            requires = IS_IN_SET(mission_status_opts),
                            ),
                      # @todo: change into real fields written onaccept?
@@ -388,7 +388,7 @@ class DeploymentModel(S3Model):
                      Field("status", "integer",
                            default = 5,
                            label = T("Category"),
-                           represent = S3Represent(options = status_opts),
+                           represent = s3_options_represent(status_opts),
                            requires = IS_IN_SET(status_opts),
                            ),
                      *s3_meta_fields())
@@ -895,7 +895,7 @@ class DeploymentAlertModel(S3Model):
                      mission_id(
                         requires = IS_ONE_OF(db,
                                              "deploy_mission.id",
-                                             S3Represent(lookup="deploy_mission"),
+                                             S3Represent(lookup = "deploy_mission"),
                                              filterby="status",
                                              filter_opts=(2,),
                                              ),
@@ -1004,7 +1004,7 @@ class DeploymentAlertModel(S3Model):
                         )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         alert_id = S3ReusableField("alert_id", "reference %s" % tablename,
                                    label = T("Alert"),
                                    ondelete = "CASCADE",

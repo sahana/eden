@@ -110,7 +110,7 @@ class ProcurementPlansModel(S3Model):
                      self.org_organisation_id(label = T("Supplier")),
                      Field("shipping", "integer",
                            requires = IS_EMPTY_OR(IS_IN_SET(proc_shipping_opts)),
-                           represent = S3Represent(options = proc_shipping_opts),
+                           represent = s3_options_represent(proc_shipping_opts),
                            label = T("Shipping Method"),
                            default = 0,
                            ),

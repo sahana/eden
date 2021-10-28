@@ -449,7 +449,7 @@ $.filterOptionsS3({
                      Field("status",
                            default = "Draft",
                            label = T("Status"),
-                           represent = S3Represent(options=status_opts),
+                           represent = s3_options_represent(status_opts),
                            requires = IS_IN_SET(status_opts),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the appropriate handling of the alert message"),
@@ -460,7 +460,7 @@ $.filterOptionsS3({
                      Field("msg_type",
                            label = T("Message Type"),
                            default = "Alert",
-                           #represent = S3Represent(options=msg_types),
+                           #represent = s3_options_represent(msg_types),
                            requires = IS_IN_SET(msg_types),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The nature of the alert message"),
@@ -1135,8 +1135,7 @@ $.filterOptionsS3({
                          ),
                      Field("urgency",
                            label = T("Urgency"),
-                           represent = S3Represent(options = cap_options["urgency"],
-                                                   ),
+                           represent = s3_options_represent(cap_options["urgency"]),
                            # Empty For Template, checked onvalidation hook
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(cap_options["urgency"])),
@@ -1148,8 +1147,7 @@ $.filterOptionsS3({
                            ),
                      Field("severity",
                            label = T("Severity"),
-                           represent = S3Represent(options = cap_options["severity"],
-                                                   ),
+                           represent = s3_options_represent(cap_options["severity"]),
                            # Empty For Template, checked onvalidation hook
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(cap_options["severity"])),
@@ -1161,8 +1159,7 @@ $.filterOptionsS3({
                            ),
                      Field("certainty",
                            label = T("Certainty"),
-                           represent = S3Represent(options = cap_options["certainty"],
-                                                   ),
+                           represent = s3_options_represent(cap_options["certainty"]),
                            # Empty For Template, checked onvalidation hook
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(cap_options["certainty"])),
@@ -1365,7 +1362,8 @@ $.filterOptionsS3({
         # Reference Representation
         info_represent = S3Represent(lookup = tablename,
                                      fields = ["language", "headline"],
-                                     field_sep = " - ")
+                                     field_sep = " - ",
+                                     )
 
         # Reusable Field
         info_id = S3ReusableField("info_id", "reference %s" % tablename,
@@ -2756,7 +2754,9 @@ class CAPWarningPriorityModel(S3Model):
             )
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         priority_id = S3ReusableField("priority", "reference %s" % tablename,
                                       label = T("Priority"),
                                       represent = represent,
@@ -2969,7 +2969,7 @@ class CAPHistoryModel(S3Model):
                      s3_datetime("sent"),
                      Field("status",
                            label = T("Status"),
-                           represent = S3Represent(options=status_opts),
+                           represent = s3_options_represent(status_opts),
                            requires = IS_IN_SET(status_opts),
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" % (T("Denotes the appropriate handling of the alert message"),
@@ -2979,7 +2979,7 @@ class CAPHistoryModel(S3Model):
                            ),
                      Field("msg_type",
                            label = T("Message Type"),
-                           represent = S3Represent(options=msg_types),
+                           represent = s3_options_represent(msg_types),
                            requires = IS_EMPTY_OR(IS_IN_SET(msg_types)),
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" % (T("The nature of the alert message"),
@@ -2997,7 +2997,7 @@ class CAPHistoryModel(S3Model):
                            ),
                      Field("scope",
                            label = T("Scope"),
-                           represent = S3Represent(options=scopes),
+                           represent = s3_options_represent(scopes),
                            requires = IS_EMPTY_OR(IS_IN_SET(scopes)),
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" % (T("Denotes the intended distribution of the alert message"),
@@ -3229,7 +3229,7 @@ class CAPHistoryModel(S3Model):
                            ),
                      Field("urgency",
                            label = T("Urgency"),
-                           represent = S3Represent(options=urgency_opts),
+                           represent = s3_options_represent(urgency_opts),
                            requires = IS_IN_SET(urgency_opts),
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" % (T("Urgency"),
@@ -3239,7 +3239,7 @@ class CAPHistoryModel(S3Model):
                            ),
                      Field("severity",
                            label = T("Severity"),
-                           represent = S3Represent(options=severity_opts),
+                           represent = s3_options_represent(severity_opts),
                            requires = IS_IN_SET(severity_opts),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Severity"),
@@ -3249,7 +3249,7 @@ class CAPHistoryModel(S3Model):
                            ),
                      Field("certainty",
                            label = T("Certainty"),
-                           represent = S3Represent(options=certainty_opts),
+                           represent = s3_options_represent(certainty_opts),
                            requires = IS_IN_SET(certainty_opts),
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" % (T("Certainty"),

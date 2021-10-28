@@ -330,16 +330,16 @@ def config(settings):
         }
 
         from gluon import IS_EMPTY_OR, IS_IN_SET
-        from s3 import S3Represent
+        from s3 import s3_options_represent
 
         s3db = current.s3db
 
         field = s3db.med_hospital.facility_type
-        field.represent = S3Represent(options = med_facility_type_opts)
+        field.represent = s3_options_represent(med_facility_type_opts)
         field.requires = IS_EMPTY_OR(IS_IN_SET(med_facility_type_opts))
 
         field = s3db.med_status.facility_status
-        field.represent = S3Represent(options = med_facility_status_opts)
+        field.represent = s3_options_represent(med_facility_status_opts)
         field.requires = IS_EMPTY_OR(IS_IN_SET(med_facility_status_opts))
 
     settings.customise_med_hospital_resource = customise_med_hospital_resource

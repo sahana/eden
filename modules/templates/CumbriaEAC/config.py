@@ -802,7 +802,7 @@ def config(settings):
             current.log.error(error)
             raise HTTP(503, body=error)
 
-        from s3 import S3Audit, S3Represent, s3_format_fullname, s3_fullname, s3_str
+        from s3 import S3Audit, s3_options_represent, s3_format_fullname, s3_fullname, s3_str
 
         date_format = settings.get_L10n_date_format()
         date_format_str = str(date_format)
@@ -889,7 +889,7 @@ def config(settings):
 
         # Event Log
         event_represent = etable.event.represent
-        status_represent = S3Represent(options = cr_shelter_status_opts)
+        status_represent = s3_options_represent(cr_shelter_status_opts)
 
         query = (etable.site_id == site_id) & \
                 (etable.archived == False)
@@ -1231,7 +1231,7 @@ def config(settings):
         from gluon import A, DIV, IS_EMPTY_OR, IS_IN_SET, IS_INT_IN_RANGE, IS_LENGTH, \
                                   IS_NOT_EMPTY, IS_NOT_IN_DB, IS_URL
 
-        from s3 import S3Represent, S3SQLCustomForm, S3LocationSelector, \
+        from s3 import s3_options_represent, S3SQLCustomForm, S3LocationSelector, \
                        S3TextFilter, S3LocationFilter, S3OptionsFilter, S3RangeFilter, \
                        S3TagCheckboxWidget, s3_fieldmethod
 
@@ -1279,10 +1279,10 @@ def config(settings):
             f.represent = None
         elif r.method == "report":
             # Differentiate the 2x Closed
-            f.represent = S3Represent(options = cr_shelter_status_opts)
+            f.represent = s3_options_represent(cr_shelter_status_opts)
         else:
             # Show the 2x Closed as 'Closed'
-            f.represent = S3Represent(options = dict(cr_shelter_status_opts))
+            f.represent = s3_options_represent(dict(cr_shelter_status_opts))
         dtable.population_day.label = T("Occupancy")
         table.obsolete.label = T("Unavailable")
         table.obsolete.comment = DIV(_class = "tooltip",
@@ -1365,7 +1365,7 @@ def config(settings):
                         }
         f.requires = IS_EMPTY_OR(IS_IN_SET(purpose_opts,
                                            zero = T("Not defined")))
-        f.represent = S3Represent(options = purpose_opts)
+        f.represent = s3_options_represent(purpose_opts)
 
         plan = components_get("plan")
         f = plan.table.value
@@ -1381,7 +1381,7 @@ def config(settings):
         plan_opts = {str(p.id): p.name for p in plans}
         f.requires = IS_EMPTY_OR(IS_IN_SET(plan_opts,
                                            zero = T("Unknown")))
-        f.represent = S3Represent(options = plan_opts)
+        f.represent = s3_options_represent(plan_opts)
 
         streetview = components_get("streetview")
         f = streetview.table.value
@@ -2599,12 +2599,12 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_org_site_event_resource(r, tablename):
 
-        from s3 import S3Represent
+        from s3 import s3_options_represent
 
         s3db = current.s3db
 
         table = s3db.org_site_event
-        table.status.represent = S3Represent(options = cr_shelter_status_opts)
+        table.status.represent = s3_options_represent(cr_shelter_status_opts)
         table.created_by.readable = True
 
         s3db.configure(tablename,

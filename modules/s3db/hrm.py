@@ -270,7 +270,7 @@ class HRModel(S3Model):
                            label = T("Type"),
                            readable = hrm_types,
                            writable = hrm_types,
-                           represent = S3Represent(options = hrm_type_opts),
+                           represent = s3_options_represent(hrm_type_opts),
                            requires = IS_IN_SET(hrm_type_opts),
                            ),
                      s3_comments(comment = None,
@@ -439,7 +439,7 @@ class HRModel(S3Model):
                      Field("type", "integer",
                            default = 1,
                            label = T("Type"),
-                           represent = S3Represent(options = hrm_type_opts),
+                           represent = s3_options_represent(hrm_type_opts),
                            requires = IS_IN_SET(hrm_type_opts,
                                                 zero = None),
                            widget = RadioWidget.widget,
@@ -483,7 +483,7 @@ class HRModel(S3Model):
                      Field("status", "integer",
                            default = 1,
                            label = T("Status"),
-                           represent = S3Represent(options = hrm_status_opts),
+                           represent = s3_options_represent(hrm_status_opts),
                            requires = IS_IN_SET(hrm_status_opts,
                                                 zero = None),
                            ),
@@ -1754,7 +1754,6 @@ class HRInsuranceModel(S3Model):
         insurance_types = {"SOCIAL": T("Social Insurance"),
                            "HEALTH": T("Health Insurance"),
                            }
-        insurance_type_represent = S3Represent(options = insurance_types)
 
         # =====================================================================
         # Insurance Information
@@ -1767,7 +1766,7 @@ class HRInsuranceModel(S3Model):
                           #self.pr_person_id(),
                           Field("type",
                                 label = T("Type"),
-                                represent = insurance_type_represent,
+                                represent = s3_options_represent(insurance_types),
                                 requires = IS_IN_SET(insurance_types),
                                 ),
                           Field("insurance_number",
@@ -1824,12 +1823,10 @@ class HRContractModel(S3Model):
                           "LONG": T("Long-term"),
                           "PERMANENT": T("Permanent")
                           }
-        contract_term_represent = S3Represent(options = contract_terms)
 
         hours_models = {"PARTTIME": T("Part-time"),
                         "FULLTIME": T("Full-time"),
                         }
-        hours_model_represent = S3Represent(options = hours_models)
 
         # =====================================================================
         # Employment Contract Details
@@ -1847,11 +1844,11 @@ class HRContractModel(S3Model):
                           #        ),
                           Field("term",
                                 requires = IS_IN_SET(contract_terms),
-                                represent = contract_term_represent,
+                                represent = s3_options_represent(contract_terms),
                                 ),
                           Field("hours",
                                 requires = IS_IN_SET(hours_models),
-                                represent = hours_model_represent,
+                                represent = s3_options_represent(hours_models),
                                 ),
                           s3_comments(),
                           *s3_meta_fields())
@@ -2202,7 +2199,8 @@ class HRSkillModel(S3Model):
             msg_record_created = T("Skill added"),
             msg_record_modified = T("Skill updated"),
             msg_record_deleted = T("Skill deleted"),
-            msg_list_empty = T("Currently no entries in the catalog"))
+            msg_list_empty = T("Currently no entries in the catalog"),
+            )
 
         autocomplete = False
         label_create = crud_strings[tablename].label_create
@@ -2221,7 +2219,9 @@ class HRSkillModel(S3Model):
                                  tooltip = tooltip,
                                  )
 
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         skill_id = S3ReusableField("skill_id", "reference %s" % tablename,
                                    label = T("Skill"),
                                    ondelete = "SET NULL",
@@ -2305,9 +2305,12 @@ class HRSkillModel(S3Model):
             msg_record_created = T("Competency Rating added"),
             msg_record_modified = T("Competency Rating updated"),
             msg_record_deleted = T("Competency Rating deleted"),
-            msg_list_empty = T("Currently no entries in the catalog"))
+            msg_list_empty = T("Currently no entries in the catalog"),
+            )
 
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         competency_id = S3ReusableField("competency_id", "reference %s" % tablename,
                                         label = T("Competency"),
                                         ondelete = "RESTRICT",
@@ -2479,7 +2482,7 @@ class HRSkillModel(S3Model):
                      # Optionally restrict to Staff/Volunteers/Members
                      Field("type", "integer",
                            label = T("Type"),
-                           represent = S3Represent(options = hrm_course_types),
+                           represent = s3_options_represent(hrm_course_types),
                            requires = IS_EMPTY_OR(IS_IN_SET(hrm_course_types)),
                            # Enable in Templates as-required
                            readable = False,
@@ -2632,7 +2635,7 @@ class HRSkillModel(S3Model):
 
         event_types = settings.get_hrm_event_types()
         label_create = crud_strings[tablename].label_create
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         event_type_id = S3ReusableField("event_type_id", "reference %s" % tablename,
                                         label = T("Event Type"),
                                         ondelete = "RESTRICT",
@@ -3075,7 +3078,7 @@ class HRSkillModel(S3Model):
                      Field("role", "integer",
                            default = 1,
                            label = T("Role"),
-                           represent = S3Represent(options = role_opts),
+                           represent = s3_options_represent(role_opts),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(role_opts,
                                                   zero = None)),
@@ -3096,7 +3099,7 @@ class HRSkillModel(S3Model):
                      Field("status", "integer",
                            default = 4, # Invited
                            label = T("Status"),
-                           represent = S3Represent(options = status_opts),
+                           represent = s3_options_represent(status_opts),
                            requires = IS_EMPTY_OR(IS_IN_SET(status_opts)),
                            # Enable in templates as-required
                            readable = False,
@@ -3106,7 +3109,7 @@ class HRSkillModel(S3Model):
                      # Once this has been filled-out then the other fields are locked
                      Field("grade", "integer",
                            label = T("Grade"),
-                           represent = S3Represent(options = course_grade_opts),
+                           represent = s3_options_represent(course_grade_opts),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(course_grade_opts,
                                                   zero = None)),
@@ -3341,10 +3344,11 @@ class HRSkillModel(S3Model):
             msg_record_modified = T("Certificate updated"),
             msg_record_deleted = T("Certificate deleted"),
             msg_no_match = T("No entries found"),
-            msg_list_empty = T("Currently no entries in the catalog"))
+            msg_list_empty = T("Currently no entries in the catalog"),
+            )
 
         label_create = crud_strings[tablename].label_create
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup = tablename)
         certificate_id = S3ReusableField("certificate_id", "reference %s" % tablename,
                                          label = T("Certificate"),
                                          ondelete = "RESTRICT",
@@ -3497,7 +3501,7 @@ class HRSkillModel(S3Model):
                                      ),
                      Field("performance_rating", "integer",
                            label = T("Performance Rating"),
-                           represent = S3Represent(options = hrm_performance_opts),
+                           represent = s3_options_represent(hrm_performance_opts),
                            # Default to pass/fail (can override to 5-levels in Controller)
                            # @ToDo: Build this onaccept of hrm_appraisal
                            requires = IS_EMPTY_OR(IS_IN_SET(hrm_pass_fail_opts)),
@@ -4430,7 +4434,7 @@ class HRExperienceModel(S3Model):
             for k, v in activity_types.items():
                 activity_type_opts[k] = T(v)
             activity_type_requires = IS_EMPTY_OR(IS_IN_SET(activity_type_opts))
-            activity_type_represent = S3Represent(options = activity_type_opts)
+            activity_type_represent = s3_options_represent(activity_type_opts)
             use_activity_types = True
 
         tablename = "hrm_experience"
@@ -5036,7 +5040,7 @@ class HRShiftModel(S3Model):
                      job_title_id(),
                      skill_id(),
                      Field("day_of_week", "integer",
-                           represent = S3Represent(options = DAYS_OF_WEEK),
+                           represent = s3_options_represent(DAYS_OF_WEEK),
                            requires = IS_IN_SET(DAYS_OF_WEEK),
                            ),
                      s3_time("start_time",
@@ -5087,7 +5091,8 @@ class HRShiftModel(S3Model):
                      *s3_meta_fields())
 
         represent = S3Represent(lookup = tablename,
-                                fields = ["start_date", "end_date"])
+                                fields = ["start_date", "end_date"],
+                                )
         shift_id = S3ReusableField("shift_id", "reference %s" % tablename,
                                    label = T("Shift"),
                                    ondelete = "RESTRICT",
@@ -5350,7 +5355,7 @@ class HRDelegationModel(S3Model):
                                                 zero = None,
                                                 sort = False,
                                                 ),
-                           represent = S3Represent(options = dict(delegation_status)),
+                           represent = s3_options_represent(dict(delegation_status)),
                            ),
                      # Enable in template if/as required:
                      Field("hours_per_week", "integer",
@@ -5412,7 +5417,7 @@ class HRDelegationModel(S3Model):
                            requires = IS_IN_SET(message_status,
                                                 zero = None,
                                                 ),
-                           represent = S3Represent(options = message_status),
+                           represent = s3_options_represent(message_status),
                            writable = False,
                            ),
                      s3_comments(),

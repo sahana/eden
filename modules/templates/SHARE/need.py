@@ -67,7 +67,7 @@ def need_priority():
                            label = current.T("Priority"),
                            #@ToDo: Colour code the priority text - red, orange, green
                            #represent = need_priority_represent,
-                           represent = S3Represent(options = priority_opts),
+                           represent = s3_options_represent(priority_opts),
                            requires = IS_EMPTY_OR(
                                            IS_IN_SET(priority_opts)
                                            ),
@@ -91,7 +91,7 @@ def need_status():
     status_opts = need_status_opts()
     return S3ReusableField("status", "integer",
                            label = current.T("Fulfilment Status"),
-                           represent = S3Represent(options = status_opts),
+                           represent = s3_options_represent(status_opts),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(status_opts,
                                                   zero = None,
@@ -112,7 +112,7 @@ def need_timeframe():
     return S3ReusableField("timeframe", "integer",
                            default = 3,
                            label = T("Timeframe"),
-                           represent = S3Represent(options = timeframe_opts),
+                           represent = s3_options_represent(timeframe_opts),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(timeframe_opts,
                                                   zero = None,
@@ -891,7 +891,7 @@ class NeedsResponseLineModel(S3Model):
                           self.org_sector_id(),
                           Field("modality", "integer",
                                 label = T("Modality"),
-                                represent = S3Represent(options = modality_opts),
+                                represent = s3_options_represent(modality_opts),
                                 requires = IS_IN_SET(modality_opts),
                                 ),
                           s3_date(label = T("Date Planned")),
@@ -996,7 +996,7 @@ class NeedsResponseOrganisationModel(S3Model):
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(project_organisation_roles)
                                             ),
-                                represent = S3Represent(options = project_organisation_roles),
+                                represent = s3_options_represent(project_organisation_roles),
                                 ),
                           s3_comments(),
                           *s3_meta_fields())

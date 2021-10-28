@@ -50,7 +50,7 @@ def s3_assess_severity_represent(value):
         return NONE
 
 repr_select = lambda l: len(l.name) > 48 and "%s..." % l.name[:44] or l.name
-S3Represent = s3base.S3Represent
+from s3 import S3Represent
 
 add_components = s3db.add_components
 configure = s3db.configure
@@ -151,11 +151,12 @@ def assess_tables():
         if auth.has_membership(auth.id_group("'Administrator'")):
             return S3PopupLink(c="assess",
                                f="baseline_type",
-                               label=ADD_BASELINE_TYPE)
+                               label=ADD_BASELINE_TYPE,
+                               )
         else:
             return None
 
-    represent = S3Represent(tablename)
+    represent = S3Represent(lookup = tablename)
     baseline_type_id = S3ReusableField("baseline_type_id", "reference %s" % tablename,
                                        sortby="name",
                                        requires = IS_EMPTY_OR(IS_ONE_OF(db,
@@ -1867,7 +1868,7 @@ def impact_tables():
         else:
             return None
 
-    represent = S3Represent(tablename)
+    represent = S3Represent(lookup = tablename)
     impact_type_id = S3ReusableField("impact_type_id", "reference %s" % tablename,
                                      sortby="name",
                                      requires = IS_EMPTY_OR(
@@ -2377,14 +2378,14 @@ def custom_assess(custom_assess_fields, location_id=None):
                                                                  value="")
 
         elif field[0] == "baseline":
-            label = S3Represent(lookup="assess_baseline_type")(field[1])
+            label = S3Represent(lookup = "assess_baseline_type")(field[1])
             label = "%s:" % T(label)
             widget = INPUT(_name = name,
                            _class = "double",
                            _type = "text")
 
         elif field[0] == "impact":
-            label = S3Represent(lookup="assess_impact_type")(field[1])
+            label = S3Represent(lookup = "assess_impact_type")(field[1])
             label = "%s:" % T(label)
             value_widget = INPUT(_name = name,
                                  _class = "double",

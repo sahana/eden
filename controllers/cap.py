@@ -740,12 +740,12 @@ def alert():
                             translate = False
                         if translate:
                             # Represent each row with local name if available
-                            from s3 import S3Represent
+                            from s3 import s3_options_represent
                             atable = s3db.cap_area
                             cap_area_options = cap_AreaRowOptionsBuilder(r.id,
                                                                          caller = r.method,
                                                                          )
-                            atable.name.represent = S3Represent(options = cap_area_options)
+                            atable.name.represent = s3_options_represent(cap_area_options)
 
                 elif r.method != "import" and not get_vars.get("_next"):
                     s3.crud.submit_style = "hide"
@@ -838,9 +838,9 @@ def alert():
                         translate = False
                     if translate:
                         # Represent each row with local name if available
-                        from s3 import S3Represent
+                        from s3 import s3_options_represent
                         cap_area_options = cap_AreaRowOptionsBuilder(r.id)
-                        atable.name.represent = S3Represent(options = cap_area_options)
+                        atable.name.represent = s3_options_represent(cap_area_options)
 
                 if record.approved_by is not None:
                     # Once approved, don't allow area segment to edit

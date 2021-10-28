@@ -127,7 +127,7 @@ class DVIModel(S3Model):
                            label = T("Task Status"),
                            requires = IS_IN_SET(task_status,
                                                 zero = None),
-                           represent = S3Represent(options = task_status),
+                           represent = s3_options_represent(task_status),
                            ),
                      *s3_meta_fields())
 
@@ -430,7 +430,7 @@ class DVIModel(S3Model):
                            default = 1,
                            label = T("Identification Status"),
                            requires = IS_IN_SET(dvi_id_status, zero=None),
-                           represent = S3Represent(options = dvi_id_status),
+                           represent = s3_options_represent(dvi_id_status),
                            ),
                      person_id("identity",
                                label = T("Identified as"),
@@ -447,7 +447,7 @@ class DVIModel(S3Model):
                            default = 1,
                            label = T("Method used"),
                            requires = IS_IN_SET(dvi_id_methods, zero=None),
-                           represent = S3Represent(options = dvi_id_methods),
+                           represent = s3_options_represent(dvi_id_methods),
                            ),
                      Field("comment", "text"),
                      *s3_meta_fields())
