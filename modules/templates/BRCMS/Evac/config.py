@@ -725,7 +725,7 @@ def config(settings):
     # =========================================================================
     def customise_inv_inv_item_resource(r, tablename):
 
-        from s3 import IS_ONE_OF, S3Represent, S3SQLCustomForm
+        from s3 import IS_ONE_OF, S3Represent, S3SQLCustomForm, S3SQLInlineComponent
         from s3layouts import S3PopupLink
 
         s3db = current.s3db
@@ -749,10 +749,33 @@ def config(settings):
         table.site_id.comment = S3PopupLink(c = "inv",
                                             f = "warehouse",
                                             label = T("Create Warehouse"),
+                                            vars = {"parent": "inv_item",
+                                                    "child": "site_id",
+                                                    }
                                             )
 
-        crud_fields = [f.name for f in table if (f.writable or f.readable) and not f.compute]
-        crud_fields.insert(0, "dissemination.dissemination")
+        crud_fields = ("dissemination.dissemination",
+                       "site_id",
+                       "item_id",
+                       "item_pack_id",
+                       "quantity",
+                       S3SQLInlineComponent("bin",
+                                            label = T("Bins"),
+                                            fields = ["layout_id",
+                                                      "quantity",
+                                                      ],
+                                            ),
+                       "status",
+                       "purchase_date",
+                       "expiry_date",
+                       "pack_value",
+                       "currency",
+                       "item_source_no",
+                       "owner_org_id",
+                       "supply_org_id",
+                       "source_type",
+                       "comments",
+                       )
 
         from .dissemination import disseminate
         crud_form = S3SQLCustomForm(postprocess = disseminate,

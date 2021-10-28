@@ -311,7 +311,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Administration", link=False, restrict=ADMIN)(
                         M("Accomodation Types", c="cr", f="shelter_type"),
                         M("Bank Services", c="fin", f="bank_service"),
-                        M("Item catalog", c="supply", f="utem"),
+                        M("Item Catalog", c="supply", f="item"),
                         ),
                     )
 

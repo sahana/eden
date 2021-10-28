@@ -51,23 +51,25 @@ $(document).ready(function() {
                 siteID,
                 trees = $('div[id^="sub_defaultbin_defaultbin_i_layout_id"].s3-hierarchy-widget'); // There will be 3
 
-            siteField.change(function() {
-                // Remove all Bin allocations
-                inlineComponent.inlinecomponent('removeRows');
-                siteID = siteField.val();
-                ajaxURL = S3.Ap.concat('/org/site/' + siteID + '/layout/hierarchy.tree');
-                trees.hierarchicalopts('reload', ajaxURL);
-                createButtons.each(function() {
-                    $this = $(this);
-                    if (oldSiteID) {
-                        ajaxURL = $this.attr('href').replace(oldSiteID, siteID);
-                    } else {
-                        ajaxURL = $this.attr('href').replace(re, siteID);
-                    }
-                    $this.attr('href', ajaxURL);
+            if (trees.length) {
+                siteField.change(function() {
+                    // Remove all Bin allocations
+                    inlineComponent.inlinecomponent('removeRows');
+                    siteID = siteField.val();
+                    ajaxURL = S3.Ap.concat('/org/site/' + siteID + '/layout/hierarchy.tree');
+                    trees.hierarchicalopts('reload', ajaxURL);
+                    createButtons.each(function() {
+                        $this = $(this);
+                        if (oldSiteID) {
+                            ajaxURL = $this.attr('href').replace(oldSiteID, siteID);
+                        } else {
+                            ajaxURL = $this.attr('href').replace(re, siteID);
+                        }
+                        $this.attr('href', ajaxURL);
+                    });
+                    oldSiteID = siteID;
                 });
-                oldSiteID = siteID;
-            });
+            }
         }
 
         updatePacks = function(update) {
