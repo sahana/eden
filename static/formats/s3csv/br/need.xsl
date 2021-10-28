@@ -7,6 +7,7 @@
 
          CSV column..................Format..........Content
 
+         uuid........................string..........Need.uuid (Not currently supported for Hierarchical Types)
          Organisation................string..........Organisation Name
          Branch.........................optional.....Organisation Branch Name
          ...SubBranch,SubSubBranch...etc (indefinite depth, must specify all from root)
@@ -138,11 +139,22 @@
         <xsl:param name="ParentPath"/>
         <xsl:param name="Row"/>
 
+        <xsl:variable name="uuid" select="col[@field='uuid']"/>
+
         <resource name="br_need">
-            <!-- Use path with prefix to generate the tuid -->
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="concat('TYPE:', $Path)"/>
-            </xsl:attribute>
+            <xsl:choose>
+                <xsl:when test="$uuid!=''">
+                    <xsl:attribute name="uuid">
+                        <xsl:value-of select="$uuid"/>
+                    </xsl:attribute>
+                </xsl:when>
+                <xsl:otherwise>
+                    <!-- Use path with prefix to generate the tuid -->
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('TYPE:', $Path)"/>
+                    </xsl:attribute>
+                </xsl:otherwise>
+            </xsl:choose>
 
             <!-- Add link to parent (if there is one) -->
             <xsl:if test="$ParentPath!=''">

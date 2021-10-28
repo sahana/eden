@@ -180,7 +180,8 @@ def person():
             field = ctable.organisation_id
             field.comment = None
             if not field.default:
-                default_org, selectable = s3db.br_case_default_org()
+                from s3db.br import br_case_default_org
+                default_org, selectable = br_case_default_org()
                 if default_org and settings.get_br_case_hide_default_org():
                     field.writable = selectable
                     field.readable = selectable or multiple_orgs
@@ -392,7 +393,8 @@ def person():
                                                            field.represent,
                                                            multiple = True,
                                                            ))
-                s3db.br_assistance_default_status()
+                from s3db.br import br_assistance_default_status
+                br_assistance_default_status()
 
         elif r.component_name == "assistance_measure":
 

@@ -128,7 +128,7 @@ def config(settings):
             # Has a unique pr_realm with appropriate multiple inheritance
             # - handled by crud_form.postprocess
             return None
-        elif tablename == "br_activity":
+        elif tablename == "br_case_activity":
             # Has a unique pr_realm with appropriate multiple inheritance
             # - handled by onaccept
             return None
@@ -536,40 +536,141 @@ def config(settings):
     settings.auth.remove_role = auth_remove_role
 
     # =========================================================================
-    def br_case_activity_onaccept(form):
+    def br_case_activity_create_onaccept(form):
         """
-            Have a Realm for the Activity
-            - ensure the correct Inheritance
-            Create a Task for new Activities
+            * Have a Realm for the Activity
+              - ensure the correct Inheritance
+            * Create a Task for the Assignment
         """
-
-        from s3db.pr import pr_add_affiliation
 
         db = current.db
         s3db = current.s3db
 
-        activity_id = form.vars.id
+        form_vars = form.vars
+        activity_id = form_vars.id
 
-        # @ToDo: complete
+        # Create a pr_realm record
+        rtable = s3db.pr_realm
+        realm_id = rtable.insert(name = "%s_%s" % ("br_case_activity",
+                                                   activity_id,
+                                                   ))
+        realm = Storage(id = realm_id)
+        s3db.update_super(rtable, realm)
+        realm_entity = realm["pe_id"]
+        # Set this record to use this for it's realm
+        catable = s3db.br_case_activity
+        activity = db(catable.id == activity_id).select(catable.id,
+                                                        catable.person_id,
+                                                        limitby = (0, 1),
+                                                        ).first()
+        activity.update_record(realm_entity = realm_entity)
+
+        # Set appropriate affiliations
+        from s3db.pr import pr_add_affiliation
+
+        # Activity affiliated to the Case
+        # Person in a case has the same Realm
+        ptable = s3db.pr_person
+        person = db(ptable.id == activity.person_id).select(ptable.realm_entity,
+                                                            limitby = (0, 1),
+                                                            ).first()
+
+        pr_add_affiliation(person.realm_entity, realm_entity, role="Realm Hierarchy")
+
+        human_resource_id = form_vars.human_resource_id
+        if human_resource_id:
+            # Assignee already done, so add affiliation to this Handler
+            htable = s3db.hrm_human_resource
+            query = (htable.id == human_resource_id) & \
+                    (htable.person_id == ptable.id)
+            person = db(query).select(ptable.pe_id,
+                                      limitby = (0, 1),
+                                      ).first()
+            pr_add_affiliation(person.pe_id, realm_entity, role="Realm Hierarchy")
+        else:
+            # Create a Task to look for someone to assign themselves to the Activity
+            ntable = s3db.br_need
+            need = db(ntable.id == form_vars.need_id).select(ntable.name,
+                                                             ntable.uuid,
+                                                             limitby = (0, 1),
+                                                             ).first()
+            ttable = s3db.project_task
+            task_id = ttable.insert(name = need.name,
+                                    description = form_vars.need_details,
+                                    )
+            # Link the Task to the Activity
+            s3db.dissemination_case_activity_task.insert(case_activity_id = activity_id,
+                                                         task_id = task_id,
+                                                         )
+            # Set the Task to appropriate Realm Entity
+            # => top-level WG Forum
+            ftable = s3db.pr_forum
+            forum = db(ftable.uuid == need.uuid).select(ftable.pe_id,
+                                                        limitby = (0, 1),
+                                                        ).first()
+
+            db(ttable.id == task_id).update(realm_entity = forum.pe_id)
 
     # =========================================================================
     def customise_br_case_activity_resource(r, tablename):
 
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLVerticalSubFormLayout
+
         s3db = current.s3db
 
         s3db.add_custom_callback(tablename,
-                                 "onaccept",
-                                 br_case_activity_onaccept,
+                                 "create_onaccept",
+                                 br_case_activity_create_onaccept,
                                  )
+
+        table = s3db.br_case_activity
+        table.human_resource_id.label = T("Handler")
+
+        if r.method in (None, "create"):
+            table.need_details.comment = T("If no Handler is assigned, then these Details will be visible in the Task created to request someone to take on this Activity")
+
+        crud_form = S3SQLCustomForm("person_id",
+                                    "need_id",
+                                    "need_details",
+                                    "human_resource_id",
+                                    "priority",
+                                    "date",
+                                    "activity_details",
+                                    "status_id",
+                                    S3SQLInlineComponent("case_activity_update",
+                                                         label = T("Progress"),
+                                                         fields = ["date",
+                                                                   "update_type_id",
+                                                                   "human_resource_id",
+                                                                   "comments",
+                                                                   ],
+                                                         layout = S3SQLVerticalSubFormLayout,
+                                                         explicit_add = T("Add Entry"),
+                                                         ),
+                                    "end_date",
+                                    "outcome",
+                                    S3SQLInlineComponent("document",
+                                                         name = "file",
+                                                         label = T("Attachments"),
+                                                         fields = ["file", "comments"],
+                                                         filterby = {"field": "file",
+                                                                     "options": "",
+                                                                     "invert": True,
+                                                                     },
+                                                         ),
+                                    "comments",
+                                    )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
 
     settings.customise_br_case_activity_resource = customise_br_case_activity_resource
 
     # =========================================================================
-    def customise_br_case_resource(r, tablename):
-
-        current.s3db.br_case.household_size.label = T("Group Size")
-
-    settings.customise_br_case_resource = customise_br_case_resource
+    # Use pr_person_controller prep
+    #def customise_br_case_resource(r, tablename):
+    #settings.customise_br_case_resource = customise_br_case_resource
 
     # =========================================================================
     def customise_cr_shelter_resource(r, tablename):
@@ -1048,9 +1149,41 @@ def config(settings):
                 result = True
 
             if r.component or r.controller == "hrm":
-                return
+                return result
 
-            from s3 import S3SQLCustomForm, S3SQLInlineComponent
+            from gluon import IS_EMPTY_OR
+            from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineComponent
+
+            db = current.db
+            s3db = current.s3db
+
+            table = s3db.br_case
+
+            #table.br_case.household_size.label = T("Group Size")
+
+            # Filter to Case Managers
+            gtable = db.auth_group
+            mtable = db.auth_membership
+            ltable = s3db.pr_person_user
+            ptable = s3db.pr_person
+            query = (gtable.uuid.belongs(("CASE_MANAGER",
+                                          "CASE_SUPER",
+                                          "ORG_ADMIN",
+                                          ))) & \
+                    (gtable.id == mtable.group_id) & \
+                    (mtable.user_id == ltable.user_id) & \
+                    (ltable.pe_id == ptable.pe_id)
+            persons = db(query).select(ptable.id)
+            filter_opts = [p.id for p in persons]
+            f = table.human_resource_id
+            f.label = T("Case Manager")
+            f.requires = IS_EMPTY_OR(
+                            IS_ONE_OF(db, "hrm_human_resource.id",
+                                      f.represent,
+                                      filterby = "person_id",
+                                      filter_opts = filter_opts,
+                                      sort = True,
+                                      ))
 
             crud_form = S3SQLCustomForm("case.date",
                                         "case.organisation_id",
@@ -1088,9 +1221,9 @@ def config(settings):
                                         postprocess = pr_person_postprocess,
                                         )
 
-            current.s3db.configure(r.tablename,
-                                   crud_form = crud_form,
-                                   )
+            s3db.configure(r.tablename,
+                           crud_form = crud_form,
+                           )
 
             return result
         s3.prep = prep
@@ -1100,29 +1233,108 @@ def config(settings):
     settings.customise_pr_person_controller = customise_pr_person_controller
 
     # =========================================================================
-    def project_task_onaccept(form):
+    def project_task_update_onaccept(form):
         """
-            Have a Realm for the Task
-            - ensure the correct Inheritance
             Update the Activity inheritances when Task is Assigned
         """
 
-        from s3db.pr import pr_add_affiliation
+        form_vars = form.vars
+        pe_id = form_vars.pe_id
+
+        if pe_id == form.record.pe_id:
+            # No change
+            return
 
         db = current.db
         s3db = current.s3db
 
-        task_id = form.vars.id
+        task_id = form_vars.id
 
-        # @ToDo: complete
+        # Lookup the linked Case Activity
+        catable = s3db.br_case_activity
+        ltable = s3db.dissemination_case_activity_task
+        query = (ltable.task_id == task_id) & \
+                (ltable.case_activity_id == catable.id)
+        activity = db(query).select(catable.realm_entity,
+                                    limitby = (0, 1),
+                                    ).first()
+
+        if activity:
+            # Affiliate the Activity to the Assignee
+            from s3db.pr import pr_add_affiliation
+
+            pr_add_affiliation(pe_id, activity.realm_entity, role="Realm Hierarchy")
 
     # =========================================================================
     def customise_project_task_resource(r, tablename):
 
-        current.s3db.add_custom_callback(tablename,
-                                         "create_onaccept",
-                                         project_task_onaccept,
-                                         )
+        from gluon import IS_EMPTY_OR
+        from s3 import IS_ONE_OF
+
+        db = current.db
+        s3db = current.s3db
+
+        # Just People for Assignees
+        task_id = r.id
+        if task_id and tablename == r.tablename:
+            # Are we linked to a Case Activity?
+            catable = s3db.br_case_activity
+            ltable = s3db.dissemination_case_activity_task
+            query = (ltable.task_id == task_id) & \
+                    (ltable.case_activity_id == catable.id)
+            activity = db(query).select(catable.need_id,
+                                        catable.realm_entity,
+                                        limitby = (0, 1),
+                                        ).first()
+        else:
+            activity = None
+
+        f = s3db.project_task.pe_id
+
+        if activity:
+            # Filter to Handlers of that Type
+            f.label = T("Handler")
+            ntable = s3db.br_need
+            need = db(ntable.id == activity.need_id).select(ntable.uuid,
+                                                            limitby = (0, 1),
+                                                            ).first()
+            gtable = db.auth_group
+            mtable = db.auth_membership
+            ltable = s3db.pr_person_user
+            query = (gtable.uuid.belongs((need.uuid,
+                                          "ORG_ADMIN",
+                                          "ADMIN",
+                                          ))) & \
+                    (gtable.id == mtable.group_id) & \
+                    (mtable.user_id == ltable.user_id)
+            persons = db(query).select(ltable.pe_id)
+            filter_opts = [p.pe_id for p in persons]
+        else:
+            # Filtered to Staff
+            htable = s3db.hrm_human_resource
+            ptable = s3db.pr_person
+            query = (htable.deleted == False) & \
+                    (htable.person_id == ptable.id)
+            persons = db(query).select(ptable.pe_id)
+            filter_opts = [p.pe_id for p in persons]
+
+        from s3db.pr import pr_PersonEntityRepresent
+        represent = pr_PersonEntityRepresent(show_label = False,
+                                             show_type = False,
+                                             )
+
+        f.requires = IS_EMPTY_OR(
+                        IS_ONE_OF(db, "pr_pentity.pe_id",
+                                  represent,
+                                  filterby = "pe_id",
+                                  filter_opts = filter_opts,
+                                  sort = True,
+                                  ))
+
+        s3db.add_custom_callback(tablename,
+                                 "update_onaccept",
+                                 project_task_update_onaccept,
+                                 )
 
     settings.customise_project_task_resource = customise_project_task_resource
 

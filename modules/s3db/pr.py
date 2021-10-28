@@ -7347,12 +7347,16 @@ class pr_PersonEntityRepresent(S3Represent):
                       )
             # Strip off any .aadata extension!
             url = url.replace(".aadata", "")
-            return A(v, _href=url)
+            return A(v,
+                     _href = url,
+                     )
         else:
             # Custom linkto
             k = s3_str(k)
-            return A(v, _href=self.linkto.replace("[id]", k) \
-                                         .replace("%5Bid%5D", k))
+            return A(v,
+                     _href = self.linkto.replace("[id]", k) \
+                                        .replace("%5Bid%5D", k),
+                     )
 
     # -------------------------------------------------------------------------
     def lookup_rows(self, key, values, fields=None):

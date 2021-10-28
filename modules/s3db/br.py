@@ -495,7 +495,8 @@ class BRCaseActivityModel(S3Model):
 
         labels = br_terminology()
 
-        hr_represent = self.hrm_HumanResourceRepresent(show_link = False)
+        from .hrm import hrm_HumanResourceRepresent
+        hr_represent = hrm_HumanResourceRepresent(show_link = False)
 
         # ---------------------------------------------------------------------
         # Activity Status
