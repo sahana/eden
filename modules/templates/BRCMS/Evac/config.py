@@ -555,6 +555,8 @@ def config(settings):
     # =========================================================================
     def customise_br_case_activity_resource(r, tablename):
 
+        s3db = current.s3db
+
         s3db.add_custom_callback(tablename,
                                  "onaccept",
                                  br_case_activity_onaccept,
@@ -970,7 +972,7 @@ def config(settings):
                 if pe.instance_type == "pr_realm":
                     # Set the person to use this for it's realm
                     ptable = s3db.pr_person
-                    db(ptable.id == person_id).update_record(realm_entity = realm_entity)
+                    db(ptable.id == person_id).update(realm_entity = realm_entity)
                 else:
                     current.log.debug("Disseminate: record %s in %s had a realm of type %s" % (record_id,
                                                                                                tablename,
@@ -998,9 +1000,10 @@ def config(settings):
             pr_remove_affiliation(None, realm_entity)
         else:
             # Create a pr_realm record
-            realm_id = s3db.pr_realm.insert(name = "%s_%s" % ("br_case",
-                                                              case.id,
-                                                              ))
+            rtable = s3db.pr_realm
+            realm_id = rtable.insert(name = "%s_%s" % ("br_case",
+                                                       case.id,
+                                                       ))
             realm = Storage(id = realm_id)
             s3db.update_super(rtable, realm)
             realm_entity = realm["pe_id"]
@@ -1008,7 +1011,7 @@ def config(settings):
             case.update_record(realm_entity = realm_entity)
             # Set the person to use this for it's realm
             ptable = s3db.pr_person
-            db(ptable.id == person_id).update_record(realm_entity = realm_entity)
+            db(ptable.id == person_id).update(realm_entity = realm_entity)
 
         # Set appropriate affiliations
         from s3db.pr import pr_add_affiliation
