@@ -1004,16 +1004,18 @@ class TransportFlightModel(S3Model):
     """
         Flights
 
-        @ToDo: Link to Airplane for Capacity
+        @ToDo: Capacity
     """
 
     names = ("transport_flight",
+             "transport_flight_id",
              "transport_flight_manifest",
              )
 
     def model(self):
 
         T = current.T
+        db = current.db
 
         airport_id = self.transport_airport_id
 
@@ -1057,6 +1059,20 @@ class TransportFlightModel(S3Model):
                                                          },
                             )
 
+        represent = S3Represent(lookup = tablename)
+
+        flight_id = S3ReusableField("flight_id", "reference %s" % tablename,
+                                    label = T("Flight"),
+                                    ondelete = "SET NULL",
+                                    represent = represent,
+                                    requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "%s.id" % tablename,
+                                                          represent,
+                                                          sort = True
+                                                          )),
+                                    sortby = "name",
+                                    )
+
         # ---------------------------------------------------------------------
         # Manifest
         #
@@ -1077,7 +1093,8 @@ class TransportFlightModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3db
         #
-        return {}
+        return {"transport_flight_id": flight_id,
+                }
 
 # =============================================================================
 class transport_BorderCrossingRepresent(S3Represent):

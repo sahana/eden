@@ -107,7 +107,7 @@ class FinBankModel(S3Model):
                                      ondelete = "SET NULL",
                                      represent = represent,
                                      requires = IS_EMPTY_OR(
-                                                    IS_ONE_OF(db, "fin_bank_service.id",
+                                                    IS_ONE_OF(db, "%s.id" % tablename,
                                                               represent,
                                                               sort = True
                                                               )),
@@ -261,11 +261,13 @@ class FinBrokerModel(S3Model):
     """ Model for Brokers """
 
     names = ("fin_broker",
+             "fin_broker_id",
              )
 
     def model(self):
 
         T = current.T
+        db = current.db
 
         # -------------------------------------------------------------------------
         # Brokers
@@ -310,10 +312,25 @@ class FinBrokerModel(S3Model):
             msg_list_empty = T("No Brokers currently registered"),
             )
 
+        represent = S3Represent(lookup = tablename)
+
+        broker_id = S3ReusableField("broker_id", "reference %s" % tablename,
+                                    label = T("Broker"),
+                                    ondelete = "SET NULL",
+                                    represent = represent,
+                                    requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "%s.id" % tablename,
+                                                          represent,
+                                                          sort = True
+                                                          )),
+                                    sortby = "name",
+                                    )
+
         # ---------------------------------------------------------------------
         # Return global names to s3.*
         #
-        return {}
+        return {"fin_broker_id": broker_id,
+                }
 
 # =============================================================================
 class FinExpensesModel(S3Model):
@@ -326,6 +343,7 @@ class FinExpensesModel(S3Model):
     def model(self):
 
         T = current.T
+        db = current.db
 
         # -------------------------------------------------------------------------
         # Expenses
@@ -399,10 +417,10 @@ class FinExpensesModel(S3Model):
                                      ondelete = "CASCADE",
                                      represent = represent,
                                      requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(current.db, "fin_expense.id",
+                                                IS_ONE_OF(db, "%s.id" % tablename,
                                                           represent,
-                                                          orderby="fin_expense.name",
-                                                          sort=True,
+                                                          orderby = "fin_expense.name",
+                                                          sort = True,
                                                           )),
                                      sortby = "name",
                                      )
@@ -410,7 +428,7 @@ class FinExpensesModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3.*
         #
-        return {"fin_expense_id": expense_id,
+        return {"fin_expense_id": expense_id, # Used by Events
                 }
 
     # -------------------------------------------------------------------------

@@ -573,16 +573,12 @@ class S3SQLDefaultForm(S3SQLForm):
         # Process the form
         logged = False
         if not readonly:
-            link = get_option("link")
-            hierarchy = get_option("hierarchy")
-            onvalidation = get_option("onvalidation")
-            onaccept = get_option("onaccept")
             success, error = self.process(form,
                                           request.post_vars,
-                                          onvalidation = onvalidation,
-                                          onaccept = onaccept,
-                                          hierarchy = hierarchy,
-                                          link = link,
+                                          onvalidation = get_option("onvalidation"),
+                                          onaccept = get_option("onaccept"),
+                                          hierarchy = get_option("hierarchy"),
+                                          link = get_option("link"),
                                           http = request.http,
                                           format = format,
                                           )

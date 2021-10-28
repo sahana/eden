@@ -50,16 +50,13 @@ class S3MainMenu(default.S3MainMenu):
                    check = lambda this: not this.preceding()[-1].check_permission(),
                    ),
                 MM("ToDo", c="project", f="task"),
-                MM("More", link=False)(
-                    MM("Accommodation", c="cr", f="shelter"),
-                    MM("Finances", c="fin", f="index"),
+                MM("Map", c="gis", f="index"),
+                MM("Working Groups", link=False)(
                     MM("Flights", c="transport", f="flight"),
+                    MM("Logistics", c="fin", f="index"),
                     MM("Medical", c="med", f="index"),
+                    MM("Security", c="security", f="index"),
                     MM("Organizations", c="org", f="organisation"),
-                    MM("Security", c="event", f="incident_report"),
-                    MM("Staff", c="hrm", f="staff"),
-                    # Just Admins:
-                    #MM("Working Groups", c="pr", f="forum"),
                     ),
                 ]
 
@@ -194,7 +191,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         statistics = M("Statistics", link=False)(
                         M("Cases", f="person", m="report"),
                         M("Activities", f="case_activity", m="report", check=use_activities),
-                        M("Measures", f="assistance_measure", m="report", check=manage_assistance),
+                        #M("Measures", f="assistance_measure", m="report", check=manage_assistance),
                         )
 
         # Registry sub-menu
@@ -211,17 +208,17 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       vars={"mine": "1", "~.priority": "0"}, check=urgent_activities
                       ),
                     ),
-                 M("My Measures", f="assistance_measure",
-                   vars={"mine": "1"}, check=manage_assistance)(
-                    M("Calendar", m="organize", vars={"mine": "1"}),
-                    ),
+                 #M("My Measures", f="assistance_measure",
+                 #  vars={"mine": "1"}, check=manage_assistance)(
+                 #   M("Calendar", m="organize", vars={"mine": "1"}),
+                 #   ),
                  #M("Appointments"),
                  statistics,
                  M("Compilations", link=False)(
                     M("Current Cases", f="person", vars={"closed": "0"}),
                     M("All Cases", f="person"),
                     M("All Activities", f="case_activity", check=use_activities),
-                    M("All Measures", f="assistance_measure", check=manage_assistance),
+                    #M("All Measures", f="assistance_measure", check=manage_assistance),
                     ),
                  )
         else:
@@ -235,9 +232,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       vars={"~.priority": "0"}, check=urgent_activities,
                       ),
                     ),
-                 M("Measures", f="assistance_measure", check=manage_assistance)(
-                    #M("Overview"),
-                    ),
+                 #M("Measures", f="assistance_measure", check=manage_assistance)(
+                 #   #M("Overview"),
+                 #   ),
                  #M("Appointments"),
                  statistics,
                  M("Compilations", link=False)(
@@ -256,7 +253,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                   check = lambda i: use_activities and settings.get_br_case_activity_status(),
                   ),
                 M("Need Types", f="need",
-                  check = lambda i: not settings.get_br_needs_org_specific(),
+                  #check = lambda i: not settings.get_br_needs_org_specific(),
                   ),
                 M("Assistance Statuses", f="assistance_status",
                   check = manage_assistance,
@@ -265,11 +262,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                   check = lambda i: manage_assistance and \
                                     settings.get_br_assistance_types(),
                   ),
-                M(labels.THEMES, f="assistance_theme",
-                  check = lambda i: manage_assistance and \
-                                    settings.get_br_assistance_themes() and \
-                                    not settings.get_br_assistance_themes_org_specific(),
-                  ),
+                #M(labels.THEMES, f="assistance_theme",
+                #  check = lambda i: manage_assistance and \
+                #                    settings.get_br_assistance_themes() and \
+                #                    not settings.get_br_assistance_themes_org_specific(),
+                #  ),
                 ),
              )
 
@@ -277,20 +274,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def cr():
-        """ CR / Shelter Registry """
+    def cr(self):
+        """ Events """
 
-        ADMIN = current.auth.get_system_roles().ADMIN
-
-        return M(c="cr")(
-                    M("Accommodation", f="shelter")(
-                        M("Create", m="create"),
-                        M("Map", m="map"),
-                        ),
-                    M("Administration", link=False, restrict=ADMIN)(
-                        M("Shelter Types", f="shelter_type"),
-                        ),
-                    )
+        return self.fin()
 
     # -------------------------------------------------------------------------
     def event(self):
@@ -301,21 +288,31 @@ class S3OptionsMenu(default.S3OptionsMenu):
     # -------------------------------------------------------------------------
     @staticmethod
     def fin():
-        """ Finances """
+        """ Logistics """
 
         ADMIN = current.auth.get_system_roles().ADMIN
 
-        return M(c="fin")(
-                    M("Banks", f="bank")(
+        return M()(
+                    M("Accommodation", c="cr", f="shelter")(
                         M("Create", m="create"),
                         M("Map", m="map"),
                         ),
-                    M("Brokers", f="broker")(
+                    M("Banks", c="fin", f="bank")(
+                        M("Create", m="create"),
+                        M("Map", m="map"),
+                        ),
+                    M("Brokers", c="fin", f="broker")(
+                        M("Create", m="create"),
+                        M("Map", m="map"),
+                        ),
+                    M("Stock", c="inv", f="inv_item")(
                         M("Create", m="create"),
                         M("Map", m="map"),
                         ),
                     M("Administration", link=False, restrict=ADMIN)(
-                        M("Bank Services", f="bank_service"),
+                        M("Accomodation Types", c="cr", f="shelter_type"),
+                        M("Bank Services", c="fin", f="bank_service"),
+                        M("Item catalog", c="supply", f="utem"),
                         ),
                     )
 
@@ -324,6 +321,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ Maps """
 
         if current.request.function == "route":
+            # @ToDo: Should be managed from within Case Activity?
             return self.security()
         else:
             return super(S3OptionsMenu, self).gis()
@@ -334,13 +332,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         if current.request.function == "skill":
             return self.med()
-
-        return M(c="hrm")(
-                    M("Staff", f="staff")(
-                        # Always create via User
-                        #M("Create", m="create"),
-                        ),
-                    )
+        else:
+            return self.org()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -370,22 +363,19 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def org():
         """ ORG / Organization Registry """
 
-        sysroles = current.auth.get_system_roles()
+        ADMIN = current.auth.get_system_roles().ADMIN
 
-        ADMIN = sysroles.ADMIN
-        #ORG_GROUP_ADMIN = sysroles.ORG_GROUP_ADMIN
-
-        return M(c="org")(
-                    M("Organizations", f="organisation")(
+        return M()(
+                    M("Organizations", c="org", f="organisation")(
                         #M("Hierarchy", m="hierarchy"),
                         M("Create", m="create", restrict=ADMIN),
                         ),
-                    #M("Facilities", f="facility")(
-                    #    M("Create", m="create"),
-                    #    ),
+                    M("Staff", c="hrm", f="staff")(
+                        # Always create via User
+                        #M("Create", m="create"),
+                        ),
                     M("Administration", restrict=ADMIN)(
-                        #M("Facility Types", f="facility_type"),
-                        M("Organization Types", f="organisation_type"),
+                        M("Organization Types", c="org", f="organisation_type"),
                         )
                     )
 
@@ -413,9 +403,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Map", m="map"),
                         ),
                    # View from inside Activity?
-                   #M("Evacuation Routes", c="gis", f="route")(
-                   #     M("Create", m="create"),
-                   #     ),
+                   M("Evacuation Routes", c="gis", f="route")(
+                        M("Create", m="create"),
+                        ),
                    M("Incident Reports", c="event", f="incident_report")(
                        M("Create", m="create"),
                        M("Map", m="map"),

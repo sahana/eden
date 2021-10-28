@@ -27,7 +27,14 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("DisseminationMedContactModel",
+__all__ = ("DisseminationFinBrokerModel",
+           "DisseminationIncidentReportModel",
+           "DisseminationInvItemModel",
+           "DisseminationMedContactModel",
+           "DisseminationSecurityCheckpointModel",
+           "DisseminationSecurityZoneModel",
+           "DisseminationSiteModel",
+           "DisseminationTransportFlightModel",
            "disseminate",
            )
 
@@ -56,12 +63,90 @@ def dissemination():
 WORKING_GROUPS = {"cr_shelter": "LOGISTICS",
                   "event_incident_report": "SECURITY",
                   "fin_broker": "LOGISTICS",
-                  "med_contact": "MEDICAL",
                   "inv_inv_item": "LOGISTICS",
+                  "med_contact": "MEDICAL",
                   "security_checkpoint": "SECURITY",
                   "security_zone": "SECURITY",
                   "transport_flight": "FLIGHTS",
                   }
+
+# =============================================================================
+class DisseminationFinBrokerModel(S3Model):
+
+    names = ("dissemination_fin_broker",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Link Dissemination to Fin Brokers
+        #
+        tablename = "dissemination_fin_broker"
+        self.define_table(tablename,
+                          self.fin_broker_id(empty = False,
+                                             ondelete = "CASCADE",
+                                             ),
+                          dissemination()(),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class DisseminationIncidentReportModel(S3Model):
+
+    names = ("dissemination_incident_report",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Link Dissemination to Incident Reports
+        #
+        tablename = "dissemination_incident_report"
+        self.define_table(tablename,
+                          self.event_incident_report_id(empty = False,
+                                                        #ondelete = "CASCADE",
+                                                        ),
+                          dissemination()(),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class DisseminationInvItemModel(S3Model):
+
+    names = ("dissemination_inv_item",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Link Dissemination to Inv Items
+        #
+        tablename = "dissemination_inv_item"
+        self.define_table(tablename,
+                          self.inv_item_id(#empty = False,
+                                           #ondelete = "CASCADE",
+                                           ),
+                          dissemination()(),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class DisseminationMedContactModel(S3Model):
@@ -78,7 +163,111 @@ class DisseminationMedContactModel(S3Model):
         #
         tablename = "dissemination_med_contact"
         self.define_table(tablename,
-                          self.med_contact_id(),
+                          self.med_contact_id(#empty = False,
+                                              #ondelete = "CASCADE",
+                                              ),
+                          dissemination()(),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class DisseminationSecurityCheckpointModel(S3Model):
+
+    names = ("dissemination_security_checkpoint",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Link Dissemination to Checkpoints
+        #
+        tablename = "dissemination_security_checkpoint"
+        self.define_table(tablename,
+                          self.security_checkpoint_id(empty = False,
+                                                      ondelete = "CASCADE",
+                                                      ),
+                          dissemination()(),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class DisseminationSecurityZoneModel(S3Model):
+
+    names = ("dissemination_security_zone",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Link Dissemination to Security Zones
+        #
+        tablename = "dissemination_security_zone"
+        self.define_table(tablename,
+                          self.security_zone_id(empty = False,
+                                                ondelete = "CASCADE",
+                                                ),
+                          dissemination()(),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class DisseminationSiteModel(S3Model):
+
+    names = ("dissemination_org_site",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Link Dissemination to Sites (Currently just Shelters)
+        #
+        tablename = "dissemination_org_site"
+        self.define_table(tablename,
+                          self.org_site_id(), # super-link. Cannot alter ondelete, Empty by default.
+                          dissemination()(),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class DisseminationTransportFlightModel(S3Model):
+
+    names = ("dissemination_transport_flight",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Link Dissemination to Flights
+        #
+        tablename = "dissemination_transport_flight"
+        self.define_table(tablename,
+                          self.transport_flight_id(empty = False,
+                                                   ondelete = "CASCADE",
+                                                   ),
                           dissemination()(),
                           *s3_meta_fields())
 

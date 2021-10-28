@@ -4288,12 +4288,14 @@ class IncidentReportModel(S3Model):
     """
 
     names = ("event_incident_report",
+             "event_incident_report_id",
              "event_incident_report_incident",
              )
 
     def model(self):
 
         T = current.T
+        db = current.db
 
         #settings = current.deployment_settings
         #if settings.get_event_cascade_delete_incidents():
@@ -4420,13 +4422,14 @@ class IncidentReportModel(S3Model):
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        report_options = Storage(
-                        rows=report_fields,
-                        cols=report_fields,
-                        fact=report_fields,
-                        defaults=Storage(rows = "location_id$L1", #lfield, # Lowest-level of hierarchy
-                                         cols = "incident_type_id",
-                                         fact = "count(name)",
-                                         totals = True)
+                        rows = report_fields,
+                        cols = report_fields,
+                        fact = report_fields,
+                        defaults = Storage(rows = "location_id$L1", # lfield, # Lowest-level of hierarchy
+                                           cols = "incident_type_id",
+                                           fact = "count(name)",
+                                           totals = True,
+                                           ),
                         ),
                        super_entity = "doc_entity",
                        )
@@ -4451,14 +4454,26 @@ class IncidentReportModel(S3Model):
                             event_incident_report_incident = "incident_report_id",
                             )
 
+        represent = S3Represent(lookup = tablename)
+
+        incident_report_id = S3ReusableField("incident_report_id", "reference %s" % tablename,
+                                             label = T("Incident Report"),
+                                             ondelete = "CASCADE",
+                                             represent = represent,
+                                             requires = IS_EMPTY_OR(
+                                                            IS_ONE_OF(db, "%s.id" % tablename,
+                                                                      represent,
+                                                                      sort = True
+                                                                      )),
+                                             sortby = "name",
+                                             )
+
         # ---------------------------------------------------------------------
         # Incident Reports <> Incidents link table
         #
         tablename = "event_incident_report_incident"
         define_table(tablename,
-                     Field("incident_report_id", "reference event_incident_report",
-                           ondelete = "CASCADE",
-                           ),
+                     incident_report_id(),
                      self.event_incident_id(empty = False,
                                             ondelete = "CASCADE",
                                             ),
@@ -4472,7 +4487,8 @@ class IncidentReportModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return {"event_incident_report_id": incident_report_id,
+                }
 
 # =============================================================================
 class ScenarioModel(S3Model):

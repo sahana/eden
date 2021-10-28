@@ -19,7 +19,9 @@ def config(settings):
     settings.base.system_name_short =  "AFGEx"
 
     # PrePopulate data
-    settings.base.prepopulate.append("BRCMS/Evac")
+    settings.base.prepopulate = ["default/base",
+                                 "BRCMS/Evac",
+                                 ]
     #settings.base.prepopulate_demo.append("BRCMS/Evac/Demo")
 
     # Custom Models
@@ -53,6 +55,7 @@ def config(settings):
     settings.br.case_activity_need_details = True
     settings.br.case_activity_updates = True
     settings.br.case_activity_documents = True
+    settings.br.case_activity_urgent_option = True
     settings.br.case_address = True
     settings.br.case_id_tab = True
     settings.br.case_language_details = False
@@ -113,15 +116,15 @@ def config(settings):
 
         from s3dal import original_tablename
 
-        db = current.db
-        s3db = current.s3db
+        #db = current.db
+        #s3db = current.s3db
 
         tablename = original_tablename(table)
 
         if tablename == "org_organisation":
             # Realm is own PE ID
             # => use Default Rules
-            pass
+            return 0
         elif tablename in ("fin_bank",
                            "med_hospital",
                            "med_pharmacy",
@@ -145,6 +148,9 @@ def config(settings):
         elif tablename == "br_activity":
             # Has a unique pr_realm with appropriate multiple inheritance
             pass
+        elif tablename == "transport_flight_manifest":
+            # Inherit from person
+            pass
         elif tablename in ("cr_shelter",
                            "event_incident_report",
                            "fin_broker",
@@ -155,7 +161,8 @@ def config(settings):
                            "transport_flight",
                            ):
             # Has a unique pr_realm with appropriate multiple inheritance
-            pass
+            # => Leave this to disseminate
+            return None
 
         realm_entity = 0
 
@@ -610,6 +617,131 @@ def config(settings):
     settings.customise_br_case_resource = customise_br_case_resource
 
     # =========================================================================
+    def customise_cr_shelter_resource(r, tablename):
+
+        s3db = current.s3db
+
+        s3db.add_components(tablename,
+                            dissemination_org_site = {"name": "dissemination",
+                                                      "joinby": "site_id",
+                                                      "multiple": False,
+                                                      },
+                            )
+
+        from s3 import S3SQLCustomForm
+        crud_fields = ("dissemination.dissemination",
+                       "name",
+                       "organisation_id",
+                       "shelter_type_id",
+                       "location_id",
+                       "person_id",
+                       "contact_name",
+                       "phone",
+                       "email",
+                       "website",
+                       "shelter_details.population",
+                       "shelter_details.capacity_day",
+                       "shelter_details.capacity_night",
+                       "shelter_details.available_capacity_day",
+                       "shelter_details.population_day",
+                       "shelter_details.population_night",
+                       "shelter_details.status",
+                       "comments",
+                       "obsolete",
+                       )
+
+        from .dissemination import disseminate
+        crud_form = S3SQLCustomForm(postprocess = disseminate,
+                                    *crud_fields)
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
+
+    settings.customise_cr_shelter_resource = customise_cr_shelter_resource
+
+    # =========================================================================
+    def customise_event_incident_report_resource(r, tablename):
+
+        s3db = current.s3db
+
+        s3db.add_components(tablename,
+                            dissemination_incident_report = {"name": "dissemination",
+                                                             "joinby": "incident_report_id",
+                                                             "multiple": False,
+                                                             },
+                            )
+
+        from s3 import S3SQLCustomForm
+        table = s3db.event_incident_report
+        crud_fields = [f.name for f in table if (f.writable or f.readable) and not f.compute]
+        crud_fields.insert(0, "dissemination.dissemination")
+
+        from .dissemination import disseminate
+        crud_form = S3SQLCustomForm(postprocess = disseminate,
+                                    *crud_fields)
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
+
+    settings.customise_event_incident_report_resource = customise_event_incident_report_resource
+
+    # =========================================================================
+    def customise_fin_broker_resource(r, tablename):
+
+        s3db = current.s3db
+
+        s3db.add_components(tablename,
+                            dissemination_fin_broker = {"name": "dissemination",
+                                                        "joinby": "broker_id",
+                                                        "multiple": False,
+                                                        },
+                            )
+
+        from s3 import S3SQLCustomForm
+        table = s3db.fin_broker
+        crud_fields = [f.name for f in table if (f.writable or f.readable) and not f.compute]
+        crud_fields.insert(0, "dissemination.dissemination")
+
+        from .dissemination import disseminate
+        crud_form = S3SQLCustomForm(postprocess = disseminate,
+                                    *crud_fields)
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
+
+    settings.customise_fin_broker_resource = customise_fin_broker_resource
+
+    # =========================================================================
+    def customise_inv_inv_item_resource(r, tablename):
+
+        s3db = current.s3db
+
+        s3db.add_components(tablename,
+                            dissemination_inv_item = {"name": "dissemination",
+                                                      "joinby": "inv_item_id",
+                                                      "multiple": False,
+                                                      },
+                            )
+
+        from s3 import S3SQLCustomForm
+        table = s3db.inv_inv_item
+        crud_fields = [f.name for f in table if (f.writable or f.readable) and not f.compute]
+        crud_fields.insert(0, "dissemination.dissemination")
+
+        from .dissemination import disseminate
+        crud_form = S3SQLCustomForm(postprocess = disseminate,
+                                    *crud_fields)
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
+
+    settings.customise_inv_inv_item_resource = customise_inv_inv_item_resource
+
+    # =========================================================================
     def customise_med_contact_resource(r, tablename):
 
         from gluon import A, URL
@@ -661,5 +793,86 @@ def config(settings):
                        )
 
     settings.customise_med_contact_resource = customise_med_contact_resource
+
+    # =========================================================================
+    def customise_security_checkpoint_resource(r, tablename):
+
+        s3db = current.s3db
+
+        s3db.add_components(tablename,
+                            dissemination_security_checkpoint = {"name": "dissemination",
+                                                                 "joinby": "checkpoint_id",
+                                                                 "multiple": False,
+                                                                 },
+                            )
+
+        from s3 import S3SQLCustomForm
+        table = s3db.security_checkpoint
+        crud_fields = [f.name for f in table if (f.writable or f.readable) and not f.compute]
+        crud_fields.insert(0, "dissemination.dissemination")
+
+        from .dissemination import disseminate
+        crud_form = S3SQLCustomForm(postprocess = disseminate,
+                                    *crud_fields)
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
+
+    settings.customise_security_checkpoint_resource = customise_security_checkpoint_resource
+
+    # =========================================================================
+    def customise_security_zone_resource(r, tablename):
+
+        s3db = current.s3db
+
+        s3db.add_components(tablename,
+                            dissemination_security_zone = {"name": "dissemination",
+                                                           "joinby": "zone_id",
+                                                           "multiple": False,
+                                                           },
+                            )
+
+        from s3 import S3SQLCustomForm
+        table = s3db.security_zone
+        crud_fields = [f.name for f in table if (f.writable or f.readable) and not f.compute]
+        crud_fields.insert(0, "dissemination.dissemination")
+
+        from .dissemination import disseminate
+        crud_form = S3SQLCustomForm(postprocess = disseminate,
+                                    *crud_fields)
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
+
+    settings.customise_security_zone_resource = customise_security_zone_resource
+
+    # =========================================================================
+    def customise_transport_flight_resource(r, tablename):
+
+        s3db = current.s3db
+
+        s3db.add_components(tablename,
+                            dissemination_transport_flight = {"name": "dissemination",
+                                                              "joinby": "flight_id",
+                                                              "multiple": False,
+                                                              },
+                            )
+
+        from s3 import S3SQLCustomForm
+        table = s3db.transport_flight
+        crud_fields = [f.name for f in table if (f.writable or f.readable) and not f.compute]
+        crud_fields.insert(0, "dissemination.dissemination")
+
+        from .dissemination import disseminate
+        crud_form = S3SQLCustomForm(postprocess = disseminate,
+                                    *crud_fields)
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
+
+    settings.customise_transport_flight_resource = customise_transport_flight_resource
 
 # END =========================================================================
