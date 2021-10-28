@@ -39,6 +39,7 @@ def config(settings):
                                         #"pr_realm",  # Cases, Resources
                                         )
 
+    # Enable extra Modules
     modules = settings.modules
     modules["asset"] = {"name_nice": T("Assets"), "module_type": None}
     modules["dissemination"] = {"name_nice": T("Dissemination"), "module_type": None}
@@ -82,6 +83,11 @@ def config(settings):
     settings.hrm.use_credentials = False
     settings.hrm.use_description = False
     settings.hrm.use_trainings = False
+
+    # -------------------------------------------------------------------------
+    # INV Settings
+    #
+    settings.inv.direct_stock_edits = True
 
     # -------------------------------------------------------------------------
     # Organisations Module Settings
@@ -133,11 +139,22 @@ def config(settings):
                            ):
             # No Realm 
             return None
+        elif tablename in ("cr_shelter",
+                           "event_incident_report",
+                           "fin_broker",
+                           "med_contact",
+                           "inv_inv_item",
+                           "inv_warehouse",
+                           "security_checkpoint",
+                           "security_zone",
+                           "transport_flight",
+                           ):
+            # Has a unique pr_realm with appropriate multiple inheritance
+            # => Leave this to disseminate
+            return None
         elif tablename == "pr_person":
             # Staff?
             # Case?
-            # Doctor?
-            # Case & Doctor?
             pass
         elif tablename == "br_case":
             # Has a unique pr_realm with appropriate multiple inheritance
@@ -149,21 +166,10 @@ def config(settings):
             # Has a unique pr_realm with appropriate multiple inheritance
             pass
         elif tablename == "transport_flight_manifest":
-            # Inherit from person
+            # Inherit from passenger
             pass
-        elif tablename in ("cr_shelter",
-                           "event_incident_report",
-                           "fin_broker",
-                           "med_contact",
-                           "inv_inv_item",
-                           "security_checkpoint",
-                           "security_zone",
-                           "transport_flight",
-                           ):
-            # Has a unique pr_realm with appropriate multiple inheritance
-            # => Leave this to disseminate
-            return None
 
+        # Use default rules
         realm_entity = 0
 
         return realm_entity
@@ -656,6 +662,8 @@ def config(settings):
 
         s3db.configure(tablename,
                        crud_form = crud_form,
+                       # Do NOT update standard affiliations
+                       onaccept = None,
                        )
 
     settings.customise_cr_shelter_resource = customise_cr_shelter_resource
@@ -717,6 +725,9 @@ def config(settings):
     # =========================================================================
     def customise_inv_inv_item_resource(r, tablename):
 
+        from s3 import IS_ONE_OF, S3Represent, S3SQLCustomForm
+        from s3layouts import S3PopupLink
+
         s3db = current.s3db
 
         s3db.add_components(tablename,
@@ -726,8 +737,20 @@ def config(settings):
                                                       },
                             )
 
-        from s3 import S3SQLCustomForm
         table = s3db.inv_inv_item
+        table.site_id.requires = IS_ONE_OF(current.db, "org_site.site_id",
+                                           S3Represent(lookup = "org_site"),
+                                           orderby = "org_site.name",
+                                           sort = True,
+                                           instance_types = ("inv_warehouse",),
+                                           updateable = True,
+                                           )
+        # @ToDo: get this working with a site_id
+        table.site_id.comment = S3PopupLink(c = "inv",
+                                            f = "warehouse",
+                                            label = T("Create Warehouse"),
+                                            )
+
         crud_fields = [f.name for f in table if (f.writable or f.readable) and not f.compute]
         crud_fields.insert(0, "dissemination.dissemination")
 
@@ -740,6 +763,35 @@ def config(settings):
                        )
 
     settings.customise_inv_inv_item_resource = customise_inv_inv_item_resource
+
+    # =========================================================================
+    def customise_inv_warehouse_resource(r, tablename):
+
+        s3db = current.s3db
+
+        s3db.add_components(tablename,
+                            dissemination_org_site = {"name": "dissemination",
+                                                      "joinby": "site_id",
+                                                      "multiple": False,
+                                                      },
+                            )
+
+        from s3 import S3SQLCustomForm
+        table = s3db.inv_warehouse
+        crud_fields = [f.name for f in table if (f.writable or f.readable) and not f.compute]
+        crud_fields.insert(0, "dissemination.dissemination")
+
+        from .dissemination import disseminate
+        crud_form = S3SQLCustomForm(postprocess = disseminate,
+                                    *crud_fields)
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       # Do NOT update standard affiliations
+                       onaccept = None,
+                       )
+
+    settings.customise_inv_warehouse_resource = customise_inv_warehouse_resource
 
     # =========================================================================
     def customise_med_contact_resource(r, tablename):

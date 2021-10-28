@@ -608,6 +608,7 @@ class InventoryModel(S3Model):
                                      label = WAREHOUSE,
                                      ondelete = "RESTRICT",
                                      represent = self.org_site_represent,
+                                     updateable = True,
                                      readable = True,
                                      writable = True,
                                      # Comment these to use a Dropdown & not an Autocomplete
@@ -8487,16 +8488,6 @@ def inv_recv_controller():
     s3 = current.response.s3
     settings = current.deployment_settings
 
-    recvtable = s3db.inv_recv
-
-    # Limit site_id to sites the user has permissions for
-    if settings.get_inv_shipment_name() == "order":
-        error_msg = T("You do not have permission for any facility to add an order.")
-    else:
-        error_msg = T("You do not have permission for any facility to receive a shipment.")
-    current.auth.permitted_facilities(table = recvtable,
-                                      error_msg = error_msg)
-
     # Custom methods
     set_method = s3db.set_method
     # Printable GRN Form in PDF format
@@ -8880,6 +8871,7 @@ def inv_recv_controller():
             # No Component
             # Configure which fields in inv_recv are readable/writable
             # depending on status
+            recvtable = s3db.inv_recv
             if record:
                 if status not in (SHIP_STATUS_IN_PROCESS, SHIP_STATUS_SENT):
                     # Now that the shipment has been sent
@@ -10303,6 +10295,7 @@ def inv_req_controller(template = False):
                     if commit:
                         current_site = commit.site_id
 
+                # @ToDo: We shouldn't need to use permitted_facilities here
                 allowed_sites = auth.permitted_facilities(redirect_on_error=False)
                 if current_site and current_site not in allowed_sites:
                     table.site_id.writable = False
@@ -10398,10 +10391,6 @@ $.filterOptionsS3({
                 
         else:
             # Not r.component
-            # Limit site_id to facilities the user has permissions for
-            # @ToDo: Non-Item requests shouldn't be bound to a Facility?
-            auth.permitted_facilities(table = r.table,
-                                      error_msg = T("You do not have permission for any facility to make a request."))
             if r.id:
                 # Prevent Deleting Requests which are complete or closed
                 record = r.record
@@ -12639,11 +12628,6 @@ def inv_send_controller():
     s3db = current.s3db
 
     sendtable = s3db.inv_send
-
-    # Limit site_id to sites the user has permissions for
-    error_msg = T("You do not have permission for any facility to send a shipment.")
-    current.auth.permitted_facilities(table = sendtable,
-                                      error_msg = error_msg)
 
     response = current.response
     s3 = response.s3

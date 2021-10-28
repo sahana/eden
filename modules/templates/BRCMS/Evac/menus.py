@@ -273,7 +273,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return menu
 
     # -------------------------------------------------------------------------
-    @staticmethod
     def cr(self):
         """ Events """
 
@@ -307,7 +306,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                     M("Stock", c="inv", f="inv_item")(
                         M("Create", m="create"),
-                        M("Map", m="map"),
+                        M("Warehouses", f="warehouse"),
                         ),
                     M("Administration", link=False, restrict=ADMIN)(
                         M("Accomodation Types", c="cr", f="shelter_type"),
@@ -334,6 +333,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
             return self.med()
         else:
             return self.org()
+
+    # -------------------------------------------------------------------------
+    def inv(self):
+        """ Stock """
+
+        return self.fin()
 
     # -------------------------------------------------------------------------
     @staticmethod

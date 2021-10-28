@@ -49,11 +49,6 @@ def warehouse_type():
 def inv_item():
     """ REST Controller """
 
-    if settings.get_inv_direct_stock_edits():
-        # Limit site_id to sites the user has permissions for
-        auth.permitted_facilities(table = s3db.inv_inv_item,
-                                  error_msg = T("You do not have permission for any site to add an inventory item."))
-
     # Import pre-process
     def import_prep(data):
         """
@@ -252,13 +247,6 @@ def adj():
         RESTful CRUD controller for Stock Adjustments
     """
 
-    table = s3db.inv_adj
-
-    # Limit site_id to sites the user has permissions for
-    error_msg = T("You do not have permission to adjust the stock level in this warehouse.")
-    auth.permitted_facilities(table = table,
-                              error_msg = error_msg)
-
     from s3db.inv import inv_adj_close
     s3db.set_method("inv", "adj",
                     method = "close",
@@ -315,6 +303,8 @@ S3.supply.oldQuantity=%s''' % (binned, record.old_quantity))
                     doc_table.person_id.readable = doc_table.person_id.writable = False
                     doc_table.location_id.readable = doc_table.location_id.writable = False
             else:
+                #No Component
+                table = s3db.inv_adj
                 if r.record:
                     if r.record.status:
                         # Don't allow modifying completed adjustments
@@ -841,10 +831,6 @@ def commit():
                 # No Component
                 table = r.table
                 s3.crud.submit_button = T("Save Changes")
-                # Limit site_id to facilities the user has permissions for
-                auth.permitted_facilities(table = table,
-                                          error_msg = T("You do not have permission for any facility to make a commitment.") )
-
                 table.site_id.comment = A(T("Set as default Site"),
                                           _id = "inv_commit_site_id_link",
                                           _target = "_blank",

@@ -5482,7 +5482,7 @@ Please go to %(url)s to approve this user."""
         if "update" in args or "create" in args:
             if redirect_on_error:
                 # Trying to create or update
-                # If they do no have permission to any facilities
+                # If they do not have permission to any facilities
                 current.session.error = "%s %s" % (error_msg, HINT)
                 redirect(URL(c="default", f="index"))
         elif table is not None:
