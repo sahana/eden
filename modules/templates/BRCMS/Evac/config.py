@@ -594,6 +594,7 @@ def config(settings):
                                                              ntable.uuid,
                                                              limitby = (0, 1),
                                                              ).first()
+
             ttable = s3db.project_task
             task_id = ttable.insert(name = need.name,
                                     description = form_vars.need_details,
@@ -612,8 +613,60 @@ def config(settings):
             db(ttable.id == task_id).update(realm_entity = forum.pe_id)
 
     # =========================================================================
+    def br_case_activity_update_onaccept(form):
+        """
+            * Ensure the correct Inheritances for the Realm
+        """
+
+        form_vars = form.vars
+        human_resource_id = form_vars.human_resource_id
+        if human_resource_id == form.record.human_resource_id:
+            # Handler unchanged
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        activity_id = form_vars.id
+
+        # Read the realm_entity
+        catable = s3db.br_case_activity
+        activity = db(catable.id == activity_id).select(catable.person_id,
+                                                        catable.realm_entity,
+                                                        limitby = (0, 1),
+                                                        ).first()
+        realm_entity = activity.realm_entity
+
+        # Remove all current affiliations
+        from s3db.pr import pr_remove_affiliation
+        pr_remove_affiliation(None, realm_entity)
+
+        # Set appropriate affiliations
+        from s3db.pr import pr_add_affiliation
+
+        # Activity affiliated to the Case
+        # Person in a case has the same Realm
+        ptable = s3db.pr_person
+        person = db(ptable.id == activity.person_id).select(ptable.realm_entity,
+                                                            limitby = (0, 1),
+                                                            ).first()
+
+        pr_add_affiliation(person.realm_entity, realm_entity, role="Realm Hierarchy")
+
+        if human_resource_id:
+            # Assignee already done, so add affiliation to this Handler
+            htable = s3db.hrm_human_resource
+            query = (htable.id == human_resource_id) & \
+                    (htable.person_id == ptable.id)
+            person = db(query).select(ptable.pe_id,
+                                      limitby = (0, 1),
+                                      ).first()
+            pr_add_affiliation(person.pe_id, realm_entity, role="Realm Hierarchy")
+
+    # =========================================================================
     def customise_br_case_activity_resource(r, tablename):
 
+        from gluon import IS_NOT_EMPTY
         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLVerticalSubFormLayout
 
         s3db = current.s3db
@@ -623,11 +676,26 @@ def config(settings):
                                  br_case_activity_create_onaccept,
                                  )
 
+        s3db.add_custom_callback(tablename,
+                                 "update_onaccept",
+                                 br_case_activity_update_onaccept,
+                                 )
+
         table = s3db.br_case_activity
         table.human_resource_id.label = T("Handler")
 
         if r.method in (None, "create"):
-            table.need_details.comment = T("If no Handler is assigned, then these Details will be visible in the Task created to request someone to take on this Activity")
+            # Need is required
+            requires = table.need_id.requires 
+            if hasattr(requires, "other"):
+                table.need_id.requires = requires.other
+            table.need_details.requires = IS_NOT_EMPTY()
+            table.need_details.comment = T("If no Handler is assigned, then these Details will be copied to the Task created to request someone to take on this Activity")
+            table.human_resource_id.comment = T("If no Handler is assigned, then when a Handler accepts the Task then they will be Assigned to the Activity")
+        elif r.method == "update":
+            # Don't allow Need to be changed
+            table.need_id.writable = False
+            table.human_resource_id.comment = None
 
         crud_form = S3SQLCustomForm("person_id",
                                     "need_id",
@@ -1269,7 +1337,8 @@ def config(settings):
         ltable = s3db.dissemination_case_activity_task
         query = (ltable.task_id == task_id) & \
                 (ltable.case_activity_id == catable.id)
-        activity = db(query).select(catable.realm_entity,
+        activity = db(query).select(catable.id,
+                                    catable.realm_entity,
                                     limitby = (0, 1),
                                     ).first()
 
@@ -1278,6 +1347,16 @@ def config(settings):
             from s3db.pr import pr_add_affiliation
 
             pr_add_affiliation(pe_id, activity.realm_entity, role="Realm Hierarchy")
+
+            # Assign the Handler to the Activity
+            ptable = s3db.pr_person
+            htable = s3db.hrm_human_resource
+            query = (ptable.pe_id == pe_id) & \
+                    (ptable.id == htable.person_id)
+            hr = db(query).select(htable.id,
+                                  limitby = (0, 1),
+                                  ).first()
+            activity.update_record(human_resource_id = hr.id)
 
     # =========================================================================
     def customise_project_task_resource(r, tablename):
