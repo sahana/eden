@@ -228,27 +228,27 @@ def user():
 
         rheader = DIV()
 
-        id = r.id
+        user_id = r.id
         registration_key = r.record.registration_key
         if not registration_key:
             btn = A(T("Disable"),
                     _class = "action-btn",
                     _title = "Disable User",
-                    _href = URL(args = [id, "disable"])
+                    _href = URL(args = [user_id, "disable"])
                     )
             rheader.append(btn)
             if settings.get_auth_show_link():
                 btn = A(T("Link"),
                         _class = "action-btn",
                         _title = "Link (or refresh link) between User, Person & HR Record",
-                        _href = URL(args = [id, "link"])
+                        _href = URL(args = [user_id, "link"])
                         )
                 rheader.append(btn)
         #elif registration_key == "pending":
         #    btn = A(T("Approve"),
         #            _class = "action-btn",
         #            _title = "Approve User",
-        #            _href = URL(args = [id, "approve"])
+        #            _href = URL(args = [user_id, "approve"])
         #            )
         #    rheader.append(btn)
         else:
@@ -256,7 +256,7 @@ def user():
             btn = A(T("Approve"),
                     _class = "action-btn",
                     _title = "Approve User",
-                    _href = URL(args = [id, "approve"])
+                    _href = URL(args = [user_id, "approve"])
                     )
             rheader.append(btn)
 
@@ -418,7 +418,7 @@ def user():
                 return output
 
             # Assume formstyle callable
-            id = "auth_user_password_two__row"
+            row_id = "auth_user_password_two__row"
             label = "%s:" % T("Verify password")
             widget = INPUT(_name = "password_two",
                            _id = "password_two",
@@ -426,7 +426,7 @@ def user():
                            _disabled = "disabled",
                            )
             comment = ""
-            row = s3_formstyle(id, label, widget, comment, hidden=True)
+            row = s3_formstyle(row_id, label, widget, comment, hidden=True)
             if isinstance(row, tuple):
                 # Formstyle with separate row for label (e.g. default Eden formstyle)
                 tuple_rows = True
@@ -437,7 +437,7 @@ def user():
                 form[0].insert(4, row)
             # @ToDo: Ensure this reads existing values & creates/updates when saved
             #if settings.get_auth_registration_requests_mobile_phone():
-            #    id = "auth_user_mobile__row"
+            #    row_id = "auth_user_mobile__row"
             #    label = LABEL("%s:" % settings.get_ui_label_mobile_phone(),
             #                  _for="mobile",
             #                  )
@@ -446,7 +446,7 @@ def user():
             #                   _class="string",
             #                   )
             #    comment = ""
-            #    row = s3_formstyle(id, label, widget, comment)
+            #    row = s3_formstyle(row_id, label, widget, comment)
             #    if tuple_rows:
             #        form[0].insert(-8, row)
             #    else:
@@ -460,12 +460,11 @@ def user():
 
     s3.import_prep = auth.s3_import_prep
 
-    output = s3_rest_controller("auth", "user",
-                                csv_stylesheet = ("auth", "user.xsl"),
-                                csv_template = ("auth", "user"),
-                                rheader = rheader,
-                                )
-    return output
+    return s3_rest_controller("auth", "user",
+                              csv_stylesheet = ("auth", "user.xsl"),
+                              csv_template = ("auth", "user"),
+                              rheader = rheader,
+                              )
 
 # =============================================================================
 def group():
@@ -497,7 +496,10 @@ def group():
         msg_list_empty = T("No Roles defined"),
         )
 
-    s3db.configure(tablename, main="role")
+    s3db.configure(tablename,
+                   main = "role",
+                   )
+
     return s3_rest_controller("auth", "group")
 
 # -----------------------------------------------------------------------------
@@ -548,7 +550,8 @@ def audit():
     S3Audit().__init__()
 
     # Represent the user_id column
-    db.s3_audit.user_id.represent = s3db.auth_UserRepresent()
+    from s3db.auth import auth_UserRepresent
+    db.s3_audit.user_id.represent = auth_UserRepresent()
 
     return s3_rest_controller("s3", "audit")
 
@@ -583,7 +586,9 @@ def consent_option():
             # consent / consent assertion record
             for t in (ctable, atable):
                 query = (t.option_id == r.id) & (t.deleted == False)
-                row = db(query).select(t.id, limitby=(0, 1)).first()
+                row = db(query).select(t.id,
+                                       limitby = (0, 1),
+                                       ).first()
                 if row:
                     editable = False
                     break
@@ -649,7 +654,10 @@ def consent_question():
 
     person_id = auth.s3_logged_in_person()
     if not person_id:
-        redirect(URL(c="default", f="user", args=["login"], vars={"_next": URL()}))
+        redirect(URL(c="default", f="user",
+                     args = ["login"],
+                     vars = {"_next": URL()},
+                     ))
 
     output = {}
 
@@ -773,8 +781,9 @@ def errors():
 
     func = lambda p: os.stat(apath("%s/errors/%s" % (appname, p), r=request)).st_mtime
     tickets = sorted(listdir(apath("%s/errors/" % appname, r=request), "^\w.*"),
-                     key=func,
-                     reverse=True)
+                     key = func,
+                     reverse = True,
+                     )
 
     return {"app": appname,
             "tickets": tickets,
@@ -787,7 +796,7 @@ def ticket():
 
     if len(request.args) != 2:
         session.error = T("Invalid ticket")
-        redirect(URL(r=request))
+        redirect(URL())
 
     app = request.args[0]
     ticket = request.args[1]

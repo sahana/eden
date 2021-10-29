@@ -35,8 +35,6 @@ def config(settings):
     settings.auth.realm_entity_types = ("org_organisation",
                                         "pr_forum",  # Realms
                                         "pr_person", # Case Managers, Case Supervisors, Handlers
-                                        # Not needed, as hidden?
-                                        #"pr_realm",  # Cases, Resources
                                         )
 
     # Enable extra Modules
@@ -265,6 +263,9 @@ def config(settings):
                                    otable.pe_id,
                                    limitby = (0, 1),
                                    ).first()
+            if not org:
+                # Default ADMIN in prepop: bail
+                return
 
             # Lookup the Entity for the main role
             if for_pe:
@@ -323,6 +324,10 @@ def config(settings):
                 org = db(query).select(otable.pe_id,
                                        limitby = (0, 1),
                                        ).first()
+                if not org:
+                    # Default ADMIN in prepop: bail
+                    return
+
                 entity = org.pe_id
 
             # Add the main Role for the correct entity
@@ -361,6 +366,9 @@ def config(settings):
         org = db(query).select(otable.pe_id,
                                limitby = (0, 1),
                                ).first()
+        if not org:
+            # Default ADMIN in prepop: bail
+            return
         # Add User to the Org Member role for the Org entity
         add_membership(group_id = group.id,
                        user_id = user_id,
@@ -558,6 +566,33 @@ def config(settings):
                           )
 
     settings.auth.remove_role = auth_remove_role
+
+    # =========================================================================
+    def customise_auth_user_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.method == "roles":
+                #if not current.auth.s3_has_role("ADMIN"):
+                # Show a very simplified interface
+                settings.auth.realm_entity_types = ("org_organisation",)
+                s3.scripts.append("/%s/static/themes/Evac/js/roles.js" % r.application)
+
+            return result
+        s3.prep = prep
+
+        return attr
+
+    settings.customise_auth_user_controller = customise_auth_user_controller
 
     # =========================================================================
     def br_case_activity_create_onaccept(form):
