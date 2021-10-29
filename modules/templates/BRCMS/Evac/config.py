@@ -181,8 +181,7 @@ def config(settings):
                 # => Inherit from Org
                 return org.pe_id
 
-            # Hmm, what kind of person could this be?
-            current.log.warning("Person %s is neither Case nor Staff...using default rules" % person_id)
+            # Probably a new case...will be sorted in crud_form.preprocess
             # => use Default Rules
             return 0
         elif tablename == "gis_route":
@@ -451,6 +450,9 @@ def config(settings):
                                    otable.pe_id,
                                    limitby = (0, 1),
                                    ).first()
+            if not org:
+                # Default ADMIN in prepop: bail
+                return
 
             # Lookup the Entity for the main role
             if for_pe:
@@ -506,6 +508,9 @@ def config(settings):
                 org = db(query).select(otable.pe_id,
                                        limitby = (0, 1),
                                        ).first()
+                if not org:
+                    # Default ADMIN in prepop: bail
+                    return
                 entity = org.pe_id
 
             # Remove the main Role for the correct entity
@@ -744,7 +749,8 @@ def config(settings):
                                  )
 
         table = s3db.br_case_activity
-        table.human_resource_id.label = T("Handler")
+        f = table.human_resource_id
+        f.label = T("Handler")
 
         if r.method in (None, "create"):
             # Need is required
@@ -753,11 +759,49 @@ def config(settings):
                 table.need_id.requires = requires.other
             table.need_details.requires = IS_NOT_EMPTY()
             table.need_details.comment = T("If no Handler is assigned, then these Details will be copied to the Task created to request someone to take on this Activity")
-            table.human_resource_id.comment = T("If no Handler is assigned, then when a Handler accepts the Task then they will be Assigned to the Activity")
+            f.comment = T("If no Handler is assigned, then when a Handler accepts the Task then they will be Assigned to the Activity")
+            # Filter to Handlers for the WG selected
+            current.response.s3.scripts.append("/%s/static/themes/Evac/js/br_case_activity.js" % r.application)
         elif r.method == "update":
             # Don't allow Need to be changed
             table.need_id.writable = False
-            table.human_resource_id.comment = None
+            f.comment = None
+            # Filter to Handlers for this WG
+            db = current.db
+            if tablename == r.tablename:
+                need_id = r.record.need_id
+            else:
+                activity_id = r.component_id
+                record = db(table.id == activity_id).select(table.need_id,
+                                                            limitby = (0, 1),
+                                                            ).first()
+                need_id = record.need_id
+            ntable = s3db.br_need
+            need = db(ntable.id == need_id).select(ntable.uuid,
+                                                   limitby = (0, 1),
+                                                   ).first()
+            gtable = db.auth_group
+            mtable = db.auth_membership
+            ltable = s3db.pr_person_user
+            ptable = s3db.pr_person
+            query = (gtable.uuid.belongs((need.uuid,
+                                          "ORG_ADMIN",
+                                          "ADMIN",
+                                          ))) & \
+                    (gtable.id == mtable.group_id) & \
+                    (mtable.user_id == ltable.user_id) & \
+                    (ltable.pe_id == ptable.pe_id)
+            persons = db(query).select(ptable.id)
+            filter_opts = [p.id for p in persons]
+            from gluon import IS_EMPTY_OR
+            from s3 import IS_ONE_OF
+            f.requires = IS_EMPTY_OR(
+                            IS_ONE_OF(db, "hrm_human_resource.id",
+                                      f.represent,
+                                      filterby = "person_id",
+                                      filter_opts = filter_opts,
+                                      sort = True,
+                                      ))
 
         crud_form = S3SQLCustomForm("person_id",
                                     "need_id",
@@ -801,6 +845,65 @@ def config(settings):
     # Use pr_person_controller prep
     #def customise_br_case_resource(r, tablename):
     #settings.customise_br_case_resource = customise_br_case_resource
+
+    # =========================================================================
+    def handlers(r, **attr):
+        """
+            Return the Handlers for a Need when creating an Activity
+            - called by br_case_activity.js
+            - called via .json to reduce request overheads
+        """
+
+        import json
+
+        from s3 import s3_fullname
+
+        db = current.db
+        s3db = current.s3db
+
+        ntable = s3db.br_need
+        need = db(ntable.id == r.id).select(ntable.uuid,
+                                            limitby = (0, 1),
+                                            ).first()
+        gtable = db.auth_group
+        mtable = db.auth_membership
+        ltable = s3db.pr_person_user
+        ptable = s3db.pr_person
+        htable = s3db.hrm_human_resource
+        query = (gtable.uuid.belongs((need.uuid,
+                                      "ORG_ADMIN",
+                                      "ADMIN",
+                                      ))) & \
+                (gtable.id == mtable.group_id) & \
+                (mtable.user_id == ltable.user_id) & \
+                (ltable.pe_id == ptable.pe_id) & \
+                (ptable.id == htable.person_id)
+        rows = db(query).select(htable.id,
+                                ptable.first_name,
+                                ptable.middle_name,
+                                ptable.last_name,
+                                )
+
+        # Simplify format
+        handlers = [{"i": row["hrm_human_resource.id"],
+                     "n": s3_fullname(row.pr_person),
+                     } for row in rows]
+
+        SEPARATORS = (",", ":")
+        current.response.headers["Content-Type"] = "application/json"
+        return json.dumps(handlers, separators=SEPARATORS)
+        
+    # =========================================================================
+    def customise_br_need_controller(**attr):
+
+        current.s3db.set_method("br", "need",
+                                method = "handlers",
+                                action = handlers,
+                                )
+
+        return attr
+
+    settings.customise_br_need_controller = customise_br_need_controller
 
     # =========================================================================
     def customise_cr_shelter_resource(r, tablename):

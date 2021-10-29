@@ -188,10 +188,8 @@ def item_packs():
               } for row in rows]
 
     SEPARATORS = (",", ":")
-    output = json.dumps(packs, separators=SEPARATORS)
-
     response.headers["Content-Type"] = "application/json"
-    return output
+    return json.dumps(packs, separators=SEPARATORS)
 
 # -----------------------------------------------------------------------------
 def kit_item():
