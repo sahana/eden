@@ -51,6 +51,7 @@ def dissemination():
                           ("WORKING_GROUP", T("Disseminate to Working Group")),
                           ("ALL", T("Disseminate to ALL")),
                           )
+    # Script to confirm level changes
     current.response.s3.scripts.append("/%s/static/themes/Evac/js/dissemination.js" % current.request.application)
     return S3ReusableField("dissemination",
                            default = "NONE",
@@ -442,18 +443,32 @@ def disseminate(form):
                                      ),
                        WG,
                        )
-        
+
         forums = db(ftable.uuid.belongs(forum_uuids)).select(ftable.pe_id)
         for forum in forums:
             pr_add_affiliation(forum.pe_id, realm_entity, role="Realm Hierarchy")
     else:
-        # Just Org WG RW
-        forum = db(ftable.uuid == "%s_RW_%s" % (WG,
-                                                organisation_id,
-                                                )).select(ftable.pe_id,
-                                                          limitby = (0, 1),
-                                                          ).first()
-        pr_add_affiliation(forum.pe_id, realm_entity, role="Realm Hierarchy")
+        if WG == "LOGISTICS":
+            # Org WG RW & ORG SECURITY RO
+            forum_uuids = ("%s_RW_%s" % (WG,
+                                         organisation_id,
+                                         ),
+                           "%s_RO_%s" % ("SECURITY",
+                                         organisation_id,
+                                         ),
+                           )
+            
+            forums = db(ftable.uuid.belongs(forum_uuids)).select(ftable.pe_id)
+            for forum in forums:
+                pr_add_affiliation(forum.pe_id, realm_entity, role="Realm Hierarchy")
+        else:
+            # Just Org WG RW
+            forum = db(ftable.uuid == "%s_RW_%s" % (WG,
+                                                    organisation_id,
+                                                    )).select(ftable.pe_id,
+                                                              limitby = (0, 1),
+                                                              ).first()
+            pr_add_affiliation(forum.pe_id, realm_entity, role="Realm Hierarchy")
 
     if level != "NONE":
         # Lookup the Orgs

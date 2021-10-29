@@ -1080,6 +1080,8 @@ def config(settings):
             record = Storage(id = forum_id)
             update_super(ftable, record)
             org_wg_ro = record["pe_id"]
+            if WG == "SECURITY":
+                security_wg_ro = org_wg_ro
 
             # Have the WG inherit from the top-level Org
             pr_add_affiliation(master_ro, org_wg_ro, role="Realm Hierarchy")
@@ -1102,6 +1104,9 @@ def config(settings):
 
             # Have the WG inherit from the top-level
             pr_add_affiliation(master_rw, org_wg_rw, role="Realm Hierarchy")
+
+        # Additionally have the top-level LOGISTICS inherit from ORG SECURITY RO
+        pr_add_affiliation(security_wg_ro, forums["LOGISTICS"], role="Realm Hierarchy")
 
     # =========================================================================
     def customise_org_organisation_resource(r, tablename):
