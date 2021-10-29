@@ -65,6 +65,30 @@ def config(settings):
     settings.br.manage_assistance = False
     settings.br.needs_org_specific = False
 
+    settings.L10n.ethnicity = {"Achakzai": "Achakzai",
+                               "Afshar": "Afshar",
+                               "Aimaq": "Aimaq (Jamshidi, Taimuri, Firozkohi, Taimani)",
+                               "Arab": "Arab",
+                               "Baloch": "Baloch",
+                               "Brahui": "Brahu'i/Brahvi",
+                               "Gujjar": "Gujjar",
+                               "Hazara": "Hazara",
+                               "Kazakh": "Kazakh (Karakalpak)",
+                               "Kyrgyz": "Kyrgyz",
+                               "Mongol": "Moghol/Mongol",
+                               "Nuristani": "Nuristani",
+                               "Pamiri": "Pamiri (Vakti, Munjani, Yidgha, Ishkashim, Shugni, Sangleji, Sarikuli)",
+                               "Parsiwan": "Parsiwan",
+                               "Pashai": "Pasha'i",
+                               "Pashtun": "Pashtun",
+                               "Qizilbash": "Qizilbash",
+                               "Sadat": "Sadat",
+                               "Sayyid": "Sayyid",
+                               "Tajik": "Tajik",
+                               "Turkmen": "Turkmen",
+                               "Uzbek": "Uzbek",
+                               }
+
     # -------------------------------------------------------------------------
     # CR Settings
     #
@@ -1225,6 +1249,12 @@ def config(settings):
             db = current.db
             s3db = current.s3db
 
+            s3db.add_components("pr_person",
+                                pr_occupation_type_person = {"joinby": "person_id",
+                                                             "multiple": False,
+                                                             },
+                                )
+
             table = s3db.br_case
 
             #table.br_case.household_size.label = T("Group Size")
@@ -1262,9 +1292,11 @@ def config(settings):
                                         "first_name",
                                         "middle_name",
                                         "last_name",
-                                        "person_details.nationality",
-                                        "date_of_birth",
                                         "gender",
+                                        "date_of_birth",
+                                        #"person_details.nationality",
+                                        "physical_description.ethnicity",
+                                        (T("Occupation"), "occupation_type_person.occupation_type_id"),
                                         "person_details.marital_status",
                                         "case.household_size",
                                         S3SQLInlineComponent("address",

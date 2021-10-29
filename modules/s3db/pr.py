@@ -6241,24 +6241,22 @@ class PersonOccupationModel(S3Model):
             msg_record_modified = T("Occupation Type updated"),
             msg_record_deleted = T("Occupation Type deleted"),
             msg_list_empty = T("No Occupation Types currently defined"),
-        )
+            )
 
         # Reusable field
         represent = S3Represent(lookup = tablename,
                                 translate = True,
                                 )
-        occupation_type_id = S3ReusableField("occupation_type_id",
-                                             "reference %s" % tablename,
+        occupation_type_id = S3ReusableField("occupation_type_id", "reference %s" % tablename,
                                              label = T("Occupation Type"),
                                              represent = represent,
-                                             requires = IS_ONE_OF(db,
-                                                          "pr_occupation_type.id",
-                                                          represent,
-                                                          ),
+                                             requires = IS_ONE_OF(db, "%s.id" % tablename,
+                                                                  represent,
+                                                                  ),
                                              sortby = "name",
-                                             comment = S3PopupLink(c="pr",
-                                                                   f="occupation_type",
-                                                                   tooltip=T("Create a new occupation type"),
+                                             comment = S3PopupLink(c = "pr",
+                                                                   f = "occupation_type",
+                                                                   tooltip = T("Create a new occupation type"),
                                                                    ),
                                              )
 
@@ -6760,24 +6758,22 @@ class ReligionModel(S3Model):
             msg_record_modified = T("Religion updated"),
             msg_record_deleted = T("Religion deleted"),
             msg_list_empty = T("No Religions currently defined"),
-        )
+            )
 
         # Reusable field
         represent = S3Represent(lookup = tablename,
                                 #translate = True,
                                 )
-        religion_id = S3ReusableField("religion_id",
-                                      "reference %s" % tablename,
+        religion_id = S3ReusableField("religion_id", "reference %s" % tablename,
                                       label = T("Religion"),
                                       represent = represent,
-                                      requires = IS_ONE_OF(db,
-                                                  "pr_religion.id",
-                                                  represent,
-                                                  ),
+                                      requires = IS_ONE_OF(db, "%s.id" % tablename,
+                                                           represent,
+                                                           ),
                                       sortby = "name",
-                                      comment = S3PopupLink(c="pr",
-                                                            f="religion",
-                                                            tooltip=T("Create a new religion"),
+                                      comment = S3PopupLink(c = "pr",
+                                                            f = "religion",
+                                                            tooltip = T("Create a new religion"),
                                                             ),
                                       widget = S3HierarchyWidget(lookup = "pr_religion",
                                                                  represent = represent,
@@ -6793,19 +6789,20 @@ class ReligionModel(S3Model):
                                     IS_ONE_OF(db, "pr_religion.id",
                                               represent,
                                               # If limiting to just 1 level of parent
-                                              #filterby="parent",
-                                              #filter_opts=(None,),
-                                              orderby="pr_religion.name"))
+                                              #filterby = "parent",
+                                              #filter_opts = (None,),
+                                              orderby = "pr_religion.name",
+                                              ))
 
         # ---------------------------------------------------------------------
         # Religion <=> Organisation Link
         #
         tablename = "pr_religion_organisation"
         define_table(tablename,
-                     religion_id(ondelete="RESTRICT",
+                     religion_id(ondelete = "RESTRICT",
                                  ),
                      self.org_organisation_id(empty = False,
-                                              ondelete="CASCADE",
+                                              ondelete = "CASCADE",
                                               ),
                      *s3_meta_fields())
 
@@ -6850,18 +6847,19 @@ class SavedFilterModel(S3Model):
                           s3_comments(),
                           *s3_meta_fields())
 
-        represent = S3Represent(lookup=tablename, fields=["title"])
+        represent = S3Represent(lookup = tablename,
+                                fields = ["title"],
+                                )
         filter_id = S3ReusableField("filter_id", "reference %s" % tablename,
                                     label = T("Filter"),
                                     ondelete = "SET NULL",
                                     represent = represent,
                                     requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(
-                                                    current.db, "pr_filter.id",
-                                                    represent,
-                                                    orderby="pr_filter.title",
-                                                    sort=True,
-                                                    )),
+                                                IS_ONE_OF(current.db, "pr_filter.id",
+                                                          represent,
+                                                          orderby = "pr_filter.title",
+                                                          sort = True,
+                                                          )),
                                     )
 
         self.configure(tablename,

@@ -252,16 +252,19 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 M("Case Activity Statuses", f="case_activity_status",
                   check = lambda i: use_activities and settings.get_br_case_activity_status(),
                   ),
-                M("Need Types", f="need",
+                M("Needs", f="need",
                   #check = lambda i: not settings.get_br_needs_org_specific(),
                   ),
-                M("Assistance Statuses", f="assistance_status",
-                  check = manage_assistance,
+                M("Occupations", c="pr", f="occupation_type",
+                  #check = lambda i: not settings.get_br_needs_org_specific(),
                   ),
-                M("Assistance Types", f="assistance_type",
-                  check = lambda i: manage_assistance and \
-                                    settings.get_br_assistance_types(),
-                  ),
+                #M("Assistance Statuses", f="assistance_status",
+                #  check = manage_assistance,
+                #  ),
+                #M("Assistance Types", f="assistance_type",
+                #  check = lambda i: manage_assistance and \
+                #                    settings.get_br_assistance_types(),
+                #  ),
                 #M(labels.THEMES, f="assistance_theme",
                 #  check = lambda i: manage_assistance and \
                 #                    settings.get_br_assistance_themes() and \
