@@ -506,8 +506,9 @@ class S3Importer(S3Method):
         if response.s3.error_report:
             error_report = "Errors|" + "|".join(response.s3.error_report)
             error_tip = A("All Errors",
-                          _class="errortip",
-                          _title=error_report)
+                          _class = "errortip",
+                          _title = error_report,
+                          )
         else:
             # @todo: restore the error tree from all items?
             error_tip = ""
@@ -4986,9 +4987,7 @@ class S3BulkImporter(object):
         """
 
         if url == "unifont":
-            #url = "http://unifoundry.com/pub/unifont-7.0.06/font-builds/unifont-7.0.06.ttf"
-            #url = "http://unifoundry.com/pub/unifont-10.0.07/font-builds/unifont-10.0.07.ttf"
-            url = "http://unifoundry.com/pub/unifont/unifont-13.0.01/font-builds/unifont-13.0.01.ttf"
+            url = "http://unifoundry.com/pub/unifont/unifont-14.0.01/font-builds/unifont-14.0.01.ttf"
             # Rename to make version upgrades be transparent
             filename = "unifont.ttf"
             extension = "ttf"

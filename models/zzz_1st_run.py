@@ -261,7 +261,8 @@ if len(pop_list) > 0:
     info("\nPlease be patient whilst the database is populated...")
 
     # Create the bulk Importer object
-    bi = s3base.S3BulkImporter()
+    from s3 import S3BulkImporter
+    bi = S3BulkImporter()
 
     # Register handlers
     s3.import_feed = bi.import_feed
