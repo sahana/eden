@@ -582,11 +582,14 @@ def config(settings):
                 result = True
 
             if r.method == "roles":
-                #if not current.auth.s3_has_role("ADMIN"):
-                # Show a very simplified interface
-                settings.auth.realm_entity_types = ("org_organisation",)
-                s3.scripts.append("/%s/static/themes/Evac/js/roles.js" % r.application)
-
+                if current.auth.s3_has_role("ADMIN") and r.get_vars.get("advanced"):
+                    # @ToDo: Show Hidden Roles
+                    pass
+                else:
+                    # Show a very simplified interface
+                    settings.auth.realm_entity_types = ("org_organisation",)
+                    s3.scripts.append("/%s/static/themes/Evac/js/roles.js" % r.application)
+                    # @ToDo: Add an Advanced button to trigger a page reload with the advanced get_var
             return result
         s3.prep = prep
 
