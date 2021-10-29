@@ -51,6 +51,7 @@ def dissemination():
                           ("WORKING_GROUP", T("Disseminate to Working Group")),
                           ("ALL", T("Disseminate to ALL")),
                           )
+    current.response.s3.scripts.append("/%s/static/themes/Evac/js/dissemination.js" % current.request.application)
     return S3ReusableField("dissemination",
                            default = "NONE",
                            label = T("Dissemination Level"),

@@ -522,7 +522,8 @@ class HospitalBedsModel(S3Model):
                           Field("bed_type", "integer",
                                 default = 6,
                                 label = T("Bed Type"),
-                                represent = s3_options_represent(med_bed_type_opts),
+                                # Can't migrate to s3_options_represent as we read the options in the controller for the Filter options
+                                represent = S3Represent(options = med_bed_type_opts),
                                 requires = IS_IN_SET(med_bed_type_opts,
                                                      zero = None),
                                 ),
@@ -1026,7 +1027,8 @@ class HospitalStatusModel(S3Model):
                           # Status of the facility and facility operations
                           Field("facility_status", "integer",
                                 label = T("Facility Status"),
-                                represent = s3_options_represent(med_facility_status_opts),
+                                # Can't migrate to s3_options_represent as we read the options in the controller for the Filter options
+                                represent = S3Represent(options = med_facility_status_opts),
                                 requires = IS_EMPTY_OR(
                                              IS_IN_SET(med_facility_status_opts)),
                                 ),
@@ -1051,7 +1053,8 @@ class HospitalStatusModel(S3Model):
                                 ),
                           Field("power_supply_type", "integer",
                                 label = T("Power Supply Type"),
-                                represent = s3_options_represent(med_power_supply_type_opts),
+                                # Can't migrate to s3_options_represent as we read the options in the controller for the Filter options
+                                represent = S3Represent(options = med_power_supply_type_opts),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(med_power_supply_type_opts,
                                                       zero = None)),
