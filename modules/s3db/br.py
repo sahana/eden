@@ -4065,7 +4065,7 @@ def br_group_membership_onaccept(membership, group, group_id, person_id):
 # =============================================================================
 # User Interface
 # =============================================================================
-def br_rheader(r, tabs=None):
+def br_rheader(r):
     """ BR Resource Headers """
 
     if r.representation != "html":
@@ -4073,136 +4073,125 @@ def br_rheader(r, tabs=None):
         return None
 
     tablename, record = s3_rheader_resource(r)
+    if not record:
+        return None
+
     if tablename != r.tablename:
-        resource = current.s3db.resource(tablename, id=record.id)
+        resource = current.s3db.resource(tablename,
+                                         id = record.id,
+                                         )
     else:
         resource = r.resource
 
-    rheader = None
-    rheader_fields = []
+    case = resource.select(["first_name",
+                            "middle_name",
+                            "last_name",
+                            "case.status_id",
+                            "case.invalid",
+                            "case.household_size",
+                            "case.organisation_id",
+                            ],
+                            represent = True,
+                            raw_data = True,
+                            ).rows
 
-    if record:
+    if not case:
+        # Target record exists, but doesn't match filters
+        return None
 
-        T = current.T
-        settings = current.deployment_settings
+    case = case[0]
 
-        record_id = record.id
+    T = current.T
+    settings = current.deployment_settings
 
-        if tablename == "pr_person":
+    record_id = record.id
 
-            if not tabs:
+    # Basic Case Documentation
+    tabs = [(T("Basic Details"), None),
+            ]
+    append = tabs.append
 
-                # Basic Case Documentation
-                tabs = [(T("Basic Details"), None),
-                        ]
-                append = tabs.append
+    if settings.get_br_case_contacts_tab():
+        append((T("Contact Info"), "contacts"))
+    if settings.get_br_case_id_tab():
+        append((T("ID"), "identity"))
+    if settings.get_br_case_family_tab():
+        append((T("Family Members"), "group_membership/"))
 
-                if settings.get_br_case_contacts_tab():
-                    append((T("Contact Info"), "contacts"))
-                if settings.get_br_case_id_tab():
-                    append((T("ID"), "identity"))
-                if settings.get_br_case_family_tab():
-                    append((T("Family Members"), "group_membership/"))
+    activities_tab = settings.get_br_case_activities()
+    measures_tab = settings.get_br_manage_assistance() and \
+                   settings.get_br_assistance_tab()
 
-                activities_tab = settings.get_br_case_activities()
-                measures_tab = settings.get_br_manage_assistance() and \
-                               settings.get_br_assistance_tab()
+    if activities_tab and measures_tab:
+        activities_label = T("Needs")
+        measures_label = T("Measures")
+    else:
+        activities_label = T("Activities")
+        measures_label = T("Assistance")
 
-                if activities_tab and measures_tab:
-                    activities_label = T("Needs")
-                    measures_label = T("Measures")
-                else:
-                    activities_label = T("Activities")
-                    measures_label = T("Assistance")
+    if activities_tab:
+        append((activities_label, "case_activity"))
+    if measures_tab:
+        append((measures_label, "assistance_measure"))
 
-                if activities_tab:
-                    append((activities_label, "case_activity"))
-                if measures_tab:
-                    append((measures_label, "assistance_measure"))
+    if settings.get_br_service_contacts():
+        append((T("Service Contacts"), "service_contact"))
+    if settings.get_br_case_notes_tab():
+        append((T("Notes"), "br_note"))
+    if settings.get_br_case_photos_tab():
+        append((T("Photos"), "image"))
+    if settings.get_br_case_documents_tab():
+        append((T("Documents"), "document/"))
 
-                if settings.get_br_service_contacts():
-                    append((T("Service Contacts"), "service_contact"))
-                if settings.get_br_case_notes_tab():
-                    append((T("Notes"), "br_note"))
-                if settings.get_br_case_photos_tab():
-                    append((T("Photos"), "image"))
-                if settings.get_br_case_documents_tab():
-                    append((T("Documents"), "document/"))
-
-            case = resource.select(["first_name",
-                                    "middle_name",
-                                    "last_name",
-                                    "case.status_id",
-                                    "case.invalid",
-                                    "case.household_size",
-                                    "case.organisation_id",
-                                    ],
-                                    represent = True,
-                                    raw_data = True,
-                                    ).rows
-
-            if not case:
-                # Target record exists, but doesn't match filters
-                return None
-
-            # Extract case data
-            case = case[0]
-
-            name = s3_fullname
-            case_status = lambda row: case["br_case.status_id"]
-            organisation = lambda row: case["br_case.organisation_id"]
-
-            household = settings.get_br_household_size()
-            if household:
-                if household == "auto":
-                    label = T("Size of Family")
-                else:
-                    label = T("Household Size")
-                household_size = (label,
-                                  lambda row: case["br_case.household_size"],
-                                  )
-            else:
-                household_size = None
-
-            rheader_fields = [[(T("ID"), "pe_label"),
-                               (T("Case Status"), case_status),
-                               (T("Organisation"), organisation),
-                               ],
-                              ["date_of_birth",
-                               household_size,
-                               ],
-                              ]
-
-            invalid = case["_row"]["br_case.invalid"]
-            if invalid:
-                # "Invalid Case" Hint
-                hint = lambda record: SPAN(T("Invalid Case"),
-                                           _class="invalid-case",
-                                           )
-                rheader_fields.insert(0, [(None, hint)])
-
-            # Generate rheader XML
-            rheader = S3ResourceHeader(rheader_fields, tabs, title=name)(
-                            r,
-                            table = resource.table,
-                            record = record,
-                            )
-
-            # Add profile picture
-            from s3 import s3_avatar_represent
-            rheader.insert(0, A(s3_avatar_represent(record_id,
-                                                    "pr_person",
-                                                    _class = "rheader-avatar",
-                                                    ),
-                                _href=URL(f = "person",
-                                          args = [record_id, "image"],
-                                          vars = r.get_vars,
-                                          ),
-                                )
-                           )
-
+    household = settings.get_br_household_size()
+    if household:
+        if household == "auto":
+            label = T("Size of Family")
         else:
-            rheader = None
+            label = T("Household Size")
+        household_size = (label,
+                          lambda row: case["br_case.household_size"],
+                          )
+    else:
+        household_size = None
+
+    rheader_fields = [[(T("ID"), "pe_label"),
+                       (T("Case Status"), lambda row: case["br_case.status_id"]),
+                       (T("Organisation"), lambda row: case["br_case.organisation_id"]),
+                       ],
+                      ["date_of_birth",
+                       household_size,
+                       ],
+                      ]
+
+    invalid = case["_row"]["br_case.invalid"]
+    if invalid:
+        # "Invalid Case" Hint
+        hint = lambda row: SPAN(T("Invalid Case"),
+                                _class = "invalid-case",
+                                )
+        rheader_fields.insert(0, [(None, hint)])
+
+    # Generate rheader XML
+    rheader = S3ResourceHeader(rheader_fields,
+                               tabs,
+                               title = s3_fullname,
+                               )(r,
+                                 table = resource.table,
+                                 record = record,
+                                 )
+
+    # Add profile picture
+    rheader.insert(0, A(s3_avatar_represent(record_id,
+                                            "pr_person",
+                                            _class = "rheader-avatar",
+                                            ),
+                        _href = URL(f = "person",
+                                    args = [record_id, "image", "create"],
+                                    vars = r.get_vars,
+                                    ),
+                        )
+                   )
 
     return rheader
 

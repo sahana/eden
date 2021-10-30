@@ -36,6 +36,9 @@ if migrate:
 else:
     check_reserved = []
 
+# Test MS SQL compatibility
+#check_reserved = ["mssql"]
+
 try:
     db = DAL(db_string,
              check_reserved = check_reserved,

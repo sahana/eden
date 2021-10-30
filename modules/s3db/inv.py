@@ -6046,8 +6046,6 @@ def inv_adj_close(r, **attr):
                 next = URL(),
                 )
 
-    T = current.T
-
     adj_id = r.id
 
     if not adj_id:
@@ -6061,6 +6059,8 @@ def inv_adj_close(r, **attr):
                                   record_id = adj_id,
                                   ):
         r.unauthorised()
+
+    T = current.T
 
     record = r.record
 
@@ -6232,14 +6232,13 @@ def inv_adj_close(r, **attr):
     message = T("Adjustment Closed")
     current.session.confirmation = message
 
-    output = json.dumps({"message": s3_str(message),
-                         "tree": URL(c = prefix,
-                                     f = resourcename,
-                                     args = [instance_id, "inv_item"],
-                                     ),
-                         }, separators=SEPARATORS)
     current.response.headers["Content-Type"] = "application/json"
-    return output
+    return json.dumps({"message": s3_str(message),
+                       "tree": URL(c = prefix,
+                                   f = resourcename,
+                                   args = [instance_id, "inv_item"],
+                                   ),
+                       }, separators=SEPARATORS)
 
 # =============================================================================
 def inv_adj_rheader(r):
@@ -6404,11 +6403,10 @@ def inv_commit_all(r, **attr):
                   args = [cid],
                   )
 
-    output = json.dumps({"message": s3_str(message),
-                         "tree": url,
-                         }, separators=SEPARATORS)
     current.response.headers["Content-Type"] = "application/json"
-    return output
+    return json.dumps({"message": s3_str(message),
+                       "tree": url,
+                       }, separators=SEPARATORS)
 
 # =============================================================================
 def inv_commit_send(r, **attr):
@@ -6515,14 +6513,13 @@ def inv_commit_send(r, **attr):
     current.session.confirmation = message
 
     # Redirect to inv_send for the send id just created
-    output = json.dumps({"message": s3_str(message),
-                         "tree": URL(c = "inv",
-                                     f = "send",
-                                     args = [send_id],
-                                     ),
-                         }, separators=SEPARATORS)
     current.response.headers["Content-Type"] = "application/json"
-    return output
+    return json.dumps({"message": s3_str(message),
+                       "tree": URL(c = "inv",
+                                   f = "send",
+                                   args = [send_id],
+                                   ),
+                       }, separators=SEPARATORS)
 
 # =============================================================================
 def inv_gift_certificate(r, **attr):
@@ -8470,11 +8467,10 @@ def inv_recv_cancel(r, **attr):
     message = T("Received Shipment canceled and items removed from Warehouse")
     current.session.confirmation = message
 
-    output = json.dumps({"message": s3_str(message),
-                         "tree": URL(args = [recv_id]),
-                         }, separators=SEPARATORS)
     current.response.headers["Content-Type"] = "application/json"
-    return output
+    return json.dumps({"message": s3_str(message),
+                       "tree": URL(args = [recv_id]),
+                       }, separators=SEPARATORS)
 
 # =============================================================================
 def inv_recv_controller():
@@ -9616,11 +9612,10 @@ def inv_recv_process(r, **attr):
     message = T("Shipment Items Received")
     current.session.confirmation = message
 
-    output = json.dumps({"message": s3_str(message),
-                         "tree": URL(args = [recv_id]),
-                         }, separators=SEPARATORS)
     current.response.headers["Content-Type"] = "application/json"
-    return output
+    return json.dumps({"message": s3_str(message),
+                       "tree": URL(args = [recv_id]),
+                       }, separators=SEPARATORS)
 
 # =============================================================================
 def inv_req_add_from_template(req_id):
@@ -9793,11 +9788,10 @@ def inv_req_approve(r, **attr):
     message = T("Request Approved")
     current.session.confirmation = message
 
-    output = json.dumps({"message": s3_str(message),
-                         "tree": URL(args = [req_id]),
-                         }, separators=SEPARATORS)
     current.response.headers["Content-Type"] = "application/json"
-    return output
+    return json.dumps({"message": s3_str(message),
+                       "tree": URL(args = [req_id]),
+                       }, separators=SEPARATORS)
 
 # =============================================================================
 def inv_req_approvers(site_id):
@@ -10883,11 +10877,10 @@ def inv_req_submit(r, **attr):
     message = T("Request submitted for Approval")
     current.session.confirmation = message
 
-    output = json.dumps({"message": s3_str(message),
-                         "tree": URL(args = [req_id]),
-                         }, separators=SEPARATORS)
     current.response.headers["Content-Type"] = "application/json"
-    return output
+    return json.dumps({"message": s3_str(message),
+                       "tree": URL(args = [req_id]),
+                       }, separators=SEPARATORS)
 
 # =============================================================================
 def inv_req_from(r, **attr):
@@ -10949,11 +10942,10 @@ def inv_req_from(r, **attr):
          }
     current.session.confirmation = message
 
-    output = json.dumps({"message": s3_str(message),
-                         "tree": URL(args = [req_id, "req_item"]),
-                         }, separators=SEPARATORS)
     current.response.headers["Content-Type"] = "application/json"
-    return output
+    return json.dumps({"message": s3_str(message),
+                       "tree": URL(args = [req_id, "req_item"]),
+                       }, separators=SEPARATORS)
 
 # =============================================================================
 def inv_req_inline_form(method):
@@ -11326,14 +11318,13 @@ def inv_req_item_order(r, **attr):
     current.session.confirmation = message
 
     # Redirect back to the Request's Items tab
-    output = json.dumps({"message": s3_str(message),
-                         "tree": URL(c = "inv",
-                                     f = "req",
-                                     args = [req_id, "req_item"],
-                                     ),
-                         }, separators=SEPARATORS)
     current.response.headers["Content-Type"] = "application/json"
-    return output
+    return json.dumps({"message": s3_str(message),
+                       "tree": URL(c = "inv",
+                                   f = "req",
+                                   args = [req_id, "req_item"],
+                                   ),
+                       }, separators=SEPARATORS)
 
 # =============================================================================
 def inv_req_marker_fn(record):
@@ -12048,11 +12039,10 @@ def inv_req_send(r, **attr):
     message = T("Shipment created")
     current.session.confirmation = message
 
-    output = json.dumps({"message": s3_str(message),
-                         "tree": URL(args = [send_id, "track_item"]),
-                         }, separators=SEPARATORS)
     current.response.headers["Content-Type"] = "application/json"
-    return output
+    return json.dumps({"message": s3_str(message),
+                       "tree": URL(args = [send_id, "track_item"]),
+                       }, separators=SEPARATORS)
 
 # =============================================================================
 def inv_req_send_sites(r, **attr):
@@ -13423,11 +13413,10 @@ def inv_send_cancel(r, **attr):
     message = T("Sent Shipment canceled and items returned to Warehouse")
     current.session.confirmation = message
 
-    output = json.dumps({"message": s3_str(message),
-                         "tree": URL(args = [send_id]),
-                         }, separators=SEPARATORS)
     current.response.headers["Content-Type"] = "application/json"
-    return output
+    return json.dumps({"message": s3_str(message),
+                       "tree": URL(args = [send_id]),
+                       }, separators=SEPARATORS)
 
 # =============================================================================
 def inv_send_form(r, **attr):
@@ -13877,11 +13866,10 @@ def inv_send_process(r, **attr):
     message = T("Shipment Items sent from Warehouse")
     current.session.confirmation = message
 
-    output = json.dumps({"message": s3_str(message),
-                         "tree": URL(args = [send_id, "track_item"]),
-                         }, separators=SEPARATORS)
     current.response.headers["Content-Type"] = "application/json"
-    return output
+    return json.dumps({"message": s3_str(message),
+                       "tree": URL(args = [send_id, "track_item"]),
+                       }, separators=SEPARATORS)
 
 # =============================================================================
 def inv_send_received(r, **attr):
@@ -13971,11 +13959,10 @@ def inv_send_received(r, **attr):
     message = T("Shipment received")
     current.session.confirmation = message
 
-    output = json.dumps({"message": s3_str(message),
-                         "tree": URL(args = [send_id, "track_item"]),
-                         }, separators=SEPARATORS)
     current.response.headers["Content-Type"] = "application/json"
-    return output
+    return json.dumps({"message": s3_str(message),
+                       "tree": URL(args = [send_id, "track_item"]),
+                       }, separators=SEPARATORS)
 
 # =============================================================================
 def inv_send_return_complete(r, **attr):
@@ -14059,11 +14046,10 @@ def inv_send_return_complete(r, **attr):
     message = T("Return completed. Stock is back in the Warehouse and can be assigned to Bins")
     current.session.confirmation = message
 
-    output = json.dumps({"message": s3_str(message),
-                         "tree": URL(args = [send_id]),
-                         }, separators=SEPARATORS)
     current.response.headers["Content-Type"] = "application/json"
-    return output
+    return json.dumps({"message": s3_str(message),
+                       "tree": URL(args = [send_id]),
+                       }, separators=SEPARATORS)
 
 # =============================================================================
 def inv_send_return(r, **attr):
@@ -14124,11 +14110,10 @@ def inv_send_return(r, **attr):
     message = T("Sent Shipment has returned, indicate how many items will be returned to Warehouse.")
     current.session.confirmation = message
 
-    output = json.dumps({"message": s3_str(message),
-                         "tree": URL(args = [send_id, "track_item"]),
-                         }, separators=SEPARATORS)
     current.response.headers["Content-Type"] = "application/json"
-    return output
+    return json.dumps({"message": s3_str(message),
+                       "tree": URL(args = [send_id, "track_item"]),
+                       }, separators=SEPARATORS)
 
 # =============================================================================
 def inv_send_rheader(r):

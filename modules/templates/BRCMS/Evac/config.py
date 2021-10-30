@@ -1373,9 +1373,189 @@ def config(settings):
             pr_add_affiliation(person.pe_id, realm_entity, role="Realm Hierarchy")
 
     # =========================================================================
+    def br_rheader(r):
+        """
+            BR Resource Headers
+            - copied from modules/s3db/py
+            - settings applied rather than looked-up & Family/Household labelled as Group
+            - 'Share case with' added 
+        """
+
+        if r.representation != "html":
+            # Resource headers only used in interactive views
+            return None
+
+        from s3 import s3_rheader_resource
+
+        tablename, record = s3_rheader_resource(r)
+        if not record:
+            return None
+
+        s3db = current.s3db
+
+        if tablename != r.tablename:
+            resource = s3db.resource(tablename,
+                                     id = record.id,
+                                     )
+        else:
+            resource = r.resource
+
+        case = resource.select(["first_name",
+                                "middle_name",
+                                "last_name",
+                                "case.status_id",
+                                "case.invalid",
+                                "case.household_size",
+                                "case.organisation_id",
+                                ],
+                                represent = True,
+                                raw_data = True,
+                                ).rows
+
+        if not case:
+            # Target record exists, but doesn't match filters
+            return None
+
+        case = case[0]
+        raw = case["_row"]
+
+        from s3 import S3ResourceHeader, s3_avatar_represent, s3_fullname
+
+        T = current.T
+
+        record_id = record.id
+
+        tabs = [(T("Basic Details"), None),
+                (T("Contact Info"), "contacts"),
+                (T("ID"), "identity"),
+                (T("Group Members"), "group_membership/"),
+                (T("Activities"), "case_activity"),
+                (T("Notes"), "br_note"),
+                (T("Documents"), "document/"),
+                ]
+
+        rheader_fields = [[(T("ID"), "pe_label"),
+                           (T("Case Status"), lambda row: case["br_case.status_id"]),
+                           (T("Organisation"), lambda row: case["br_case.organisation_id"]),
+                           ],
+                          ["date_of_birth",
+                           (T("Size of Group"), lambda row: case["br_case.household_size"]),
+                           ],
+                          ]
+
+        if current.auth.s3_has_role("ORG_ADMIN"):
+            # Add option to share case with another Organisation
+            otable = s3db.org_organisation
+            query = (otable.deleted == False) & \
+                    (otable.id != raw["br_case.organisation_id"])
+            orgs = current.db(query).select(otable.id,
+                                            otable.name,
+                                            )
+            from gluon import OPTION, SELECT
+            opts = [OPTION(org.name,
+                           _value = org.id,
+                           ) for org in orgs]
+            opts.insert(0, OPTION(""))
+            orgs_dropdown = SELECT(_id = "share-case",
+                                   *opts)
+            orgs_dropdown["_data-person_id"] = record.id
+            rheader_fields[1].append((T("Share Case with"), lambda row: orgs_dropdown))
+            s3 = current.response.s3
+            s3.scripts.append("/%s/static/themes/Evac/js/share_case.js" % r.application)
+            s3.stylesheets.append("../themes/Evac/style.css")
+
+        invalid = raw["br_case.invalid"]
+        if invalid:
+            # "Invalid Case" Hint
+            hint = lambda row: SPAN(T("Invalid Case"),
+                                    _class = "invalid-case",
+                                    )
+            rheader_fields.insert(0, [(None, hint)])
+
+        # Generate rheader XML
+        rheader = S3ResourceHeader(rheader_fields,
+                                   tabs,
+                                   title = s3_fullname,
+                                   )(r,
+                                     table = resource.table,
+                                     record = record,
+                                     )
+
+        # Add profile picture
+        from gluon import A, URL 
+        rheader.insert(0, A(s3_avatar_represent(record_id,
+                                                "pr_person",
+                                                _class = "rheader-avatar",
+                                                ),
+                            _href = URL(f = "person",
+                                        args = [record_id, "image", "create"],
+                                        vars = r.get_vars,
+                                        ),
+                            )
+                       )
+
+        return rheader
+
+    # =========================================================================
+    def share_case(r, **attr):
+        """
+            Share a case with another Organisation
+            - i.e. affiliate to ORG RO forum for their ORG_ADMIN to have READ access
+
+            - called via POST from inv_send_rheader
+            - called via JSON method to reduce request overheads
+        """
+
+        if r.http != "POST":
+            r.error(405, current.ERROR.BAD_METHOD,
+                    next = URL(),
+                    )
+
+        person_id = r.id
+
+        if not person_id:
+            r.error(405, "Can only share a single case")
+
+        try:
+            organisation_id = r.args[2]
+        except:
+            r.error(405, "Missing Organisation to share to")
+
+        auth = current.auth
+        s3db = current.s3db
+        ptable = s3db.pr_person
+
+        if not auth.s3_has_permission("update", ptable,
+                                      record_id = person_id,
+                                      ):
+            r.unauthorised()
+
+        ftable = s3db.pr_forum
+        forum = current.db(ftable.uuid == "ORG_ADMIN_RW_%s" % organisation_id).select(ftable.pe_id,
+                                                                                      limitby = (0, 1),
+                                                                                      ).first()
+
+        from s3db.pr import pr_add_affiliation
+        pr_add_affiliation(forum.pe_id, r.record.realm_entity, role="Realm Hierarchy")
+
+        from s3 import s3_str
+
+        import json
+        SEPARATORS = (",", ":")
+        current.response.headers["Content-Type"] = "application/json"
+        return json.dumps({"message": s3_str(current.T("Case Shared")),
+                           }, separators=SEPARATORS)
+
+    # =========================================================================
     def customise_pr_person_controller(**attr):
 
+        s3db = current.s3db
         s3 = current.response.s3
+
+        s3db.set_method("pr", "person", 
+                        method = "share",
+                        action = share_case,
+                        )
 
         # Custom prep
         standard_prep = s3.prep
@@ -1393,7 +1573,6 @@ def config(settings):
             from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineComponent
 
             db = current.db
-            s3db = current.s3db
 
             s3db.add_components("pr_person",
                                 pr_occupation_type_person = {"joinby": "person_id",
@@ -1487,6 +1666,8 @@ def config(settings):
 
             return result
         s3.prep = prep
+
+        attr["rheader"] = br_rheader
 
         return attr
 
