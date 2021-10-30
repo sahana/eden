@@ -1592,6 +1592,7 @@ def config(settings):
             query = (gtable.uuid.belongs(("CASE_MANAGER",
                                           "CASE_SUPER",
                                           "ORG_ADMIN",
+                                          "ADMIN",
                                           ))) & \
                     (gtable.id == mtable.group_id) & \
                     (mtable.user_id == ltable.user_id) & \
