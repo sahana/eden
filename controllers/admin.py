@@ -256,7 +256,7 @@ def user():
             btn = A(T("Approve"),
                     _class = "action-btn",
                     _title = "Approve User",
-                    _href = URL(args = [user_id, "approve"])
+                    _href = URL(args = [user_id, "approve"]),
                     )
             rheader.append(btn)
 
@@ -294,7 +294,7 @@ def user():
 
         if r.method == "delete" and r.http == "GET":
             if r.id == session.auth.user.id: # we're trying to delete ourself
-                get_vars.update({"user.id":str(r.id)})
+                get_vars.update({"user.id": str(r.id)})
                 r.id = None
                 s3db.configure(r.tablename,
                                delete_next = URL(c="default", f="user/logout"),
@@ -524,7 +524,7 @@ def organisation():
         msg_record_created = T("Organization Domain added"),
         msg_record_modified = T("Organization Domain updated"),
         msg_record_deleted = T("Organization Domain deleted"),
-        msg_list_empty = T("No Organization Domains currently registered")
+        msg_list_empty = T("No Organization Domains currently registered"),
         )
 
     return s3_rest_controller("auth", "organisation")
@@ -742,8 +742,7 @@ def acl():
         next = request.vars._next
         s3db.configure(tablename, delete_next=next)
 
-    output = s3_rest_controller("s3", "permission")
-    return output
+    return s3_rest_controller("s3", "permission")
 
 # -----------------------------------------------------------------------------
 def acl_represent(acl, options):
@@ -841,14 +840,13 @@ def portable():
                 last_build_exists = True
                 break
 
-    web2py_form = SQLFORM.factory(
-            Field("web2py_source",
-                  "upload",
-                  uploadfolder=uploadfolder,
-                  requires=IS_UPLOAD_FILENAME(extension="zip"),
-                ),
-            table_name="web2py_source",
-            )
+    web2py_form = SQLFORM.factory(Field("web2py_source",
+                                        "upload",
+                                        uploadfolder = uploadfolder,
+                                        requires = IS_UPLOAD_FILENAME(extension = "zip"),
+                                        ),
+                                  table_name = "web2py_source",
+                                  )
 
     if web2py_form.accepts(request.vars, keepvalues=True, session=None):
         # Make sure only one web2py source file exists
@@ -875,16 +873,18 @@ def portable():
     # completed.
 
     if web2py_source_exists:
-        generator_form = SQLFORM.factory(
-                Field("copy_database", "boolean"),
-                Field("copy_uploads", "boolean"),
-                )
+        generator_form = SQLFORM.factory(Field("copy_database", "boolean"),
+                                         Field("copy_uploads", "boolean"),
+                                         )
 
-        if generator_form.accepts(request.vars, keepvalues=True, session=None):
+        if generator_form.accepts(request.vars,
+                                  keepvalues = True,
+                                  session = None,
+                                  ):
             if web2py_source_exists:
-                create_portable_app(web2py_source=web2py_source,\
-                        copy_database = request.vars.copy_database,\
-                        copy_uploads = request.vars.copy_uploads)
+                create_portable_app(web2py_source = web2py_source,\
+                                    copy_database = request.vars.copy_database,\
+                                    copy_uploads = request.vars.copy_uploads)
             else:
                 session.error = T("Web2py executable zip file needs to be uploaded first to use this function.")
     else:
@@ -1201,12 +1201,16 @@ def translate():
             row = TR(TD("%s:" % T("Select language code")),
                      TD(lang_dropdown),
                      TD("%s:" % T("Or add a new language code")),
-                     TD(INPUT(_type="text", _name="new_code")),
+                     TD(INPUT(_type = "text",
+                              _name = "new_code",
+                              )),
                      )
             div.append(row)
             div.append(BR())
             div.append(BR())
-            div.append(INPUT(_type="submit", _value=T("Submit")))
+            div.append(INPUT(_type = "submit",
+                             _value = T("Submit"),
+                             ))
             form.append(div)
             # Add the custom form to the output
             output["form"] = form
@@ -1284,16 +1288,22 @@ def translate():
                     lang_dropdown.append(lang)
                 lang_col.append(lang_dropdown)
 
-                row = TR(TD("%s:" % T("Language Code")), TD(lang_col))
+                row = TR(TD("%s:" % T("Language Code")),
+                         TD(lang_col),
+                         )
                 div = DIV(row,
                           BR(),
                           )
-                row = TR(TD(INPUT(_type="checkbox", _name="update_master")),
+                row = TR(TD(INPUT(_type = "checkbox",
+                                  _name = "update_master",
+                                  )),
                          TD(T("Update Master file")))
                 div.append(row)
                 div.append(BR())
                 div.append(BR())
-                div.append(INPUT(_type="submit", _value=T("Submit")))
+                div.append(INPUT(_type = "submit",
+                                 _value = T("Submit"),
+                                 ))
                 form.append(div)
                 # Add the custom form to the output
                 output["title"] = T("Select the language file")
@@ -1302,9 +1312,13 @@ def translate():
         elif opt == "4":
             # Add strings manually
             div = DIV(T("Upload a text file containing new-line separated strings:"),
-                      INPUT(_type="file", _name="upload"),
+                      INPUT(_type = "file",
+                            _name = "upload",
+                            ),
                       BR(),
-                      INPUT(_type="submit", _value=T("Upload")),
+                      INPUT(_type = "submit",
+                            _value = T("Upload"),
+                            ),
                       )
             form.append(div)
 
@@ -1328,8 +1342,7 @@ def translate():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller("translate", "language")
-    return output
+    return s3_rest_controller("translate", "language")
 
 # =============================================================================
 @auth.s3_requires_membership(1)
@@ -1357,12 +1370,14 @@ def task():
                                 editable = False,
                                 )
 
-        s3task.configure_tasktable_crud(task="", status_writable=True)
+        s3task.configure_tasktable_crud(task = "",
+                                        status_writable = True)
         return True
     s3.prep = prep
 
+    from s3db.s3 import s3_scheduler_rheader
     return s3_rest_controller("scheduler", "task",
-                              rheader = s3db.s3_scheduler_rheader,
+                              rheader = s3_scheduler_rheader,
                               )
 
 # =============================================================================
@@ -1389,7 +1404,9 @@ def result():
         try:
             filenames = os.listdir(path)
         except OSError:
-            links = UL(LI(T("No test results found"), _class="error"))
+            links = UL(LI(T("No test results found"),
+                          _class = "error",
+                          ))
         else:
             links = UL()
             for filename in filenames:
@@ -1418,12 +1435,10 @@ def result():
                       )
             links.append(link)
 
-    output = {"title": title,
-              "links": links,
-              "overview": overview,
-              }
-
-    return output
+    return {"title": title,
+            "links": links,
+            "overview": overview,
+            }
 
 # =============================================================================
 # Configurations

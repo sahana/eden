@@ -137,6 +137,7 @@ class S3RoleManager(S3Method):
         response = current.response
         s3 = response.s3
 
+        resource = self.resource
         get_vars = self.request.get_vars
 
         # List Config
@@ -149,9 +150,9 @@ class S3RoleManager(S3Method):
         default_orderby = "auth_group.role"
         s3.no_formats = True
 
-        # Exclude hidden roles
-        resource = self.resource
-        resource.add_filter(FS("hidden") == False)
+        if not get_vars.get("advanced"):
+            # Exclude hidden roles
+            resource.add_filter(FS("hidden") == False)
 
         if r.interactive:
 
@@ -183,7 +184,9 @@ class S3RoleManager(S3Method):
                                 id = list_id,
                                 dt_pagination = dt_pagination,
                                 dt_pageLength = display_length,
-                                dt_base_url = r.url(method="", vars={}),
+                                dt_base_url = r.url(method = "",
+                                                    vars = {},
+                                                    ),
                                 dt_permalink = r.url(),
                                 dt_formkey = formkey,
                                 )
@@ -197,14 +200,14 @@ class S3RoleManager(S3Method):
             # Page actions
             crud_button = S3CRUD.crud_button
             page_actions = DIV(crud_button(T("Create Role"),
-                                           _href = r.url(method="create"),
+                                           _href = r.url(method = "create"),
                                            ),
                                # TODO activate when implemented
                                #crud_button(T("Import Roles"),
-                               #            _href = r.url(method="import"),
+                               #            _href = r.url(method = "import"),
                                #            ),
                                crud_button(T("Export Roles"),
-                                           _href = r.url(representation="csv"),
+                                           _href = r.url(representation = "csv"),
                                            ),
                                )
 
@@ -1173,8 +1176,9 @@ class S3RoleManager(S3Method):
             privileged_roles = {u:u for u in privileged_roles}
 
         table = auth.settings.table_group
-        query = (table.hidden == False) & \
-                (table.deleted == False)
+        query = (table.deleted == False)
+        if not current.request.get_vars.get("advanced"):
+            query &= (table.hidden == False)
         rows = current.db(query).select(table.id,
                                         table.uuid,
                                         table.role,
@@ -1287,16 +1291,13 @@ class S3RoleManager(S3Method):
 
         T = current.T
 
-        output = {}
-
-        # Title
-        output["title"] = T("Import Roles")
-
         # View
         response = current.response
         response.view = "admin/import_roles.html"
 
-        return output
+        # Title
+        return {"title": T("Import Roles"),
+                }
 
         # if GET:
         #   show an import form
@@ -1992,7 +1993,7 @@ class S3RolesExport(object):
                 (otable.deleted == False)
         self.orgs = db(query).select(otable.pe_id,
                                      otable.name,
-                                     ).as_dict(key="pe_id")
+                                     ).as_dict(key = "pe_id")
 
     # -------------------------------------------------------------------------
     def as_csv(self):

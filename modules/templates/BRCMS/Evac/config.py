@@ -222,9 +222,7 @@ def config(settings):
             return 0
 
         # Use default rules
-        realm_entity = 0
-
-        return realm_entity
+        return 0
 
     settings.auth.realm_entity = evac_realm_entity
 
@@ -573,6 +571,168 @@ def config(settings):
     settings.auth.remove_role = auth_remove_role
 
     # =========================================================================
+    def auth_user_update_onaccept(form):
+        """
+            Handle Users moved between Orgs
+        """
+
+        form_vars = form.vars
+        organisation_id = int(form_vars.organisation_id)
+        old_organisation_id = form.record.organisation_id
+        if organisation_id == old_organisation_id:
+            # Nothing to do
+            return
+
+        user_id = form_vars.id
+
+        db = current.db
+        s3db = current.s3db
+
+        # Lookup the Org PE IDs
+        otable = s3db.org_organisation
+        orgs = db(otable.id.belongs((organisation_id,
+                                     old_organisation_id,
+                                     ))).select(otable.id,
+                                                otable.pe_id,
+                                                limitby = (0, 2),
+                                                )
+        orgs = {org.id: org.pe_id for org in orgs}
+        organisation_pe_id = orgs[organisation_id]
+        old_organisation_pe_id = orgs[old_organisation_id]
+
+        # Read Memberships
+        gtable = db.auth_group
+        mtable = db.auth_membership
+        query = (mtable.user_id == user_id) & \
+                (mtable.group_id == gtable.id)
+        rows = db(query).select(gtable.uuid,
+                                mtable.pe_id,
+                                )
+        roles = {}
+        for row in rows:
+            role = row["auth_group.uuid"]
+            if role in ("AUTHENTICATED",
+                        "FLIGHTS",
+                        "LEGAL",
+                        "LOGISTICS",
+                        "MEDICAL",
+                        "SECURITY",
+                        ):
+                # Role applied at Personal Level
+                # => no need to update
+                continue
+            if role in roles:
+                roles[role].append(row["auth_membership.pe_id"])
+            else:
+                roles[role] = [row["auth_membership.pe_id"]]
+
+        if "CASE_MANAGER" in roles or \
+           "CASE_SUPER" in roles or \
+           "ORG_ADMIN" in roles:
+            # Can be assigned to Cases
+
+            # Lookup Person PE ID
+            ltable = s3db.pr_person_user
+            person = db(ltable.user_id == user_id).select(ltable.pe_id,
+                                                          limitby = (0, 1),
+                                                          ).first()
+            pe_id = person.pe_id
+            
+            # Remove assignment to all Cases in the old Org
+            ptable = s3db.pr_person
+            htable = s3db.hrm_human_resource
+            ctable = s3db.br_case
+            query = (ptable.pe_id == pe_id) & \
+                    (ptable.id == htable.person_id) & \
+                    (htable.id == ctable.human_resource_id) & \
+                    (ctable.organisation_id == old_organisation_id)
+            cases = db(query).select(ctable.id,
+                                     ctable.realm_entity,
+                                     )
+            if cases:
+                # Remove assignments
+                db(ctable.id.belongs([c.id for c in cases])).update(human_resource_id = None)
+                # Remove affiliations
+                from s3db.pr import pr_remove_affiliation
+                for case in cases:
+                    pr_remove_affiliation(pe_id, case.realm_entity)
+
+            if "CASE_MANAGER" in roles:
+                del roles["CASE_MANAGER"]
+            if "CASE_SUPER" in roles:
+                del roles["CASE_SUPER"]
+
+            if "ORG_ADMIN" in roles and \
+               old_organisation_pe_id in roles["ORG_ADMIN"]:
+                # Update Role to new Org's Realm
+                # Role applied at Organization Level
+                query = (mtable.user_id == user_id) & \
+                        (mtable.group_id == gtable.id) & \
+                        (gtable.uuid == "ORG_ADMIN") & \
+                        (mtable.pe_id == old_organisation_pe_id)
+                membership = db(query).select(mtable.id,
+                                              limitby = (0, 1),
+                                              ).first()
+                membership.update_record(pe_id = organisation_pe_id)
+                del roles["ORG_ADMIN"]
+
+        if "ORG_MEMBER" in roles and \
+           old_organisation_pe_id in roles["ORG_MEMBER"]:
+            # Update Role to new Org's Realm
+            # Role applied at Organization Level
+            query = (mtable.user_id == user_id) & \
+                    (mtable.group_id == gtable.id) & \
+                    (gtable.uuid == "ORG_MEMBER") & \
+                    (mtable.pe_id == old_organisation_pe_id)
+            membership = db(query).select(mtable.id,
+                                          limitby = (0, 1),
+                                          ).first()
+            membership.update_record(pe_id = organisation_pe_id)
+            del roles["ORG_MEMBER"]
+        
+        # Lookup Forums
+        forum_roles = ("_RW",
+                       "_RO",
+                       )
+        forums = []
+        for role in roles:
+            if role[-3:] in (forum_roles):
+                forums += ("%s_%s" % (role, organisation_id),
+                           "%s_%s" % (role, old_organisation_id),
+                           )
+
+        if not forums:
+            # Case Manager or Case Super
+            return
+
+        ftable = s3db.pr_forum
+        forums = db(ftable.uuid.belongs(forums)).select(ftable.uuid,
+                                                        ftable.pe_id,
+                                                        )
+        forums = {row.uuid: row.pe_id for row in forums}
+
+        user_query = (mtable.user_id == user_id)
+        for role in roles:
+            old_forum_uuid = "%s_%s" % (role, old_organisation_id)
+            if old_forum_uuid not in forums:
+                # Unknown role
+                continue
+            # WG role applied at WG Forum Level
+            old_forum_pe_id = forums[old_forum_uuid]
+            if old_forum_pe_id not in roles[role]:
+                # No role for the old Org's WG Forum realm
+                continue
+            forum_pe_id = forums["%s_%s" % (role, organisation_id)]
+            query = user_query & \
+                    (mtable.group_id == gtable.id) & \
+                    (gtable.uuid == role) & \
+                    (mtable.pe_id == old_forum_pe_id)
+            membership = db(query).select(mtable.id,
+                                          limitby = (0, 1),
+                                          ).first()
+            membership.update_record(pe_id = forum_pe_id)
+
+    # =========================================================================
     def customise_auth_user_controller(**attr):
 
         s3 = current.response.s3
@@ -595,6 +755,12 @@ def config(settings):
                     settings.auth.realm_entity_types = ("org_organisation",)
                     s3.scripts.append("/%s/static/themes/Evac/js/roles.js" % r.application)
                     # @ToDo: Add an Advanced button to trigger a page reload with the advanced get_var
+            else:
+                # Handle move of User between Orgs
+                current.s3db.configure("auth_user",
+                                       update_onaccept = auth_user_update_onaccept,
+                                       )
+
             return result
         s3.prep = prep
 
@@ -687,7 +853,7 @@ def config(settings):
 
         form_vars = form.vars
         human_resource_id = form_vars.human_resource_id
-        if human_resource_id == form.record.human_resource_id:
+        if human_resource_id == str(form.record.human_resource_id):
             # Handler unchanged
             return
 
@@ -1683,7 +1849,7 @@ def config(settings):
         form_vars = form.vars
         pe_id = form_vars.pe_id
 
-        if pe_id == form.record.pe_id:
+        if pe_id == str(form.record.pe_id):
             # No change
             return
 

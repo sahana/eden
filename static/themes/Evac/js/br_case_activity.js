@@ -14,7 +14,7 @@ $(document).ready(function() {
 
     var updateHandlers = function() {
         handlersLength = handlers.length;
-        handlerField.html('');
+        handlerField.html('<option value></option>');
         for (i = 0; i < handlersLength; i++) {
             handler = handlers[i];
             opt = '<option value="' + handler.i + '">' + handler.n + '</option>';
