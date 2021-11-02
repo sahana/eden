@@ -22,7 +22,8 @@ def config(settings):
     settings.base.prepopulate = ["default/base",
                                  "BRCMS/Evac",
                                  ]
-    #settings.base.prepopulate_demo.append("BRCMS/Evac/Demo")
+    settings.base.prepopulate_demo = ("BRCMS/Evac/Demo",
+                                      )
 
     # Custom Models
     settings.base.custom_models = {"dissemination": "BRCMS.Evac",
@@ -227,7 +228,11 @@ def config(settings):
     settings.auth.realm_entity = evac_realm_entity
 
     # -------------------------------------------------------------------------
-    def auth_add_role(user_id, group_id, for_pe=None):
+    def auth_add_role(user_id,
+                      group_id,
+                      for_pe = None,
+                      from_role_manager = True,
+                      ):
         """
             Automatically add subsidiary roles & set to appropriate entities
         """
@@ -238,10 +243,11 @@ def config(settings):
 
         # Is this the Admin role?
         if group_id == system_roles.ADMIN:
-            # Add the main Role
-            add_membership(group_id = group_id,
-                           user_id = user_id,
-                           )
+            if from_role_manager:
+                # Add the main Role
+                add_membership(group_id = group_id,
+                               user_id = user_id,
+                               )
             # No Subsidiary Roles to add
             return
 
@@ -270,11 +276,19 @@ def config(settings):
             else:
                 entity = org.pe_id
 
-            # Add the main Role for the correct entity
-            add_membership(group_id = group_id,
-                           user_id = user_id,
-                           entity = entity,
-                           )
+            if from_role_manager:
+                # Add the main Role for the correct entity
+                add_membership(group_id = group_id,
+                               user_id = user_id,
+                               entity = entity,
+                               )
+            elif not for_pe:
+                # Update the main Role to the correct entity
+                mtable = db.auth_membership
+                query = (mtable.group_id == group_id) & \
+                        (mtable.user_id == user_id) & \
+                        (mtable.pe_id == None)
+                db(query).update(pe_id = entity)
 
             # Lookup the Groups for the subsidiary roles
             groups = db(gtable.uuid.belongs(("ORG_ADMIN_RO",
@@ -327,11 +341,20 @@ def config(settings):
 
                 entity = org.pe_id
 
-            # Add the main Role for the correct entity
-            add_membership(group_id = group_id,
-                           user_id = user_id,
-                           entity = entity,
-                           )
+            if from_role_manager:
+                # Add the main Role for the correct entity
+                add_membership(group_id = group_id,
+                               user_id = user_id,
+                               entity = entity,
+                               )
+            elif not for_pe:
+                # Update the main Role to the correct entity
+                mtable = db.auth_membership
+                query = (mtable.group_id == group_id) & \
+                        (mtable.user_id == user_id) & \
+                        (mtable.pe_id == None)
+                db(query).update(pe_id = entity)
+
             # No Subsidiary Roles to add
             return
 
@@ -345,11 +368,19 @@ def config(settings):
                                                           ).first()
             entity = person.pe_id
 
-        # Add the main Role for the correct entity
-        add_membership(group_id = group_id,
-                       user_id = user_id,
-                       entity = entity,
-                       )
+        if from_role_manager:
+            # Add the main Role for the correct entity
+            add_membership(group_id = group_id,
+                           user_id = user_id,
+                           entity = entity,
+                           )
+        elif not for_pe:
+            # Update the main Role to the correct entity
+            mtable = db.auth_membership
+            query = (mtable.group_id == group_id) & \
+                    (mtable.user_id == user_id) & \
+                    (mtable.pe_id == None)
+            db(query).update(pe_id = entity)
 
         # Lookup the Group for the Org Member role
         group = db(gtable.uuid == "ORG_MEMBER").select(gtable.id,
@@ -360,7 +391,8 @@ def config(settings):
         otable = s3db.org_organisation
         query = (utable.id == user_id) & \
                 (otable.id == utable.organisation_id)
-        org = db(query).select(otable.pe_id,
+        org = db(query).select(otable.id,
+                               otable.pe_id,
                                limitby = (0, 1),
                                ).first()
         if not org:
@@ -569,6 +601,30 @@ def config(settings):
                           )
 
     settings.auth.remove_role = auth_remove_role
+
+    # =========================================================================
+    def auth_membership_create_onaccept(form):
+        """
+            Automatically add subsidiary roles & set to appropriate entities
+        """
+
+        form_vars = form.vars
+
+        auth_add_role(form_vars.user_id,
+                      form_vars.group_id,
+                      for_pe = form_vars.pe_id,
+                      from_role_manager = False,
+                      )
+
+    # =========================================================================
+    def customise_auth_user_resource(r, tablename):
+
+        # @ToDo: Call settings.auth.add_role via auth_membership_create_onaccept
+        current.s3db.configure("auth_membership",
+                               create_onaccept = auth_membership_create_onaccept,
+                               )
+
+    settings.customise_auth_user_resource = customise_auth_user_resource
 
     # =========================================================================
     def auth_user_update_onaccept(form):

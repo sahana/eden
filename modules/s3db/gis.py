@@ -2768,6 +2768,8 @@ class LayerFeatureModel(S3Model):
                                                                     ),
                                               ),
                                 ),
+                          # @ToDo: 'function' is a SQL-reserved word in several databases
+                          #        - rename as 'function_name'
                           Field("function",
                                 label = T("Function"),
                                 requires = IS_NOT_EMPTY(),

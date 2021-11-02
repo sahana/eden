@@ -57,6 +57,8 @@ class S3DashboardModel(S3Model):
                           Field("controller", length = 64,
                                 requires = IS_NOT_EMPTY(),
                                 ),
+                          # @ToDo: 'function' is a SQL-reserved word in several databases
+                          #        - rename as 'function_name'
                           Field("function", length = 512,
                                 requires = IS_NOT_EMPTY(),
                                 ),

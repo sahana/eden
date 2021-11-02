@@ -5790,6 +5790,8 @@ class S3Permission(object):
             db.define_table(self.tablename,
                             Field("group_id", table_group),
                             Field("controller", length=64),
+                            # @ToDo: 'function' is a SQL-reserved word in several databases
+                            #        - rename as 'function_name'
                             Field("function", length=512),
                             Field("tablename", length=512),
                             Field("record", "integer"),

@@ -638,7 +638,7 @@ class S3RoleManager(S3Method):
                     continue
 
                 if rule_id and deleted:
-                    db(table.id == rule_id).update(deleted=True)
+                    db(table.id == rule_id).update(deleted = True)
 
                 else:
                     entity = rule[6]
@@ -749,7 +749,7 @@ class S3RoleManager(S3Method):
                               )
 
         message = current.T("New Role %(role)s created") % {"role": name}
-        return current.xml.json_message(message=message)
+        return current.xml.json_message(message = message)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -780,7 +780,7 @@ class S3RoleManager(S3Method):
 
         message = current.T("Role %(role)s deleted") % {"role": role.role}
 
-        return current.xml.json_message(message=message)
+        return current.xml.json_message(message = message)
 
     # -------------------------------------------------------------------------
     def assign_roles(self, r, **attr):
@@ -840,7 +840,9 @@ class S3RoleManager(S3Method):
                 realm_types, realms = None, None
 
             # The Ajax URL for role updates
-            ajax_url = r.url(id="[id]", representation="json")
+            ajax_url = r.url(id = "[id]",
+                             representation = "json",
+                             )
 
             # The form field
             field = mtable.user_id
@@ -857,7 +859,9 @@ class S3RoleManager(S3Method):
             s3 = current.response.s3
             tablename = str(mtable)
             form = SQLFORM.factory(field,
-                                   record = {"id": None, "user_id": r.id},
+                                   record = {"id": None,
+                                             "user_id": r.id,
+                                             },
                                    showid = False,
                                    labels = {field.name: ""},
                                    formstyle = s3.crud.formstyle,
@@ -876,7 +880,9 @@ class S3RoleManager(S3Method):
             crud_button = S3CRUD.crud_button
             output["list_btn"] = crud_button(T("Back to User List"),
                                              icon = "return",
-                                             _href = r.url(id="", method=""),
+                                             _href = r.url(id = "",
+                                                           method = "",
+                                                           ),
                                              )
 
             # View
@@ -923,7 +929,7 @@ class S3RoleManager(S3Method):
                     for group_id, pe_id in removed:
                         remove_role(user_id, group_id, for_pe=pe_id)
 
-                output = current.xml.json_message(options=options)
+                output = current.xml.json_message(options = options)
 
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
@@ -1002,7 +1008,9 @@ class S3RoleManager(S3Method):
             # Render form
             tablename = str(mtable)
             form = SQLFORM.factory(field,
-                                   record = {"id": None, "group_id": role.id},
+                                   record = {"id": None,
+                                             "group_id": role.id,
+                                             },
                                    showid = False,
                                    labels = {field.name: ""},
                                    formstyle = s3.crud.formstyle,
@@ -1020,10 +1028,12 @@ class S3RoleManager(S3Method):
             if "rheader" not in attr:
                 return_btn = S3CRUD.crud_button("Back to Roles List",
                                                 icon = "return",
-                                                _href=r.url(id="", method=""),
+                                                _href = r.url(id = "",
+                                                              method = "",
+                                                              ),
                                                 )
                 output["rheader"] = DIV(return_btn,
-                                        _class="rheader",
+                                        _class = "rheader",
                                         )
 
             response = current.response
@@ -1071,7 +1081,7 @@ class S3RoleManager(S3Method):
                     for user_id, pe_id in removed:
                         remove_role(user_id, group_id, for_pe=pe_id)
 
-                output = current.xml.json_message(options=options)
+                output = current.xml.json_message(options = options)
 
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)

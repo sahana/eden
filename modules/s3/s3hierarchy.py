@@ -91,6 +91,11 @@ class S3HierarchyCRUD(S3Method):
 
         component = r.component
         if component:
+            # There is a potential for inconsistency when using a component view for the hierarchy
+            # @ToDo: Rewrite the use case (org_site_layout) as a controller with 'viewing',
+            #        ensuring that the component link is applied directly only to the root nodes
+            #        & that child nodes inherit this from their ancestors instead of from the
+            #        component link.
             if r.component_id:
                 r.error(405, "HierarchyCRUD not yet supported for individual Components")
             else:
@@ -105,6 +110,8 @@ class S3HierarchyCRUD(S3Method):
         else:
             record = r.record
             # @todo: apply all resource filters?
+            # NB Need to be careful that Filters don't break the tree by excluding
+            #    ancestors of tree members.
             _filter = None
 
         hierarchy = S3Hierarchy(tablename = tablename,

@@ -6837,6 +6837,8 @@ class SavedFilterModel(S3Model):
                           Field("title"),
                           # Controller/Function/Resource/URL are used just for Saved Filters
                           Field("controller"),
+                          # @ToDo: 'function' is a SQL-reserved word in several databases
+                          #        - rename as 'function_name'
                           Field("function"),
                           Field("resource"), # tablename
                           Field("url"),

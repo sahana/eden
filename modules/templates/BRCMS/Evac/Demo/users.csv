@@ -1,0 +1,17 @@
+First Name,Middle Name,Email,Password,Role,Organisation,Link
+S3i,Admin,s3iadmin@example.com,eden,ORG_ADMIN,Save-Settle-Support Initiative,Staff
+S3i,Case Manager,s3icase@example.com,eden,CASE_MANAGER,Save-Settle-Support Initiative,Staff
+S3i,Case Supervisor,s3isuper@example.com,eden,CASE_SUPER,Save-Settle-Support Initiative,Staff
+S3i,Flights,s3iflights@example.com,eden,FLIGHTS,Save-Settle-Support Initiative,Staff
+S3i,Legal,s3ilegal@example.com,eden,LEGAL,Save-Settle-Support Initiative,Staff
+S3i,Logistics,s3ilogistics@example.com,eden,LOGISTICS,Save-Settle-Support Initiative,Staff
+S3i,Medical,s3imedical@example.com,eden,MEDICAL,Save-Settle-Support Initiative,Staff
+S3i,Security,s3isecurity@example.com,eden,SECURITY,Save-Settle-Support Initiative,Staff
+PE,Admin,peadmin@example.com,eden,ORG_ADMIN,Project Exodus Relief,Staff
+PE,Case Manager,pecase@example.com,eden,CASE_MANAGER,Project Exodus Relief,Staff
+PE,Case Supervisor,pesuper@example.com,eden,CASE_SUPER,Project Exodus Relief,Staff
+PE,Flights,peflights@example.com,eden,FLIGHTS,Project Exodus Relief,Staff
+PE,Legal,pelegal@example.com,eden,LEGAL,Project Exodus Relief,Staff
+PE,Logistics,pelogs@example.com,eden,LOGISTICS,Project Exodus Relief,Staff
+PE,Medical,pemedical@example.com,eden,MEDICAL,Project Exodus Relief,Staff
+PE,Security,pesecurity@example.com,eden,SECURITY,Project Exodus Relief,Staff
