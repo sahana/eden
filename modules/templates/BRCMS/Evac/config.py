@@ -40,7 +40,6 @@ def config(settings):
 
     # Enable extra Modules
     modules = settings.modules
-    modules["asset"] = {"name_nice": T("Assets"), "module_type": None}
     modules["dissemination"] = {"name_nice": T("Dissemination"), "module_type": None}
     modules["fin"] = {"name_nice": T("Finances"), "module_type": None}
     modules["inv"] = {"name_nice": T("Inventory"), "module_type": None}
@@ -974,17 +973,15 @@ def config(settings):
         f = table.human_resource_id
         f.label = T("Handler")
 
-        if r.method in (None, "create"):
-            # Need is required
-            requires = table.need_id.requires 
-            if hasattr(requires, "other"):
-                table.need_id.requires = requires.other
-            table.need_details.requires = IS_NOT_EMPTY()
-            table.need_details.comment = T("If no Handler is assigned, then these Details will be copied to the Task created to request someone to take on this Activity")
-            f.comment = T("If no Handler is assigned, then when a Handler accepts the Task then they will be Assigned to the Activity")
-            # Filter to Handlers for the WG selected
-            current.response.s3.scripts.append("/%s/static/themes/Evac/js/br_case_activity.js" % r.application)
-        elif r.method == "update":
+        if r.method == "update":
+            update = True
+        else:
+            if tablename == r.tablename:
+                update = r.id
+            else:
+                update = r.component_id
+
+        if update:
             # Don't allow Need to be changed
             table.need_id.writable = False
             f.comment = None
@@ -1025,6 +1022,17 @@ def config(settings):
                                       sort = True,
                                       ))
 
+        elif r.method in (None, "create"):
+            # Need is required
+            requires = table.need_id.requires 
+            if hasattr(requires, "other"):
+                table.need_id.requires = requires.other
+            table.need_details.requires = IS_NOT_EMPTY()
+            table.need_details.comment = T("If no Handler is assigned, then these Details will be copied to the Task created to request someone to take on this Activity")
+            f.comment = T("If no Handler is assigned, then when a Handler accepts the Task then they will be Assigned to the Activity")
+            # Filter to Handlers for the WG selected
+            current.response.s3.scripts.append("/%s/static/themes/Evac/js/br_case_activity.js" % r.application)
+
         crud_form = S3SQLCustomForm("person_id",
                                     "need_id",
                                     "need_details",
@@ -1062,6 +1070,34 @@ def config(settings):
                        )
 
     settings.customise_br_case_activity_resource = customise_br_case_activity_resource
+        
+    # =========================================================================
+    def customise_br_case_activity_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.get_vars.get("my_cases"):
+                # Filter to Activities for Cases assigned to this person
+                human_resource_id = current.auth.s3_logged_in_human_resource()
+                if human_resource_id:
+                    from s3 import FS
+                    r.resource.add_filter(FS("person_id$case.human_resource_id") == human_resource_id)
+
+            return result
+        s3.prep = prep
+
+        return attr
+
+    settings.customise_br_case_activity_controller = customise_br_case_activity_controller
 
     # =========================================================================
     # Use pr_person_controller prep
@@ -1498,7 +1534,7 @@ def config(settings):
 
         form_vars = form.vars
         human_resource_id = form_vars.sub_case_human_resource_id
-        organisation_id = form_vars.sub_case_organisation_id
+        organisation_id = form_vars.sub_case_organisation_id or current.auth.user.organisation_id
 
         record = form.record
         if record:
@@ -1743,13 +1779,12 @@ def config(settings):
         except:
             r.error(405, "Missing Organisation to share to")
 
-        auth = current.auth
         s3db = current.s3db
         ptable = s3db.pr_person
 
-        if not auth.s3_has_permission("update", ptable,
-                                      record_id = person_id,
-                                      ):
+        if not current.auth.s3_has_permission("update", ptable,
+                                              record_id = person_id,
+                                              ):
             r.unauthorised()
 
         ftable = s3db.pr_forum
@@ -1771,6 +1806,14 @@ def config(settings):
     # =========================================================================
     def customise_pr_person_controller(**attr):
 
+        if current.request.controller in ("default",
+                                          "hrm",
+                                          ):
+            # Use defaults
+            return attr
+
+        # Cases
+
         s3db = current.s3db
         s3 = current.response.s3
 
@@ -1788,7 +1831,7 @@ def config(settings):
             else:
                 result = True
 
-            if r.component or r.controller == "hrm":
+            if r.component:
                 return result
 
             from gluon import IS_EMPTY_OR
@@ -1801,6 +1844,8 @@ def config(settings):
                                                              "multiple": False,
                                                              },
                                 )
+            f = s3db.pr_occupation_type_person.occupation_type_id
+            f.requires = IS_EMPTY_OR(f.requires)
 
             table = s3db.br_case
 
@@ -1831,42 +1876,63 @@ def config(settings):
                                       sort = True,
                                       ))
 
-            crud_form = S3SQLCustomForm("case.date",
-                                        "case.organisation_id",
-                                        "case.human_resource_id",
-                                        "case.priority",
-                                        "case.status_id",
-                                        "pe_label",
-                                        "first_name",
-                                        "middle_name",
-                                        "last_name",
-                                        "gender",
-                                        "date_of_birth",
-                                        #"person_details.nationality",
-                                        "physical_description.ethnicity",
-                                        (T("Occupation"), "occupation_type_person.occupation_type_id"),
-                                        "person_details.marital_status",
-                                        "case.household_size",
-                                        S3SQLInlineComponent("address",
-                                                             label = T("Current Address"),
-                                                             fields = [("", "location_id")],
-                                                             filterby = {"field": "type",
-                                                                         "options": "1",
-                                                                         },
-                                                             link = False,
-                                                             multiple = False,
-                                                             ),
-                                        S3SQLInlineComponent("contact",
-                                                             fields = [("", "value")],
-                                                             filterby = {"field": "contact_method",
-                                                                         "options": "SMS",
-                                                                         },
-                                                             label = T("Mobile Phone"),
-                                                             multiple = False,
-                                                             name = "phone",
-                                                             ),
-                                        "case.comments",
-                                        "case.invalid",
+            crud_fields = ["case.date",
+                           "case.human_resource_id",
+                           "case.priority",
+                           "case.status_id",
+                           "pe_label",
+                           "first_name",
+                           "middle_name",
+                           "last_name",
+                           "gender",
+                           "date_of_birth",
+                           #"person_details.nationality",
+                           "physical_description.ethnicity",
+                           (T("Occupation"), "occupation_type_person.occupation_type_id"),
+                           "person_details.marital_status",
+                           #"case.household_size",
+                           S3SQLInlineComponent("address",
+                                                label = T("Current Address"),
+                                                fields = [("", "location_id")],
+                                                filterby = {"field": "type",
+                                                            "options": "1",
+                                                            },
+                                                link = False,
+                                                multiple = False,
+                                                ),
+                           S3SQLInlineComponent("contact",
+                                                fields = [("", "value")],
+                                                filterby = {"field": "contact_method",
+                                                            "options": "SMS",
+                                                            },
+                                                label = T("Mobile Phone"),
+                                                multiple = False,
+                                                name = "phone",
+                                                ),
+                           "case.comments",
+                           "case.invalid",
+                           ]
+
+            auth = current.auth
+            has_role = auth.s3_has_role
+            if has_role("ADMIN"):
+                multiple_orgs = True
+            elif has_role("ORG_ADMIN"):
+                realms = auth.permission.permitted_realms("br_case", "create")
+                otable = s3db.org_organisation
+                query = (otable.pe_id.belongs(realms)) & \
+                        (otable.deleted == False)
+                rows = db(query).select(otable.id,
+                                        limitby = (0, 2),
+                                        )
+                multiple_orgs = len(rows) > 1
+            else:
+                multiple_orgs = False
+
+            if multiple_orgs:
+                crud_fields.insert(1, "case.organisation_id")
+
+            crud_form = S3SQLCustomForm(*crud_fields,
                                         postprocess = pr_person_postprocess,
                                         )
 
@@ -1879,8 +1945,9 @@ def config(settings):
                            "date_of_birth",
                            "case.status_id",
                            "case.human_resource_id",
-                           "case.organisation_id",
                            ]
+            if multiple_orgs:
+                list_fields.append("case.organisation_id")
 
             s3db.configure(r.tablename,
                            crud_form = crud_form,

@@ -33,7 +33,7 @@ def person():
     """ Case File: RESTful CRUD Controller """
 
     # Set the default case status
-    from s3db.br import br_case_default_status, br_terminology
+    from s3db.br import br_case_default_status, br_terminology, br_person_anonymize
     br_case_default_status()
 
     from s3db.pr import pr_Contacts
@@ -94,13 +94,13 @@ def person():
                 queries.append(FS("case.status_id$is_closed") == True)
                 CASES = labels.CLOSED
                 insertable = False
-                status_filter_opts = lambda: get_status_filter_opts(closed=True)
+                status_filter_opts = lambda: get_status_filter_opts(closed = True)
             elif closed == "0":
                 # Only open cases
                 queries.append((FS("case.status_id$is_closed") == False) | \
                                (FS("case.status_id$is_closed") == None))
                 CASES = CURRENT
-                status_filter_opts = lambda: get_status_filter_opts(closed=False)
+                status_filter_opts = lambda: get_status_filter_opts(closed = False)
             else:
                 status_filter_opts = get_status_filter_opts
 
@@ -132,7 +132,6 @@ def person():
                         )
 
         # Update resource configuration for perspective
-        from s3db.br import br_person_anonymize
         resource.configure(anonymize = br_person_anonymize(),
                            deletable = False,
                            insertable = insertable,
@@ -151,7 +150,7 @@ def person():
                 export_formats = list(settings.get_ui_export_formats())
                 export_formats.append(("card", "fa fa-id-card", T("Export ID Cards")))
                 settings.ui.export_formats = export_formats
-                s3.formats["card"] = r.url(method="")
+                s3.formats["card"] = r.url(method = "")
 
         if r.component:
             component_name = r.component_name
@@ -244,10 +243,10 @@ def person():
                 # Represent for br_assistance_measure_theme.id
                 details_per_theme = settings.get_br_assistance_details_per_theme()
                 if details_per_theme:
-                    ltable.id.represent = s3db.br_AssistanceMeasureThemeRepresent(
-                                                paragraph = True,
-                                                details = True,
-                                                )
+                    from s3db.br import br_AssistanceMeasureThemeRepresent
+                    ltable.id.represent = br_AssistanceMeasureThemeRepresent(paragraph = True,
+                                                                             details = True,
+                                                                             )
 
                 # Filter theme_id selectors to case root org
                 from s3db.br import br_case_root_org
@@ -610,9 +609,10 @@ def group_membership():
                 group_ids = set()
 
             # Add-Person widget to use BR controller and expose pe_label
+            from s3db.pr import pr_PersonRepresent
             from s3 import S3AddPersonWidget
             field = table.person_id
-            field.represent = s3db.pr_PersonRepresent(show_link=True)
+            field.represent = pr_PersonRepresent(show_link = True)
             field.widget = S3AddPersonWidget(controller = "br",
                                              pe_label = True,
                                              )
@@ -923,7 +923,8 @@ def case_activity():
 
             # Default status
             if case_activity_status:
-                s3db.br_case_activity_default_status()
+                from s3db.br import br_case_activity_default_status
+                br_case_activity_default_status()
 
             # Filter widgets
             from s3 import S3DateFilter, \

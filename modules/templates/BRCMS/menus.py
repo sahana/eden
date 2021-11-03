@@ -168,6 +168,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def br():
         """ Beneficiary Registry """
 
+        from s3db.br import br_crud_strings, br_terminology
+
         auth = current.auth
         has_role = auth.s3_has_role
 
@@ -175,9 +177,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         ADMIN = sysroles.ADMIN
         ORG_GROUP_ADMIN = sysroles.ORG_GROUP_ADMIN
 
-        s3db = current.s3db
-        labels = s3db.br_terminology()
-        crud_strings = s3db.br_crud_strings("pr_person")
+        labels = br_terminology()
+        crud_strings = br_crud_strings("pr_person")
 
         settings = current.deployment_settings
         use_activities = settings.get_br_case_activities()
@@ -187,7 +188,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         menu = M(c="br")
 
-        # Statistics sub-memnu (common for all roles)
+        # Statistics sub-menu (common for all roles)
         statistics = M("Statistics", link=False)(
                         M("Cases", f="person", m="report"),
                         M("Activities", f="case_activity", m="report", check=use_activities),

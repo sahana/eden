@@ -36,19 +36,19 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Modules Menu """
 
-        auth = current.auth
+        from s3db.br import br_terminology
+        labels = br_terminology()
 
-        case_vars = {"closed": "0"}
-        if auth.s3_logged_in_human_resource() and \
-           auth.s3_has_role("CASE_MANAGER"):
-            case_vars["mine"] = "1"
+        if current.auth.s3_has_roles(("CASE_MANAGER",
+                                      "CASE_SUPER",
+                                      "ORG_ADMIN",
+                                      )):
+            #case_vars["mine"] = "1"
+            CASES = MM(labels.CASES, c="br", f="person", vars={"closed": "0"})
+        else:
+            CASES = MM(labels.CASES, c="br", f="case_activity")
 
-        labels = current.s3db.br_terminology()
-
-        return [MM(labels.CASES, c=("br", "pr"), f="person", vars=case_vars),
-                MM("Case Management", c="br", f="index",
-                   check = lambda this: not this.preceding()[-1].check_permission(),
-                   ),
+        return [CASES,
                 MM("ToDo", c="project", f="task"),
                 MM("Map", c="gis", f="index"),
                 MM("Working Groups", link=False)(
@@ -170,77 +170,69 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ Beneficiary Registry """
 
         auth = current.auth
-        has_role = auth.s3_has_role
 
-        sysroles = auth.get_system_roles()
-        ADMIN = sysroles.ADMIN
+        if not auth.s3_has_roles(("CASE_MANAGER",
+                                  "CASE_SUPER",
+                                  "ORG_ADMIN",
+                                  )):
+            # Can only see Activities
+            return M(c="br")(
+                    M("My Activities", f="case_activity")(),
+                    M("Emergencies", f="case_activity",
+                      vars = {"~.priority": "0"},
+                      )
+                    )
 
-        s3db = current.s3db
-        labels = s3db.br_terminology()
-        crud_strings = s3db.br_crud_strings("pr_person")
+        from s3db.br import br_crud_strings, br_terminology
+        crud_strings = br_crud_strings("pr_person")
+        labels = br_terminology()
 
-        settings = current.deployment_settings
-        use_activities = settings.get_br_case_activities()
-        urgent_activities = use_activities and settings.get_br_case_activity_urgent_option()
+        system_roles = auth.get_system_roles()
+        ADMIN = system_roles.ADMIN
+        ORG_ADMIN = system_roles.ORG_ADMIN
 
-        manage_assistance = settings.get_br_manage_assistance()
+        #settings = current.deployment_settings
+        #use_activities = settings.get_br_case_activities()
+        #urgent_activities = use_activities and settings.get_br_case_activity_urgent_option()
+
+        #manage_assistance = settings.get_br_manage_assistance()
 
         menu = M(c="br")
 
-        # Statistics sub-memnu (common for all roles)
+        # Statistics sub-menu (common for all roles)
         statistics = M("Statistics", link=False)(
                         M("Cases", f="person", m="report"),
-                        M("Activities", f="case_activity", m="report", check=use_activities),
+                        M("Activities", f="case_activity", m="report"),
                         #M("Measures", f="assistance_measure", m="report", check=manage_assistance),
                         )
 
         # Registry sub-menu
-        human_resource_id = auth.s3_logged_in_human_resource()
-        if human_resource_id and has_role("CASE_MANAGEMENT"):
-
-            # Side menu for case managers (including "my"-sections)
-            menu(M(labels.CURRENT_MINE, f="person", vars={"closed": "0", "mine": "1"})(
-                    M(crud_strings.label_create, m="create"),
-                    M("My Activities", f="case_activity",
-                      vars={"mine": "1"}, check=use_activities,
-                      ),
-                    M("Emergencies", f="case_activity",
-                      vars={"mine": "1", "~.priority": "0"}, check=urgent_activities
-                      ),
-                    ),
-                 #M("My Measures", f="assistance_measure",
-                 #  vars={"mine": "1"}, check=manage_assistance)(
-                 #   M("Calendar", m="organize", vars={"mine": "1"}),
-                 #   ),
-                 #M("Appointments"),
-                 statistics,
-                 M("Compilations", link=False)(
-                    M("Current Cases", f="person", vars={"closed": "0"}),
-                    M("All Cases", f="person"),
-                    M("All Activities", f="case_activity", check=use_activities),
-                    #M("All Measures", f="assistance_measure", check=manage_assistance),
-                    ),
-                 )
-        else:
-
-            # Default side menu (without "my"-sections)
-            menu(M(labels.CURRENT, f="person", vars={"closed": "0"})(
-                    M(crud_strings.label_create, m="create"),
-                    M("Activities", f="case_activity", check=use_activities,
-                      ),
-                    M("Emergencies", f="case_activity",
-                      vars={"~.priority": "0"}, check=urgent_activities,
-                      ),
-                    ),
-                 #M("Measures", f="assistance_measure", check=manage_assistance)(
-                 #   #M("Overview"),
-                 #   ),
-                 #M("Appointments"),
-                 statistics,
-                 M("Compilations", link=False)(
-                    M("All Cases", f="person"),
-                    ),
-                 )
+        # Side menu for case managers (including "my"-sections)
+        menu(M(labels.CURRENT_MINE, f="person",
+               vars = {"closed": "0", "mine": "1"},
+               )(
+                M(crud_strings.label_create, m="create", restrict=ORG_ADMIN),
+                M("Activities", f="case_activity",
+                  vars = {"my_cases": "1"},
+                  ),
+                M("Emergencies", f="person",
+                  vars = {"closed": "0", "mine": "1", "~.priority": "0"},
+                  ),
+                ),
+             #M("My Measures", f="assistance_measure",
+             #  vars={"mine": "1"}, check=manage_assistance)(
+             #   M("Calendar", m="organize", vars={"mine": "1"}),
+             #   ),
+             #M("Appointments"),
+             statistics,
+             M("Compilations", link=False)(
+                M("Urgent Cases", f="person", vars={"closed": "0", "~.priority": "0"}),
+                M("Current Cases", f="person", vars={"closed": "0"}),
+                M("All Cases", f="person"),
+                M("All Activities", f="case_activity",),
+                #M("All Measures", f="assistance_measure", check=manage_assistance),
+                ),
+             )
 
         # Archive- and Administration sub-menus (common for all roles)
         menu(M("Archive", link=False)(
@@ -249,15 +241,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 ),
              M("Administration", link=False, restrict=ADMIN)(
                 M("Case Statuses", f="case_status"),
-                M("Case Activity Statuses", f="case_activity_status",
-                  check = lambda i: use_activities and settings.get_br_case_activity_status(),
-                  ),
+                M("Case Activity Statuses", f="case_activity_status"),
                 M("Needs", f="need",
                   #check = lambda i: not settings.get_br_needs_org_specific(),
                   ),
-                M("Occupations", c="pr", f="occupation_type",
-                  #check = lambda i: not settings.get_br_needs_org_specific(),
-                  ),
+                M("Occupations", c="pr", f="occupation_type"),
                 #M("Assistance Statuses", f="assistance_status",
                 #  check = manage_assistance,
                 #  ),

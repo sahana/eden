@@ -603,9 +603,10 @@ class S3OptionsMenu(object):
 
         ADMIN = current.auth.get_system_roles().ADMIN
 
-        s3db = current.s3db
-        labels = s3db.br_terminology()
-        crud_strings = s3db.br_crud_strings("pr_person")
+        from s3db.br import br_crud_strings, br_terminology
+
+        labels = br_terminology()
+        crud_strings = br_crud_strings("pr_person")
 
         settings = current.deployment_settings
         use_activities = settings.get_br_case_activities()

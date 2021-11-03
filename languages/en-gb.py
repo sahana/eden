@@ -101,6 +101,7 @@
 'Last Synchronization': 'Last Synchronisation',
 'Last synchronized on': 'Last synchronised on',
 'Lead Organization': 'Lead Organisation',
+'Lead Organization?': 'Lead Organisation?',
 'List All Organization Approvers & Whitelists': 'List All Organisation Approvers & Whitelists',
 'List Organization Domains': 'List Organisation Domains',
 'List Organization Types': 'List Organisation Types',

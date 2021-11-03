@@ -425,7 +425,7 @@ class BRCaseModel(S3Model):
             atable = s3db.br_case_activity
             stable = s3db.br_case_activity_status
 
-            default_closure = br_case_activity_default_status(closing=True)
+            default_closure = br_case_activity_default_status(closing = True)
             if default_closure:
                 join = stable.on((stable.id == atable.status_id) & \
                                  (stable.is_closed == False))
@@ -3736,7 +3736,7 @@ def br_case_status_filter_opts(closed=None):
     return OrderedDict((row.id, T(row.name)) for row in rows)
 
 # -----------------------------------------------------------------------------
-def br_case_activity_default_status(closing=False):
+def br_case_activity_default_status(closing = False):
     """
         Helper to get/set the default status for case activities
 
