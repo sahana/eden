@@ -2096,11 +2096,12 @@ def config(settings):
                                         limitby = (0, 2),
                                         )
                 multiple_orgs = len(rows) > 1
-            elif has_role("CASE_SUPER"):
-                assign_cm = True
             else:
-                assign_cm = False
                 multiple_orgs = False
+                if has_role("CASE_SUPER"):
+                    assign_cm = True
+                else:
+                    assign_cm = False
 
             if assign_cm:
                 crud_fields.insert(1, "case.human_resource_id")
