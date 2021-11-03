@@ -3945,58 +3945,49 @@ def br_household_size(group_id):
             db(ctable.id == case_id).update(household_size = number_of_members)
 
 # -----------------------------------------------------------------------------
-def br_group_membership_onaccept(membership, group, group_id, person_id):
+def br_group_membership_onaccept(membership, group_id, person_id):
     """
         Module-specific extensions for pr_group_membership_onaccept
 
         @param membership: the pr_group_membership record
                            - required fields: id, deleted, group_head
-        @param group: the pr_group record
-                      - required fields: id, group_type
-        @param group_id: the group ID (if membership was deleted)
-        @param person_id: the person ID (if membership was deleted)
+        @param group_id: the group ID
+        @param person_id: the person ID
     """
-
-    db = current.db
-    s3db = current.s3db
-
-    table = s3db.pr_group_membership
-    gtable = s3db.pr_group
-    ctable = s3db.br_case
 
     response = current.response
     s3 = response.s3
     if s3.purge_case_groups:
         return
 
+    db = current.db
+    s3db = current.s3db
+
+    gtable = s3db.pr_group
+
     # Get the group type
-    if not group.id and group_id:
-        query = (gtable.id == group_id) & \
-                (gtable.deleted != True)
-        row = db(query).select(#gtable.id,
-                               gtable.group_type,
-                               limitby = (0, 1),
-                               ).first()
-        if row:
-            group = row
+    query = (gtable.id == group_id) & \
+            (gtable.deleted != True)
+    group = db(query).select(#gtable.id,
+                             gtable.group_type,
+                             limitby = (0, 1),
+                             ).first()
 
-    if group.group_type == CASE_GROUP:
+    if group.group_type != CASE_GROUP:
+        # Ignore
+        return
 
-        # Case groups should only have one group head
-        if not membership.deleted and membership.group_head:
-            query = (table.group_id == group_id) & \
-                    (table.id != membership.id) & \
-                    (table.group_head == True)
-            db(query).update(group_head=False)
+    table = s3db.pr_group_membership
+    ctable = s3db.br_case
 
-        update_household_size = current.deployment_settings.get_br_household_size() == "auto"
-        recount = s3db.br_household_size
+    settings = current.deployment_settings
+    update_household_size = settings.get_br_household_size() == "auto"
 
-        if update_household_size and membership.deleted and person_id:
+    if membership.deleted:
+        if update_household_size and person_id:
             # Update the household size for removed group member
             query = (table.person_id == person_id) & \
                     (table.group_id != group_id) & \
-                    (table.deleted != True) & \
                     (gtable.id == table.group_id) & \
                     (gtable.group_type == CASE_GROUP)
             row = db(query).select(table.group_id,
@@ -4004,63 +3995,70 @@ def br_group_membership_onaccept(membership, group, group_id, person_id):
                                    ).first()
             if row:
                 # Person still belongs to other case groups, count properly:
-                recount(row.group_id)
+                br_household_size(row.group_id)
             else:
                 # No further case groups, so household size is 1
-                ctable = s3db.br_case
-                cquery = (ctable.person_id == person_id)
-                db(cquery).update(household_size = 1)
-
-        if not s3.bulk:
-            # Get number of (remaining) members in this group
+                db(ctable.person_id == person_id).update(household_size = 1)
+    else:
+        if membership.group_head:
+            # Case groups should only have one group head
             query = (table.group_id == group_id) & \
-                    (table.deleted != True)
-            rows = db(query).select(table.id,
-                                    limitby = (0, 2),
-                                    )
+                    (table.id != membership.id) & \
+                    (table.group_head == True)
+            db(query).update(group_head = False)
 
-            if len(rows) < 2:
-                # Update the household size for current group members
-                if update_household_size:
-                    recount(group_id)
-                    update_household_size = False
-                # Remove the case group if it only has one member
-                s3.purge_case_groups = True
-                resource = s3db.resource("pr_group", id=group_id)
-                resource.delete()
-                s3.purge_case_groups = False
+    if not s3.bulk:
+        # Get number of (remaining) members in this group
+        query = (table.group_id == group_id) & \
+                (table.deleted != True)
+        rows = db(query).select(table.id,
+                                limitby = (0, 2),
+                                )
 
-            elif not membership.deleted:
-                # Generate a case for new case group member
-                # ...unless we already have one
-                query = (ctable.person_id == person_id) & \
-                        (ctable.deleted != True)
-                row = db(query).select(ctable.id,
-                                       limitby = (0, 1),
-                                       ).first()
-                if not row:
-                    # Customise case resource
-                    r = S3Request("br", "case", current.request)
-                    r.customise_resource("br_case")
+        if len(rows) < 2:
+            # Update the household size for current group members
+            if update_household_size:
+                br_household_size(group_id)
+                update_household_size = False
+            # Remove the case group if it only has one member
+            s3.purge_case_groups = True
+            resource = s3db.resource("pr_group",
+                                     id = group_id,
+                                     )
+            resource.delete()
+            s3.purge_case_groups = False
 
-                    # Get the default case status from database
-                    s3db.br_case_default_status()
+        elif not membership.deleted and settings.get_br_case_per_family_member():
+            # Generate a case for new case group member
+            # ...unless we already have one
+            query = (ctable.person_id == person_id) & \
+                    (ctable.deleted != True)
+            row = db(query).select(ctable.id,
+                                   limitby = (0, 1),
+                                   ).first()
+            if not row:
+                # Customise case resource
+                r = S3Request("br", "case", current.request)
+                r.customise_resource("br_case")
 
-                    # Create a case
-                    cresource = s3db.resource("br_case")
-                    try:
-                        # Using resource.insert for proper authorization
-                        # and post-processing (=audit, ownership, realm,
-                        # onaccept)
-                        cresource.insert(person_id = person_id)
-                    except S3PermissionError:
-                        # Unlikely (but possible) that this situation
-                        # is deliberate => issue a warning
-                        response.warning = current.T("No permission to create a case record for new group member")
+                # Get the default case status from database
+                br_case_default_status()
 
-        # Update the household size for current group members
-        if update_household_size:
-            recount(group_id)
+                # Create a case
+                cresource = s3db.resource("br_case")
+                try:
+                    # Using resource.insert for proper authorization
+                    # and post-processing (=audit, ownership, realm,
+                    # onaccept)
+                    cresource.insert(person_id = person_id)
+                except S3PermissionError:
+                    # Unlikely (but possible) that this situation
+                    # is deliberate => issue a warning
+                    response.warning = current.T("No permission to create a case record for new group member")
+
+    # Update the household size for current group members
+    if update_household_size:
+        br_household_size(group_id)
 
 # =============================================================================
 # User Interface

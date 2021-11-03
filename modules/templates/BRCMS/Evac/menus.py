@@ -191,77 +191,50 @@ class S3OptionsMenu(default.S3OptionsMenu):
         ADMIN = system_roles.ADMIN
         ORG_ADMIN = system_roles.ORG_ADMIN
 
-        #settings = current.deployment_settings
-        #use_activities = settings.get_br_case_activities()
-        #urgent_activities = use_activities and settings.get_br_case_activity_urgent_option()
-
-        #manage_assistance = settings.get_br_manage_assistance()
-
-        menu = M(c="br")
-
-        # Statistics sub-menu (common for all roles)
-        statistics = M("Statistics", link=False)(
-                        M("Cases", f="person", m="report"),
-                        M("Activities", f="case_activity", m="report"),
-                        #M("Measures", f="assistance_measure", m="report", check=manage_assistance),
-                        )
-
-        # Registry sub-menu
-        # Side menu for case managers (including "my"-sections)
-        menu(M(labels.CURRENT_MINE, f="person",
-               vars = {"closed": "0", "mine": "1"},
-               )(
-                M(crud_strings.label_create, m="create", restrict=ORG_ADMIN),
-                M("Activities", f="case_activity",
-                  vars = {"my_cases": "1"},
-                  ),
-                M("Emergencies", f="person",
-                  vars = {"closed": "0", "mine": "1", "~.priority": "0"},
-                  ),
-                ),
-             #M("My Measures", f="assistance_measure",
-             #  vars={"mine": "1"}, check=manage_assistance)(
-             #   M("Calendar", m="organize", vars={"mine": "1"}),
-             #   ),
-             #M("Appointments"),
-             statistics,
-             M("Compilations", link=False)(
-                M("Urgent Cases", f="person", vars={"closed": "0", "~.priority": "0"}),
-                M("Current Cases", f="person", vars={"closed": "0"}),
-                M("All Cases", f="person"),
-                M("All Activities", f="case_activity",),
-                #M("All Measures", f="assistance_measure", check=manage_assistance),
-                ),
-             )
-
-        # Archive- and Administration sub-menus (common for all roles)
-        menu(M("Archive", link=False)(
-                M(labels.CLOSED, f="person", vars={"closed": "1"}),
-                M("Invalid Cases", f="person", vars={"invalid": "1"}, restrict=ADMIN),
-                ),
-             M("Administration", link=False, restrict=ADMIN)(
-                M("Case Statuses", f="case_status"),
-                M("Case Activity Statuses", f="case_activity_status"),
-                M("Needs", f="need",
-                  #check = lambda i: not settings.get_br_needs_org_specific(),
-                  ),
-                M("Occupations", c="pr", f="occupation_type"),
-                #M("Assistance Statuses", f="assistance_status",
-                #  check = manage_assistance,
-                #  ),
-                #M("Assistance Types", f="assistance_type",
-                #  check = lambda i: manage_assistance and \
-                #                    settings.get_br_assistance_types(),
-                #  ),
-                #M(labels.THEMES, f="assistance_theme",
-                #  check = lambda i: manage_assistance and \
-                #                    settings.get_br_assistance_themes() and \
-                #                    not settings.get_br_assistance_themes_org_specific(),
-                #  ),
-                ),
-             )
-
-        return menu
+        return M(c="br")(
+                M(labels.CURRENT_MINE, f="person",
+                  vars = {"closed": "0", "mine": "1"},
+                  )(
+                    M(crud_strings.label_create, m="create", restrict=ORG_ADMIN),
+                    M("Activities", f="case_activity",
+                      vars = {"my_cases": "1"},
+                      ),
+                    M("Emergencies", f="person",
+                      vars = {"closed": "0", "mine": "1", "case.priority": "0"},
+                      ),
+                    ),
+                M("Compilations", link=False)(
+                    M("Urgent Cases", f="person",
+                      vars = {"closed": "0",
+                              "case.priority": "0",
+                              }
+                      ),
+                    M("Current Cases", f="person",
+                      vars = {"closed": "0"},
+                      ),
+                    M("All Cases", f="person"),
+                    M("All Activities", f="case_activity",),
+                    ),
+                M("Statistics", link=False)(
+                    M("Cases", f="person", m="report"),
+                    M("Activities", f="case_activity", m="report"),
+                    ),
+                M("Archive", link=False)(
+                    M(labels.CLOSED, f="person",
+                      vars = {"closed": "1"},
+                      ),
+                    M("Invalid Cases", f="person",
+                      vars = {"invalid": "1"},
+                      restrict = ADMIN,
+                      ),
+                    ),
+                M("Administration", link=False, restrict=ADMIN)(
+                    M("Case Statuses", f="case_status"),
+                    M("Case Activity Statuses", f="case_activity_status"),
+                    M("Needs", f="need"),
+                    M("Occupations", c="pr", f="occupation_type"),
+                    ),
+                )
 
     # -------------------------------------------------------------------------
     def cr(self):

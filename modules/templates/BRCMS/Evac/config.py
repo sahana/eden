@@ -59,6 +59,7 @@ def config(settings):
     settings.br.case_id_tab = True
     settings.br.case_language_details = False
     settings.br.case_notes_tab = True
+    settings.br.case_per_family_member = False
     settings.br.id_card_export_roles = None
     settings.br.manage_assistance = False
     settings.br.needs_org_specific = False
@@ -169,7 +170,16 @@ def config(settings):
                 # => Inherit from Case
                 return case.realm_entity
 
-            # Try Staff 2nd (we expect less of these)
+            # Try Case 1st (we expect more of these)
+            ctable = s3db.br_case
+            case = db(ctable.person_id == person_id).select(ctable.realm_entity,
+                                                            limitby = (0, 1),
+                                                            ).first()
+            if case:
+                # => Inherit from Case
+                return case.realm_entity
+
+            # Try Staff 3rd (we expect less of these)
             htable = s3db.hrm_human_resource
             otable = s3db.org_organisation
             query = (htable.person_id == person_id) & \
@@ -216,6 +226,25 @@ def config(settings):
                                                                    limitby = (0, 1),
                                                                    ).first()
             return person.realm_entity
+
+        elif tablename in ("pr_address",
+                           "pr_contact",
+                           "pr_contact_emergency",
+                           "pr_image",
+                           ):
+
+            # Inherit from person via PE
+            s3db = current.s3db
+            table = s3db.table(tablename)
+            ptable = s3db.pr_person
+            query = (table._id == row.id) & \
+                    (ptable.pe_id == table.pe_id)
+            person = current.db(query).select(ptable.realm_entity,
+                                              limitby = (0, 1),
+                                              ).first()
+            if person:
+                realm_entity = person.realm_entity
+
         elif tablename == "org_organisation":
             # Realm is own PE ID
             # => use Default Rules
@@ -957,6 +986,7 @@ def config(settings):
         from gluon import IS_NOT_EMPTY
         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLVerticalSubFormLayout
 
+        db = current.db
         s3db = current.s3db
 
         s3db.add_custom_callback(tablename,
@@ -986,7 +1016,6 @@ def config(settings):
             table.need_id.writable = False
             f.comment = None
             # Filter to Handlers for this WG
-            db = current.db
             if tablename == r.tablename:
                 need_id = r.record.need_id
             else:
@@ -1030,6 +1059,21 @@ def config(settings):
             table.need_details.requires = IS_NOT_EMPTY()
             table.need_details.comment = T("If no Handler is assigned, then these Details will be copied to the Task created to request someone to take on this Activity")
             f.comment = T("If no Handler is assigned, then when a Handler accepts the Task then they will be Assigned to the Activity")
+            # Activity Priority defaults to Case Priority
+            if tablename == r.tablename:
+                record = r.record
+                if record:
+                    ctable = s3db.br_case
+                    case = db(ctable.person_id == r.record.person_id).select(ctable.priority,
+                                                                             limitby = (0, 1),
+                                                                             ).first()
+                    table.priority.default = case.priority
+            else:
+                ctable = s3db.br_case
+                case = db(ctable.person_id == r.id).select(ctable.priority,
+                                                           limitby = (0, 1),
+                                                           ).first()
+                table.priority.default = case.priority
             # Filter to Handlers for the WG selected
             current.response.s3.scripts.append("/%s/static/themes/Evac/js/br_case_activity.js" % r.application)
 
@@ -1527,110 +1571,6 @@ def config(settings):
     settings.customise_org_organisation_controller = customise_org_organisation_controller
 
     # =========================================================================
-    def pr_person_postprocess(form):
-        """
-            Set the Correct Realm for the Case and then the Person
-        """
-
-        form_vars = form.vars
-        human_resource_id = form_vars.sub_case_human_resource_id
-        organisation_id = form_vars.sub_case_organisation_id or current.auth.user.organisation_id
-
-        record = form.record
-        if record:
-            # Update form
-
-            # Have either the Case Manager or Organisation changed?
-            if human_resource_id == record.sub_case_human_resource_id and \
-               organisation_id == record.sub_case_organisation_id:
-                # No change
-                return
-
-            db = current.db
-            s3db = current.s3db
-
-            # Lookup Case
-            person_id = form_vars.id
-            ctable = s3db.br_case
-            case = db(ctable.person_id == person_id).select(ctable.id,
-                                                            ctable.realm_entity,
-                                                            limitby = (0, 1),
-                                                            ).first()
-
-            # Read current realm_entity
-            realm_entity = case.realm_entity
-
-            if realm_entity:
-                # Check it's a pr_realm record
-                petable = s3db.pr_pentity
-                pe = db(petable.pe_id == realm_entity).select(petable.instance_type,
-                                                              limitby = (0, 1)
-                                                              ).first()
-                if pe.instance_type == "pr_realm":
-                    # Set the person to use this for it's realm
-                    ptable = s3db.pr_person
-                    db(ptable.id == person_id).update(realm_entity = realm_entity)
-                else:
-                    current.log.debug("Disseminate: record %s in %s had a realm of type %s" % (record_id,
-                                                                                               tablename,
-                                                                                               pe.instance_type,
-                                                                                               ))
-                    realm_entity = None
-
-        else:
-            # Create form
-            db = current.db
-            s3db = current.s3db
-
-            # Lookup Case
-            person_id = form_vars.id
-            ctable = s3db.br_case
-            case = db(ctable.person_id == person_id).select(ctable.id,
-                                                            limitby = (0, 1),
-                                                            ).first()
-
-            realm_entity = None
-
-        if realm_entity:
-            # Delete all current affiliations
-            from s3db.pr import pr_remove_affiliation
-            pr_remove_affiliation(None, realm_entity)
-        else:
-            # Create a pr_realm record
-            rtable = s3db.pr_realm
-            realm_id = rtable.insert(name = "%s_%s" % ("br_case",
-                                                       case.id,
-                                                       ))
-            realm = Storage(id = realm_id)
-            s3db.update_super(rtable, realm)
-            realm_entity = realm["pe_id"]
-            # Set this Case to use this for it's realm
-            case.update_record(realm_entity = realm_entity)
-            # Set the person to use this for it's realm
-            ptable = s3db.pr_person
-            db(ptable.id == person_id).update(realm_entity = realm_entity)
-
-        # Set appropriate affiliations
-        from s3db.pr import pr_add_affiliation
-
-        # Org
-        otable = s3db.org_organisation
-        org = db(otable.id == organisation_id).select(otable.pe_id,
-                                                      limitby = (0, 1),
-                                                      ).first()
-        pr_add_affiliation(org.pe_id, realm_entity, role="Realm Hierarchy")
-
-        if human_resource_id:
-            # Case Manager
-            htable = s3db.hrm_human_resource
-            query = (htable.id == human_resource_id) & \
-                    (htable.person_id == ptable.id)
-            person = db(query).select(ptable.pe_id,
-                                      limitby = (0, 1),
-                                      ).first()
-            pr_add_affiliation(person.pe_id, realm_entity, role="Realm Hierarchy")
-
-    # =========================================================================
     def br_rheader(r):
         """
             BR Resource Headers
@@ -1755,6 +1695,110 @@ def config(settings):
         return rheader
 
     # =========================================================================
+    def pr_person_postprocess(form):
+        """
+            Set the Correct Realm for the Case and then the Person
+        """
+
+        form_vars = form.vars
+        human_resource_id = form_vars.sub_case_human_resource_id
+        organisation_id = form_vars.sub_case_organisation_id or current.auth.user.organisation_id
+
+        record = form.record
+        if record:
+            # Update form
+
+            # Have either the Case Manager or Organisation changed?
+            if human_resource_id == record.sub_case_human_resource_id and \
+               organisation_id == record.sub_case_organisation_id:
+                # No change
+                return
+
+            db = current.db
+            s3db = current.s3db
+
+            # Lookup Case
+            person_id = form_vars.id
+            ctable = s3db.br_case
+            case = db(ctable.person_id == person_id).select(ctable.id,
+                                                            ctable.realm_entity,
+                                                            limitby = (0, 1),
+                                                            ).first()
+
+            # Read current realm_entity
+            realm_entity = case.realm_entity
+
+            if realm_entity:
+                # Check it's a pr_realm record
+                petable = s3db.pr_pentity
+                pe = db(petable.pe_id == realm_entity).select(petable.instance_type,
+                                                              limitby = (0, 1)
+                                                              ).first()
+                if pe.instance_type == "pr_realm":
+                    # Set the person to use this for it's realm
+                    ptable = s3db.pr_person
+                    db(ptable.id == person_id).update(realm_entity = realm_entity)
+                else:
+                    current.log.debug("Disseminate: record %s in %s had a realm of type %s" % (record_id,
+                                                                                               tablename,
+                                                                                               pe.instance_type,
+                                                                                               ))
+                    realm_entity = None
+
+        else:
+            # Create form
+            db = current.db
+            s3db = current.s3db
+
+            # Lookup Case
+            person_id = form_vars.id
+            ctable = s3db.br_case
+            case = db(ctable.person_id == person_id).select(ctable.id,
+                                                            limitby = (0, 1),
+                                                            ).first()
+
+            realm_entity = None
+
+        if realm_entity:
+            # Delete all current affiliations
+            from s3db.pr import pr_remove_affiliation
+            pr_remove_affiliation(None, realm_entity)
+        else:
+            # Create a pr_realm record
+            rtable = s3db.pr_realm
+            realm_id = rtable.insert(name = "%s_%s" % ("br_case",
+                                                       case.id,
+                                                       ))
+            realm = Storage(id = realm_id)
+            s3db.update_super(rtable, realm)
+            realm_entity = realm["pe_id"]
+            # Set this Case to use this for it's realm
+            case.update_record(realm_entity = realm_entity)
+            # Set the person to use this for it's realm
+            ptable = s3db.pr_person
+            db(ptable.id == person_id).update(realm_entity = realm_entity)
+
+        # Set appropriate affiliations
+        from s3db.pr import pr_add_affiliation
+
+        # Org
+        otable = s3db.org_organisation
+        org = db(otable.id == organisation_id).select(otable.pe_id,
+                                                      limitby = (0, 1),
+                                                      ).first()
+        pr_add_affiliation(org.pe_id, realm_entity, role="Realm Hierarchy")
+
+        if human_resource_id:
+            # Case Manager
+            htable = s3db.hrm_human_resource
+            query = (htable.id == human_resource_id) & \
+                    (htable.person_id == ptable.id)
+            person = db(query).select(ptable.pe_id,
+                                      limitby = (0, 1),
+                                      ).first()
+            pr_add_affiliation(person.pe_id, realm_entity, role="Realm Hierarchy")
+
+    # =========================================================================
     def share_case(r, **attr):
         """
             Share a case with another Organisation
@@ -1839,12 +1883,19 @@ def config(settings):
 
             db = current.db
 
+            # Redefine as multiple=False for simpler Inline form
             s3db.add_components("pr_person",
                                 pr_occupation_type_person = {"joinby": "person_id",
                                                              "multiple": False,
                                                              },
                                 )
+            # Occupation optional
             f = s3db.pr_occupation_type_person.occupation_type_id
+            f.requires = IS_EMPTY_OR(f.requires)
+
+            ptable = s3db.pr_person
+            # Gender optional
+            f = ptable.gender
             f.requires = IS_EMPTY_OR(f.requires)
 
             table = s3db.br_case
@@ -1855,7 +1906,6 @@ def config(settings):
             gtable = db.auth_group
             mtable = db.auth_membership
             ltable = s3db.pr_person_user
-            ptable = s3db.pr_person
             query = (gtable.uuid.belongs(("CASE_MANAGER",
                                           "CASE_SUPER",
                                           "ORG_ADMIN",
@@ -1877,7 +1927,6 @@ def config(settings):
                                       ))
 
             crud_fields = ["case.date",
-                           "case.human_resource_id",
                            "case.priority",
                            "case.status_id",
                            "pe_label",
@@ -1916,8 +1965,10 @@ def config(settings):
             auth = current.auth
             has_role = auth.s3_has_role
             if has_role("ADMIN"):
+                assign_cm = True
                 multiple_orgs = True
             elif has_role("ORG_ADMIN"):
+                assign_cm = True
                 realms = auth.permission.permitted_realms("br_case", "create")
                 otable = s3db.org_organisation
                 query = (otable.pe_id.belongs(realms)) & \
@@ -1926,9 +1977,14 @@ def config(settings):
                                         limitby = (0, 2),
                                         )
                 multiple_orgs = len(rows) > 1
+            elif has_role("CASE_SUPER"):
+                assign_cm = True
             else:
+                assign_cm = False
                 multiple_orgs = False
 
+            if assign_cm:
+                crud_fields.insert(1, "case.human_resource_id")
             if multiple_orgs:
                 crud_fields.insert(1, "case.organisation_id")
 
@@ -1962,6 +2018,52 @@ def config(settings):
         return attr
 
     settings.customise_pr_person_controller = customise_pr_person_controller
+
+    # =========================================================================
+    def customise_pr_group_membership_controller(**attr):
+
+        #s3db = current.s3db
+        s3 = current.response.s3
+
+        # @ToDo:
+        #s3db.set_method("pr", "group_membership", 
+        #                method = "split",
+        #                action = split_case,
+        #                )
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            # Adjust CRUD strings for this perspective
+            s3.crud_strings["pr_group_membership"] = Storage(
+                label_create = T("Add Group Member"),
+                title_display = T("Group Member Details"),
+                title_list = T("Group Members"),
+                title_update = T("Edit Group Member"),
+                label_list_button = T("List Group Members"),
+                label_delete_button = T("Remove Group Member"),
+                msg_record_created = T("Group Member added"),
+                msg_record_modified = T("Group Member updated"),
+                msg_record_deleted = T("Group Member removed"),
+                msg_list_empty = T("No Group Members currently registered"),
+                )
+
+            current.s3db.pr_group_membership.group_head.label = T("Group Head")
+
+            return result
+        s3.prep = prep
+
+        attr["rheader"] = br_rheader
+
+        return attr
+
+    settings.customise_pr_group_membership_controller = customise_pr_group_membership_controller
 
     # =========================================================================
     def project_task_update_onaccept(form):

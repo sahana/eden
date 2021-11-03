@@ -42,7 +42,7 @@ from gluon.languages import lazyT
 from s3dal import SQLCustomType
 from .s3datetime import S3DateTime
 from .s3navigation import S3ScriptItem
-from .s3utils import s3_str, S3MarkupStripper
+from .s3utils import NONE, s3_str, S3MarkupStripper
 from .s3validators import IS_ISO639_2_LANGUAGE_CODE, IS_ONE_OF, IS_UTC_DATE, IS_UTC_DATETIME
 from .s3widgets import S3CalendarWidget, S3DateWidget
 
@@ -563,11 +563,10 @@ class S3Represent(object):
         self.queries = 0
 
         # Default representations
-        messages = current.messages
         if self.default is None:
-            self.default = s3_str(messages.UNKNOWN_OPT)
+            self.default = s3_str(current.messages.UNKNOWN_OPT)
         if self.none is None:
-            self.none = messages["NONE"]
+            self.none = NONE
 
         # Initialize theset
         if self.options is not None:
@@ -1298,7 +1297,7 @@ def s3_comments(name="comments", **attr):
     if "represent" not in attr:
         # Support HTML markup
         attr["represent"] = lambda comments: \
-            XML(comments) if comments else current.messages["NONE"]
+            XML(comments) if comments else NONE
     if "widget" not in attr:
         from .s3widgets import s3_comments_widget
         _placeholder = attr.pop("_placeholder", None)
@@ -1308,8 +1307,8 @@ def s3_comments(name="comments", **attr):
         else:
             attr["widget"] = s3_comments_widget
     if "comment" not in attr:
-        attr["comment"] = DIV(_class="tooltip",
-                              _title="%s|%s" % \
+        attr["comment"] = DIV(_class = "tooltip",
+                              _title = "%s|%s" % \
             (T("Comments"),
              T("Please use this field to record any additional information, including a history of the record if it is updated.")))
 
@@ -1332,7 +1331,7 @@ def s3_currency(name="currency", **attr):
     if "requires" not in attr:
         currency_opts = settings.get_fin_currencies()
         attr["requires"] = IS_IN_SET(list(currency_opts.keys()),
-                                     zero=None)
+                                     zero = None)
     if "writable" not in attr:
         attr["writable"] = settings.get_fin_currency_writable()
 
@@ -1542,8 +1541,8 @@ def s3_date(name="date", **attr):
     if "represent" not in attributes:
         attributes["represent"] = lambda dt: \
                                   S3DateTime.date_represent(dt,
-                                                            utc=True,
-                                                            calendar=calendar,
+                                                            utc = True,
+                                                            calendar = calendar,
                                                             )
 
     # Validator
@@ -1558,9 +1557,9 @@ def s3_date(name="date", **attr):
                 minimum = now - relativedelta(months = past)
             if future is not None:
                 maximum = now + relativedelta(months = future)
-            requires = IS_UTC_DATE(calendar=calendar,
-                                   minimum=minimum,
-                                   maximum=maximum,
+            requires = IS_UTC_DATE(calendar = calendar,
+                                   minimum = minimum,
+                                   maximum = maximum,
                                    )
 
         empty = attributes.pop("empty", None)
@@ -1639,7 +1638,9 @@ def s3_datetime(name="date", **attr):
                 years += 1
             month = divmod((current_month - months) + 12, 12)[1]
             year = now.year - years
-            return now.replace(month=month, year=year)
+            return now.replace(month = month,
+                               year = year,
+                               )
 
         earliest = limits.get("min")
         if not earliest:
@@ -1657,12 +1658,12 @@ def s3_datetime(name="date", **attr):
         if not earliest:
             past = limits.get("past")
             if past is not None:
-                earliest = now - datetime.timedelta(hours=past)
+                earliest = now - datetime.timedelta(hours = past)
         latest = limits.get("max")
         if not latest:
             future = limits.get("future")
             if future is not None:
-                latest = now + datetime.timedelta(hours=future)
+                latest = now + datetime.timedelta(hours = future)
 
     # Label
     if "label" not in attributes:

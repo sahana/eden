@@ -623,7 +623,7 @@ def group_membership():
             field.readable = field.writable = True
             field.label = ROLE
             field.comment = DIV(_class = "tooltip",
-                                _title = "%s|%s" % (T("Role"),
+                                _title = "%s|%s" % (ROLE,
                                                     T("The role of the person within the family"),
                                                     ))
             field.requires = IS_EMPTY_OR(

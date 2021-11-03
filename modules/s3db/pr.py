@@ -2867,7 +2867,7 @@ class PersonGroupModel(S3Model):
                                  ],
                   onvalidation = self.group_membership_onvalidation,
                   onaccept = self.group_membership_onaccept,
-                  ondelete = self.group_membership_onaccept,
+                  ondelete = self.group_membership_ondelete,
                   realm_entity = self.group_membership_realm_entity,
                   )
 
@@ -2982,76 +2982,84 @@ class PersonGroupModel(S3Model):
             @param form: the FORM
         """
 
-        if hasattr(form, "vars"):
-            record_id = form.vars.get("id")
-        elif isinstance(form, Row) and "id" in form:
-            record_id = form.id
-        else:
-            return
-
-        if not record_id:
-            return
-
         db = current.db
-        settings = current.deployment_settings
 
-        table = db.pr_group_membership
-        gtable = db.pr_group
+        form_vars = form.vars
+        record_id = form_vars.id
 
-        # Use left join for group data
-        left = gtable.on(gtable.id == table.group_id)
+        table = current.s3db.pr_group_membership
 
-        row = db(table.id == record_id).select(table.id,
-                                               table.person_id,
-                                               table.group_id,
-                                               table.group_head,
-                                               table.deleted,
-                                               table.deleted_fk,
-                                               gtable.id,
-                                               gtable.group_type,
-                                               left = left,
-                                               limitby = (0, 1),
-                                               ).first()
-        record = row.pr_group_membership
+        if "group_id" in form_vars and \
+           "person_id" in form_vars and \
+           "group_head" in form_vars:
+            record = form_vars
+        else:
+            record = db(table.id == record_id).select(table.person_id,
+                                                      table.group_id,
+                                                      table.group_head, # For br_group_membership_onaccept
+                                                      limitby = (0, 1),
+                                                      ).first()
+            record.id = record_id
+            record.deleted = False
 
-        if not record:
-            return
-
-        # Get person_id and group_id
-        group_id = record.group_id
         person_id = record.person_id
-        if record.deleted and record.deleted_fk:
-            try:
-                deleted_fk = json.loads(record.deleted_fk)
-            except ValueError:
-                pass
-            else:
-                person_id = deleted_fk.get("person_id", person_id)
-                group_id = deleted_fk.get("group_id", group_id)
+        group_id = record.group_id
 
         # Make sure a person always only belongs once
         # to the same group (delete all other memberships)
-        if person_id and group_id and not record.deleted:
-            query = (table.person_id == person_id) & \
-                    (table.group_id == group_id) & \
-                    (table.id != record.id) & \
-                    (table.deleted != True)
-            deleted_fk = {"person_id": person_id,
-                          "group_id": group_id,
-                          }
-            db(query).update(deleted = True,
-                             person_id = None,
-                             group_id = None,
-                             deleted_fk = json.dumps(deleted_fk),
-                             )
+        query = (table.person_id == person_id) & \
+                (table.group_id == group_id) & \
+                (table.id != record_id) & \
+                (table.deleted != True)
+        deleted_fk = {"person_id": person_id,
+                      "group_id": group_id,
+                      }
+        db(query).update(deleted = True,
+                         person_id = None,
+                         group_id = None,
+                         deleted_fk = json.dumps(deleted_fk),
+                         )
 
         # Update PE hierarchy affiliations
-        pr_update_affiliations(table, record)
+        pr_group_update_affiliations(Storage(person_id = person_id))
 
         # BR extensions
-        s3db = current.s3db
-        if settings.has_module("br"):
-            s3db.br_group_membership_onaccept(record, row.pr_group, group_id, person_id)
+        if current.deployment_settings.has_module("br"):
+            from .br import br_group_membership_onaccept
+            br_group_membership_onaccept(record, group_id, person_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def group_membership_ondelete(form):
+        """
+            Remove any duplicate memberships and update affiliations
+
+            @param form: the FORM
+        """
+
+        if hasattr(row, "person_id") and \
+           hasattr(row, "group_id"):
+            person_id = row.person_id
+            group_id = row.group_id
+        else:
+            # Read from deleted_fk
+            db = current.db
+            table = db.pr_group_membership
+            record = db(table.id == row.id).select(table.deleted_fk,
+                                                   limitby = (0, 1),
+                                                   ).first()
+
+            deleted_fk = json.loads(record.deleted_fk)
+            person_id = deleted_fk.get("person_id")
+            group_id = deleted_fk.get("group_id")
+
+        # Update PE hierarchy affiliations
+        pr_group_update_affiliations(Storage(person_id = person_id))
+
+        # BR extensions
+        if current.deployment_settings.has_module("br"):
+            from .br import br_group_membership_onaccept
+            br_group_membership_onaccept(Storage(deleted = True), group_id, person_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -9252,7 +9260,6 @@ def pr_group_update_affiliations(record):
     for m in current_memberships:
         group, person = m
         pr_add_affiliation(group, person, role=MEMBERS, role_type=OU)
-    return
 
 # =============================================================================
 def pr_human_resource_update_affiliations(person_id):
@@ -9504,7 +9511,6 @@ def pr_get_pe_id(entity, record_id=None):
                 return None
     if record:
         return record.pe_id
-    return None
 
 # =============================================================================
 # Back-end Role Tools
@@ -9599,7 +9605,6 @@ def pr_add_to_role(role_id, pe_id):
                       )
         # Clear descendant paths (triggers lazy rebuild)
         pr_rebuild_path(pe_id, clear=True)
-    return
 
 # =============================================================================
 def pr_remove_from_role(role_id, pe_id):
@@ -9631,8 +9636,6 @@ def pr_remove_from_role(role_id, pe_id):
 
         # Clear descendant paths
         pr_rebuild_path(pe_id, clear=True)
-
-    return
 
 # =============================================================================
 # Hierarchy Lookup
@@ -9841,7 +9844,6 @@ def pr_instance_type(pe_id):
                                                        ).first()
         if row:
             return row.instance_type
-    return None
 
 # =============================================================================
 def pr_default_realms(entity):

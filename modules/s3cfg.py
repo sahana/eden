@@ -3050,6 +3050,12 @@ class S3Config(Storage):
         """
         return self.br.get("case_family_tab", True)
 
+    def get_br_case_per_family_member(self):
+        """
+            Whether family members each have their own Case
+        """
+        return self.br.get("case_per_family_member", True)
+
     def get_br_service_contacts(self):
         """
             Enable case file tab to track service contacts

@@ -206,9 +206,10 @@ def config(settings):
                                     ).first()
 
             if case and case.organisation_id:
-                realm_entity = s3db.pr_get_pe_id("org_organisation",
-                                                 case.organisation_id,
-                                                 )
+                from s3db.pr import pr_get_pe_id
+                realm_entity = pr_get_pe_id("org_organisation",
+                                            case.organisation_id,
+                                            )
 
         elif tablename in ("pr_address",
                            "pr_contact",
@@ -288,8 +289,9 @@ def config(settings):
         elif tablename == "project_task":
 
             # Inherit the realm entity from the assignee
+            from s3db.pr import pr_instance_type
             assignee_pe_id = row.pe_id
-            instance_type = s3db.pr_instance_type(assignee_pe_id)
+            instance_type = pr_instance_type(assignee_pe_id)
             if instance_type:
                 table = s3db.table(instance_type)
                 query = table.pe_id == assignee_pe_id
@@ -305,9 +307,10 @@ def config(settings):
                 auth = current.auth
                 user_org_id = auth.user.organisation_id if auth.user else None
                 if user_org_id:
-                    realm_entity = s3db.pr_get_pe_id("org_organisation",
-                                                     user_org_id,
-                                                     )
+                    from s3db.pr import pr_get_pe_id
+                    realm_entity = pr_get_pe_id("org_organisation",
+                                                user_org_id,
+                                                )
         return realm_entity
 
     settings.auth.realm_entity = brcms_realm_entity

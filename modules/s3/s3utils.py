@@ -2008,11 +2008,16 @@ class S3PriorityRepresent(object):
         if classes:
             suffix = classes.get(value)
             if suffix:
-                css_class = "%s %s-%s" % (css_class, base_class, suffix)
+                css_class = "%s %s-%s" % (css_class,
+                                          base_class,
+                                          suffix,
+                                          )
 
         label = self.options.get(value)
 
-        return DIV(label, _class=css_class)
+        return DIV(label,
+                   _class = css_class,
+                   )
 
     # -------------------------------------------------------------------------
     def represent(self, value, row=None):
