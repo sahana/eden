@@ -27,6 +27,7 @@ ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,,,org_org
 ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,,,pr_address,CREATE|READ|UPDATE|DELETE,,,,
 ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,,,pr_contact,CREATE|READ|UPDATE|DELETE,,,,
 ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,,,pr_contact_emergency,CREATE|READ|UPDATE|DELETE,,,,
+ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,,,
 ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,,,pr_person,CREATE|READ|UPDATE|DELETE,,,,
 ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,
 ORG_ADMIN,Organisation Admin,Permission assigned at Organization Level,transport,airport,,CREATE|READ|UPDATE,,,,
@@ -47,7 +48,12 @@ ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum L
 ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,,,inv_inv_item,READ,,true,,
 ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,,,inv_warehouse,READ,,true,,
 ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,,,med_contact,READ,,true,,
+ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,,,pr_address,READ,,true,,Shared Cases
+ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,,,pr_contact,READ,,true,,Shared Cases
+ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,,,pr_contact_emergency,READ,,true,,Shared Cases
+ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,,,pr_group_membership,READ,,true,,Shared Cases
 ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,,,pr_person,READ,,true,,Shared Cases
+ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,,,pr_person_details,READ,,true,,Shared Cases
 ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,security,,,READ,,true,,
 ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,transport,flight,,READ,,true,,
 ORG_ADMIN_RO,Organisation Admin (RO),Permission assigned at Organization Forum Level,project,task,,CREATE|READ|UPDATE,READ|UPDATE|DELETE,true,,
@@ -66,6 +72,7 @@ CASE_MANAGER,Case Manager,Permission assigned at Personal Level,,,gis_route,CREA
 CASE_MANAGER,Case Manager,Permission assigned at Personal Level,,,pr_address,CREATE|READ|UPDATE|DELETE,,,,
 CASE_MANAGER,Case Manager,Permission assigned at Personal Level,,,pr_contact,CREATE|READ|UPDATE|DELETE,,,,
 CASE_MANAGER,Case Manager,Permission assigned at Personal Level,,,pr_contact_emergency,CREATE|READ|UPDATE|DELETE,,,,
+CASE_MANAGER,Case Manager,Permission assigned at Personal Level,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,,,
 CASE_MANAGER,Case Manager,Permission assigned at Personal Level,,,pr_person,READ|UPDATE,,,,
 CASE_MANAGER,Case Manager,Permission assigned at Personal Level,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,
 CASE_MANAGER,Case Manager,Permission assigned at Personal Level,project,task,,CREATE|READ|UPDATE,,,,
@@ -79,6 +86,7 @@ CASE_SUPER,Case Supervisor,Permission assigned at Personal Level,,,hrm_human_res
 CASE_SUPER,Case Supervisor,Permission assigned at Personal Level,,,pr_address,CREATE|READ|UPDATE|DELETE,,,,
 CASE_SUPER,Case Supervisor,Permission assigned at Personal Level,,,pr_contact,CREATE|READ|UPDATE|DELETE,,,,
 CASE_SUPER,Case Supervisor,Permission assigned at Personal Level,,,pr_contact_emergency,CREATE|READ|UPDATE|DELETE,,,,
+CASE_SUPER,Case Supervisor,Permission assigned at Personal Level,,,pr_group_membership,CREATE|READ|UPDATE|DELETE,,,,
 CASE_SUPER,Case Supervisor,Permission assigned at Personal Level,,,pr_person,READ|UPDATE,,,,
 CASE_SUPER,Case Supervisor,Permission assigned at Personal Level,,,pr_person_details,CREATE|READ|UPDATE|DELETE,,,,
 CASE_SUPER,Case Supervisor,Permission assigned at Personal Level,project,task,,CREATE|READ|UPDATE|DELETE,,,,

@@ -179,7 +179,23 @@ def config(settings):
                 # => Inherit from Case
                 return case.realm_entity
 
-            # Try Staff 3rd (we expect less of these)
+            # Try Family Members 2nd (we expect less of these)
+            mtable = s3db.pr_group_membership
+            membership = db(mtable.person_id == person_id).select(mtable.group_id,
+                                                                  limitby = (0, 1),
+                                                                  ).first()
+            if membership:
+                # => Inherit from Case via the Group Head
+                ptable = s3db.pr_person
+                query = (mtable.group_id == membership.group_id) & \
+                        (mtable.group_head == True) & \
+                        (mtable.person_id == ptable.id)
+                person = db(query).select(ptable.realm_entity,
+                                          limitby = (0, 1),
+                                          ).first()
+                return person.realm_entity
+
+            # Try Staff 3rd (we expect even less of these)
             htable = s3db.hrm_human_resource
             otable = s3db.org_organisation
             query = (htable.person_id == person_id) & \
@@ -194,6 +210,13 @@ def config(settings):
             # Probably a new case...will be sorted in crud_form.preprocess
             # => use Default Rules
             return 0
+        elif tablename == "pr_group_membership":
+            # Inherits realm from the Case via the Person
+            ptable = current.s3db.pr_person
+            person = current.db(ptable.id == row.person_id).select(ptable.realm_entity,
+                                                                   limitby = (0, 1),
+                                                                   ).first()
+            return person.realm_entity
         elif tablename == "gis_route":
             # Inherits realm from the Case
             # @ToDo
@@ -1695,6 +1718,102 @@ def config(settings):
         return rheader
 
     # =========================================================================
+    def pr_group_membership_postprocess(form):
+        """
+            Set the Correct Realm for the Memberships
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Lookup the Group
+        mtable = s3db.pr_group_membership
+        membership = db(mtable.id == form.vars.id).select(mtable.group_id,
+                                                          limitby = (0, 1),
+                                                          ).first()
+        group_id = membership.group_id
+
+        # Lookup the Group Head
+        ptable = s3db.pr_person
+        query = (mtable.group_id == group_id) & \
+                (mtable.group_head == True) & \
+                (mtable.person_id == ptable.id)
+        person = db(query).select(ptable.realm_entity,
+                                  limitby = (0, 1),
+                                  ).first()
+
+        # Update all Memberships to have the same realm as the Group Head
+        db(mtable.group_id == group_id).update(realm_entity = person.realm_entity)
+
+    # =========================================================================
+    def customise_pr_group_membership_controller(**attr):
+
+        s3db = current.s3db
+        s3 = current.response.s3
+
+        # @ToDo:
+        #s3db.set_method("pr", "group_membership", 
+        #                method = "split",
+        #                action = split_case,
+        #                )
+
+        # Custom prep
+        standard_prep = s3.prep
+        def prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            # Adjust CRUD strings for this perspective
+            s3.crud_strings["pr_group_membership"] = Storage(
+                label_create = T("Add Group Member"),
+                title_display = T("Group Member Details"),
+                title_list = T("Group Members"),
+                title_update = T("Edit Group Member"),
+                label_list_button = T("List Group Members"),
+                label_delete_button = T("Remove Group Member"),
+                msg_record_created = T("Group Member added"),
+                msg_record_modified = T("Group Member updated"),
+                msg_record_deleted = T("Group Member removed"),
+                msg_list_empty = T("No Group Members currently registered"),
+                )
+
+            table = s3db.pr_group_membership
+
+            # Don't expose Group Head, as we need this to match the Case
+            f = table.group_head
+            f.readable = f.writable = False
+            #f.label = T("Group Head")
+
+            list_fields = r.resource.get_config("list_fields")
+            try:
+                list_fields.remove("group_head")
+            except ValueError:
+                # Already removed
+                pass
+
+            crud_fields = [f.name for f in table if (f.writable or f.readable) and not f.compute]
+
+            from s3 import S3SQLCustomForm
+            crud_form = S3SQLCustomForm(postprocess = pr_group_membership_postprocess,
+                                        *crud_fields)
+
+            s3db.configure("pr_group_membership",
+                           crud_form = crud_form,
+                           )
+
+            return result
+        s3.prep = prep
+
+        attr["rheader"] = br_rheader
+
+        return attr
+
+    settings.customise_pr_group_membership_controller = customise_pr_group_membership_controller
+
+    # =========================================================================
     def pr_person_postprocess(form):
         """
             Set the Correct Realm for the Case and then the Person
@@ -2018,52 +2137,6 @@ def config(settings):
         return attr
 
     settings.customise_pr_person_controller = customise_pr_person_controller
-
-    # =========================================================================
-    def customise_pr_group_membership_controller(**attr):
-
-        #s3db = current.s3db
-        s3 = current.response.s3
-
-        # @ToDo:
-        #s3db.set_method("pr", "group_membership", 
-        #                method = "split",
-        #                action = split_case,
-        #                )
-
-        # Custom prep
-        standard_prep = s3.prep
-        def prep(r):
-            # Call standard prep
-            if callable(standard_prep):
-                result = standard_prep(r)
-            else:
-                result = True
-
-            # Adjust CRUD strings for this perspective
-            s3.crud_strings["pr_group_membership"] = Storage(
-                label_create = T("Add Group Member"),
-                title_display = T("Group Member Details"),
-                title_list = T("Group Members"),
-                title_update = T("Edit Group Member"),
-                label_list_button = T("List Group Members"),
-                label_delete_button = T("Remove Group Member"),
-                msg_record_created = T("Group Member added"),
-                msg_record_modified = T("Group Member updated"),
-                msg_record_deleted = T("Group Member removed"),
-                msg_list_empty = T("No Group Members currently registered"),
-                )
-
-            current.s3db.pr_group_membership.group_head.label = T("Group Head")
-
-            return result
-        s3.prep = prep
-
-        attr["rheader"] = br_rheader
-
-        return attr
-
-    settings.customise_pr_group_membership_controller = customise_pr_group_membership_controller
 
     # =========================================================================
     def project_task_update_onaccept(form):
