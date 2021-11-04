@@ -89,6 +89,7 @@ __all__ = (# Person Entities
            # PE Hierarchy and Realms
            "pr_update_affiliations",
            "pr_add_affiliation",
+           "pr_is_affiliated",
            "pr_remove_affiliation",
            "pr_get_pe_id",
            "pr_define_role",
@@ -9414,6 +9415,52 @@ def pr_add_affiliation(master, affiliate, role=None, role_type=OU):
     return role_id
 
 # =============================================================================
+def pr_is_affiliated(master, affiliate, role=None):
+    """
+        Add a new affiliation record
+
+        @param master: the master entity, either as PE ID or as tuple
+                       (instance_type, instance_id)
+        @param affiliate: the affiliated entity, either as PE ID or as tuple
+                          (instance_type, instance_id)
+        @param role: name of the role to check, if None,
+                     the affiliation will be checked for all roles
+    """
+
+    master_pe = pr_get_pe_id(master)
+    affiliate_pe = pr_get_pe_id(affiliate)
+
+    if master_pe and affiliate_pe:
+        db = current.db
+        s3db = current.s3db
+        rtable = s3db.pr_role
+        query = (rtable.pe_id == master_pe) & \
+                (rtable.deleted != True)
+        if role:
+            query &= (rtable.role == role)
+        roles = db(query).select(rtable.id,
+                                 rtable.role,
+                                 )
+        if roles:
+            atable = s3db.pr_affiliation
+            query = (atable.pe_id == affiliate_pe)
+            if len(roles) > 1:
+                roles = {role.id: role.role for role in roles}
+                query &= (atable.role_id.belongs(roles))
+            else:
+                role = roles.first()
+                query &= (atable.role_id == role.id)
+                roles = {role.id: role.role}
+            affiliations = db(query).select(atable.role_id)
+            roles = [roles[row.role_id] for row in affiliations]
+        else:
+            roles = []
+    else:
+        roles = []
+
+    return roles
+
+# =============================================================================
 def pr_remove_affiliation(master, affiliate, role=None):
     """
         Remove affiliation records
@@ -9962,7 +10009,7 @@ def pr_ancestors(entities):
     return ancestors
 
 # =============================================================================
-def pr_descendants(pe_ids, skip=None, root=True):
+def pr_descendants(pe_ids, skip=None, root=True, exclude_persons=True):
     """
         Find descendant entities of a person entity in the OU hierarchy
         (performs a real search, not a path lookup), grouped by root PE
@@ -9971,6 +10018,7 @@ def pr_descendants(pe_ids, skip=None, root=True):
         @param skip: list of person entity IDs to skip during
                      descending (internal)
         @param root: this is the top-node (internal)
+        @param exclude_persons: exclude pr_person records
 
         @return: a dict of lists of descendant PEs per root PE
     """
@@ -9978,30 +10026,33 @@ def pr_descendants(pe_ids, skip=None, root=True):
     if skip is None:
         skip = set()
 
-    # We still need to support Py 2.6
-    #pe_ids = {i for i in pe_ids if i not in skip}
-    pe_ids = set(i for i in pe_ids if i not in skip)
+    pe_ids = {i for i in pe_ids if i not in skip}
     if not pe_ids:
         return {}
 
     s3db = current.s3db
-    etable = s3db.pr_pentity
     rtable = s3db.pr_role
     atable = s3db.pr_affiliation
+    r = rtable._tablename
+    a = atable._tablename
 
     q = (rtable.pe_id.belongs(pe_ids)) \
         if len(pe_ids) > 1 else (rtable.pe_id == list(pe_ids)[0])
 
     query = (q & (rtable.role_type == OU) & (rtable.deleted != True)) & \
-            ((atable.role_id == rtable.id) & (atable.deleted != True)) & \
-            (etable.pe_id == atable.pe_id)
+            ((atable.role_id == rtable.id) & (atable.deleted != True))
 
-    rows = current.db(query).select(rtable.pe_id,
-                                    atable.pe_id,
-                                    etable.instance_type)
-    r = rtable._tablename
-    e = etable._tablename
-    a = atable._tablename
+    fields = [rtable.pe_id,
+              atable.pe_id,
+              ]
+
+    if exclude_persons:
+        etable = s3db.pr_pentity
+        e = etable._tablename
+        query &= (etable.pe_id == atable.pe_id)
+        fields.append(etable.instance_type)
+
+    rows = current.db(query).select(*fields)
 
     nodes = set()
     ogetattr = object.__getattribute__
@@ -10013,8 +10064,13 @@ def pr_descendants(pe_ids, skip=None, root=True):
 
         parent = ogetattr(ogetattr(row, r), "pe_id")
         child = ogetattr(ogetattr(row, a), "pe_id")
-        instance_type = ogetattr(ogetattr(row, e), "instance_type")
-        if instance_type != "pr_person":
+        if exclude_persons:
+            instance_type = ogetattr(ogetattr(row, e), "instance_type")
+            if instance_type != "pr_person":
+                if parent not in result:
+                    result[parent] = []
+                result[parent].append(child)
+        else:
             if parent not in result:
                 result[parent] = []
             result[parent].append(child)
@@ -10081,26 +10137,19 @@ def pr_get_descendants(pe_ids, entity_types=None, skip=None, ids=True):
     if entity_types is not None:
         query &= (etable.pe_id == atable.pe_id)
         rows = db(query).select(etable.pe_id, etable.instance_type)
-        # We still need to support Py 2.6
-        #result = {(r.pe_id, r.instance_type) for r in rows}
-        result = set((r.pe_id, r.instance_type) for r in rows)
-        # We still need to support Py 2.6
-        #node_ids = {i for i, t in result if i not in skip}
-        node_ids = set(i for i, t in result if i not in skip)
+        result = {(r.pe_id, r.instance_type) for r in rows}
+        node_ids = {i for i, t in result if i not in skip}
     else:
         rows = db(query).select(atable.pe_id)
-        # We still need to support Py 2.6
-        #result = {r.pe_id for r in rows}
-        result = set(r.pe_id for r in rows)
-        # We still need to support Py 2.6
-        #node_ids = {i for i in result if i not in skip}
-        node_ids = set(i for i in result if i not in skip)
+        result = {r.pe_id for r in rows}
+        node_ids = {i for i in result if i not in skip}
     # Recurse
     if node_ids:
         descendants = pr_get_descendants(node_ids,
                                          skip = skip,
                                          entity_types = entity_types,
-                                         ids = False)
+                                         ids = False,
+                                         )
         result.update(descendants)
 
     if ids:
@@ -10136,11 +10185,12 @@ def pr_rebuild_path(pe_id, clear=False):
             (rtable.role_type == OU) & \
             (rtable.deleted != True)
     db = current.db
-    db(query).update(path=None)
+    db(query).update(path = None)
     roles = db(query).select(rtable.id,
                              rtable.pe_id,
                              rtable.path,
-                             rtable.role_type)
+                             rtable.role_type,
+                             )
     for role in roles:
         if role.path is None:
             pr_role_rebuild_path(role, clear=clear)
@@ -10204,7 +10254,7 @@ def pr_role_rebuild_path(role_id, skip=None, clear=False):
                 ppath = S3MultiPath(prole.path)
             if ppath is not None:
                 path.extend(prole.pe_id, ppath, cut=pe_id)
-        db(rtable.id == role_id).update(path=str(path))
+        db(rtable.id == role_id).update(path = str(path))
 
     # Clear descendant paths, if requested (only necessary for writes)
     if clear:
@@ -10288,7 +10338,8 @@ def pr_image_modify(image_file,
         tempfile.seek(0)
         newfile = table.new_name.store(tempfile,
                                        save_im_name,
-                                       table.new_name.uploadfolder)
+                                       table.new_name.uploadfolder,
+                                       )
         # rewind the original file so it can be read, if required
         image_file.seek(0)
         table.insert(original_name = image_name,

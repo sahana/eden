@@ -4017,7 +4017,8 @@ Please go to %(url)s to approve this user."""
                                   system_roles.AUTHENTICATED,
                                   )
 
-                default_realm = s3db.pr_default_realms(self.user["pe_id"])
+                from s3db.pr import pr_default_realms
+                default_realm = pr_default_realms(self.user["pe_id"])
 
                 # Store the realms:
                 for row in rows:
@@ -4056,7 +4057,12 @@ Please go to %(url)s to approve this user."""
                                     append(entity)
 
                     # Lookup the subsidiaries of all realms and extensions
-                    descendants = s3db.pr_descendants(entities)
+                    from s3db.pr import pr_descendants
+                    if current.deployment_settings.get_auth_user_realms_include_persons():
+                        exclude_persons = False
+                    else:
+                        exclude_persons = True
+                    descendants = pr_descendants(entities, exclude_persons = exclude_persons)
 
                     # Add the subsidiaries to the realms
                     for group_id in realms:
@@ -4684,8 +4690,6 @@ Please go to %(url)s to approve this user."""
         if self.override:
             return True
 
-        sr = self.get_system_roles()
-
         if not hasattr(table, "_tablename"):
             tablename = table
             table = current.s3db.table(tablename, db_only=True)
@@ -4718,13 +4722,13 @@ Please go to %(url)s to approve this user."""
                 authorised = self.s3_logged_in()
             else:
                 # Editor role required for Update/Delete.
+                sr = self.get_system_roles()
                 authorised = self.s3_has_role(sr.EDITOR)
                 if not authorised and self.user and "owned_by_user" in table:
                     # Creator of Record is allowed to Edit
-                    query = (table.id == record_id)
-                    record = current.db(query).select(table.owned_by_user,
-                                                      limitby = (0, 1),
-                                                      ).first()
+                    record = current.db(table.id == record_id).select(table.owned_by_user,
+                                                                      limitby = (0, 1),
+                                                                      ).first()
                     if record and self.user.id == record.owned_by_user:
                         authorised = True
 
@@ -4734,12 +4738,14 @@ Please go to %(url)s to approve this user."""
                                                         c = c,
                                                         f = f,
                                                         t = table,
-                                                        record = record_id)
+                                                        record = record_id,
+                                                        )
 
         # Web2py default policy
         else:
             if self.s3_logged_in():
                 # Administrators are always authorised
+                sr = self.get_system_roles()
                 if self.s3_has_role(sr.ADMIN):
                     authorised = True
                 else:
@@ -4751,6 +4757,93 @@ Please go to %(url)s to approve this user."""
                 authorised = False
 
         return authorised
+    # -------------------------------------------------------------------------
+    def s3_check_permission(self, user_id, method, table, record_id=None, c=None, f=None):
+        """
+            S3 framework function to define whether a user can access a record
+            in manner "method". Designed to be called from the CLI for test purposes.
+
+            @param user_id: the auth_user.id to test
+            @param method: the access method as string, one of
+                           "create", "read", "update", "delete"
+            @param table: the table or tablename
+            @param record_id: the record ID (if any)
+            @param c: the controller name (overrides current.request)
+            @param f: the function name (overrides current.request)
+        """
+
+        if self.override:
+            return "Auth Override: Permission Granted"
+
+        if not hasattr(table, "_tablename"):
+            tablename = table
+            table = current.s3db.table(tablename, db_only=True)
+            if table is None:
+                return "Permission check on Table %s failed as couldn't load table. Module disabled?" % tablename
+
+        policy = current.deployment_settings.get_security_policy()
+
+        # Simple policy
+        if policy == 1:
+            # Anonymous users can Read.
+            if method == "read":
+                return "Policy 1: Read OK for Anonymous"
+            else:
+                # Authentication required for Create/Update/Delete.
+                if user:
+                    return "Policy 1: method OK for Authenticated"
+                else:
+                    return "Policy 1: method not OK for Anonymous"
+        # Editor policy
+        elif policy == 2:
+            # Anonymous users can Read.
+            if method == "read":
+                return "Policy 2: Read OK for Anonymous"
+            elif method == "create":
+                # Authentication required for Create.
+                if user:
+                    return "Policy 2: Create OK for Authenticated"
+                else:
+                    return "Policy 2: Create not OK for Anonymous"
+            elif record_id == 0 and method == "update":
+                if user:
+                    return "Policy 2: Authenticated users can update at least some records"
+                else:
+                    return "Policy 2: Update not OK for Anonymous"
+            else:
+                # Editor role required for Update/Delete.
+                db = current.db
+                sr = self.get_system_roles()
+                mtable = db.auth_membership
+                query = (mtable.user_id == user_id) & \
+                        (mtable.group_id == sr.EDITOR)
+                membership = db(query).select(mtable.id,
+                                              limitby = (0, 1),
+                                              ).first()
+                if membership:
+                    return "Policy 2: Editor role can %s" % method
+                if user and "owned_by_user" in table:
+                    # Creator of Record is allowed to Edit
+                    record = db(table.id == record_id).select(table.owned_by_user,
+                                                              limitby = (0, 1),
+                                                              ).first()
+                    if record and user_id == record.owned_by_user:
+                        return "Policy 2: Creator of Record is allowed to Edit"
+                return "Policy 2: Not Editor & not Owner, so cannot %s" % method
+
+        # Use S3Permission ACLs
+        elif policy in (3, 4, 5, 6, 7, 8):
+            authorised = self.permission.check_permission(user_id,
+                                                          method,
+                                                          c = c,
+                                                          f = f,
+                                                          t = table,
+                                                          record = record_id,
+                                                          )
+            if authorised:
+                return "Permission Granted"
+            else:
+                return "Permission NOT Granted"
 
     # -------------------------------------------------------------------------
     def s3_accessible_query(self, method, table, c=None, f=None):
@@ -6048,7 +6141,13 @@ class S3Permission(object):
         return (realm_entity, owner_group, owner_user)
 
     # -------------------------------------------------------------------------
-    def is_owner(self, table, record, owners=None, strict=False):
+    def is_owner(self,
+                 table,
+                 record,
+                 owners = None,
+                 strict = False,
+                 user_id = None,
+                 ):
         """
             Check whether the current user owns the record
 
@@ -6056,12 +6155,12 @@ class S3Permission(object):
             @param record: the record ID (or the Row if already loaded)
             @param owners: override the actual record owners by a tuple
                            (realm_entity, owner_group, owner_user)
-
+            @param strict: 
+            @param user_id: User to check for (defaults to currently logged-in user if not provided)
             @return: True if the current user owns the record, else False
         """
 
         auth = self.auth
-        user_id = None
         sr = auth.get_system_roles()
 
         if auth.user is not None:
@@ -6619,6 +6718,272 @@ class S3Permission(object):
         permission_cache[key] = permitted
 
         return permitted
+    # -------------------------------------------------------------------------
+    def check_permission(self, user_id, method, c=None, f=None, t=None, record=None):
+        """
+            Check permission to access a record with method for a user
+            - designed to be run from CLI for testing purposes
+
+            @param user_id: the auth_iser.id to test
+            @param method: the access method (string)
+            @param c: the controller name (falls back to current request)
+            @param f: the function name (falls back to current request)
+            @param t: the table or tablename
+            @param record: the record or record ID (None for any record)
+        """
+
+        info = current.log.info
+
+        # Auth override, system roles and login
+        auth = self.auth
+        if auth.override:
+            info("==> auth.override")
+            info("*** GRANTED ***")
+            return True
+
+        # Multiple methods?
+        if isinstance(method, (list, tuple)):
+            for m in method:
+                if self.has_permission(m, c=c, f=f, t=t, record=record):
+                    return True
+            return False
+        else:
+            method = [method]
+
+        if record == 0:
+            record = None
+
+        info("check_permission(%s, '%s', c=%s, f=%s, t=%s, record=%s)" % (user_id,
+                                                                          "|".join(method),
+                                                                          c or current.request.controller,
+                                                                          f or current.request.function,
+                                                                          t,
+                                                                          record,
+                                                                          ))
+
+        sr = auth.get_system_roles()
+        logged_in = user_id is not None
+        self.check_settings()
+
+        # Required ACL
+        racl = self.required_acl(method)
+        info("==> required ACL: %04X" % racl)
+
+        # Get realms and delegations
+        if not logged_in:
+            realms = Storage({sr.ANONYMOUS:None})
+        else:
+            # Copy functionality from s3_set_roles
+            db = current.db
+            s3db = current.s3db
+
+            # Get all current auth_memberships of the user
+            mtable = auth.settings.table_membership
+            query = (mtable.deleted == False) & \
+                    (mtable.user_id == user_id) & \
+                    (mtable.group_id != None)
+            rows = db(query).select(mtable.group_id,
+                                    mtable.pe_id,
+                                    cacheable = True,
+                                    )
+            if not self.entity_realm:
+                # Group memberships have no realms (policy 5 and below)
+                realms = Storage([(row.group_id, None) for row in rows])
+            else:
+                # Group memberships are limited to realms (policy 6 and above)
+                realms = {}
+
+                # These roles can't be realm-restricted:
+                unrestrictable = (sr.ADMIN,
+                                  sr.ANONYMOUS,
+                                  sr.AUTHENTICATED,
+                                  )
+
+                ltable = s3db.pr_person_user
+                user = db(ltable.user_id == user_id).select(ltable.pe_id,
+                                                            limitby = (0, 1),
+                                                            ).first()
+                from s3db.pr import pr_default_realms
+                default_realm = pr_default_realms(user.pe_id)
+
+                # Store the realms:
+                for row in rows:
+                    group_id = row.group_id
+                    if group_id in realms and realms[group_id] is None:
+                        continue
+                    if group_id in unrestrictable:
+                        realms[group_id] = None
+                        continue
+                    if group_id not in realms:
+                        realms[group_id] = []
+                    realm = realms[group_id]
+                    pe_id = row.pe_id
+                    if pe_id is None:
+                        if default_realm:
+                            realm.extend([e for e in default_realm
+                                            if e not in realm])
+                        if not realm:
+                            del realms[group_id]
+                    elif pe_id == 0:
+                        # Site-wide
+                        realms[group_id] = None
+                    elif pe_id not in realm:
+                        realms[group_id].append(pe_id)
+
+                if self.entity_hierarchy:
+                    # Realms include subsidiaries of the realm entities
+
+                    # Get all entities in realms
+                    entities = []
+                    append = entities.append
+                    for realm in realms.values():
+                        if realm is not None:
+                            for entity in realm:
+                                if entity not in entities:
+                                    append(entity)
+
+                    # Lookup the subsidiaries of all realms and extensions
+                    from s3db.pr import pr_descendants
+                    if current.deployment_settings.get_auth_user_realms_include_persons():
+                        exclude_persons = False
+                    else:
+                        exclude_persons = True
+                    descendants = pr_descendants(entities, exclude_persons = exclude_persons)
+
+                    # Add the subsidiaries to the realms
+                    for group_id in realms:
+                        realm = realms[group_id]
+                        if realm is None:
+                            continue
+                        append = realm.append
+                        for entity in list(realm):
+                            if entity in descendants:
+                                for subsidiary in descendants[entity]:
+                                    if subsidiary not in realm:
+                                        append(subsidiary)
+
+        # Administrators have all permissions
+        if sr.ADMIN in realms:
+            info("==> user is ADMIN")
+            info("*** GRANTED ***")
+            return True
+
+        # Fall back to current request
+        c = c or self.controller
+        f = f or self.function
+
+        if not self.use_cacls:
+            info("==> simple authorization")
+            # Fall back to simple authorization
+            if logged_in:
+                info("*** GRANTED ***")
+                return True
+            else:
+                if self.page_restricted(c=c, f=f):
+                    permitted = racl == self.READ
+                else:
+                    info("==> unrestricted page")
+                    permitted = True
+                if permitted:
+                    info("*** GRANTED ***")
+                else:
+                    info("*** DENIED ***")
+                return permitted
+
+        # Do we need to check the owner role (i.e. table+record given)?
+        if t is not None and record is not None:
+            owners = self.get_owners(t, record)
+            is_owner = self.is_owner(t, record, owners=owners, user_id=user_id)
+            entity = owners[0]
+        else:
+            owners = []
+            is_owner = True
+            entity = None
+
+        # Get the applicable ACLs
+        acls = self.applicable_acls(racl,
+                                    realms = realms,
+                                    c = c,
+                                    f = f,
+                                    t = t,
+                                    entity = entity
+                                    )
+
+        permitted = None
+        if acls is None:
+            info("==> no ACLs defined for this case")
+            permitted = True
+        elif not acls:
+            info("==> no applicable ACLs")
+            permitted = False
+        else:
+            if entity:
+                if entity in acls:
+                    uacl, oacl = acls[entity]
+                elif "ANY" in acls:
+                    uacl, oacl = acls["ANY"]
+                else:
+                    info("==> Owner entity outside realm")
+                    permitted = False
+            else:
+                uacl, oacl = self.most_permissive(acls.values())
+
+            info("==> uacl: %04X, oacl: %04X" % (uacl, oacl))
+
+            if permitted is None:
+                if uacl & racl == racl:
+                    permitted = True
+                elif oacl & racl == racl:
+                    if is_owner and record:
+                        info("==> User owns the record")
+                    elif record:
+                        info("==> User does not own the record")
+                    permitted = is_owner
+                else:
+                    permitted = False
+
+        if permitted is None:
+            raise self.error("Cannot determine permission.")
+
+        elif permitted and \
+             t is not None and record is not None and \
+             self.requires_approval(t):
+
+            # Approval possible for this table?
+            if not hasattr(t, "_tablename"):
+                table = current.s3db.table(t)
+                if not table:
+                    raise AttributeError("undefined table %s" % t)
+            else:
+                table = t
+            if "approved_by" in table.fields:
+
+                approval_methods = ("approve", "review", "reject")
+                access_approved = not all([m in approval_methods for m in method])
+                access_unapproved = any([m in method for m in approval_methods])
+
+                if access_unapproved:
+                    if not access_approved:
+                        permitted = self.unapproved(table, record)
+                        if not permitted:
+                            info("==> Record already approved")
+                else:
+                    permitted = self.approved(table, record) or \
+                                self.is_owner(table, record, owners, strict=True, user_id=user_id) or \
+                                self.check_permission(user_id, "review", t=table, record=record)
+                    if not permitted:
+                        info("==> Record not approved")
+                        info("==> is owner: %s" % is_owner)
+            else:
+                # Approval not possible for this table => no change
+                pass
+
+        if permitted:
+            info("*** GRANTED ***")
+        else:
+            info("*** DENIED ***")
+
+        return permitted
 
     # -------------------------------------------------------------------------
     def accessible_query(self, method, table, c=None, f=None, deny=True):
@@ -6685,7 +7050,7 @@ class S3Permission(object):
         # Get realms and delegations
         user = auth.user
         if not logged_in:
-            realms = Storage({sr.ANONYMOUS:None})
+            realms = Storage({sr.ANONYMOUS: None})
         else:
             realms = user.realms
 

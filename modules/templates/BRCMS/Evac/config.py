@@ -37,6 +37,7 @@ def config(settings):
                                         "pr_forum",  # Realms
                                         "pr_person", # Case Managers, Case Supervisors, Handlers
                                         )
+    settings.auth.user_realms_include_persons = True
 
     # Enable extra Modules
     modules = settings.modules
@@ -151,24 +152,17 @@ def config(settings):
             # Has a unique pr_realm with appropriate multiple inheritance
             # - handled by crud_form.postprocess
             return None
+
         elif tablename == "br_case_activity":
             # Has a unique pr_realm with appropriate multiple inheritance
             # - handled by onaccept
             return None
+
         elif tablename == "pr_person":
             # Is this a Case or Staff?
             db = current.db
             s3db = current.s3db
             person_id = row.id
-
-            # Try Case 1st (we expect more of these)
-            ctable = s3db.br_case
-            case = db(ctable.person_id == person_id).select(ctable.realm_entity,
-                                                            limitby = (0, 1),
-                                                            ).first()
-            if case:
-                # => Inherit from Case
-                return case.realm_entity
 
             # Try Case 1st (we expect more of these)
             ctable = s3db.br_case
@@ -196,20 +190,22 @@ def config(settings):
                 return person.realm_entity
 
             # Try Staff 3rd (we expect even less of these)
-            htable = s3db.hrm_human_resource
-            otable = s3db.org_organisation
-            query = (htable.person_id == person_id) & \
-                    (htable.organisation_id == otable.id)
-            org = db(query).select(otable.pe_id,
-                                   limitby = (0, 1),
-                                   ).first()
-            if org:
-                # => Inherit from Org
-                return org.pe_id
+            #htable = s3db.hrm_human_resource
+            #otable = s3db.org_organisation
+            #query = (htable.person_id == person_id) & \
+            #        (htable.organisation_id == otable.id)
+            #org = db(query).select(otable.pe_id,
+            #                       limitby = (0, 1),
+            #                       ).first()
+            #if org:
+            #    # => Self, but affiliated to Org
+            #    # (Affiliation handled by pr_human_resource_update_affiliations called by hrm_human_resource_onaccept)
+            #    return row.pe_id
 
-            # Probably a new case...will be sorted in crud_form.preprocess
-            # => use Default Rules
-            return 0
+            # Probably a new case (sorted in crud_form.preprocess) or new HR (sorted in hrm_human_resource_onaccept)
+            # => Set to Self
+            return row.pe_id
+
         elif tablename == "pr_group_membership":
             # Inherits realm from the Case via the Person
             ptable = current.s3db.pr_person
@@ -217,10 +213,48 @@ def config(settings):
                                                                    limitby = (0, 1),
                                                                    ).first()
             return person.realm_entity
+
+        elif tablename == "project_task":
+            if row.pe_id:
+                # Assigned
+                # => Realm inherited from Assignee
+                return row.pe_id
+            else:
+                # Unassigned
+                # Is the Task linked to an Activity?
+                db = current.db
+                s3db = current.s3db
+                catable = s3db.br_case_activity
+                ltable = s3db.dissemination_case_activity_task
+                ntable = s3db.br_need
+                query = (ltable.task_id == row.id) & \
+                        (ltable.case_activity_id == catable.id) & \
+                        (catable.need_id == ntable.id)
+                need = db(query).select(ntable.uuid,
+                                        limitby = (0, 1),
+                                        ).first()
+                if need:
+                    # Task belongs to the WG
+                    # => top-level WG Forum
+                    ftable = s3db.pr_forum
+                    forum = db(ftable.uuid == need.uuid).select(ftable.pe_id,
+                                                                limitby = (0, 1),
+                                                                ).first()
+                    return forum.pe_id
+                else:
+                    # Task belongs to the Creator
+                    ltable = s3db.pr_person_user
+                    link = db(ltable.user_id == row.owned_by_user).select(ltable.pe_id,
+                                                                          limitby = (0, 1),
+                                                                          ).first()
+                    if link:
+                        return link.pe_id
+
         elif tablename == "gis_route":
             # Inherits realm from the Case
             # @ToDo
             pass
+
         elif tablename in ("fin_bank",
                            "med_hospital",
                            "med_pharmacy",
@@ -229,6 +263,7 @@ def config(settings):
                            ):
             # No Realm 
             return None
+
         elif tablename in ("cr_shelter",
                            "event_incident_report",
                            "fin_broker",
@@ -242,6 +277,7 @@ def config(settings):
             # Has a unique pr_realm with appropriate multiple inheritance
             # => Leave this to disseminate (called from crud_form.postprocess)
             return None
+
         elif tablename == "transport_flight_manifest":
             # Inherit from passenger
             ptable = current.s3db.pr_person
@@ -267,6 +303,14 @@ def config(settings):
                                               ).first()
             if person:
                 realm_entity = person.realm_entity
+
+        elif tablename == "hrm_human_resource":
+            # => Inherit from the Person
+            ptable = current.s3db.pr_person
+            person = current.db(ptable.id == row.person_id).select(ptable.pe_id,
+                                                                   limitby = (0, 1),
+                                                                   ).first()
+            return person.pe_id
 
         elif tablename == "org_organisation":
             # Realm is own PE ID
@@ -1037,42 +1081,61 @@ def config(settings):
         if update:
             # Don't allow Need to be changed
             table.need_id.writable = False
-            f.comment = None
-            # Filter to Handlers for this WG
-            if tablename == r.tablename:
-                need_id = r.record.need_id
+            auth = current.auth
+            has_role = auth.s3_has_role
+            if not has_role("ORG_ADMIN"):
+                f.writable = False
+                f.comment = T("Handler can only assign themselves or be assigned by the Org Admin")
             else:
-                activity_id = r.component_id
-                record = db(table.id == activity_id).select(table.need_id,
-                                                            limitby = (0, 1),
-                                                            ).first()
-                need_id = record.need_id
-            ntable = s3db.br_need
-            need = db(ntable.id == need_id).select(ntable.uuid,
-                                                   limitby = (0, 1),
-                                                   ).first()
-            gtable = db.auth_group
-            mtable = db.auth_membership
-            ltable = s3db.pr_person_user
-            ptable = s3db.pr_person
-            query = (gtable.uuid.belongs((need.uuid,
-                                          "ORG_ADMIN",
-                                          "ADMIN",
-                                          ))) & \
-                    (gtable.id == mtable.group_id) & \
-                    (mtable.user_id == ltable.user_id) & \
-                    (ltable.pe_id == ptable.pe_id)
-            persons = db(query).select(ptable.id)
-            filter_opts = [p.id for p in persons]
-            from gluon import IS_EMPTY_OR
-            from s3 import IS_ONE_OF
-            f.requires = IS_EMPTY_OR(
-                            IS_ONE_OF(db, "hrm_human_resource.id",
-                                      f.represent,
-                                      filterby = "person_id",
-                                      filter_opts = filter_opts,
-                                      sort = True,
-                                      ))
+                f.comment = None
+                # Filter to Handlers for this WG
+                if tablename == r.tablename:
+                    need_id = r.record.need_id
+                else:
+                    activity_id = r.component_id
+                    record = db(table.id == activity_id).select(table.need_id,
+                                                                limitby = (0, 1),
+                                                                ).first()
+                    need_id = record.need_id
+                ntable = s3db.br_need
+                need = db(ntable.id == need_id).select(ntable.uuid,
+                                                       limitby = (0, 1),
+                                                       ).first()
+                gtable = db.auth_group
+                mtable = db.auth_membership
+                ltable = s3db.pr_person_user
+                ptable = s3db.pr_person
+                query = (gtable.uuid.belongs((need.uuid,
+                                              "ORG_ADMIN",
+                                              "ADMIN",
+                                              ))) & \
+                        (gtable.id == mtable.group_id) & \
+                        (mtable.user_id == ltable.user_id) & \
+                        (ltable.pe_id == ptable.pe_id)
+                
+                if not has_role("ADMIN"):
+                    # ORG_ADMIN: Can only assign to people in their Org(s)
+                    # @ToDo: Handle shared cases!
+                    pe_ids = auth.user.realms[auth.get_system_roles().ORG_ADMIN]
+                    otable = s3db.org_organisation
+                    utable = db.auth_user
+                    query &= (mtable.user_id == utable.id) & \
+                             (utable.organisation_id == otable.id)
+                    if len(pe_ids) > 1:
+                        query &= (otable.pe_id == pe_ids[0])
+                    else:
+                        query &= (otable.pe_id.belongs(pe_ids))
+                persons = db(query).select(ptable.id)
+                filter_opts = [p.id for p in persons]
+                from gluon import IS_EMPTY_OR
+                from s3 import IS_ONE_OF
+                f.requires = IS_EMPTY_OR(
+                                IS_ONE_OF(db, "hrm_human_resource.id",
+                                          f.represent,
+                                          filterby = "person_id",
+                                          filter_opts = filter_opts,
+                                          sort = True,
+                                          ))
 
         elif r.method in (None, "create"):
             # Need is required
@@ -1097,8 +1160,11 @@ def config(settings):
                                                            limitby = (0, 1),
                                                            ).first()
                 table.priority.default = case.priority
-            # Filter to Handlers for the WG selected
-            current.response.s3.scripts.append("/%s/static/themes/Evac/js/br_case_activity.js" % r.application)
+            if not current.auth.s3_has_role("ORG_ADMIN"):
+                f.writable = False
+            else:
+                # Filter to Handlers for the WG selected
+                current.response.s3.scripts.append("/%s/static/themes/Evac/js/br_case_activity.js" % r.application)
 
         crud_form = S3SQLCustomForm("person_id",
                                     "need_id",
@@ -1203,6 +1269,19 @@ def config(settings):
                 (mtable.user_id == ltable.user_id) & \
                 (ltable.pe_id == ptable.pe_id) & \
                 (ptable.id == htable.person_id)
+        auth = current.auth
+        if not auth.s3_has_role("ADMIN"):
+            # ORG_ADMIN: Can only assign to people in their Org(s)
+            # @ToDo: Handle shared cases!
+            pe_ids = auth.user.realms[auth.get_system_roles().ORG_ADMIN]
+            otable = s3db.org_organisation
+            utable = db.auth_user
+            query &= (mtable.user_id == utable.id) & \
+                     (utable.organisation_id == otable.id)
+            if len(pe_ids) > 1:
+                query &= (otable.pe_id == pe_ids[0])
+            else:
+                query &= (otable.pe_id.belongs(pe_ids))
         rows = db(query).select(htable.id,
                                 ptable.first_name,
                                 ptable.middle_name,
@@ -1331,12 +1410,53 @@ def config(settings):
     settings.customise_fin_broker_resource = customise_fin_broker_resource
 
     # =========================================================================
+    def hrm_human_resource_onaccept(form):
+        """
+            Set the realm of the Person after HR created
+        """
+
+        auth = current.auth
+        s3db = current.s3db
+
+        form_vars = form.vars
+        person_id = form_vars.person_id
+
+        ptable = s3db.pr_person
+
+        if person_id:
+            person = current.db(ptable.id == person_id).select(ptable.pe_id,
+                                                               limitby = (0, 1),
+                                                               ).first()
+            person.id = person_id
+        else:
+            htable = s3db.hrm_human_resource
+            query = (htable.id == form_vars.id) & \
+                    (htable.person_id == ptable.id)
+            person = current.db(query).select(ptable.id,
+                                              ptable.pe_id,
+                                              limitby = (0, 1),
+                                              ).first()
+
+        realm_entity = auth.get_realm_entity(ptable, person)
+        auth.set_realm_entity(ptable, person,
+                              entity = realm_entity,
+                              )
+
+    # =========================================================================
     def customise_hrm_human_resource_resource(r, tablename):
 
-        current.s3db.configure(tablename,
-                               # Always create via User Account
-                               insertable = False,
-                               )
+        s3db = current.s3db
+
+        s3db.configure(tablename,
+                       # Always create via User Account
+                       insertable = False,
+                       )
+
+        # Set the realm of the Person after HR created
+        s3db.add_custom_callback("hrm_human_resource",
+                                 "onaccept",
+                                 hrm_human_resource_onaccept,
+                                 )
 
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
@@ -2201,7 +2321,6 @@ def config(settings):
             query = (ltable.task_id == task_id) & \
                     (ltable.case_activity_id == catable.id)
             activity = db(query).select(catable.need_id,
-                                        catable.realm_entity,
                                         limitby = (0, 1),
                                         ).first()
         else:
@@ -2209,32 +2328,71 @@ def config(settings):
 
         f = s3db.project_task.pe_id
 
+        auth = current.auth
         if activity:
-            # Filter to Handlers of that Type
             f.label = T("Handler")
-            ntable = s3db.br_need
-            need = db(ntable.id == activity.need_id).select(ntable.uuid,
-                                                            limitby = (0, 1),
-                                                            ).first()
-            gtable = db.auth_group
-            mtable = db.auth_membership
-            ltable = s3db.pr_person_user
-            query = (gtable.uuid.belongs((need.uuid,
-                                          "ORG_ADMIN",
-                                          "ADMIN",
-                                          ))) & \
-                    (gtable.id == mtable.group_id) & \
-                    (mtable.user_id == ltable.user_id)
-            persons = db(query).select(ltable.pe_id)
-            filter_opts = [p.pe_id for p in persons]
+            has_role = auth.s3_has_role
+            if not has_role("ORG_ADMIN"):
+                # Can only assign self
+                filter_opts = [auth.user.pe_id]
+            else:
+                # Filter to Handlers of that Type
+                ntable = s3db.br_need
+                need = db(ntable.id == activity.need_id).select(ntable.uuid,
+                                                                limitby = (0, 1),
+                                                                ).first()
+                gtable = db.auth_group
+                mtable = db.auth_membership
+                ltable = s3db.pr_person_user
+                query = (gtable.uuid.belongs((need.uuid,
+                                              "ORG_ADMIN",
+                                              "ADMIN",
+                                              ))) & \
+                        (gtable.id == mtable.group_id) & \
+                        (mtable.user_id == ltable.user_id)
+                if not has_role("ADMIN"):
+                    # ORG_ADMIN: Can only assign to people in their Org(s)
+                    pe_ids = auth.user.realms[auth.get_system_roles().ORG_ADMIN]
+                    otable = s3db.org_organisation
+                    utable = db.auth_user
+                    query &= (mtable.user_id == utable.id) & \
+                             (utable.organisation_id == otable.id)
+                    if len(pe_ids) > 1:
+                        query &= (otable.pe_id == pe_ids[0])
+                    else:
+                        query &= (otable.pe_id.belongs(pe_ids))
+                persons = db(query).select(ltable.pe_id)
+                filter_opts = [p.pe_id for p in persons]
+                
         else:
-            # Filtered to Staff
-            htable = s3db.hrm_human_resource
-            ptable = s3db.pr_person
-            query = (htable.deleted == False) & \
-                    (htable.person_id == ptable.id)
-            persons = db(query).select(ptable.pe_id)
-            filter_opts = [p.pe_id for p in persons]
+            if not auth.s3_has_roles("CASE_MANAGER",
+                                     "ORG_ADMIN",
+                                     ):
+                # Can only assign self
+                filter_opts = [auth.user.pe_id]
+            else:
+                # Filtered to Staff
+                has_role = auth.s3_has_role
+                htable = s3db.hrm_human_resource
+                ptable = s3db.pr_person
+                query = (htable.deleted == False) & \
+                        (htable.person_id == ptable.id)
+                if not has_role("ADMIN"):
+                    # @ToDo:
+                    #if not has_role("ORG_ADMIN"):
+                    #    # Case Manager: Can only assign to people they manage
+                    #    pass
+                    #else:
+                    # ORG_ADMIN: Can only assign to people in their Org(s)
+                    pe_ids = auth.user.realms[auth.get_system_roles().ORG_ADMIN]
+                    otable = s3db.org_organisation
+                    query &= (htable.organisation_id == otable.id)
+                    if len(pe_ids) > 1:
+                        query &= (otable.pe_id == pe_ids[0])
+                    else:
+                        query &= (otable.pe_id.belongs(pe_ids))
+                persons = db(query).select(ptable.pe_id)
+                filter_opts = [p.pe_id for p in persons]
 
         from s3db.pr import pr_PersonEntityRepresent
         represent = pr_PersonEntityRepresent(show_label = False,

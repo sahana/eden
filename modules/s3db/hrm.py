@@ -6392,16 +6392,17 @@ def hrm_human_resource_onaccept(form):
     # Realm_entity for the pr_person record
     ptable = s3db.pr_person
     person_id = record.person_id
-    person = Storage(id = person_id)
     if settings.get_auth_person_realm_human_resource_site_then_org():
         # Set pr_person.realm_entity to the human_resource's site pe_id or organisation_pe_id
+        person = Storage(id = person_id)
         entity = s3db.pr_get_pe_id("org_site", site_id) or \
                  s3db.pr_get_pe_id("org_organisation", organisation_id)
 
         if entity:
             auth.set_realm_entity(ptable, person,
                                   entity = entity,
-                                  force_update = True)
+                                  force_update = True,
+                                  )
 
     tracker = S3Tracker()
     if person_id:
@@ -6419,8 +6420,8 @@ def hrm_human_resource_onaccept(form):
         vol = True
         location_lookup = settings.get_hrm_location_vol()
 
-    # Add deploy_application when creating inside deploy module
     if request.controller == "deploy":
+        # Add deploy_application when creating inside deploy module
         user_organisation_id = auth.user.organisation_id
         ltable = s3db.deploy_application
         if user_organisation_id:

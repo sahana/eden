@@ -959,6 +959,14 @@ class S3Config(Storage):
         """
         return self.auth.get("person_realm_member_org", False)
 
+    def get_auth_user_realms_include_persons(self):
+        """
+           Applies only to Hierarchical Realms (Policy 7)
+           By default the User's Realms list doesn't include person records (as there could be very large numbers)
+           If the deployment needs this then set this to True
+        """
+        return self.auth.get("user_realms_include_persons", False)
+
     def get_auth_entity_role_manager(self):
         """
             Activate Entity Role Manager (=embedded Role Manager Tab for OrgAdmins)
