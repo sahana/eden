@@ -3031,11 +3031,11 @@ class PersonGroupModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def group_membership_ondelete(form):
+    def group_membership_ondelete(row):
         """
             Remove any duplicate memberships and update affiliations
 
-            @param form: the FORM
+            @param row: the Row
         """
 
         if hasattr(row, "person_id") and \
