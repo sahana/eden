@@ -2108,7 +2108,7 @@ def config(settings):
             r.unauthorised()
 
         ftable = s3db.pr_forum
-        forum = current.db(ftable.uuid == "ORG_ADMIN_RW_%s" % organisation_id).select(ftable.pe_id,
+        forum = current.db(ftable.uuid == "ORG_ADMIN_RO_%s" % organisation_id).select(ftable.pe_id,
                                                                                       limitby = (0, 1),
                                                                                       ).first()
 
