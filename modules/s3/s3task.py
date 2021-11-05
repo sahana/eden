@@ -50,6 +50,7 @@ from gluon import current, IS_EMPTY_OR, IS_INT_IN_RANGE
 from gluon.storage import Storage
 
 from .s3datetime import S3DateTime
+from .s3utils import NONE
 from .s3validators import IS_UTC_DATETIME
 from .s3widgets import S3CalendarWidget, S3TimeIntervalWidget
 
@@ -100,7 +101,6 @@ class S3Task(object):
         """
 
         T = current.T
-        NONE = current.messages["NONE"]
         UNLIMITED = T("unlimited")
 
         tablename = self.TASK_TABLENAME
@@ -141,14 +141,14 @@ class S3Task(object):
             field.readable = field.writable = False
 
         # Args and vars
+        field = table.args
         if isinstance(args, list):
-            field = table.args
             field.default = json.dumps(args)
             field.readable = field.writable = False
         else:
             field.default = "[]"
+        field = table.vars
         if isinstance(vars, dict):
-            field = table.vars
             field.default = json.dumps(vars)
             field.readable = field.writable = False
         else:
@@ -233,7 +233,8 @@ class S3Task(object):
                 msg_record_modified = T("Job updated"),
                 msg_record_deleted = T("Job deleted"),
                 msg_list_empty = T("No jobs configured yet"),
-                msg_no_match = T("No jobs configured"))
+                msg_no_match = T("No jobs configured"),
+                )
 
     # -------------------------------------------------------------------------
     # API Function run within the main flow of the application
@@ -460,10 +461,9 @@ class S3Task(object):
         offset = datetime.timedelta(minutes = 1)
 
         query = (table.last_heartbeat > (now - offset))
-        cache = current.response.s3.cache
         worker_alive = db(query).select(table.id,
+                                        cache = current.s3db.cache,
                                         limitby = (0, 1),
-                                        cache = cache,
                                         ).first()
 
         return True if worker_alive else False
@@ -480,7 +480,8 @@ class S3Task(object):
         db = current.db
         ttable = db.scheduler_task
 
-        query = (ttable.id == task_id) & (ttable.status == "FAILED")
+        query = (ttable.id == task_id) & \
+                (ttable.status == "FAILED")
         task = db(query).select(ttable.id,
                                 limitby = (0, 1)
                                 ).first()
