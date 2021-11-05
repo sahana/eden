@@ -169,7 +169,7 @@ class PersonEntityModel(S3Model):
 
         add_components = self.add_components
         configure = self.configure
-        crud_strings = current.response.s3.crud_strings
+        #crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         super_entity = self.super_entity
         #super_key = self.super_key
@@ -321,7 +321,7 @@ class PersonEntityModel(S3Model):
                                              "multiple": False,
                                              },
                        # Tenures
-                       stdm_tenure_relationship = pe_id,
+                       #stdm_tenure_relationship = pe_id,
 
                        # Map Configs 'Saved Maps'
                        #   - Personalised configurations
@@ -404,17 +404,18 @@ class PersonEntityModel(S3Model):
                       *s3_meta_fields())
 
         # CRUD Strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Create Role"),
-            title_display = T("Role Details"),
-            title_list = T("Roles"),
-            title_update = T("Edit Role"),
-            label_list_button = T("List Roles"),
-            label_delete_button = T("Delete Role"),
-            msg_record_created = T("Role added"),
-            msg_record_modified = T("Role updated"),
-            msg_record_deleted = T("Role deleted"),
-            msg_list_empty = T("No Roles defined"))
+        #crud_strings[tablename] = Storage(
+        #    label_create = T("Create Role"),
+        #    title_display = T("Role Details"),
+        #    title_list = T("Roles"),
+        #    title_update = T("Edit Role"),
+        #    label_list_button = T("List Roles"),
+        #    label_delete_button = T("Delete Role"),
+        #    msg_record_created = T("Role added"),
+        #    msg_record_modified = T("Role updated"),
+        #    msg_record_deleted = T("Role deleted"),
+        #    msg_list_empty = T("No Roles defined"),
+        #    )
 
         # Resource configuration
         configure(tablename,
@@ -454,17 +455,18 @@ class PersonEntityModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Add Affiliation"),
-            title_display = T("Affiliation Details"),
-            title_list = T("Affiliations"),
-            title_update = T("Edit Affiliation"),
-            label_list_button = T("List Affiliations"),
-            label_delete_button = T("Delete Affiliation"),
-            msg_record_created = T("Affiliation added"),
-            msg_record_modified = T("Affiliation updated"),
-            msg_record_deleted = T("Affiliation deleted"),
-            msg_list_empty = T("No Affiliations defined"))
+        #crud_strings[tablename] = Storage(
+        #    label_create = T("Add Affiliation"),
+        #    title_display = T("Affiliation Details"),
+        #    title_list = T("Affiliations"),
+        #    title_update = T("Edit Affiliation"),
+        #    label_list_button = T("List Affiliations"),
+        #    label_delete_button = T("Delete Affiliation"),
+        #    msg_record_created = T("Affiliation added"),
+        #    msg_record_modified = T("Affiliation updated"),
+        #    msg_record_deleted = T("Affiliation deleted"),
+        #    msg_list_empty = T("No Affiliations defined"),
+        #    )
 
         # Resource configuration
         configure(tablename,
@@ -671,7 +673,6 @@ class PersonEntityModel(S3Model):
                 if str(role_type) != str(OU):
                     form_vars["path"] = None
                 current.s3db.pr_role_rebuild_path(role_id, clear=True)
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -699,7 +700,6 @@ class PersonEntityModel(S3Model):
                                                             ).first()
                 if instance:
                     s3db.org_update_affiliations("org_site", instance)
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -733,8 +733,6 @@ class PersonEntityModel(S3Model):
 
             # Clear descendant paths
             current.s3db.pr_rebuild_path(pe_id, clear=True)
-
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -935,8 +933,7 @@ class PersonModel(S3Model):
                        crud_form = crud_form,
                        deduplicate = self.person_duplicate,
                        filter_widgets = filter_widgets,
-                       list_fields = ["id",
-                                      "first_name",
+                       list_fields = ["first_name",
                                       "middle_name",
                                       "last_name",
                                       #"picture",
@@ -4020,10 +4017,9 @@ class PersonEntityContactModel(S3Model):
                      Field("contact_method", length=32,
                            default = "SMS",
                            label = T("Contact Method"),
-                           represent = lambda opt: \
-                                       contact_methods.get(opt, messages.UNKNOWN_OPT),
+                           represent = s3_options_represent(contact_methods),
                            requires = IS_IN_SET(contact_methods,
-                                                zero=None),
+                                                zero = None),
                            ),
                      Field("value", notnull=True,
                            label= T("Value"),
@@ -4037,17 +4033,18 @@ class PersonEntityContactModel(S3Model):
                            default = 1,
                            label = T("Priority"),
                            requires = IS_IN_SET(list(range(1, 10))),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Priority"),
-                                                           T("What order to be contacted in."))),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Priority"),
+                                                             T("What order to be contacted in."),
+                                                             ),
+                                         ),
                            ),
                      Field("access", "integer",
                            default = 1, # Contacts default to Private
                            label = T("Access"),
-                           represent = lambda opt: \
-                                       access_opts.get(opt, messages.UNKNOWN_OPT),
+                           represent = s3_options_represent(access_opts),
                            requires = IS_IN_SET(access_opts,
-                                                zero=None),
+                                                zero = None),
                            # Enable in templates as-required
                            readable = False,
                            writable = False,
@@ -4074,7 +4071,8 @@ class PersonEntityContactModel(S3Model):
             msg_record_created = T("Contact Information Added"),
             msg_record_modified = T("Contact Information Updated"),
             msg_record_deleted = T("Contact Information Deleted"),
-            msg_list_empty = T("No contact information available"))
+            msg_list_empty = T("No contact information available"),
+            )
 
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("pe_id",
@@ -4083,8 +4081,7 @@ class PersonEntityContactModel(S3Model):
                                                        ),
                                             ignore_deleted = True,
                                             ),
-                  list_fields = ["id",
-                                 "contact_method",
+                  list_fields = ["contact_method",
                                  "value",
                                  "priority",
                                  # Used by list_layout & anyway it's useful
@@ -4146,7 +4143,8 @@ class PersonEntityContactModel(S3Model):
             msg_record_created = T("Emergency Contact Added"),
             msg_record_modified = T("Emergency Contact Updated"),
             msg_record_deleted = T("Emergency Contact Deleted"),
-            msg_list_empty = T("No emergency contacts registered"))
+            msg_list_empty = T("No emergency contacts registered"),
+            )
 
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("pe_id",),
@@ -4199,7 +4197,8 @@ class PersonEntityContactModel(S3Model):
             msg_record_created = T("Contact Person Added"),
             msg_record_modified = T("Contact Person Updated"),
             msg_record_deleted = T("Contact Person Deleted"),
-            msg_list_empty = T("No contact persons registered"))
+            msg_list_empty = T("No contact persons registered"),
+            )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -4242,8 +4241,6 @@ class PersonEntityContactModel(S3Model):
                 form.errors.value = error
             else:
                 form_vars.value = value
-
-        return
 
 # =============================================================================
 class PersonEntityImageModel(S3Model):

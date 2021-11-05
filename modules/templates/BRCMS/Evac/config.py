@@ -297,13 +297,13 @@ def config(settings):
             s3db = current.s3db
             table = s3db.table(tablename)
             ptable = s3db.pr_person
-            query = (table._id == row.id) & \
+            query = (table.id == row.id) & \
                     (ptable.pe_id == table.pe_id)
             person = current.db(query).select(ptable.realm_entity,
                                               limitby = (0, 1),
                                               ).first()
             if person:
-                realm_entity = person.realm_entity
+                return person.realm_entity
 
         elif tablename == "hrm_human_resource":
             # => Inherit from the Person
