@@ -5619,6 +5619,14 @@ class S3Config(Storage):
         """ Whether Date of Birth is Mandatory, including in the AddPersonWidget """
         return self.__lazy("pr", "dob_required", default=False)
 
+    def get_pr_request_gender(self):
+        """ Include Gender in the AddPersonWidget """
+        return self.__lazy("pr", "request_gender", default=True)
+
+    def get_pr_gender_required(self):
+        """ Whether Gender is Mandatory, including in the AddPersonWidget """
+        return self.__lazy("pr", "gender_required", default=False)
+
     def get_pr_request_email(self):
         """ Include Email in the AddPersonWidget """
         return self.__lazy("pr", "request_email", default=True)
@@ -5630,10 +5638,6 @@ class S3Config(Storage):
     def get_pr_request_grandfather_name(self):
         """ Include GrandFather Name in the AddPersonWidget """
         return self.__lazy("pr", "request_grandfather_name", default=False)
-
-    def get_pr_request_gender(self):
-        """ Include Gender in the AddPersonWidget """
-        return self.__lazy("pr", "request_gender", default=True)
 
     def get_pr_request_home_phone(self):
         """ Include Home Phone in the AddPersonWidget """
@@ -5998,6 +6002,12 @@ class S3Config(Storage):
             The lead role of organisations within projects
         """
         return self.project.get("organisation_lead_role", 1)
+
+    def get_project_task_comments(self):
+        """
+            Whether to use comments on tasks
+        """
+        return self.project.get("task_comments", True)
 
     def get_project_task_status_opts(self):
         """

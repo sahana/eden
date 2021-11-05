@@ -495,12 +495,11 @@ class S3AddPersonWidget(FormWidget):
 
         # Field label overrides
         # (all other labels are looked up from the corresponding Field)
-        labels = {
-            "full_name": T(settings.get_pr_label_fullname()),
-            "email": T("Email"),
-            "mobile_phone": settings.get_ui_label_mobile_phone(),
-            "home_phone": T("Home Phone"),
-            }
+        labels = {"full_name": T(settings.get_pr_label_fullname()),
+                  "email": T("Email"),
+                  "mobile_phone": settings.get_ui_label_mobile_phone(),
+                  "home_phone": T("Home Phone"),
+                  }
 
         # Tag labels (...and tags, in order as configured)
         tags = []
@@ -513,14 +512,14 @@ class S3AddPersonWidget(FormWidget):
 
         # Fields which, if enabled, are required
         # (all other fields are assumed to not be required)
-        required = {
-            "full_name": True,
-            "first_name": True,
-            "middle_name": settings.get_L10n_mandatory_middlename(),
-            "last_name": settings.get_L10n_mandatory_lastname(),
-            "date_of_birth": settings.get_pr_dob_required(),
-            "email": settings.get_hrm_email_required() if hrm else False,
-        }
+        required = {"full_name": True,
+                    "first_name": True,
+                    "middle_name": settings.get_L10n_mandatory_middlename(),
+                    "last_name": settings.get_L10n_mandatory_lastname(),
+                    "date_of_birth": settings.get_pr_dob_required(),
+                    "gender": settings.get_pr_gender_required(),
+                    "email": settings.get_hrm_email_required() if hrm else False,
+                    }
 
         # Determine controller for autocomplete
         controller = self.controller

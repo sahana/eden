@@ -65,6 +65,7 @@ def config(settings):
     settings.br.manage_assistance = False
     settings.br.needs_org_specific = False
 
+    settings.L10n.mandatory_lastname = True
     settings.L10n.ethnicity = {"Achakzai": "Achakzai",
                                "Afshar": "Afshar",
                                "Aimaq": "Aimaq (Jamshidi, Taimuri, Firozkohi, Taimani)",
@@ -1931,6 +1932,18 @@ def config(settings):
             f.readable = f.writable = False
             #f.label = T("Group Head")
 
+            from s3 import S3AddPersonWidget
+            settings.pr.name_format = "%(first_name)s %(last_name)s"
+            settings.pr.dob_required = True
+            settings.pr.gender_required = True
+            table.person_id.widget = S3AddPersonWidget(controller = "br",
+                                                       # auto-generated
+                                                       #pe_label = True,
+                                                       separate_name_fields= True,
+                                                       )
+
+            s3db.pr_person.first_name.label = T("Given Names")
+
             list_fields = r.resource.get_config("list_fields")
             try:
                 list_fields.remove("group_head")
@@ -2159,9 +2172,24 @@ def config(settings):
             f.requires = IS_EMPTY_OR(f.requires)
 
             ptable = s3db.pr_person
-            # Gender optional
-            f = ptable.gender
-            f.requires = IS_EMPTY_OR(f.requires)
+            ptable.first_name.label = T("Given Names")
+            # Gender optional...no Required
+            #f = ptable.gender
+            #f.requires = IS_EMPTY_OR(f.requires)
+            # DoB required
+            f = ptable.date_of_birth
+            requires = f.requires
+            if hasattr(requires, "other"):
+                f.requires = requires.other
+            # Last Name required
+            # Needs to be done before loading model
+            #settings.L10n.mandatory_lastname = True
+            # pe_label is auto-generated onaccept
+            if r.id:
+                ptable.pe_label.writable = False
+            else:
+                f = ptable.pe_label
+                f.readable = f.writable = False
 
             table = s3db.br_case
 
@@ -2196,11 +2224,11 @@ def config(settings):
                            "case.status_id",
                            "pe_label",
                            "first_name",
-                           "middle_name",
+                           #"middle_name",
                            "last_name",
                            "gender",
                            "date_of_birth",
-                           #"person_details.nationality",
+                           "person_details.nationality",
                            "physical_description.ethnicity",
                            (T("Occupation"), "occupation_type_person.occupation_type_id"),
                            "person_details.marital_status",
@@ -2261,7 +2289,7 @@ def config(settings):
             list_fields = ["case.priority",
                            "pe_label",
                            "first_name",
-                           "middle_name",
+                           #"middle_name",
                            "last_name",
                            "gender",
                            "date_of_birth",
@@ -2337,6 +2365,8 @@ def config(settings):
 
         db = current.db
         s3db = current.s3db
+
+        settings.project.task_comments = False
 
         # Just People for Assignees
         task_id = r.id

@@ -12997,9 +12997,13 @@ def project_ckeditor():
 
     s3 = current.response.s3
 
-    ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
+    ckeditor = URL(c="static", f="ckeditor",
+                   args = "ckeditor.js",
+                   )
     s3.scripts.append(ckeditor)
-    adapter = URL(c="static", f="ckeditor", args=["adapters", "jquery.js"])
+    adapter = URL(c="static", f="ckeditor",
+                  args = ["adapters", "jquery.js"],
+                  )
     s3.scripts.append(adapter)
 
     # Toolbar options: http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Toolbar
@@ -13399,12 +13403,14 @@ def project_task_controller():
         crud_strings = s3.crud_strings[tablename]
 
         if r.record:
-            if r.interactive:
+            if r.interactive and \
+               current.deployment_settings.get_project_task_comments():
                 # Put the Comments in the RFooter
                 project_ckeditor()
                 s3.rfooter = LOAD("project", "comments.load",
                                   args = [r.id],
-                                  ajax = True)
+                                  ajax = True,
+                                  )
 
         if r.method == "datalist":
             # Set list_fields for renderer (project_task_list_layout)

@@ -792,7 +792,7 @@ class PersonModel(S3Model):
         # ---------------------------------------------------------------------
         # Person
         #
-        pr_gender_opts = {1: "",
+        pr_gender_opts = {#1: "",
                           2: T("female"),
                           3: T("male"),
                           }
@@ -801,6 +801,9 @@ class PersonModel(S3Model):
             # meaning neither female nor male, officially recognized
             # in various countries)
             pr_gender_opts[4] = T("other")
+
+        if not settings.get_pr_gender_required():
+            pr_gender_opts[1] = ""
 
         pr_gender = S3ReusableField("gender", "integer",
                                     default = 1,
@@ -884,7 +887,8 @@ class PersonModel(S3Model):
             msg_record_created = T("Person added"),
             msg_record_modified = T("Person details updated"),
             msg_record_deleted = T("Person deleted"),
-            msg_list_empty = T("No Persons currently registered"))
+            msg_list_empty = T("No Persons currently registered"),
+            )
 
         # Filter widgets
         filter_widgets = [

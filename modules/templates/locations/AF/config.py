@@ -15,8 +15,8 @@ def config(settings):
 
     # Restrict to specific country/countries
     settings.gis.countries.append("AF")
-    # Dosable the Postcode selector in the LocationSelector
-    #settings.gis.postcode_selector = False
+    # Disable the Postcode selector in the LocationSelector
+    settings.gis.postcode_selector = False
 
     # L10n (Localization) settings
     settings.L10n.languages["prs"] = "Dari"

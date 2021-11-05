@@ -4930,10 +4930,14 @@ def config(settings):
                     from s3 import S3OptionsFilter
 
                     # Add gender filter
-                    gender_opts = dict(s3db.pr_gender_opts)
-                    del gender_opts[1]
+                    gender_opts = s3db.pr_gender_opts
+                    if 1 in gender_opts:
+                        gender_options = dict(gender_opts)
+                        del gender_options[1]
+                    else:
+                        gender_options = gender_opts
                     append_filter(S3OptionsFilter("person_id$gender",
-                                                  options = gender_opts,
+                                                  options = gender_options,
                                                   cols = 3,
                                                   hidden = True,
                                                   ))

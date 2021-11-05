@@ -309,12 +309,14 @@ def person():
             field.label = T("ID")
             field.comment = None
 
-            # Make gender mandatory, remove "unknown"
             field = table.gender
             field.default = None
-            options = dict(s3db.pr_gender_opts)
-            del options[1] # Remove "unknown"
-            field.requires = IS_PERSON_GENDER(options, sort=True)
+            gender_opts = s3db.pr_gender_opts
+            if 1 in gender_opts:
+                # Make gender mandatory, remove "unknown"
+                options = dict(gender_opts)
+                del options[1] # Remove "unknown"
+                field.requires = IS_PERSON_GENDER(options, sort=True)
 
             # Configure case.organisation_id
             field = ctable.organisation_id
