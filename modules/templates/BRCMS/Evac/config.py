@@ -936,9 +936,7 @@ def config(settings):
 
         # Create a pr_realm record
         rtable = s3db.pr_realm
-        realm_id = rtable.insert(name = "%s_%s" % ("br_case_activity",
-                                                   activity_id,
-                                                   ))
+        realm_id = rtable.insert(name = "br_case_activity_%s" % activity_id)
         realm = Storage(id = realm_id)
         s3db.update_super(rtable, realm)
         realm_entity = realm["pe_id"]
@@ -1973,6 +1971,7 @@ def config(settings):
     # =========================================================================
     def pr_person_postprocess(form):
         """
+            Create the ID
             Set the Correct Realm for the Case and then the Person
         """
 
@@ -2026,6 +2025,29 @@ def config(settings):
             db = current.db
             s3db = current.s3db
 
+            # Create PE Label
+            from s3 import soundex
+            first_name = soundex(form_vars.first_name)
+            last_name = soundex(form_vars.last_name)
+            date_of_birth = form_vars.date_of_birth.strftime("%y%m%d")
+            gender = int(form_vars.gender)
+            if gender == 2: # Female
+                # Increase Month by 50
+                date_of_birth = "%s%s%s" % (date_of_birth[:2],
+                                            int(date_of_birth[2:4]) + 50,
+                                            date_of_birth[-2:],
+                                            )
+            # Transpose (first letter from last_name moved to 2nd position)
+            # & Hyphenate
+            label = "%s%s%s-%s%s%s-%s" % (first_name[:1],
+                                          last_name[:1],
+                                          first_name[1:3],
+                                          first_name[-1:],
+                                          last_name[1:],
+                                          date_of_birth[:1],
+                                          date_of_birth[1:],
+                                          )
+
             # Lookup Case
             person_id = form_vars.id
             ctable = s3db.br_case
@@ -2042,9 +2064,7 @@ def config(settings):
         else:
             # Create a pr_realm record
             rtable = s3db.pr_realm
-            realm_id = rtable.insert(name = "%s_%s" % ("br_case",
-                                                       case.id,
-                                                       ))
+            realm_id = rtable.insert(name = "br_case_%s" % case.id)
             realm = Storage(id = realm_id)
             s3db.update_super(rtable, realm)
             realm_entity = realm["pe_id"]
@@ -2052,7 +2072,12 @@ def config(settings):
             case.update_record(realm_entity = realm_entity)
             # Set the person to use this for it's realm
             ptable = s3db.pr_person
-            db(ptable.id == person_id).update(realm_entity = realm_entity)
+            if record:
+                db(ptable.id == person_id).update(realm_entity = realm_entity)
+            else:
+                db(ptable.id == person_id).update(pe_label = label,
+                                                  realm_entity = realm_entity,
+                                                  )
 
         # Set appropriate affiliations
         from s3db.pr import pr_add_affiliation
