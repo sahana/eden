@@ -2525,6 +2525,14 @@ def config(settings):
     settings.customise_security_zone_resource = customise_security_zone_resource
 
     # =========================================================================
+    def customise_transport_airport_resource(r, tablename):
+
+        f = current.s3db.transport_airport.organisation_id
+        f.readable = f.writable = False
+
+    settings.customise_transport_airport_resource = customise_transport_airport_resource
+
+    # =========================================================================
     def customise_transport_flight_resource(r, tablename):
 
         s3db = current.s3db

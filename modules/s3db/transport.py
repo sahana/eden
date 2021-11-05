@@ -212,7 +212,7 @@ class TransportModel(S3Model):
                                         IS_IN_SET(humanitarian_use_opts)
                                         ),
                            ),
-                     organisation_id(),
+                     organisation_id(default = None),
                      Field("restrictions", "text",
                            label = T("Restrictions"),
                            # Enable in Templates as-required
@@ -1019,7 +1019,10 @@ class TransportFlightModel(S3Model):
 
         airport_id = self.transport_airport_id
 
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+
+        CREATE_AIRPORT = crud_strings.transport_airport.label_create
 
         # ---------------------------------------------------------------------
         # Flights
@@ -1032,16 +1035,30 @@ class TransportFlightModel(S3Model):
                      s3_datetime(),
                      airport_id("from_airport",
                                 label = T("From"),
+                                comment = S3PopupLink(c = "transport",
+                                                      f = "airport",
+                                                      tooltip = CREATE_AIRPORT,
+                                                      vars = {"parent": "flight",
+                                                              "child": "from_airport",
+                                                              },
+                                                      ),
                                 ),
                      airport_id("to_airport",
                                 label = T("To"),
+                                comment = S3PopupLink(c = "transport",
+                                                      f = "airport",
+                                                      tooltip = CREATE_AIRPORT,
+                                                      vars = {"parent": "flight",
+                                                              "child": "to_airport",
+                                                              },
+                                                      ),
                                 ),
                      self.transport_airplane_id(),
                      # @ToDo: Capacity Remaining
                      *s3_meta_fields())
 
         # CRUD Strings
-        current.response.s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             label_create = T("Create Flight"),
             title_display = T("Flight Details"),
             title_list = T("Flights"),
