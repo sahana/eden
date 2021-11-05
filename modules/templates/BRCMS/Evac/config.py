@@ -2421,9 +2421,9 @@ def config(settings):
                 filter_opts = [p.pe_id for p in persons]
                 
         else:
-            if not auth.s3_has_roles("CASE_MANAGER",
-                                     "ORG_ADMIN",
-                                     ):
+            if not auth.s3_has_roles(("CASE_MANAGER",
+                                      "ORG_ADMIN",
+                                      )):
                 # Can only assign self
                 filter_opts = [auth.user.pe_id]
             else:
