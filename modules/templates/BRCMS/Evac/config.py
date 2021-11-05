@@ -1003,6 +1003,10 @@ def config(settings):
         """
 
         form_vars = form.vars
+        if "human_resource_id" not in form_vars:
+            # Handler unchanged
+            return
+
         human_resource_id = form_vars.human_resource_id
         if human_resource_id == str(form.record.human_resource_id):
             # Handler unchanged
@@ -1046,6 +1050,17 @@ def config(settings):
                                       limitby = (0, 1),
                                       ).first()
             pr_add_affiliation(person.pe_id, realm_entity, role="Realm Hierarchy")
+
+    # =========================================================================
+    def br_case_activity_update_create_onaccept(form):
+        """
+            Set the human_resource_id for the Update
+        """
+
+        human_resource_id = current.auth.s3_logged_in_human_resource()
+
+        if human_resource_id:
+            current.db(current.s3db.br_case_activity_update.id == form.vars.id).update(human_resource_id = human_resource_id)
 
     # =========================================================================
     def customise_br_case_activity_resource(r, tablename):
@@ -1161,6 +1176,8 @@ def config(settings):
                                                            ).first()
                 table.priority.default = case.priority
             if not current.auth.s3_has_role("ORG_ADMIN"):
+                # Needs to be done in the controller prep
+                #f.default = None
                 f.writable = False
             else:
                 # Filter to Handlers for the WG selected
@@ -1214,9 +1231,16 @@ def config(settings):
         def prep(r):
             # Call standard prep
             if callable(standard_prep):
-                result = standard_prep(r)
+                # Modify the standard Prep, since Handlers cannot see Cases
+                result = standard_prep(r, can_see_cases=False)
             else:
                 result = True
+
+            s3db = current.s3db
+            s3db.br_case_activity_update.human_resource_id.writable = False
+            s3db.configure("br_case_activity_update",
+                           create_onaccept = br_case_activity_update_create_onaccept,
+                           )
 
             if r.get_vars.get("my_cases"):
                 # Filter to Activities for Cases assigned to this person
@@ -2115,6 +2139,8 @@ def config(settings):
                 result = True
 
             if r.component:
+                if r.component_name == "case_activity":
+                    s3db.br_case_activity.human_resource_id.default = None
                 return result
 
             from gluon import IS_EMPTY_OR

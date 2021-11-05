@@ -1006,14 +1006,13 @@ class BRCaseActivityModel(S3Model):
         stable = s3db.br_case_activity_status
 
         join = stable.on(stable.id == atable.status_id)
-        query = (atable.id == record_id)
 
-        row = db(query).select(atable.id,
-                               atable.end_date,
-                               stable.is_closed,
-                               join = join,
-                               limitby = (0, 1),
-                               ).first()
+        row = db(atable.id == record_id).select(atable.id,
+                                                atable.end_date,
+                                                stable.is_closed,
+                                                join = join,
+                                                limitby = (0, 1),
+                                                ).first()
         if row:
             data = {}
             activity = row.br_case_activity

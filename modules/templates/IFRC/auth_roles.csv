@@ -307,16 +307,19 @@ irs_reader,Incident Reader,,org,,,,READ,,,,,
 irs_reader,Incident Reader,,pr,,,,READ,,,,,
 irs_reader,Incident Reader,,hrm,hr_search,,,READ,,,,,
 irs_data_entry,Incident Data Entry,,event,,,,READ|CREATE,,,,,
+irs_data_entry,Incident Data Entry,,,,event_incident_type,,READ,,,,,
 irs_data_entry,Incident Data Entry,,org,,,,READ,,,,,Used to filter organisation fields
 irs_data_entry,Incident Data Entry,,,,org_organisation,,READ|UPDATE,,,,,Used to filter organisation fields
 irs_data_entry,Incident Data Entry,,pr,,,,READ,,,,,
 irs_data_entry,Incident Data Entry,,hrm,hr_search,,,READ,,,,,
 irs_editor,Incident Editor,,event,,,,READ|CREATE|UPDATE,,,,,
+irs_editor,Incident Editor,,,,event_incident_type,,READ,,,,,
 irs_editor,Incident Editor,,org,,,,READ|UPDATE,,,,,Used to filter organisation fields
 irs_editor,Incident Editor,,,,org_organisation,,READ|UPDATE,,,,,Used to filter organisation fields
 irs_editor,Incident Editor,,pr,,,,READ,,,,,
 irs_editor,Incident Editor,,hrm,hr_search,,,READ,,,,,
 irs_super,Incident Super Editor,,event,,,,READ|CREATE|UPDATE|DELETE,,,,,
+irs_super,Incident Super Editor,,,,event_incident_type,,CREATE|READ|UPDATE,,,,,
 irs_super,Incident Super Editor,,org,,,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
 irs_super,Incident Super Editor,,,,org_organisation,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
 irs_super,Incident Super Editor,,pr,,,,READ,,,,,
@@ -710,6 +713,7 @@ vulnerability_super,Vulnerability Super Editor,,hrm,hr_search,,,READ,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,admin,user,,,ALL,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,asset,,,,ALL,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,event,,,,ALL,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,event_incident_type,,ALL,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,hrm,,,,ALL,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,inv,,,,ALL,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,irs,,,,ALL,,,,,

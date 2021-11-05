@@ -4866,8 +4866,6 @@ Please go to %(url)s to approve this user."""
         if self.override:
             return table.id > 0
 
-        sr = self.get_system_roles()
-
         policy = current.deployment_settings.get_security_policy()
 
         if policy == 1:
@@ -4882,6 +4880,7 @@ Please go to %(url)s to approve this user."""
             return query
 
         # "Full" security policy
+        sr = self.get_system_roles()
         if self.s3_has_role(sr.ADMIN):
             # Administrators can see all data
             return table.id > 0
@@ -6147,6 +6146,7 @@ class S3Permission(object):
                  owners = None,
                  strict = False,
                  user_id = None,
+                 realms = None,
                  ):
         """
             Check whether the current user owns the record
@@ -6157,14 +6157,17 @@ class S3Permission(object):
                            (realm_entity, owner_group, owner_user)
             @param strict: 
             @param user_id: User to check for (defaults to currently logged-in user if not provided)
+            @param realms: User to check for (defaults to currently logged-in user's if not provided)
+
             @return: True if the current user owns the record, else False
         """
 
         auth = self.auth
         sr = auth.get_system_roles()
 
-        if auth.user is not None:
-            user_id = auth.user.id
+        user = auth.user
+        if user:
+            user_id = user.id
 
         session = current.session
         roles = [sr.ANONYMOUS]
@@ -6203,7 +6206,8 @@ class S3Permission(object):
 
         # OrgAuth: apply only group memberships within the realm
         if self.entity_realm and realm_entity:
-            realms = auth.user.realms
+            if not realms:
+                realms = user.realms
             roles = [sr.ANONYMOUS]
             append = roles.append
             for r in realms:
@@ -6893,7 +6897,11 @@ class S3Permission(object):
         # Do we need to check the owner role (i.e. table+record given)?
         if t is not None and record is not None:
             owners = self.get_owners(t, record)
-            is_owner = self.is_owner(t, record, owners=owners, user_id=user_id)
+            is_owner = self.is_owner(t, record,
+                                     owners = owners,
+                                     user_id = user_id,
+                                     realms = realms,
+                                     )
             entity = owners[0]
         else:
             owners = []
@@ -6969,7 +6977,7 @@ class S3Permission(object):
                             info("==> Record already approved")
                 else:
                     permitted = self.approved(table, record) or \
-                                self.is_owner(table, record, owners, strict=True, user_id=user_id) or \
+                                self.is_owner(table, record, owners, strict=True, user_id=user_id, realms=realms) or \
                                 self.check_permission(user_id, "review", t=table, record=record)
                     if not permitted:
                         info("==> Record not approved")
