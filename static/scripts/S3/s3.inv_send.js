@@ -50,6 +50,8 @@ $(document).ready(function() {
                 // Only a single Site matches, so set to this Site
                 toField.val(site[0]);
             }
+            // Set to 'Internal Shipment'
+            $('#inv_send_type').val(11);
         });
     };
 

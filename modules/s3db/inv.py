@@ -8809,9 +8809,9 @@ def inv_recv_controller():
                                     for item_id in item_data:
                                         req_items = item_data[item_id]
                                         if len(req_items) == 1:
-                                            req_items[0].pop("req_ref")
+                                            req_items[0].pop("r")
 
-                                    js_global_append('''S3.supply.req_items=%s''' % json.dumps(item_data, separators=SEPARATORS))
+                                    js_global_append('''S3.supply.req_data=%s''' % json.dumps(item_data, separators=SEPARATORS))
 
                                     # Add Packs for all Req Items to avoid AJAX lookups
                                     rows = db(iptable.item_id.belongs(item_ids)).select(iptable.id,

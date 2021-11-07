@@ -40,6 +40,9 @@ $(document).ready(function() {
             QuantityField = $('#inv_track_item_quantity'),
             RecvQuantityField = $('#inv_track_item_recv_quantity'),
             recvQuantity, // Value in RecvQuantityField (or QuantityField, if that isn't set). Needs to be multiplied by PackQuantity for comparisons
+            reqData = S3.supply.req_data || {},
+            reqItems,
+            ReqItemField = $('#inv_track_item_req_item_id'),
             ReqItemRow = $('#inv_track_item_req_item_id__row'),
             sendQuantity, // Value in QuantityField. Needs to be multiplied by PackQuantity for comparisons
             startingQuantity, // Needs to be multiplied by startingPackQuantity for comparisons
@@ -83,18 +86,6 @@ $(document).ready(function() {
         ItemField.on('change.s3', function(event, first) {
             itemID = ItemField.val();
 
-            if (first) {
-                 // Don't clear for first run of update forms
-            } else {
-                update = false;
-                QuantityField.val('');
-                RecvQuantityField.val('');
-                sendQuantity = recvQuantity = 0;
-                // Empty the Bins field
-                inlineComponent.inlinecomponent('removeRows');
-                binnedQuantity = 0;
-            }
-
             // Update available Packs
             packs = allPacks[itemID];
             if (packs) {
@@ -111,6 +102,67 @@ $(document).ready(function() {
                         updatePacks();
                     }
                 });
+            }
+
+            if (first) {
+                 // Don't clear for first run of update forms
+            } else {
+                update = false;
+                QuantityField.val('');
+                RecvQuantityField.val('');
+                reqItems = reqData[itemID];
+                if (reqItems) {
+                    if (reqItems.length == 1) {
+                        // Default to REQ Quantity
+                        var reqItem = reqItems[0];
+                        sendQuantity = reqItem.q / PackQuantity;
+                        QuantityField.val(sendQuantity);
+
+                        // Set req_item_id, so that we can track request fulfilment
+                        ReqItemField.val(reqItem.i);
+
+                    } else {
+                        // Multiple Req Items for the same Item
+                        // Display ReqItemRow
+                        ReqItemRow.show();
+                        // Populate with Options
+                        var reqItem,
+                            reqItemID,
+                            ReqQuantity;
+                        ReqItemField.html('');
+                        first = true;
+                        for (i = 0; i < reqItems.length; i++) {
+                            reqItem = reqItems[i];
+                            ReqItemField.append(new Option(reqItem.r, reqItem.u));
+                            if (first) {
+                                sendQuantity = reqItem.q / PackQuantity;
+                                QuantityField.val(ReqQuantity);
+                            }
+                            first = false;
+                        }
+                        ReqItemField.on('change', function() {
+                            // Update the Quantity accordingly
+                            reqItemID = parseInt(ReqItemField.val());
+                            for (i = 0; i < reqItems.length; i++) {
+                                reqItem = reqItems[i];
+                                if (reqItem.i == reqItemID) {
+                                    sendQuantity = reqItem.q / PackQuantity;
+                                    QuantityField.val(sendQuantity);
+                                    break;
+                                }
+                            }
+                        });
+                    }
+                } else {
+                    // Not linked to a Request
+                    ReqItemField.val('');
+                    // => we have no useful default
+                    sendQuantity = 0;
+                }
+                recvQuantity = 0;
+                // Empty the Bins field
+                inlineComponent.inlinecomponent('removeRows');
+                binnedQuantity = 0;
             }
 
         });
@@ -189,6 +241,7 @@ $(document).ready(function() {
                         // @ToDo: i18n
                         message = 'Quantity Sent increased to Quantity Received';
                         error = $('<div class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
+                        sendQuantity = recvQuantity;
                         QuantityField.val(recvQuantity)
                                      .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
                             $(this).fadeOut('slow').remove();
@@ -211,6 +264,7 @@ $(document).ready(function() {
                     // @ToDo: i18n
                     message = 'Quantity Received reduced to Quantity Sent';
                     error = $('<div class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
+                    recvQuantity = sendQuantity;
                     RecvQuantityField.val(sendQuantity)
                                      .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
                         $(this).fadeOut('slow').remove();
