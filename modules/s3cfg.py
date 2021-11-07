@@ -2221,12 +2221,12 @@ class S3Config(Storage):
     def get_ui_datatables_responsive(self):
         """ Make data tables responsive (auto-collapsing columns when too wide) """
 
-        return self.ui.get("datatables_responsive", True)
+        return self.__lazy("ui", "datatables_responsive", True)
 
     def get_ui_datatables_double_scroll(self):
         """ Render double scroll bars (top+bottom) for non-responsive data tables """
 
-        return self.ui.get("datatables_double_scroll", False)
+        return self.ui.get("datatables_double_scroll", True)
 
     def get_ui_auto_open_update(self):
         """
@@ -4513,6 +4513,12 @@ class S3Config(Storage):
             else:
                 label = "Staff Record"
         return label
+
+    def get_hrm_roles_tab(self):
+        """
+            Whether or not to show the the Roles tab on HRM records which have an associated User Account
+        """
+        return self.hrm.get("roles_tab", False)
 
     def get_hrm_use_awards(self):
         """

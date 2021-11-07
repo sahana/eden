@@ -993,7 +993,9 @@ def person():
             # => redirect to login, then return here
             redirect(URL(f = "user",
                          args = ["login"],
-                         vars = {"_next": URL(f="person", args=request_args)},
+                         vars = {"_next": URL(f = "person",
+                                              args = request_args,
+                                              )},
                          ))
         request.args = [person_id]
 
@@ -1002,12 +1004,13 @@ def person():
         query = (table.person_id == person_id) & \
                 (table.deleted == False)
         hr = db(query).select(table.id,
-                              limitby = (0, 1)
+                              limitby = (0, 1),
                               )
         if hr:
             # Use the HRM controller/rheader
             request.get_vars["profile"] = 1
-            return s3db.hrm_person_controller()
+            from s3db.hrm import hrm_person_controller
+            return hrm_person_controller()
 
     # Use the PR controller/rheader
 
@@ -1045,12 +1048,15 @@ def person():
 
     set_method("pr", "person",
                method = "user_profile",
-               action = auth_profile_method)
+               action = auth_profile_method,
+               )
 
     # Custom Method for Contacts
+    from s3db.pr import pr_Contacts
     set_method("pr", "person",
                method = "contacts",
-               action = s3db.pr_Contacts)
+               action = pr_Contacts,
+               )
 
     #if settings.has_module("asset"):
     #    # Assets as component of people
@@ -1255,9 +1261,10 @@ def person():
             (T("My Maps"), "config"),
             ]
 
+    from s3db.pr import pr_rheader
     return s3_rest_controller("pr", "person",
                               rheader = lambda r, tabs=tabs: \
-                                                s3db.pr_rheader(r, tabs=tabs))
+                                pr_rheader(r, tabs=tabs))
 
 # -----------------------------------------------------------------------------
 def privacy():

@@ -51,14 +51,23 @@ def config(settings):
     #
     settings.base.theme = "RMS"
 
-    # Uncomment to disable responsive behavior of datatables
-    #settings.ui.datatables_responsive = False
-
     # Uncomment to show a default cancel button in standalone create/update forms
     settings.ui.default_cancel_button = True
-
     # Limit Export Formats
     settings.ui.export_formats = ("xls","pdf")
+
+    def datatables_responsive(default):
+        """ Responsive behavior of datatables (lazy setting) """
+
+        table = current.s3db.s3dt_user_options
+        options = current.db(table.user_id == current.auth.user.id).select(table.unresponsive_tables,
+                                                                           limitby = (0, 1),
+                                                                           ).first()
+        if options:
+            return not options.unresponsive_tables
+        else:
+            return default
+    settings.ui.datatables_responsive = datatables_responsive
 
     # @todo: configure custom icons
     #settings.ui.custom_icons = {
@@ -441,9 +450,9 @@ def config(settings):
     #
     settings.L10n.languages = OrderedDict([
         ("en", "English"),
+        ("fr", "French"),
         ("pt-br", "Portuguese (Brazil)"),
         ("es", "Spanish"),
-        ("fr", "French"),
         ])
     # Default Language
     settings.L10n.default_language = "en"
@@ -1492,9 +1501,24 @@ def config(settings):
     # =========================================================================
     def customise_auth_user_resource(r, tablename):
 
-        current.s3db.configure("auth_membership",
-                               create_onaccept = auth_membership_create_onaccept,
-                               )
+        db = current.db
+        configure = current.s3db.configure
+
+        configure("auth_membership",
+                  create_onaccept = auth_membership_create_onaccept,
+                  )
+
+        table = db.auth_user
+        crud_fields = [f.name for f in table if (f.writable or f.readable) and not f.compute]
+        crud_fields.append((T("Tables have Scrollbar"), "user_options.unresponsive_tables"))
+
+        from s3 import S3SQLCustomForm
+        crud_form = S3SQLCustomForm(*crud_fields)
+
+        configure(tablename,
+                  crud_form = crud_form,
+                  dynamic_components = True,
+                  )
 
     settings.customise_auth_user_resource = customise_auth_user_resource
 

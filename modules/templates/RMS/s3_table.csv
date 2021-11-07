@@ -1,0 +1,3 @@
+Table,Field,Label,DataType,ComponentKey,Settings,Comments
+s3dt_user_options,user_id,User,reference auth_user,true,"{'component_multiple':False}",
+s3dt_user_options,unresponsive_tables,Unresponsive Tables,boolean,false,,"This option allows you to see all Table Columns, without needing to click on +, but doesn't work as well on mobile devices"

@@ -178,7 +178,8 @@ class HRModel(S3Model):
             msg_record_created = T("Department added"),
             msg_record_modified = T("Department updated"),
             msg_record_deleted = T("Department deleted"),
-            msg_list_empty = T("Currently no entries in the catalog"))
+            msg_list_empty = T("Currently no entries in the catalog"),
+            )
 
         represent = S3Represent(lookup = tablename)
         department_id = S3ReusableField("department_id", "reference %s" % tablename,
@@ -292,7 +293,8 @@ class HRModel(S3Model):
                 msg_record_created = T("Volunteer Role added"),
                 msg_record_modified = T("Volunteer Role updated"),
                 msg_record_deleted = T("Volunteer Role deleted"),
-                msg_list_empty = T("Currently no entries in the catalog"))
+                msg_list_empty = T("Currently no entries in the catalog"),
+                )
         else:
             label = T("Job Title")
             label_create = T("Create Job Title")
@@ -307,7 +309,8 @@ class HRModel(S3Model):
                 msg_record_created = T("Job Title added"),
                 msg_record_modified = T("Job Title updated"),
                 msg_record_deleted = T("Job Title deleted"),
-                msg_list_empty = T("Currently no entries in the catalog"))
+                msg_list_empty = T("Currently no entries in the catalog"),
+                )
 
         represent = S3Represent(lookup = tablename,
                                 translate = True,
@@ -519,7 +522,8 @@ class HRModel(S3Model):
                 msg_record_created = T("Contact added"),
                 msg_record_modified = T("Contact Details updated"),
                 msg_record_deleted = T("Contact deleted"),
-                msg_list_empty = T("No Contacts currently registered"))
+                msg_list_empty = T("No Contacts currently registered"),
+                )
         else:
             contacts = False
             crud_strings["hrm_staff"] = Storage(
@@ -533,7 +537,8 @@ class HRModel(S3Model):
                 msg_record_created = T("Staff Member added"),
                 msg_record_modified = T("Staff Member Details updated"),
                 msg_record_deleted = T("Staff Member deleted"),
-                msg_list_empty = T("No Staff currently registered"))
+                msg_list_empty = T("No Staff currently registered"),
+                )
 
         crud_strings["hrm_volunteer"] = Storage(
             label_create = T("Create Volunteer"),
@@ -546,7 +551,8 @@ class HRModel(S3Model):
             msg_record_created = T("Volunteer added"),
             msg_record_modified = T("Volunteer Details updated"),
             msg_record_deleted = T("Volunteer deleted"),
-            msg_list_empty = T("No Volunteers currently registered"))
+            msg_list_empty = T("No Volunteers currently registered"),
+            )
 
         hrm_human_resource_represent = hrm_HumanResourceRepresent(show_link = True)
 
@@ -594,7 +600,8 @@ class HRModel(S3Model):
                     msg_record_created = T("Human Resource added"),
                     msg_record_modified = T("Record updated"),
                     msg_record_deleted = T("Record deleted"),
-                    msg_list_empty = T("No staff or volunteers currently registered"))
+                    msg_list_empty = T("No staff or volunteers currently registered"),
+                    )
 
         comment = S3PopupLink(c = "vol" if group == "volunteer" else "hrm",
                               f = group or "staff",
@@ -1434,7 +1441,8 @@ class HRSiteModel(S3Model):
             msg_record_modified = T("Staff Assignment updated"),
             msg_record_deleted = T("Staff Assignment removed"),
             msg_no_match = T("No entries found"),
-            msg_list_empty = T("Currently no staff assigned"))
+            msg_list_empty = T("Currently no staff assigned"),
+            )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -1637,7 +1645,8 @@ class HRSalaryModel(S3Model):
             msg_record_modified = T("Salary updated"),
             msg_record_deleted = T("Salary removed"),
             msg_no_match = T("No entries found"),
-            msg_list_empty = T("Currently no salary registered"))
+            msg_list_empty = T("Currently no salary registered"),
+            )
 
         configure(tablename,
                   onvalidation = self.hrm_salary_onvalidation,
@@ -1911,7 +1920,8 @@ class HRJobModel(S3Model):
         #   msg_record_created = T("Position added"),
         #   msg_record_modified = T("Position updated"),
         #   msg_record_deleted = T("Position deleted"),
-        #   msg_list_empty = T("Currently no entries in the catalog"))
+        #   msg_list_empty = T("Currently no entries in the catalog"),
+        #   )
 
         #label_create = crud_strings[tablename].label_create
         position_id = S3ReusableField("position_id", "reference %s" % tablename,
@@ -2138,7 +2148,8 @@ class HRSkillModel(S3Model):
             msg_record_created = T("Skill Type added"),
             msg_record_modified = T("Skill Type updated"),
             msg_record_deleted = T("Skill Type deleted"),
-            msg_list_empty = T("Currently no entries in the catalog"))
+            msg_list_empty = T("Currently no entries in the catalog"),
+            )
 
         skill_types = settings.get_hrm_skill_types()
         label_create = crud_strings[tablename].label_create
@@ -2369,7 +2380,8 @@ class HRSkillModel(S3Model):
             msg_record_created = T("Skill added"),
             msg_record_modified = T("Skill updated"),
             msg_record_deleted = T("Skill removed"),
-            msg_list_empty = T("Currently no Skills registered"))
+            msg_list_empty = T("Currently no Skills registered"),
+            )
 
         configure("hrm_competency",
                   context = {"person": "person_id",
@@ -2427,7 +2439,8 @@ class HRSkillModel(S3Model):
         #    msg_record_created = T("Skill Provision added"),
         #    msg_record_modified = T("Skill Provision updated"),
         #    msg_record_deleted = T("Skill Provision deleted"),
-        #    msg_list_empty = T("Currently no entries in the catalog"))
+        #    msg_list_empty = T("Currently no entries in the catalog"),
+        #    )
 
         #label_create = crud_strings[tablename].label_create
         #represent = S3Represent(lookup = tablename)
@@ -2542,7 +2555,8 @@ class HRSkillModel(S3Model):
             msg_record_modified = T("Course updated"),
             msg_record_deleted = T("Course deleted"),
             msg_no_match = T("No entries found"),
-            msg_list_empty = T("Currently no entries in the catalog"))
+            msg_list_empty = T("Currently no entries in the catalog"),
+            )
 
         if is_admin:
             label_create = crud_strings[tablename].label_create
@@ -2631,7 +2645,8 @@ class HRSkillModel(S3Model):
             msg_record_created = T("Event Type added"),
             msg_record_modified = T("Event Type updated"),
             msg_record_deleted = T("Event Type deleted"),
-            msg_list_empty = T("Currently no entries in the catalog"))
+            msg_list_empty = T("Currently no entries in the catalog"),
+            )
 
         event_types = settings.get_hrm_event_types()
         label_create = crud_strings[tablename].label_create
@@ -2772,7 +2787,8 @@ class HRSkillModel(S3Model):
             msg_record_modified = T("Training Event updated"),
             msg_record_deleted = T("Training Event deleted"),
             msg_no_match = T("No entries found"),
-            msg_list_empty = T("Currently no training events registered"))
+            msg_list_empty = T("Currently no training events registered"),
+            )
 
         represent = hrm_TrainingEventRepresent()
         training_event_id = S3ReusableField("training_event_id", "reference %s" % tablename,
@@ -3165,7 +3181,8 @@ class HRSkillModel(S3Model):
             msg_record_modified = T("Training updated"),
             msg_record_deleted = T("Training deleted"),
             msg_no_match = T("No entries found"),
-            msg_list_empty = T("No entries currently registered"))
+            msg_list_empty = T("No entries currently registered"),
+            )
 
         filter_widgets = [
             S3TextFilter(["person_id$first_name",
@@ -3454,7 +3471,8 @@ class HRSkillModel(S3Model):
             msg_record_modified = T("Certification updated"),
             msg_record_deleted = T("Certification deleted"),
             msg_no_match = T("No entries found"),
-            msg_list_empty = T("No entries currently registered"))
+            msg_list_empty = T("No entries currently registered"),
+            )
 
         # =====================================================================
         # Credentials
@@ -3531,7 +3549,8 @@ class HRSkillModel(S3Model):
             msg_record_modified = T("Credential updated"),
             msg_record_deleted = T("Credential deleted"),
             msg_no_match = T("No entries found"),
-            msg_list_empty = T("Currently no Credentials registered"))
+            msg_list_empty = T("Currently no Credentials registered"),
+            )
 
         configure(tablename,
                   context = {"person": "person_id",
@@ -3574,7 +3593,8 @@ class HRSkillModel(S3Model):
             msg_record_modified = T("Skill Equivalence updated"),
             msg_record_deleted = T("Skill Equivalence deleted"),
             msg_no_match = T("No entries found"),
-            msg_list_empty = T("Currently no Skill Equivalences registered"))
+            msg_list_empty = T("Currently no Skill Equivalences registered"),
+            )
 
         # =====================================================================
         # Course Certificates
@@ -3606,7 +3626,8 @@ class HRSkillModel(S3Model):
             msg_record_modified = T("Course Certificate updated"),
             msg_record_deleted = T("Course Certificate deleted"),
             msg_no_match = T("No entries found"),
-            msg_list_empty = T("Currently no Course Certificates registered"))
+            msg_list_empty = T("Currently no Course Certificates registered"),
+            )
 
         # =====================================================================
         # Course <> Job Titles link table
@@ -4262,7 +4283,8 @@ class HRAppraisalModel(S3Model):
             msg_record_modified = T("Appraisal updated"),
             msg_record_deleted = T("Appraisal deleted"),
             msg_no_match = T("No Appraisals found"),
-            msg_list_empty = T("Currently no Appraisals entered"))
+            msg_list_empty = T("Currently no Appraisals entered"),
+            )
 
         crud_form = S3SQLCustomForm("organisation_id",
                                     "job_title_id",
@@ -4526,7 +4548,8 @@ class HRExperienceModel(S3Model):
             msg_record_modified = T("Professional Experience updated"),
             msg_record_deleted = T("Professional Experience deleted"),
             msg_no_match = T("No Professional Experience found"),
-            msg_list_empty = T("Currently no Professional Experience entered"))
+            msg_list_empty = T("Currently no Professional Experience entered"),
+            )
 
         self.configure(tablename,
                        context = {"person": "person_id",
@@ -4633,7 +4656,8 @@ class HRAwardModel(S3Model):
             msg_record_modified = T("Award updated"),
             msg_record_deleted = T("Award removed"),
             msg_no_match = T("No entries found"),
-            msg_list_empty = T("Currently no awards registered"))
+            msg_list_empty = T("Currently no awards registered"),
+            )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -7453,10 +7477,11 @@ def hrm_rheader(r, tabs=None, profile=False):
                      unavailability_tab,
                      (T("Assets"), "asset"),
                      ]
-            # Add role manager tab if a user record exists
-            user_id = current.auth.s3_get_user_id(record_id)
-            if user_id:
-                tabs.append((T("Roles"), "roles"))
+            if settings.get_hrm_roles_tab():
+                # Add role manager tab if a user record exists
+                user_id = current.auth.s3_get_user_id(record_id)
+                if user_id:
+                    tabs.append((T("Roles"), "roles"))
         rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader_btns = DIV(service_record, card_button,
                            # @ToDo: Move to CSS
@@ -7883,7 +7908,8 @@ def hrm_group_controller():
             msg_record_created = T("Team added"),
             msg_record_modified = T("Team updated"),
             msg_record_deleted = T("Team deleted"),
-            msg_list_empty = T("No Teams currently registered"))
+            msg_list_empty = T("No Teams currently registered"),
+            )
 
     # Format for filter_widgets & imports
     s3db.add_components("pr_group",
@@ -10135,7 +10161,8 @@ def hrm_configure_pr_group_membership():
                 msg_record_created = T("Added to Team"),
                 msg_record_modified = T("Membership updated"),
                 msg_record_deleted = T("Removed from Team"),
-                msg_list_empty = T("Not yet a Member of any Team"))
+                msg_list_empty = T("Not yet a Member of any Team"),
+                )
 
         elif function in ("group", "group_membership"):
             ADD_MEMBER = T("Add Team Member")
@@ -10149,7 +10176,8 @@ def hrm_configure_pr_group_membership():
                 msg_record_created = T("Person added to Team"),
                 msg_record_modified = T("Membership updated"),
                 msg_record_deleted = T("Person removed from Team"),
-                msg_list_empty = T("This Team has no Members yet"))
+                msg_list_empty = T("This Team has no Members yet"),
+                )
     else:
         table.group_head.label = T("Group Leader")
 

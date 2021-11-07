@@ -1866,7 +1866,7 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
     # -------------------------------------------------------------------------
     def configure_user_fields(self, pe_ids=None):
         """
-            Configure User Fields - for registration & user administration
+            Configure User Fields - for registration, user administration & profile
 
             pe_ids: an optional list of pe_ids for the Org Filter
                     i.e. org_admin coming from admin.py/user()

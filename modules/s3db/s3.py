@@ -166,7 +166,9 @@ class S3DynamicTablesModel(S3Model):
                      Field("name", length=128, unique=True, notnull=True,
                            # Set a random name as default, so this field
                            # can be hidden from the users (one-time default)
-                           default = "%s_%s" % (DYNAMIC_PREFIX, s3_table_random_name()),
+                           default = "%s_%s" % (DYNAMIC_PREFIX,
+                                                s3_table_random_name(),
+                                                ),
                            label = T("Table Name"),
                            represent = self.s3_table_name_represent(),
                            requires = [IS_NOT_EMPTY(),
@@ -189,10 +191,10 @@ class S3DynamicTablesModel(S3Model):
                      Field("settings", "json",
                            label = T("Settings"),
                            requires = IS_EMPTY_OR(IS_JSONS3()),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Settings"),
-                                                           T("Configuration settings for this table (JSON object)"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Settings"),
+                                                             T("Configuration settings for this table (JSON object)"),
+                                                             ),
                                          ),
                            ),
                      # Link this table to a certain master key
@@ -220,7 +222,7 @@ class S3DynamicTablesModel(S3Model):
             msg_record_modified = T("Table updated"),
             msg_record_deleted = T("Table deleted"),
             msg_list_empty = T("No Tables currently defined"),
-        )
+            )
 
         # Reusable field
         represent = S3Represent(lookup = tablename,
@@ -265,29 +267,29 @@ class S3DynamicTablesModel(S3Model):
                            default = False,
                            label = T("Must be unique"),
                            represent = s3_yes_no_represent,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Must be unique"),
-                                                           T("Field value must be unique"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Must be unique"),
+                                                             T("Field value must be unique"),
+                                                             ),
                                          ),
                            ),
                      Field("require_not_empty", "boolean",
                            default = False,
                            label = T("Is required"),
                            represent = s3_yes_no_represent,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Is required"),
-                                                           T("Field value must not be empty"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Is required"),
+                                                             T("Field value must not be empty"),
+                                                             ),
                                          ),
                            ),
                      Field("options", "json",
                            label = T("Options"),
                            requires = IS_EMPTY_OR(IS_JSONS3()),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Options"),
-                                                           T("Fixed set of selectable values for this field (JSON object)"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Options"),
+                                                             T("Fixed set of selectable values for this field (JSON object)"),
+                                                             ),
                                          ),
                            ),
                      Field("default_value",
@@ -305,7 +307,9 @@ class S3DynamicTablesModel(S3Model):
                            ),
                      Field("component_alias", length=128,
                            label = T("Component Alias"),
-                           requires = IS_EMPTY_OR((IS_LENGTH(128), IS_LOWER())),
+                           requires = IS_EMPTY_OR((IS_LENGTH(128),
+                                                   IS_LOWER(),
+                                                   )),
                            ),
                      Field("component_tab", "boolean",
                            label = T("Show on Tab"),
@@ -315,25 +319,27 @@ class S3DynamicTablesModel(S3Model):
                      Field("settings", "json",
                            label = T("Settings"),
                            requires = IS_EMPTY_OR(IS_JSONS3()),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Settings"),
-                                                           T("Configuration settings for this field (JSON object)"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Settings"),
+                                                             T("Configuration settings for this field (JSON object)"),
+                                                             ),
                                          ),
                            ),
                      s3_comments(label = T("Tooltip"),
                                  represent = s3_text_represent,
-                                 comment = DIV(_class="tooltip",
-                                               _title="%s|%s" % (T("Tooltip"),
-                                                                 T("Explanation of the field to be displayed in forms"),
-                                                                 ),
+                                 comment = DIV(_class = "tooltip",
+                                               _title = "%s|%s" % (T("Tooltip"),
+                                                                   T("Explanation of the field to be displayed in forms"),
+                                                                   ),
                                                ),
                                  ),
                      *s3_meta_fields())
 
         # Table configuration
         self.configure(tablename,
-                       deduplicate = S3Duplicate(primary=("table_id", "name")),
+                       deduplicate = S3Duplicate(primary = ("table_id",
+                                                            "name",
+                                                            )),
                        onvalidation = self.s3_field_onvalidation,
                        onaccept = self.s3_field_onaccept,
                        )
@@ -350,7 +356,7 @@ class S3DynamicTablesModel(S3Model):
             msg_record_modified = T("Field updated"),
             msg_record_deleted = T("Field deleted"),
             msg_list_empty = T("No Fields currently defined"),
-        )
+            )
 
         # Reusable field
         represent = S3Represent(lookup = tablename,
@@ -425,7 +431,10 @@ class S3DynamicTablesModel(S3Model):
 
             if value and "_" in value:
                 suffix = value.split("_", 1)[1]
-                return A(value, _href=URL(c=c, f=f, args=[suffix]))
+                return A(value,
+                         _href = URL(c=c, f=f,
+                                     args = [suffix],
+                                     ))
             else:
                 return value
 
@@ -469,8 +478,8 @@ class S3DynamicTablesModel(S3Model):
                     if fieldname not in record:
                         missing.append(fieldname)
             if missing:
-                query = (table.id == record_id)
-                record = db(query).select(limitby=(0, 1), *missing).first()
+                record = db(table.id == record_id).select(limitby = (0, 1),
+                                                          *missing).first()
 
         # Get the table ID
         table_id = None
@@ -499,7 +508,7 @@ class S3DynamicTablesModel(S3Model):
                 if record_id:
                     query &= (table.id != record_id)
                 row = db(query).select(table.id,
-                                       limitby = (0, 1)
+                                       limitby = (0, 1),
                                        ).first()
                 if row:
                     form.errors["name"] = "A field with this name already exists in this table"
@@ -533,12 +542,13 @@ class S3DynamicTablesModel(S3Model):
                 component_alias = form_vars.component_alias
             elif record:
                 component_alias = record.component_alias
+            else:
+                component_alias = None
             if not component_alias:
                 ttable = current.s3db.s3_table
-                query = ttable.id == table_id
-                row = db(query).select(ttable.name,
-                                       limitby = (0, 1)
-                                       ).first()
+                row = db(ttable.id == table_id).select(ttable.name,
+                                                       limitby = (0, 1),
+                                                       ).first()
                 tablename = row.name
                 component_alias = tablename.split("_", 1)[1]
                 form_vars.component_alias = component_alias
@@ -553,7 +563,7 @@ class S3DynamicTablesModel(S3Model):
             if record_id:
                 query &= (table.id != record_id)
             row = db(query).select(table.id,
-                                   limitby = (0, 1)
+                                   limitby = (0, 1),
                                    ).first()
             if row:
                 form.errors["component_alias"] = "A component with this alias already exists for this master table"
@@ -577,7 +587,7 @@ class S3DynamicTablesModel(S3Model):
         row = db(table.id == record_id).select(table.id,
                                                table.component_key,
                                                table.field_type,
-                                               limitby = (0, 1)
+                                               limitby = (0, 1),
                                                ).first()
 
         master = None
@@ -635,32 +645,32 @@ def s3_table_rheader(r, tabs=None):
         # Resource headers only used in interactive views
         return None
 
-    rheader = None
-
     record = r.record
-    if record:
+    if not record:
+        return None
 
-        T = current.T
+    if r.tablename == "s3_table":
+
+        if not tabs:
+
+            T = current.T
+
+            # Use default/tables as native controller for s3_table
+            tab_vars = {"native": True}
+
+            tabs = [(T("Table"), None, tab_vars),
+                    (T("Fields"), "field", tab_vars),
+                    ]
+
+        rheader_fields = [["name"],
+                          ]
+    else:
         rheader_fields = []
 
-        if r.tablename == "s3_table":
-
-            if not tabs:
-
-                # Use default/tables as native controller for s3_table
-                tab_vars = {"native": True}
-
-                tabs = [(T("Table"), None, tab_vars),
-                        (T("Fields"), "field", tab_vars),
-                        ]
-
-            rheader_fields = [["name"],
-                              ]
-
-        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
-                                                         table = r.resource.table,
-                                                         record = record,
-                                                         )
+    rheader = S3ResourceHeader(rheader_fields, tabs)(r,
+                                                     table = r.resource.table,
+                                                     record = record,
+                                                     )
 
     return rheader
 
@@ -674,32 +684,41 @@ def s3_scheduler_rheader(r, tabs=None):
     from s3 import s3_rheader_resource, S3ResourceHeader
 
     tablename, record = s3_rheader_resource(r)
+    if not record:
+        return None
+
     if tablename != r.tablename:
-        resource = current.s3db.resource(tablename, id=record.id)
+        resource = current.s3db.resource(tablename,
+                                         id = record.id,
+                                         )
     else:
         resource = r.resource
 
-    rheader = None
-    rheader_fields = []
+    if tablename == "scheduler_task":
 
-    if record:
-        T = current.T
+        if not tabs:
+            T = current.T
+            tabs = [(T("Job Details"), None),
+                    (T("Runs"), "run"),
+                    ]
 
-        if tablename == "scheduler_task":
+        rheader_fields = [["function_name",
+                           ],
+                          ["status",
+                           ],
+                          ]
+    else:
+        rheader_fields = []
 
-            if not tabs:
-                tabs = [(T("Job Details"), None),
-                        (T("Runs"), "run"),
-                        ]
+    header = S3ResourceHeader(rheader_fields,
+                              tabs,
+                              title = "task_name",
+                              )
+    rheader = header(r,
+                     table = resource.table,
+                     record = record,
+                     )
 
-            rheader_fields = [["function_name",
-                               ],
-                              ["status",
-                               ],
-                              ]
-
-        header = S3ResourceHeader(rheader_fields, tabs, title="task_name")
-        rheader = header(r, table=resource.table, record=record)
     return rheader
 
 # END =========================================================================

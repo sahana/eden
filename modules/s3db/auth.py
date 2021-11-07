@@ -31,7 +31,6 @@ __all__ = ("AuthConsentModel",
            "AuthDomainApproverModel",
            "AuthMasterKeyModel",
            "AuthUserNotificationModel",
-           "AuthUserOptionsModel",
            "AuthUserTempModel",
            "auth_consent_option_hash_fields",
            "auth_Consent",
@@ -505,29 +504,6 @@ class AuthMasterKeyModel(S3Model):
         #
         return {"auth_masterkey_id": masterkey_id,
                 }
-
-# =============================================================================
-class AuthUserOptionsModel(S3Model):
-    """ Model to store per-user configuration options """
-
-    names = ("auth_user_options",)
-
-    def model(self):
-
-        T = current.T
-
-        # ---------------------------------------------------------------------
-        # User Options
-        #
-        self.define_table("auth_user_options",
-                          Field("user_id", current.auth.settings.table_user),
-                          Field("options", "json")
-                          *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
 
 # =============================================================================
 class AuthUserNotificationModel(S3Model):

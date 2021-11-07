@@ -22,7 +22,7 @@ def index_alt():
     """
 
     # Just redirect to the list of Events
-    s3_redirect_default(URL(f="event"))
+    s3_redirect_default(URL(f = "event"))
 
 # -----------------------------------------------------------------------------
 def create():
@@ -352,7 +352,8 @@ def scenario():
         RESTful CRUD controller
     """
 
-    return s3_rest_controller(rheader = s3db.event_rheader)
+    from s3db.event import event_rheader
+    return s3_rest_controller(rheader = event_rheader)
 
 # -----------------------------------------------------------------------------
 def sitrep():
@@ -384,7 +385,7 @@ def sitrep():
                 components = {dtablename: {"name": "answer",
                                            "joinby": "sitrep_id",
                                            "multiple": False,
-                                           }
+                                           },
                               }
                 s3db.add_components("event_sitrep", **components)
 

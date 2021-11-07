@@ -3097,12 +3097,11 @@ class EventSitRepModel(S3Model):
                                         "location_id",
                                         "date",
                                         "summary",
-                                        S3SQLInlineComponent(
-                                            "document",
-                                            name = "document",
-                                            label = T("Attachments"),
-                                            fields = [("", "file")],
-                                        ),
+                                        S3SQLInlineComponent("document",
+                                                             name = "document",
+                                                             label = T("Attachments"),
+                                                             fields = [("", "file")],
+                                                             ),
                                         "comments",
                                         )
 
