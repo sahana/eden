@@ -548,11 +548,8 @@ def config(settings):
         """
 
         auth = current.auth
-        withdraw_role = auth.s3_withdraw_role
-
-        auth = current.auth
-        add_membership = auth.add_membership
         system_roles = auth.get_system_roles()
+        withdraw_role = auth.s3_withdraw_role
 
         # Is this the Admin role?
         if group_id == system_roles.ADMIN:
@@ -715,7 +712,6 @@ def config(settings):
     # =========================================================================
     def customise_auth_user_resource(r, tablename):
 
-        # @ToDo: Call settings.auth.add_role via auth_membership_create_onaccept
         current.s3db.configure("auth_membership",
                                create_onaccept = auth_membership_create_onaccept,
                                )

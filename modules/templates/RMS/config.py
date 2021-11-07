@@ -10,7 +10,11 @@ from s3 import S3Method, S3Represent
 
 from .controllers import deploy_index, inv_dashboard
 
+# Organisation Type
 RED_CROSS = "Red Cross / Red Crescent"
+
+# Names of Orgs with specific settings
+HNRC = "Honduran Red Cross"
 
 def config(settings):
     """
@@ -463,9 +467,6 @@ def config(settings):
     settings.L10n.name_alt_gis_location = True
     # Uncomment this to Translate Organisation Names/Acronyms
     settings.L10n.translate_org_organisation = True
-
-    # Names of Orgs with specific settings
-    HNRC = "Honduran Red Cross"
 
     # -------------------------------------------------------------------------
     # Finance settings
@@ -1263,6 +1264,239 @@ def config(settings):
     #    else:
     #        # no default
     #        return {}
+
+    # -------------------------------------------------------------------------
+    def auth_add_role(user_id,
+                      group_id,
+                      for_pe = None,
+                      from_role_manager = True,
+                      ):
+        """
+            Automatically add subsidiary roles & set to appropriate entities
+        """
+
+        auth = current.auth
+        add_membership = auth.add_membership
+        system_roles = auth.get_system_roles()
+
+        if from_role_manager:
+            # Add the main Role
+            add_membership(group_id = group_id,
+                           user_id = user_id,
+                           )
+
+        # Is this the Admin role?
+        if group_id == system_roles.ADMIN:
+            # No Subsidiary Roles to add
+            return
+
+        db = current.db
+        gtable = db.auth_group
+
+        # Lookup the role
+        group = db(gtable.id == group_id).select(gtable.uuid,
+                                                 limitby = (0, 1),
+                                                 ).first()
+        role = group.uuid
+        if role in ("hn_user",
+                    "rms_user",
+                    "rc_logs_user",
+                    "logs_manager_national",
+                    "wh_operator_national",
+                    ):
+            # This is a Hidden role, so coming in advanced mode
+            # - don't do anything further
+            return
+
+        s3db = current.s3db
+
+        # Lookup the User Organisation
+        utable = db.auth_user
+        otable = s3db.org_organisation
+        query = (utable.id == user_id) & \
+                (otable.id == utable.organisation_id)
+        org = db(query).select(otable.id,
+                               otable.name,
+                               otable.pe_id,
+                               otable.root_organisation,
+                               limitby = (0, 1),
+                               ).first()
+        if not org:
+            # Default ADMIN in prepop: bail
+            return
+
+        # Lookup the root entity
+        root_org = org.root_organisation
+        if root_org == org.id:
+            ns_level = True
+            ns = org
+        else:
+            ns_level = False
+            ns = db(otable.id == root_org).select(otable.name,
+                                                  otable.pe_id,
+                                                  limitby = (0, 1),
+                                                  ).first()
+        ns_entity = ns.pe_id
+
+        # Add to relevant NS User role
+        if ns.name == HNRC:
+            user_role = "hn_user"
+        else:
+            user_role = "rms_user"
+        roles = [user_role,
+                 ]
+
+        # Add to additional roles for Logs Users
+        if role == "logs_manager":
+            if ns_level:
+                roles.append("rc_logs_user")
+            else:
+                roles += ["rc_logs_user",
+                          "logs_manager_national",
+                          ]
+        elif role == "wh_operator":
+            roles += ["rc_logs_user",
+                      "wh_operator_national",
+                      ]
+
+        if len(roles) == 1:
+            query = (gtable.uuid == roles[0])
+        else:
+            query = (gtable.uuid.belongs(roles))
+
+        groups = db(query).select(gtable.id,
+                                  gtable.uuid,
+                                  )
+        for group in groups:
+            if group.uuid == "rc_logs_user":
+                ogtable = s3db.org_group
+                org_group = db(ogtable.name == "RC").select(ogtable.pe_id,
+                                                            limitby = (0, 1),
+                                                            ).first()
+                add_membership(group_id = group.id,
+                               user_id = user_id,
+                               entity = org_group.pe_id,
+                               )
+            else:
+                add_membership(group_id = group.id,
+                               user_id = user_id,
+                               entity = ns_entity,
+                               )
+
+    settings.auth.add_role = auth_add_role
+
+    # -------------------------------------------------------------------------
+    def auth_remove_role(user_id, group_id, for_pe=None):
+        """
+            Automatically remove subsidiary roles
+        """
+
+        auth = current.auth
+        system_roles = auth.get_system_roles()
+        withdraw_role = auth.s3_withdraw_role
+
+        # Remove the main Role
+        withdraw_role(user_id, group_id)
+
+        # Is this the Admin role?
+        if group_id == system_roles.ADMIN:
+            # No Subsidiary Roles to remove
+            return
+
+        db = current.db
+        gtable = db.auth_group
+
+        logs_roles = ("logs_manager",
+                      "wh_operator",
+                      )
+
+        # Lookup the role
+        group = db(gtable.id == group_id).select(gtable.uuid,
+                                                 limitby = (0, 1),
+                                                 ).first()
+        role = group.uuid
+        if role not in logs_roles:
+            # Not a Logs role
+            # - don't do anything further
+            return
+
+        # Do they still have a Logs role?
+        mtable = db.auth_membership
+        query = (mtable.user_id == user_id) & \
+                (gtable.id == mtable.group_id) & \
+                (gtable.uuid.belongs(logs_roles))
+        memberships = db(query).select(mtable.id,
+                                       limitby = (0, 1),
+                                       ).first()
+        if not memberships:
+            # Withdraw the Logs RC role
+            group = db(gtable.uuid == "rc_logs_user").select(gtable.id,
+                                                       limitby = (0, 1),
+                                                       ).first()
+            withdraw_role(user_id, group.id, for_pe=[])  
+
+        # Lookup the User Organisation
+        utable = db.auth_user
+        otable = current.s3db.org_organisation
+        query = (utable.id == user_id) & \
+                (otable.id == utable.organisation_id)
+        org = db(query).select(otable.id,
+                               otable.pe_id,
+                               otable.root_organisation,
+                               limitby = (0, 1),
+                               ).first()
+        if not org:
+            # Default ADMIN in prepop: bail
+            return
+
+        # Lookup the root entity
+        root_org = org.root_organisation
+        if root_org == org.id:
+            if role == "logs_manager":
+                # No more subsidiary roles
+                return
+            ns = org
+        else:
+            ns = db(otable.id == root_org).select(otable.pe_id,
+                                                  limitby = (0, 1),
+                                                  ).first()
+        ns_entity = ns.pe_id
+
+        if role == "logs_manager":
+            ns_level = "logs_manager_national"
+        else:
+            # wh_operator
+            ns_level = "wh_operator_national"
+
+        group = db(gtable.uuid == ns_level).select(gtable.id,
+                                                   limitby = (0, 1),
+                                                   ).first()
+        withdraw_role(user_id, group.id, for_pe=ns_entity)
+
+    settings.auth.remove_role = auth_remove_role
+
+    # =========================================================================
+    def auth_membership_create_onaccept(form):
+        """
+            Automatically add subsidiary roles & set to appropriate entities
+        """
+
+        form_vars = form.vars
+
+        auth_add_role(form_vars.user_id,
+                      form_vars.group_id,
+                      for_pe = form_vars.pe_id,
+                      from_role_manager = False,
+                      )
+
+    # =========================================================================
+    def customise_auth_user_resource(r, tablename):
+
+        current.s3db.configure("auth_membership",
+                               create_onaccept = auth_membership_create_onaccept,
+                               )
+
+    settings.customise_auth_user_resource = customise_auth_user_resource
 
     # -------------------------------------------------------------------------
     def customise_auth_user_controller(**attr):

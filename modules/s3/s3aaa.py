@@ -345,69 +345,72 @@ Thank you"""
         gname = settings.table_group_name
         if not gtable:
             define_table(gname,
-                # Group unique ID, must be notnull+unique:
-                Field("uuid", length=64, notnull=True, unique=True,
-                      readable=False, writable=False),
-                # Group does not appear in the Role Manager:
-                # (can neither assign, nor modify, nor delete)
-                Field("hidden", "boolean",
-                      readable=False, writable=False,
-                      default=False),
-                # Group cannot be modified in the Role Manager:
-                # (can assign, but neither modify nor delete)
-                Field("system", "boolean",
-                      readable=False, writable=False,
-                      default=False),
-                # Group cannot be deleted in the Role Manager:
-                # (can assign and modify, but not delete)
-                Field("protected", "boolean",
-                      readable=False, writable=False,
-                      default=False),
-                # Role name:
-                Field("role", length=255, unique=True,
-                      default="",
-                      requires = IS_NOT_IN_DB(db, "%s.role" % gname),
-                      label = messages.label_role,
-                      ),
-                Field("description", "text",
-                      label = messages.label_description,
-                      ),
-                # Additional meta fields required for sync:
-                S3MetaFields.created_on(),
-                S3MetaFields.modified_on(),
-                S3MetaFields.deleted(),
-                #S3MetaFields.deleted_fk(),
-                #S3MetaFields.deleted_rb(),
-                migrate = migrate,
-                fake_migrate = fake_migrate,
-                )
+                         # Group unique ID, must be notnull+unique:
+                         Field("uuid", length=64, notnull=True, unique=True,
+                               readable=False, writable=False),
+                         # Group does not appear in the Role Manager (except in Advanced mode):
+                         # (can neither assign, nor modify, nor delete)
+                         Field("hidden", "boolean",
+                               readable=False, writable=False,
+                               default=False),
+                         # Group cannot be modified in the Role Manager:
+                         # (can assign, but neither modify nor delete)
+                         Field("system", "boolean",
+                               readable=False, writable=False,
+                               default=False),
+                         # Group cannot be deleted in the Role Manager:
+                         # (can assign and modify, but not delete)
+                         Field("protected", "boolean",
+                               readable=False, writable=False,
+                               default=False),
+                         # Role name:
+                         Field("role", length=255, unique=True,
+                               default="",
+                               requires = IS_NOT_IN_DB(db, "%s.role" % gname),
+                               label = messages.label_role,
+                               ),
+                         Field("description", "text",
+                               label = messages.label_description,
+                               ),
+                         # Additional meta fields required for sync:
+                         S3MetaFields.created_on(),
+                         S3MetaFields.modified_on(),
+                         S3MetaFields.deleted(),
+                         #S3MetaFields.deleted_fk(),
+                         #S3MetaFields.deleted_rb(),
+                         migrate = migrate,
+                         fake_migrate = fake_migrate,
+                         )
             gtable = settings.table_group = db[gname]
 
         # Group membership table (user<->role)
         if not settings.table_membership:
-            define_table(
-                settings.table_membership_name,
-                Field("user_id", utable,
-                      requires = IS_IN_DB(db, "%s.id" % uname,
-                                          "%(id)s: %(first_name)s %(last_name)s"),
-                      label = messages.label_user_id,
-                      ),
-                Field("group_id", gtable,
-                      requires = IS_IN_DB(db, "%s.id" % gname,
-                                          "%(id)s: %(role)s"),
-                      represent = S3Represent(lookup=gname, fields=["role"]),
-                      label = messages.label_group_id,
-                      ),
-                # Realm
-                Field("pe_id", "integer"),
-                migrate = migrate,
-                fake_migrate = fake_migrate,
-                *S3MetaFields.sync_meta_fields())
+            define_table(settings.table_membership_name,
+                         Field("user_id", utable,
+                               requires = IS_IN_DB(db, "%s.id" % uname,
+                                                   "%(id)s: %(first_name)s %(last_name)s"),
+                               label = messages.label_user_id,
+                               ),
+                         Field("group_id", gtable,
+                               requires = IS_IN_DB(db, "%s.id" % gname,
+                                                   "%(id)s: %(role)s"),
+                               represent = S3Represent(lookup = gname,
+                                                       fields = ["role"],
+                                                       ),
+                               label = messages.label_group_id,
+                               ),
+                         # Realm
+                         Field("pe_id", "integer"),
+                         migrate = migrate,
+                         fake_migrate = fake_migrate,
+                         *S3MetaFields.sync_meta_fields()
+                         )
             settings.table_membership = db[settings.table_membership_name]
 
         # Define Eden permission table
         self.permission.define_table(migrate = migrate,
-                                     fake_migrate = fake_migrate)
+                                     fake_migrate = fake_migrate,
+                                     )
 
         #security_policy = deployment_settings.get_security_policy()
         #if security_policy not in (1, 2, 3, 4, 5, 6, 7, 8) and \
@@ -441,35 +444,35 @@ Thank you"""
         # - date of most recent login is the most useful thing recorded, which we already record in the main auth_user table
         if not settings.table_event:
             request = current.request
-            define_table(
-                settings.table_event_name,
-                Field("time_stamp", "datetime",
-                      default = request.utcnow,
-                      #label = messages.label_time_stamp
-                      ),
-                Field("client_ip",
-                      default = request.client,
-                      #label=messages.label_client_ip
-                      ),
-                Field("user_id", utable,
-                      default = None,
-                      requires = IS_IN_DB(db, "%s.id" % uname,
-                                          "%(id)s: %(first_name)s %(last_name)s"),
-                      #label=messages.label_user_id
-                      ),
-                Field("origin", length=512,
-                      default = "auth",
-                      #label = messages.label_origin,
-                      requires = IS_NOT_EMPTY(),
-                      ),
-                Field("description", "text",
-                      default = "",
-                      #label = messages.label_description,
-                      requires = IS_NOT_EMPTY(),
-                      ),
-                migrate = migrate,
-                fake_migrate = fake_migrate,
-                *S3MetaFields.sync_meta_fields())
+            define_table(settings.table_event_name,
+                         Field("time_stamp", "datetime",
+                               default = request.utcnow,
+                               #label = messages.label_time_stamp
+                               ),
+                         Field("client_ip",
+                               default = request.client,
+                               #label=messages.label_client_ip
+                               ),
+                         Field("user_id", utable,
+                               default = None,
+                               requires = IS_IN_DB(db, "%s.id" % uname,
+                                                   "%(id)s: %(first_name)s %(last_name)s"),
+                               #label=messages.label_user_id
+                               ),
+                         Field("origin", length=512,
+                               default = "auth",
+                               #label = messages.label_origin,
+                               requires = IS_NOT_EMPTY(),
+                               ),
+                         Field("description", "text",
+                               default = "",
+                               #label = messages.label_description,
+                               requires = IS_NOT_EMPTY(),
+                               ),
+                         migrate = migrate,
+                         fake_migrate = fake_migrate,
+                         *S3MetaFields.sync_meta_fields()
+                         )
             settings.table_event = db[settings.table_event_name]
 
     # -------------------------------------------------------------------------
