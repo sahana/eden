@@ -183,7 +183,7 @@ class EventModel(S3Model):
                 msg_record_created = T("Disaster Type added"),
                 msg_record_modified = T("Disaster Type updated"),
                 msg_record_deleted = T("Disaster Type removed"),
-                msg_list_empty = T("No Disaster Types currently registered")
+                msg_list_empty = T("No Disaster Types currently registered"),
                 )
         else:
             label = T("Event Type")
@@ -198,7 +198,7 @@ class EventModel(S3Model):
                 msg_record_created = T("Event Type added"),
                 msg_record_modified = T("Event Type updated"),
                 msg_record_deleted = T("Event Type removed"),
-                msg_list_empty = T("No Event Types currently registered")
+                msg_list_empty = T("No Event Types currently registered"),
                 )
 
         event_type_id = S3ReusableField("event_type_id", "reference %s" % tablename,
@@ -208,8 +208,9 @@ class EventModel(S3Model):
                                         requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "event_event_type.id",
                                                               type_represent,
-                                                              orderby="event_event_type.name",
-                                                              sort=True)),
+                                                              orderby = "event_event_type.name",
+                                                              sort = True,
+                                                              )),
                                         sortby = "name",
                                         widget = event_type_widget,
                                         comment = event_type_comment,
@@ -240,14 +241,18 @@ class EventModel(S3Model):
                      # Use KV in event_event_tag
                      #Field("intensity",
                      #      label = T("Intensity"),
-                     #      comment = DIV(_class="tooltip",
-                     #                    _title="%s|%s" % (T("Intensity"),
-                     #                                      T("e.g. Category for a Typhoon or Magnitude for an Earthquake"))),
+                     #      comment = DIV(_class = "tooltip",
+                     #                    _title = "%s|%s" % (T("Intensity"),
+                     #                                        T("e.g. Category for a Typhoon or Magnitude for an Earthquake"),
+                     #                                        ),
+                     #                    ),
                      #      ),
                      self.org_organisation_id(
-                        comment = DIV(_class="tooltip",
-                                       _title="%s|%s" % (T("Organization"),
-                                                         T("The organization managing this event"))),
+                        comment = DIV(_class = "tooltip",
+                                      _title = "%s|%s" % (T("Organization"),
+                                                          T("The organization managing this event"),
+                                                          ),
+                                      ),
                         # Enable in the template if-required
                         readable = False,
                         writable = False,
@@ -258,10 +263,12 @@ class EventModel(S3Model):
                            represent = lambda opt: "√" if opt else NONE,
                            readable = exercise,
                            writable = exercise,
-                           #comment = DIV(_class="tooltip",
-                           #              _title="%s|%s" % (T("Exercise"),
-                                                           # Should!
-                           #                                T("Exercises mean all screens have a watermark & all notifications have a prefix."))),
+                           #comment = DIV(_class = "tooltip",
+                           #              _title = "%s|%s" % (T("Exercise"),
+                                                              # Should!
+                           #                                  T("Exercises mean all screens have a watermark & all notifications have a prefix."),
+                           #                                  ),
+                           #              ),
                            ),
                      s3_datetime("start_date",
                                  default = "now",
@@ -630,6 +637,8 @@ class EventModel(S3Model):
             Bookmark an Event
 
             S3Method for interactive requests
+
+            @ToDo: Use POST not GET
         """
 
         event_id = r.id
@@ -673,6 +682,8 @@ class EventModel(S3Model):
             Remove a Bookmark for an Event
 
             S3Method for interactive requests
+
+            @ToDo: Use POST not GET
         """
 
         event_id = r.id
@@ -707,6 +718,8 @@ class EventModel(S3Model):
 
             S3Method for interactive requests
             - designed to be called as an afterTagAdded callback to tag-it.js
+
+            @ToDo: Use POST not GET
         """
 
         event_id = r.id
@@ -767,6 +780,8 @@ class EventModel(S3Model):
 
             S3Method for interactive requests
             - designed to be called as an afterTagRemoved callback to tag-it.js
+
+            @ToDo: Use POST not GET
         """
 
         event_id = r.id
@@ -809,6 +824,8 @@ class EventModel(S3Model):
 
             S3Method for interactive requests
             - designed to be called via AJAX
+
+            @ToDo: Use POST not GET
         """
 
         event_id = r.id
@@ -859,6 +876,8 @@ class EventModel(S3Model):
 
             S3Method for interactive requests
             - designed to be called via AJAX
+
+            @ToDo: Use POST not GET
         """
 
         event_id = r.id
@@ -1215,7 +1234,7 @@ class IncidentLogModel(S3Model):
             msg_record_created = T("Log Entry added"),
             #msg_record_modified = T("Log Entry updated"),
             #msg_record_deleted = T("Log Entry removed"),
-            msg_list_empty = T("No Log Entries currently registered")
+            msg_list_empty = T("No Log Entries currently registered"),
             )
 
         self.configure(tablename,
@@ -1346,7 +1365,7 @@ class IncidentTypeModel(S3Model):
             msg_record_modified = T("Incident Type updated"),
             msg_record_deleted = T("Incident Type removed"),
             #msg_list_empty = T("No Incident Types currently registered in this event")
-            msg_list_empty = T("No Incident Types currently registered")
+            msg_list_empty = T("No Incident Types currently registered"),
             )
 
         if settings.get_incident_label(): # == "Ticket":
@@ -1902,7 +1921,8 @@ class EventBookmarkModel(S3Model):
         #    msg_record_created = T("Bookmark added"),
         #    msg_record_modified = T("Bookmark updated"),
         #    msg_record_deleted = T("Bookmark removed"),
-        #    msg_list_empty = T("No Incidents currently bookmarked"))
+        #    msg_list_empty = T("No Incidents currently bookmarked"),
+        #    )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -1952,7 +1972,8 @@ class EventCMSModel(S3Model):
         #    msg_record_created = T("Tag added"),
         #    msg_record_modified = T("Tag updated"),
         #    msg_record_deleted = T("Tag removed"),
-        #    msg_list_empty = T("No Posts currently tagged to this event"))
+        #    msg_list_empty = T("No Posts currently tagged to this event"),
+        #    )
 
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("event_id",
@@ -2112,7 +2133,8 @@ class EventForumModel(S3Model):
         #    msg_record_created = T("Incident Shared"),
         #    msg_record_modified = T("Sharing updated"),
         #    msg_record_deleted = T("Incident no longer shared"),
-        #    msg_list_empty = T("No Incidents currently shared"))
+        #    msg_list_empty = T("No Incidents currently shared"),
+        #    )
 
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary = ("event_id",
@@ -2245,7 +2267,8 @@ class EventHRModel(S3Model):
             msg_record_created = T("Human Resource assigned"),
             msg_record_modified = T("Human Resource Assignment updated"),
             msg_record_deleted = T("Human Resource unassigned"),
-            msg_list_empty = T("No Human Resources currently assigned to this incident"))
+            msg_list_empty = T("No Human Resources currently assigned to this incident"),
+            )
 
         list_fields = [#"incident_id", # Not being dropped in component view
                        "job_title_id",
@@ -2489,7 +2512,8 @@ class EventTeamModel(S3Model):
             msg_record_created = T("Team assigned"),
             msg_record_modified = T("Team Assignment updated"),
             msg_record_deleted = T("Team Assignment removed"),
-            msg_list_empty = T("No Teams currently assigned to this incident"))
+            msg_list_empty = T("No Teams currently assigned to this incident"),
+            )
 
         configure(tablename,
                   context = {"incident": "incident_id",
@@ -2563,7 +2587,8 @@ class EventImpactModel(S3Model):
         #    msg_record_created = T("Impact added"),
         #    msg_record_modified = T("Impact updated"),
         #    msg_record_deleted = T("Impact removed"),
-        #    msg_list_empty = T("No Impacts currently registered in this Event"))
+        #    msg_list_empty = T("No Impacts currently registered in this Event"),
+        #    )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -2603,7 +2628,8 @@ class EventMapModel(S3Model):
             msg_record_created = T("Map Profile added"),
             msg_record_modified = T("Map Profile updated"),
             msg_record_deleted = T("Map Profile removed"),
-            msg_list_empty = T("No Map Profiles currently registered in this incident"))
+            msg_list_empty = T("No Map Profiles currently registered in this incident"),
+            )
 
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary = ("incident_id",
@@ -2673,7 +2699,8 @@ class EventOrganisationModel(S3Model):
             msg_record_created = T("Organization added"),
             msg_record_modified = T("Organization updated"),
             msg_record_deleted = T("Organization removed"),
-            msg_list_empty = T("No Organizations currently registered in this incident"))
+            msg_list_empty = T("No Organizations currently registered in this incident"),
+            )
 
         self.configure(tablename,
                        context = {"incident": "incident_id",
@@ -2801,7 +2828,8 @@ class EventSiteModel(S3Model):
             msg_record_created = T("Facility added"),
             msg_record_modified = T("Facility updated"),
             msg_record_deleted = T("Facility removed"),
-            msg_list_empty = T("No Facilities currently registered in this incident"))
+            msg_list_empty = T("No Facilities currently registered in this incident"),
+            )
 
         if current.deployment_settings.has_module("budget"):
             crud_form = S3SQLCustomForm("incident_id",
@@ -3253,7 +3281,8 @@ class EventTaskModel(S3Model):
         #    msg_record_created = T("Task added"),
         #    msg_record_modified = T("Task updated"),
         #    msg_record_deleted = T("Task removed"),
-            msg_list_empty = T("No Tasks currently registered for this incident"))
+            msg_list_empty = T("No Tasks currently registered for this incident"),
+            )
 
         self.configure(tablename,
                        context = {"incident": "incident_id",
@@ -4022,6 +4051,8 @@ class IncidentModel(S3Model):
             Bookmark an Incident
 
             S3Method for interactive requests
+
+            @ToDo: Use POST not GET
         """
 
         incident_id = r.id
@@ -4065,6 +4096,8 @@ class IncidentModel(S3Model):
             Remove a Bookmark for an Incident
 
             S3Method for interactive requests
+
+            @ToDo: Use POST not GET
         """
 
         incident_id = r.id
@@ -4097,6 +4130,8 @@ class IncidentModel(S3Model):
 
             S3Method for interactive requests
             - designed to be called as an afterTagAdded callback to tag-it.js
+
+            @ToDo: Use POST not GET
         """
 
         incident_id = r.id
@@ -4156,6 +4191,8 @@ class IncidentModel(S3Model):
 
             S3Method for interactive requests
             - designed to be called as an afterTagRemoved callback to tag-it.js
+
+            @ToDo: Use POST not GET
         """
 
         incident_id = r.id
@@ -4197,6 +4234,8 @@ class IncidentModel(S3Model):
 
             S3Method for interactive requests
             - designed to be called via AJAX
+
+            @ToDo: Use POST not GET
         """
 
         incident_id = r.id
@@ -4247,6 +4286,8 @@ class IncidentModel(S3Model):
 
             S3Method for interactive requests
             - designed to be called via AJAX
+
+            @ToDo: Use POST not GET
         """
 
         incident_id = r.id
@@ -4550,7 +4591,8 @@ class ScenarioModel(S3Model):
             msg_record_created = T("Scenario added"),
             msg_record_modified = T("Scenario updated"),
             msg_record_deleted = T("Scenario deleted"),
-            msg_list_empty = T("No Scenarios currently registered"))
+            msg_list_empty = T("No Scenarios currently registered"),
+            )
 
         # Components
         self.add_components(tablename,
@@ -4714,7 +4756,8 @@ class ScenarioAssetModel(S3Model):
             msg_record_created = T("Asset added"),
             msg_record_modified = T("Asset updated"),
             msg_record_deleted = T("Asset removed"),
-            msg_list_empty = T("No Assets currently registered for this scenario"))
+            msg_list_empty = T("No Assets currently registered for this scenario"),
+            )
 
         self.configure(tablename,
                        context = {"scenario": "scenario_id",
@@ -4814,7 +4857,8 @@ class ScenarioHRModel(S3Model):
             msg_record_created = T("Human Resource assigned"),
             msg_record_modified = T("Human Resource Assignment updated"),
             msg_record_deleted = T("Human Resource unassigned"),
-            msg_list_empty = T("No Human Resources currently assigned to this scenario"))
+            msg_list_empty = T("No Human Resources currently assigned to this scenario"),
+            )
 
         self.configure(tablename,
                        context = {"scenario": "scenario_id",
@@ -4867,7 +4911,8 @@ class ScenarioOrganisationModel(S3Model):
             msg_record_created = T("Organization assigned"),
             msg_record_modified = T("Organization Assignment updated"),
             msg_record_deleted = T("Organization unassigned"),
-            msg_list_empty = T("No Organizations currently assigned to this scenario"))
+            msg_list_empty = T("No Organizations currently assigned to this scenario"),
+            )
 
         self.configure(tablename,
                        context = {"scenario": "scenario_id",
@@ -4921,7 +4966,8 @@ class ScenarioTaskModel(S3Model):
         #    msg_record_created = T("Task added"),
         #    msg_record_modified = T("Task updated"),
         #    msg_record_deleted = T("Task removed"),
-            msg_list_empty = T("No Tasks currently registered for this scenario"))
+            msg_list_empty = T("No Tasks currently registered for this scenario"),
+            )
 
         self.configure(tablename,
                        context = {"scenario": "scenario_id",
@@ -6398,6 +6444,7 @@ def event_notification_dispatcher(r, **attr):
     """
         Send a Dispatch notice from an Incident Report
             - this will be formatted as an OpenGeoSMS
+        @ToDo: Use POST not GET
     """
 
     if r.representation == "html" and \

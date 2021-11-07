@@ -227,6 +227,7 @@ def msg_channel_enable_interactive(r, **attr):
         - Schedule a Poll for new messages
 
         S3Method for interactive requests
+        @ToDo: Use POST not GET
     """
 
     tablename = r.tablename
@@ -288,6 +289,7 @@ def msg_channel_disable_interactive(r, **attr):
         - Remove schedule for Polling for new messages
 
         S3Method for interactive requests
+        @ToDo: Use POST not GET
     """
 
     tablename = r.tablename

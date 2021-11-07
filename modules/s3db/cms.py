@@ -1308,7 +1308,9 @@ def cms_rheader(r, tabs=None):
         rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
                                record.name
                                ),
-                            ), rheader_tabs)
+                            ),
+                      rheader_tabs,
+                      )
 
     elif resourcename == "post":
         # Tabs

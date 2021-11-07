@@ -1014,6 +1014,8 @@ def config_default(r, **attr):
     """
         Set a Config to be the default
             designed to be a custom method called by an action button
+
+        @ToDo: Use POST not GET
     """
 
     config_id = r.id
@@ -1165,16 +1167,16 @@ def config():
                             (FS("config.uuid") != "SITE_DEFAULT")
                     r.resource.add_filter(query)
                     list_fields.append("pe_default")
-                    CREATED_BY = T("Created By")
                     field = r.table.pe_id
-                    field.label = CREATED_BY
-                    field.represent = s3db.pr_PersonEntityRepresent(show_label = False,
-                                                                    show_type = False,
-                                                                    show_link = True,
-                                                                    )
+                    field.label = T("Created By")
+                    from s3db.pr import pr_PersonEntityRepresent
+                    field.represent = pr_PersonEntityRepresent(show_label = False,
+                                                               show_type = False,
+                                                               show_link = True,
+                                                               )
                     if auth.is_logged_in():
                         settings.search.filter_manager = False
-                        from s3.s3filter import S3OptionsFilter
+                        from s3 import S3OptionsFilter, S3SQLCustomForm
                         filter_widgets = [
                             S3OptionsFilter("pe_id",
                                             label = "",
@@ -1217,7 +1219,7 @@ def config():
                             fields += ["user_options.osm_oauth_consumer_key",
                                        "user_options.osm_oauth_consumer_secret",
                                        ]
-                        crud_form = s3base.S3SQLCustomForm(*fields)
+                        crud_form = S3SQLCustomForm(*fields)
                     else:
                         crud_form = None
                     s3db.configure("gis_config",
@@ -1410,6 +1412,8 @@ def enable_layer(r, **attr):
         Enable a Layer
             designed to be a custom method called by an action button
         @ToDo: Make this call an API function which can then also be used by CLI scripts (like msg_channel_enable)
+
+        @ToDo: Use POST not GET
     """
 
     if r.component_name != "layer_entity":
@@ -1429,6 +1433,8 @@ def disable_layer(r, **attr):
         Disable a Layer
             designed to be a custom method called by an action button in config/layer_entity
         @ToDo: Make this call an API function which can then also be used by CLI scripts (like msg_channel_disable)
+
+        @ToDo: Use POST not GET
     """
 
     if r.component_name != "layer_entity":
