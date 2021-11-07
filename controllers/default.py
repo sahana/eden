@@ -1114,21 +1114,15 @@ def person():
                                    #"wmsbrowser_url",
                                    #"wmsbrowser_name",
                                    ]
-                    osm_table = s3db.gis_layer_openstreetmap
-                    openstreetmap = db(osm_table.deleted == False).select(osm_table.id,
-                                                                          limitby = (0, 1)
-                                                                          )
-                    if openstreetmap:
-                        # OpenStreetMap config
-                        s3db.add_components("gis_config",
-                                            auth_user_options = {"joinby": "pe_id",
-                                                                 "pkey": "pe_id",
-                                                                 "multiple": False,
-                                                                 },
-                                           )
-                        crud_fields += ["user_options.osm_oauth_consumer_key",
-                                        "user_options.osm_oauth_consumer_secret",
-                                        ]
+                    #osm_table = s3db.gis_layer_openstreetmap
+                    #openstreetmap = db(osm_table.deleted == False).select(osm_table.id,
+                    #                                                      limitby = (0, 1)
+                    #                                                      )
+                    #if openstreetmap:
+                    #    # OpenStreetMap config
+                    #    crud_fields += ["osm_oauth_consumer_key",
+                    #                    "osm_oauth_consumer_secret",
+                    #                    ]
                     from s3 import S3SQLCustomForm
                     crud_form = S3SQLCustomForm(*crud_fields)
                     list_fields = ["name",

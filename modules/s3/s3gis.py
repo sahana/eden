@@ -6920,12 +6920,12 @@ class MAP(DIV):
                     options["config_id"] = config.id
 
             # OSM Authoring
-            pe_id = auth.user.pe_id if auth.s3_logged_in() else None
-            if pe_id and s3db.auth_user_options_get_osm(pe_id):
-                # Presence of label turns feature on in s3.gis.js
-                # @ToDo: Provide explicit option to support multiple maps in a page with different options
-                i18n["gis_potlatch"] = T("Edit the OpenStreetMap data for this area")
-                i18n["gis_osm_zoom_closer"] = T("Zoom in closer to Edit OpenStreetMap layer")
+            #pe_id = auth.user.pe_id if auth.s3_logged_in() else None
+            #if pe_id and s3db.gis_config_osm(pe_id):
+            #    # Presence of label turns feature on in s3.gis.js
+            #    # @ToDo: Provide explicit option to support multiple maps in a page with different options
+            #    i18n["gis_potlatch"] = T("Edit the OpenStreetMap data for this area")
+            #    i18n["gis_osm_zoom_closer"] = T("Zoom in closer to Edit OpenStreetMap layer")
 
             # MGRS PDF Browser
             mgrs = opts_get("mgrs", None)

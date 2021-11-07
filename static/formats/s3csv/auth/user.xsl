@@ -20,7 +20,7 @@
          Facility Type...........s3db[tablename]
          Office..................org_site.name
          Organisation Group......org_group.name
-         MasterKey..............auth_masterkey.name
+         MasterKey...............auth_masterkey.name
 
     *********************************************************************** -->
     <xsl:import href="../orgh.xsl"/>

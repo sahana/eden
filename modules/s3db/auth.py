@@ -34,7 +34,6 @@ __all__ = ("AuthConsentModel",
            "AuthUserOptionsModel",
            "AuthUserTempModel",
            "auth_consent_option_hash_fields",
-           "auth_user_options_get_osm",
            "auth_Consent",
            "auth_UserRepresent",
            )
@@ -520,29 +519,9 @@ class AuthUserOptionsModel(S3Model):
         # ---------------------------------------------------------------------
         # User Options
         #
-        OAUTH_KEY_HELP = "%s|%s|%s" % (T("OpenStreetMap OAuth Consumer Key"),
-                                       T("In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreetMap server.") % \
-                                            {"name_short": current.deployment_settings.get_system_name_short()},
-                                       T("Go to %(url)s, sign up & then register your application. You can put any URL in & you only need to select the 'modify the map' permission.") % \
-                                            {"url": A("http://www.openstreetmap.org",
-                                                      _href = "http://www.openstreetmap.org",
-                                                      _target = "blank",
-                                                      ),
-                                             },
-                                       )
-
         self.define_table("auth_user_options",
-                          self.super_link("pe_id", "pr_pentity"),
                           Field("user_id", current.auth.settings.table_user),
-                          Field("osm_oauth_consumer_key",
-                                label = T("OpenStreetMap OAuth Consumer Key"),
-                                comment = DIV(_class = "stickytip",
-                                              _title = OAUTH_KEY_HELP,
-                                              ),
-                                ),
-                          Field("osm_oauth_consumer_secret",
-                                label = T("OpenStreetMap OAuth Consumer Secret"),
-                                ),
+                          Field("options", "json")
                           *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -1374,24 +1353,6 @@ class auth_Consent(object):
                 (consenting == True)
 
         return query
-
-# =============================================================================
-def auth_user_options_get_osm(pe_id):
-    """
-        Gets the OSM-related options for a pe_id
-    """
-
-    db = current.db
-    table = current.s3db.auth_user_options
-    query = (table.pe_id == pe_id)
-    record = db(query).select(table.osm_oauth_consumer_key,
-                              table.osm_oauth_consumer_secret,
-                              limitby = (0, 1)
-                              ).first()
-    if record:
-        return record.osm_oauth_consumer_key, record.osm_oauth_consumer_secret
-    else:
-        return None
 
 # =============================================================================
 class auth_UserRepresent(S3Represent):

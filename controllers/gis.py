@@ -1204,21 +1204,15 @@ def config():
                                   #"wmsbrowser_url",
                                   #"wmsbrowser_name",
                                   ]
-                        osm_table = s3db.gis_layer_openstreetmap
-                        openstreetmap = db(osm_table.deleted == False).select(osm_table.id,
-                                                                              limitby = (0, 1),
-                                                                              )
-                        if openstreetmap:
-                            # OpenStreetMap config
-                            s3db.add_components("gis_config",
-                                                auth_user_options = {"joinby": "pe_id",
-                                                                     "pkey": "pe_id",
-                                                                     "multiple": False,
-                                                                     },
-                                               )
-                            fields += ["user_options.osm_oauth_consumer_key",
-                                       "user_options.osm_oauth_consumer_secret",
-                                       ]
+                        #osm_table = s3db.gis_layer_openstreetmap
+                        #openstreetmap = db(osm_table.deleted == False).select(osm_table.id,
+                        #                                                      limitby = (0, 1),
+                        #                                                      )
+                        #if openstreetmap:
+                        #    # OpenStreetMap config
+                        #    fields += ["osm_oauth_consumer_key",
+                        #               "osm_oauth_consumer_secret",
+                        #               ]
                         crud_form = S3SQLCustomForm(*fields)
                     else:
                         crud_form = None
@@ -1238,7 +1232,7 @@ def config():
                     msg_record_created = LAYER_ADDED,
                     msg_record_modified = LAYER_UPDATED,
                     msg_list_empty = T("No Layers currently configured in this Profile"),
-                )
+                    )
                 table =  s3db.gis_layer_entity
                 ltable = s3db.gis_layer_config
                 if r.method == "update":
@@ -3893,58 +3887,66 @@ def maps():
 # =============================================================================
 def potlatch2():
     """
-        Custom View for the Potlatch2 OpenStreetMap editor
+        Custom View for the old Potlatch2 OpenStreetMap editor
         http://wiki.openstreetmap.org/wiki/Potlatch_2
+
+        @ToDo: Update this to use iD instead
+               https://wiki.openstreetmap.org/wiki/ID
     """
 
-    config = gis.get_config()
-    pe_id = auth.s3_user_pe_id(auth.user.id) if auth.s3_logged_in() else None
-    opt = s3db.auth_user_options_get_osm(auth.user.pe_id) if pe_id else None
-    if opt:
-        osm_oauth_consumer_key, osm_oauth_consumer_secret = opt
-        gpx_url = None
-        if "gpx_id" in request.vars:
-            # Pass in a GPX Track
-            # @ToDo: Set the viewport based on the Track, if one is specified
-            table = s3db.gis_layer_track
-            query = (table.id == request.vars.gpx_id)
-            track = db(query).select(table.track,
-                                     limitby = (0, 1),
-                                     ).first()
-            if track:
-                gpx_url = "%s/%s" % (URL(c="default", f="download"),
-                                     track.track)
+    user = auth.user if auth.s3_logged_in() else None
+    if not user:
+        session.warning = T("To edit OpenStreetMap, you need to be logged-in")
+        redirect(URL(c="gis", f="index",
+                     ))
 
-        if "lat" in request.vars:
-            lat = request.vars.lat
-            lon = request.vars.lon
-        else:
-            lat = config.lat
-            lon = config.lon
-
-        if "zoom" in request.vars:
-            zoom = request.vars.zoom
-        else:
-            # This isn't good as it makes for too large an area to edit
-            #zoom = config.zoom
-            zoom = 14
-
-        site_name = settings.get_system_name_short()
-
-        return {"lat": lat,
-                "lon": lon,
-                "zoom": zoom,
-                "gpx_url": gpx_url,
-                "site_name": site_name,
-                "key": osm_oauth_consumer_key,
-                "secret": osm_oauth_consumer_secret,
-                }
-
-    else:
+    pe_id = auth.s3_user_pe_id(user.id)
+    opt = s3db.gis_config_osm(user.pe_id) if pe_id else None
+    if not opt:
         session.warning = T("To edit OpenStreetMap, you need to edit the OpenStreetMap settings in your Map Config")
         redirect(URL(c="pr", f="person",
                      args = ["config"],
                      ))
+
+    config = gis.get_config()
+    osm_oauth_consumer_key, osm_oauth_consumer_secret = opt
+    gpx_url = None
+    if "gpx_id" in request.vars:
+        # Pass in a GPX Track
+        # @ToDo: Set the viewport based on the Track, if one is specified
+        table = s3db.gis_layer_track
+        query = (table.id == request.vars.gpx_id)
+        track = db(query).select(table.track,
+                                 limitby = (0, 1),
+                                 ).first()
+        if track:
+            gpx_url = "%s/%s" % (URL(c="default", f="download"),
+                                 track.track)
+
+    if "lat" in request.vars:
+        lat = request.vars.lat
+        lon = request.vars.lon
+    else:
+        lat = config.lat
+        lon = config.lon
+
+    if "zoom" in request.vars:
+        zoom = request.vars.zoom
+    else:
+        # This isn't good as it makes for too large an area to edit
+        #zoom = config.zoom
+        zoom = 14
+
+    site_name = settings.get_system_name_short()
+
+    return {"lat": lat,
+            "lon": lon,
+            "zoom": zoom,
+            "gpx_url": gpx_url,
+            "site_name": site_name,
+            "key": osm_oauth_consumer_key,
+            "secret": osm_oauth_consumer_secret,
+            }
 
 # =============================================================================
 def proxy():

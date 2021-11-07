@@ -4491,9 +4491,10 @@ S3.gis.yx = [
         }
 
         // OpenStreetMap Editor
+        /*
         if (i18n.gis_potlatch) {
             addPotlatchButton(toolbar);
-        }
+        } */
 
         // Google Streetview
         if (options.Google && options.Google.svb) {
@@ -5592,6 +5593,7 @@ S3.gis.yx = [
      * Potlatch button for editing OpenStreetMap
      * @ToDo: Select a Polygon for editing rather than the whole Viewport
      */
+    /*
     var addPotlatchButton = function(toolbar) {
 
         var map = toolbar.map;
@@ -5615,7 +5617,7 @@ S3.gis.yx = [
         });
         toolbar.addSeparator();
         toolbar.addButton(potlatchButton);
-    };
+    }; */
 
     /**
      * Print button on Toolbar to save a screenshot

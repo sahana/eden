@@ -303,7 +303,8 @@ class S3MainMenu(object):
         """ GIS Config Menu """
 
         settings = current.deployment_settings
-        if not settings.get_gis_menu():
+        label = settings.get_gis_menu()
+        if not label:
             return None
 
         T = current.T
@@ -332,9 +333,9 @@ class S3MainMenu(object):
                     if settings.has_module("event"):
                         # See if this config is associated with an Incident
                         table = s3db.event_config
-                        query = (table.config_id == config)
-                        incident = db(query).select(table.incident_id,
-                                                    limitby=(0, 1)).first()
+                        incident = db(table.config_id == config).select(table.incident_id,
+                                                                        limitby = (0, 1),
+                                                                        ).first()
                         if incident:
                             s3.incident = incident.incident_id
                         else:
@@ -352,35 +353,40 @@ class S3MainMenu(object):
             # @ToDo: Search for OUs too (API call)
             query |= (table.pe_id == auth.user.pe_id)
         query &= (table.config_id == ctable.id)
-        configs = db(query).select(ctable.id, ctable.name, cache=cache)
+        configs = db(query).select(ctable.id,
+                                   ctable.name,
+                                   cache = cache,
+                                   )
 
-        gis_menu = MM(settings.get_gis_menu(),
-                      c=request.controller,
-                      f=request.function,
+        gis_menu = MM(label,
+                      c = request.controller,
+                      f = request.function,
                       **attr)
         args = request.args
         if len(configs):
             # Use short names for the site and personal configs else they'll wrap.
             # Provide checkboxes to select between pages
-            gis_menu(
-                    MM({"name": T("Default"),
-                        "id": "gis_menu_id_0",
-                        # @ToDo: Show when default item is selected without having
-                        # to do a DB query to read the value
-                        #"value": _config is 0,
-                        "request_type": "load"
-                       }, args=args, vars={"_config": 0}
-                    )
-                )
+            gis_menu(MM({"name": T("Default"),
+                         "id": "gis_menu_id_0",
+                         # @ToDo: Show when default item is selected without having
+                         # to do a DB query to read the value
+                         #"value": _config is 0,
+                         "request_type": "load"
+                         },
+                         args = args,
+                         vars = {"_config": 0},
+                        )
+                     )
             for config in configs:
-                gis_menu(
-                    MM({"name": config.name,
-                        "id": "gis_menu_id_%s" % config.id,
-                        "value": _config == config.id,
-                        "request_type": "load"
-                       }, args=args, vars={"_config": config.id}
-                    )
-                )
+                gis_menu(MM({"name": config.name,
+                             "id": "gis_menu_id_%s" % config.id,
+                             "value": _config == config.id,
+                             "request_type": "load"
+                             },
+                             args = args,
+                             vars = {"_config": config.id},
+                            )
+                         )
         return gis_menu
 
     # -------------------------------------------------------------------------

@@ -34,6 +34,7 @@ __all__ = ("LocationModel",
            "LocationHierarchyModel",
            "LocationRouteModel",
            "GISConfigModel",
+           "GISMenuModel",
            "LayerEntityModel",
            "LayerFeatureModel",
            "LayerMapModel",
@@ -1674,7 +1675,7 @@ class GISConfigModel(S3Model):
     """
 
     names = ("gis_config",
-             "gis_menu",
+             #"gis_config_osm",
              "gis_marker",
              "gis_projection",
              "gis_config_id",
@@ -1697,7 +1698,6 @@ class GISConfigModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        super_link = self.super_link
 
         # =====================================================================
         # GIS Markers (Icons)
@@ -1756,7 +1756,8 @@ class GISConfigModel(S3Model):
             msg_record_created = T("Marker added"),
             msg_record_modified = T("Marker updated"),
             msg_record_deleted = T("Marker deleted"),
-            msg_list_empty = T("No Markers currently available"))
+            msg_list_empty = T("No Markers currently available"),
+            )
 
         # Reusable field to include in other table definitions
         # @ToDo: Widget to include icons in dropdown: http://jqueryui.com/selectmenu/#custom_render
@@ -1771,7 +1772,7 @@ class GISConfigModel(S3Model):
                                                           zero = T("Use default"),
                                                           )),
                                     sortby = "name",
-                                    widget = S3SelectWidget(icons=self.gis_marker_options),
+                                    widget = S3SelectWidget(icons = self.gis_marker_options),
                                     comment=S3PopupLink(c = "gis",
                                                         f = "marker",
                                                         #vars = {"child": "marker_id",
@@ -1860,7 +1861,8 @@ class GISConfigModel(S3Model):
             msg_record_created = T("Projection added"),
             msg_record_modified = T("Projection updated"),
             msg_record_deleted = T("Projection deleted"),
-            msg_list_empty = T("No Projections currently defined"))
+            msg_list_empty = T("No Projections currently defined"),
+            )
 
         # Reusable field to include in other table definitions
         represent = S3Represent(lookup = tablename)
@@ -1919,7 +1921,7 @@ class GISConfigModel(S3Model):
                      Field("name"),
 
                      # pe_id for Personal/OU configs
-                     super_link("pe_id", "pr_pentity"),
+                     self.super_link("pe_id", "pr_pentity"),
                      # Gets populated onvalidation
                      Field("pe_type", "integer",
                            requires = IS_EMPTY_OR(IS_IN_SET(pe_types)),
@@ -1998,6 +2000,26 @@ class GISConfigModel(S3Model):
                            writable = False,
                            ),
 
+                     # Old functionality to support editing OSM data inside Eden, using Potlatch
+                     #Field("osm_oauth_consumer_key",
+                     #      label = T("OpenStreetMap OAuth Consumer Key"),
+                     #      comment = DIV(_class = "stickytip",
+                     #                    _title = "%s|%s|%s" % (T("OpenStreetMap OAuth Consumer Key"),
+                     #                                           T("In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreetMap server.") % \
+                     #                                               {"name_short": settings.get_system_name_short()},
+                     #                                           T("Go to %(url)s, sign up & then register your application. You can put any URL in & you only need to select the 'modify the map' permission.") % \
+                     #                                               {"url": A("http://www.openstreetmap.org",
+                     #                                                         _href = "http://www.openstreetmap.org",
+                     #                                                         _target = "blank",
+                     #                                                         ),
+                     #                                                },
+                     #                                           ),
+                     #                    ),
+                     #      ),
+                     #Field("osm_oauth_consumer_secret",
+                     #      label = T("OpenStreetMap OAuth Consumer Secret"),
+                     #      ),
+
                      Field("image", "upload",
                            autodelete = False,
                            custom_retrieve = gis_marker_retrieve,
@@ -2059,8 +2081,8 @@ class GISConfigModel(S3Model):
             msg_record_created = T("Map Profile added"),
             msg_record_modified = T("Map Profile updated"),
             msg_record_deleted = T("Map Profile deleted"),
-            msg_list_empty = T("No Map Profiles currently defined")
-        )
+            msg_list_empty = T("No Map Profiles currently defined"),
+            )
 
         configure(tablename,
                   create_next = URL(c="gis", f="config",
@@ -2096,40 +2118,9 @@ class GISConfigModel(S3Model):
                       deletable = False,
                       )
 
-        # =====================================================================
-        # GIS Menu Entries
-        #
-        # Entries in here decide whether a GIS menu appears for a user & which
-        # entries are included within it.
-        #
-        # If the pe_id field is blank then it applies to everyone
-        #
-        # Initially we just check the Person's
-        # @ToDo: Check for OUs too
-
-        tablename = "gis_menu"
-        define_table(tablename,
-                     config_id(empty = False),
-                     # Component, not instance
-                     super_link("pe_id", "pr_pentity"),
-                     *s3_meta_fields())
-
-        # Initially will be populated only when a Personal config is created
-        # CRUD Strings
-        # crud_strings[tablename] = Storage(
-            # label_create = T("Add Menu Entry"),
-            # title_display = T("Menu Entry Details"),
-            # title_list = T("Menu Entries"),
-            # title_update = T("Edit Menu Entry"),
-            # label_list_button = T("List Menu Entries"),
-            # label_delete_button = T("Delete Menu Entry"),
-            # msg_record_created = T("Menu Entry added"),
-            # msg_record_modified = T("Menu Entry updated"),
-            # msg_record_deleted = T("Menu Entry deleted"),
-            # msg_list_empty = T("No Menu Entries currently defined"))
-
         # Pass names back to global scope (s3.*)
         return {"gis_config_id": config_id,
+                #"gis_config_osm": self.gis_config_osm,
                 "gis_marker_id": marker_id,
                 "gis_projection_id": projection_id,
                 }
@@ -2217,9 +2208,9 @@ class GISConfigModel(S3Model):
                         (table.id != config_id)
                 db(query).update(pe_default = False)
             # Add to GIS Menu
-            db.gis_menu.update_or_insert(config_id = config_id,
-                                         pe_id = pe_id,
-                                         )
+            current.s3db.gis_menu.update_or_insert(config_id = config_id,
+                                                   pe_id = pe_id,
+                                                   )
         else:
             config = current.response.s3.gis.config
             if config and config.id == config_id:
@@ -2262,6 +2253,23 @@ class GISConfigModel(S3Model):
         s3 = current.response.s3
         if s3.gis.config and s3.gis.config.id == row.id:
             s3.gis.config = None
+
+    # -------------------------------------------------------------------------
+    #@staticmethod
+    #def gis_config_osm(pe_id):
+    #    """
+    #        Gets the OSM-related options for a pe_id
+    #    """
+
+    #    table = current.s3db.gis_config
+    #    record = current.db(table.pe_id == pe_id).select(table.osm_oauth_consumer_key,
+    #                                                     table.osm_oauth_consumer_secret,
+    #                                                     limitby = (0, 1)
+    #                                                     ).first()
+    #    if record:
+    #        return record.osm_oauth_consumer_key, record.osm_oauth_consumer_secret
+    #    else:
+    #        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2429,6 +2437,50 @@ class gis_MarkerRepresent(S3Represent):
                             ))
         return represent
 
+# =============================================================================
+class GISMenuModel(S3Model):
+
+    names = ("gis_menu",
+             )
+
+    def model(self):
+
+        # =====================================================================
+        # GIS Menu Entries
+        #
+        # Entries in here decide whether a GIS menu appears for a user & which
+        # entries are included within it.
+        #
+        # If the pe_id field is blank then it applies to everyone
+        #
+        # Initially we just check the Person's
+        # @ToDo: Check for OUs too
+
+        tablename = "gis_menu"
+        self.define_table(tablename,
+                          self.gis_config_id(empty = False),
+                          # Component, not instance
+                          self.super_link("pe_id", "pr_pentity"),
+                          *s3_meta_fields())
+
+        # Initially will be populated only when a Personal config is created
+        # CRUD Strings
+        # current.response.s3.crud_strings[tablename] = Storage(
+            # label_create = T("Add Menu Entry"),
+            # title_display = T("Menu Entry Details"),
+            # title_list = T("Menu Entries"),
+            # title_update = T("Edit Menu Entry"),
+            # label_list_button = T("List Menu Entries"),
+            # label_delete_button = T("Delete Menu Entry"),
+            # msg_record_created = T("Menu Entry added"),
+            # msg_record_modified = T("Menu Entry updated"),
+            # msg_record_deleted = T("Menu Entry deleted"),
+            # msg_list_empty = T("No Menu Entries currently defined"),
+            # )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
 # ==============================================================================
 class LayerEntityModel(S3Model):
     """
@@ -2500,7 +2552,7 @@ class LayerEntityModel(S3Model):
             msg_record_created = T("Layer added"),
             msg_record_modified = T("Layer updated"),
             msg_record_deleted = T("Layer deleted"),
-            msg_list_empty = T("No Layers currently defined")
+            msg_list_empty = T("No Layers currently defined"),
             )
 
         # Components
@@ -2578,7 +2630,7 @@ class LayerEntityModel(S3Model):
             msg_record_created = T("Profile Configured"),
             msg_record_modified = T("Profile Configuration updated"),
             msg_record_deleted = T("Profile Configuration removed"),
-            msg_list_empty = T("No Profiles currently have Configurations for this Layer")
+            msg_list_empty = T("No Profiles currently have Configurations for this Layer"),
             )
 
         self.configure(tablename,
@@ -2727,8 +2779,8 @@ class LayerEntityModel(S3Model):
             msg_record_created = T("Map Style added"),
             msg_record_modified = T("Map Style updated"),
             msg_record_deleted = T("Map Style deleted"),
-            msg_list_empty = T("No Map Styles currently defined")
-        )
+            msg_list_empty = T("No Map Styles currently defined"),
+            )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -4527,8 +4579,8 @@ class LayerThemeModel(S3Model):
             msg_record_created = T("Data added to Theme Layer"),
             msg_record_modified = T("Theme Data updated"),
             msg_record_deleted = T("Theme Data deleted"),
-            msg_list_empty = T("No Data currently defined for this Theme Layer")
-        )
+            msg_list_empty = T("No Data currently defined for this Theme Layer"),
+            )
 
         # Pass names back to global scope (s3.*)
         return {"gis_layer_theme_id": layer_theme_id, # Used by gis/theme_data for csv_extra_fields
@@ -4649,7 +4701,8 @@ class PoIModel(S3Model):
             msg_record_created = T("PoI Type added"),
             msg_record_modified = T("PoI Type updated"),
             msg_record_deleted = T("PoI Type deleted"),
-            msg_list_empty = T("No PoI Types currently available"))
+            msg_list_empty = T("No PoI Types currently available"),
+            )
 
         # ---------------------------------------------------------------------
         # PoI
@@ -4691,7 +4744,8 @@ class PoIModel(S3Model):
             msg_record_created = T("Point of Interest added"),
             msg_record_modified = T("Point of Interest updated"),
             msg_record_deleted = T("Point of Interest deleted"),
-            msg_list_empty = T("No Points of Interest currently available"))
+            msg_list_empty = T("No Points of Interest currently available"),
+            )
 
         #represent = S3Represent(lookup = tablename)
         #poi_id = S3ReusableField("poi_id", "reference %s" % tablename,
