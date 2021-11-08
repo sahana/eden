@@ -62,7 +62,7 @@ __all__ = ("WarehouseModel",
            "inv_recv_form",
            "inv_recv_rheader",
            #"inv_recv_process",
-           "inv_remove",
+           #"inv_remove",
            "inv_req_add_from_template", # Exported for Tasks
            #"inv_req_approve",
            "inv_req_approvers",
@@ -2045,9 +2045,11 @@ class InventoryKittingModel(S3Model):
                                                   filter_opts = (True,),
                                                   sort = True
                                                   ),
-                             widget = S3AutocompleteWidget("supply", "item",
-                                                           filter = "item.kit=1",
-                                                           ),
+                             # Not likely to be so many kits in the Catalog to need this:
+                             #widget = S3AutocompleteWidget("supply", "item",
+                             #                              filter = "item.kit=1",
+                             #                              ),
+                             widget = None,
                              # Needs better workflow as no way to add the Kit Items
                              #comment = S3PopupLink(c = "supply",
                              #                      f = "item",
@@ -2073,7 +2075,7 @@ class InventoryKittingModel(S3Model):
                                                                ),
                                            ),
                             ),
-                     self.inv_req_ref(writable = True),
+                     #self.inv_req_ref(writable = True),
                      self.pr_person_id("repacked_id",
                                        default = auth.s3_logged_in_person(),
                                        label = T("Repacked By"),
@@ -2130,11 +2132,11 @@ class InventoryKittingModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
-                     # @ToDo: Why duplicate this here?
-                     Field("site_id", "reference org_site",
-                           readable = False,
-                           writable = False,
-                           ),
+                     # Why duplicate this here?
+                     #Field("site_id", "reference org_site",
+                     #      readable = False,
+                     #      writable = False,
+                     #      ),
                      self.inv_item_id(ondelete = "RESTRICT",
                                       readable = False,
                                       writable = False,
@@ -2153,7 +2155,7 @@ class InventoryKittingModel(S3Model):
                      #s3_comments(),
                      *s3_meta_fields())
 
-        # Resource configuration
+        # This is a read-only Pick List
         configure(tablename,
                   deletable = False,
                   editable = False,
@@ -2260,46 +2262,33 @@ class InventoryKittingModel(S3Model):
                 reduce the components & increase the kits
             - picks items which have an earlier expiry_date where they have them,
               earlier purchase_data otherwise
+            - optimise to minimise the number of Bins remaining for an Item
             Provide a pick list to ensure that the right stock items are used
             to build the kits: inv_kitting_item
         """
 
         form_vars = form.vars
+
         kitting_id = form_vars.id
         item_id = form_vars.item_id
-        item_pack_id = form_vars.item_pack_id
-        quantity = form_vars.quantity
         site_id = form_vars.site_id
 
         db = current.db
         s3db = current.s3db
-        ktable = s3db.supply_kit_item
-        ptable = db.supply_item_pack
-        iitable = s3db.inv_inv_item
-        insert = s3db.inv_kitting_item.insert
 
         # Get contents of this kit
-        query = (ktable.parent_item_id == item_id)
-        rows = db(query).select(ktable.item_id,
-                                ktable.quantity,
-                                ktable.item_pack_id,
-                                )
+        ktable = s3db.supply_kit_item
+        kit_items = db(ktable.parent_item_id == item_id).select(ktable.item_id,
+                                                                ktable.quantity,
+                                                                ktable.item_pack_id,
+                                                                )
 
-        # How many kits are we building?
-        p_id_field = ptable.id
-        p_qty_field = ptable.quantity
-        pack_qty = db(p_id_field == item_pack_id).select(p_qty_field,
-                                                         limitby = (0, 1),
-                                                         ).first().quantity
-        quantity = quantity * pack_qty
+        iitable = s3db.inv_inv_item
 
         ii_id_field = iitable.id
-        ii_bin_field = iitable.layout_id
-        ii_pack_field = iitable.item_pack_id
-        ii_qty_field = iitable.quantity
+        ii_item_field = iitable.item_id
         ii_expiry_field = iitable.expiry_date
         ii_purchase_field = iitable.purchase_date
-        ii_src_field = iitable.item_source_no
 
         # Match Stock based on oldest expiry date or purchase date
         orderby = ii_expiry_field | ii_purchase_field
@@ -2314,76 +2303,187 @@ class InventoryKittingModel(S3Model):
                  ((ii_expiry_field >= current.request.now) | ((ii_expiry_field == None))) & \
                  (iitable.status == 0)
 
+        wh_packs = db(squery).select(iitable.item_pack_id)
+
+        # Lookup Packs
+        item_pack_id = int(form_vars.item_pack_id)
+        pack_ids = [row.item_pack_id for row in kit_items] + [row.item_pack_id for row in wh_packs]
+        pack_ids.append(item_pack_id)
+
+        ptable = db.supply_item_pack
+        packs = db(ptable.id.belongs(set(pack_ids))).select(ptable.id,
+                                                            ptable.quantity,
+                                                            )
+        packs = {p.id: p.quantity for p in packs}
+
+        # How many kits are we building?
+        quantity = form_vars.quantity * packs[item_pack_id]
+
+        # Common elements for query inside loop
+        ibtable = s3db.inv_inv_item_bin
+        ib_id_field = ibtable.id
+
+        fields = (ii_id_field,
+                  iitable.quantity,
+                  ii_expiry_field,
+                  ii_purchase_field, # Included just for orderby on Postgres
+                  iitable.item_pack_id,
+                  iitable.item_source_no,
+                  ib_id_field,
+                  ibtable.layout_id,
+                  ibtable.quantity,
+                  )
+
+        left = ibtable.on(ibtable.inv_item_id == ii_id_field)
+
         # Loop through each supply_item in the kit
-        for record in rows:
+        from operator import itemgetter
+        insert = s3db.inv_kitting_item.insert
+        inv_item_ids = []
+        append = inv_item_ids.append
+        for record in kit_items:
             # How much of this supply_item is required per kit?
-            pack_qty = db(p_id_field == record.item_pack_id).select(p_qty_field,
-                                                                    limitby = (0, 1),
-                                                                    ).first().quantity
-            one_kit = record.quantity * pack_qty
+            one_kit = record.quantity * packs[record.item_pack_id]
 
             # How much is required for all Kits?
             required = one_kit * quantity
 
             # List of what we have available in stock
             ritem_id = record.item_id
-            query = squery & (iitable.item_id == ritem_id)
+            query = squery & (ii_item_field == ritem_id)
 
-            wh_items = db(query).select(ii_id_field,
-                                        ii_qty_field,
-                                        ii_expiry_field,
-                                        ii_purchase_field, # Included just for orderby on Postgres
-                                        ii_pack_field,
-                                        ii_bin_field,
-                                        ii_src_field,
-                                        orderby = orderby,
-                                        )
-            for wh_item in wh_items:
-                # Get the pack_qty
-                pack_qty = db(p_id_field == wh_item.item_pack_id).select(p_qty_field,
-                                                                         limitby = (0, 1),
-                                                                         ).first().quantity
-                # How many of this item can we use for these kits?
-                amount = wh_item.quantity * pack_qty
-                # How many of this item will we use for the kits?
-                if amount > required:
-                    # Use only what is required
-                    amount = required
-                #else:
-                #    # We use all
+            rows = db(query).select(left = left,
+                                    orderby = orderby,
+                                    *fields)
 
-                if wh_item.expiry_date:
+            # Group by inv_item_id
+            inv_items = {}
+            for row in rows:
+                inv_item_id = row["inv_inv_item.id"]
+                if inv_item_id in inv_items:
+                    inv_items[inv_item_id].append(row)
+                else:
+                    inv_items[inv_item_id] = [row]
+
+            for inv_item_id in inv_items:
+                append(inv_item_id)
+                binned_quantity = 0
+                bins = inv_items[inv_item_id]
+                inv_item = bins[0].inv_inv_item
+
+                if inv_item.expiry_date:
                     if expiry_date is None:
                         # No expiry date set so this item starts the list
-                        expiry_date = wh_item.expiry_date
+                        expiry_date = inv_item.expiry_date
                     else:
                         # Shorten the expiry date if less than for previous items
-                        if wh_item.expiry_date < expiry_date:
-                            expiry_date = wh_item.expiry_date
+                        if inv_item.expiry_date < expiry_date:
+                            expiry_date = inv_item.expiry_date
 
-                # @ToDo: Record which components are to be used for the kits
-                # Store results in a table?
+                # How many of this item can we use for these kits?
+                inv_quantity = inv_item.quantity
+                pack_quantity = packs[inv_item.item_pack_id]
+                inv_amount = inv_quantity * pack_quantity
+                # How many of this item will we use for the kits?
+                if inv_amount > required:
+                    # Use only what is required
+                    inv_amount = required
+                    inv_quantity -= (inv_amount / pack_quantity)
+                else:
+                    # We use all
+                    inv_quantity = 0
 
-                # Remove from stock
-                inv_remove(wh_item, amount)
+                if len(bins) > 1:
+                    # Multiple Bins
+                    binned_quantity = 0
+                    inv_bins = [row.inv_inv_item_bin for row in bins]
+                    # Optimise to minimise the number of Bins remaining for an Item
+                    inv_bins.sort(key = itemgetter("quantity"))
+                    for inv_bin in inv_bins:
+                        bin_quantity = inv_bin.quantity
+                        binned_quantity += bin_quantity
+                        bin_amount = bin_quantity * pack_quantity
+                        # How many from this bin will we use for the kits?
+                        if bin_amount > required:
+                            # Use only what is required
+                            bin_amount = required
+                            bin_quantity -= (bin_amount / pack_quantity)
+                        else:
+                            # We use all
+                            bin_quantity = 0
 
-                # Add to Pick List
-                new_record = {"site_id": site_id,
-                              "kitting_id": kitting_id,
-                              "item_id": ritem_id,
-                              "item_pack_id": wh_item.item_pack_id,
-                              "item_source_no": wh_item.item_source_no,
-                              "quantity": amount,
-                              "inv_item_id": wh_item.id,
-                              "layout_id": wh_item.layout_id,
-                              }
-                insert(**new_record)
+                        # Update the Bin
+                        db(ib_id_field == inv_bin.id).update(quantity = bin_quantity)
 
-                # Update how much is still required
-                required -= amount
+                        # Add to Pick List
+                        insert(kitting_id = kitting_id,
+                               item_id = ritem_id,
+                               item_pack_id = inv_item.item_pack_id,
+                               item_source_no = inv_item.item_source_no,
+                               quantity = bin_amount,
+                               inv_item_id = inv_item_id,
+                               layout_id = inv_bin.layout_id,
+                               )
+
+                        # Update how much is still required
+                        required -= bin_amount
+
+                        if not required:
+                            # No more required: move on to the next inv_item_id
+                            break
+
+                    if binned_quantity < inv_quantity:
+                        # We still have some unbinned to take from
+                        unbinned_quantity = inv_quantity - binned_quantity
+                        unbinned_amount = unbinned_quantity * pack_quantity
+                        # How many of this will we use for the kits?
+                        if unbinned_amount > required:
+                            # Use only what is required
+                            unbinned_amount = required
+                        #else:
+                        #    # We use all
+
+                        # Add to Pick List
+                        insert(kitting_id = kitting_id,
+                               item_id = ritem_id,
+                               item_pack_id = inv_item.item_pack_id,
+                               item_source_no = inv_item.item_source_no,
+                               quantity = unbinned_amount,
+                               inv_item_id = inv_item_id,
+                               #layout_id = None,
+                               )
+
+                        # Update how much is still required
+                        required -= unbinned_amount
+                    
+                else:
+                    inv_bin = bins[0].inv_inv_item_bin
+                    layout_id = inv_bin.layout_id
+                    if layout_id:
+                        # Single Bin
+                        # Update the Bin
+                        db(ib_id_field == inv_bin.id).update(quantity = inv_quantity)
+                    #else:
+                    #    # Unbinned
+
+                    # Add to Pick List
+                    insert(kitting_id = kitting_id,
+                           item_id = ritem_id,
+                           item_pack_id = inv_item.item_pack_id,
+                           item_source_no = inv_item.item_source_no,
+                           quantity = inv_amount,
+                           inv_item_id = inv_item_id,
+                           layout_id = layout_id,
+                           )
+
+                    # Update how much is still required
+                    required -= inv_amount
+
+                # Update Inv Quantity
+                db(ii_id_field == inv_item_id).update(quantity = inv_quantity)
 
                 if not required:
-                    # No more required: move on to the next component
+                    # No more required: move on to the next kit_item
                     break
 
         # Add Kits to Stock
@@ -2395,7 +2495,14 @@ class InventoryKittingModel(S3Model):
                                 quantity = quantity,
                                 expiry_date = expiry_date,
                                 )
+        # supply_item_entity
         s3db.update_super(iitable, {"id": new_id})
+
+        if current.deployment_settings.get_inv_stock_cards():
+            append(new_id)
+            inv_stock_card_update(inv_item_ids,
+                                  comments = "Kitting",
+                                  )
 
 # =============================================================================
 class InventoryMinimumModel(S3Model):
@@ -12028,6 +12135,7 @@ def inv_req_send(r, **attr):
             iitem = item.inv_inv_item
             if one_match:
                 # Remove this total from the warehouse stock
+                # @ToDo: inv_remove doesn't handle Bins
                 send_item_quantity = inv_remove(iitem, quantity_needed)
                 quantity_needed -= send_item_quantity
                 append(iitem.id)
@@ -12366,11 +12474,11 @@ def inv_rheader(r):
         rheader_tabs = DIV(s3_rheader_tabs(r, tabs))
 
         # Header
-        rheader = DIV(TABLE(TR(TH("%s: " % table.req_ref.label),
-                               TD(table.req_ref.represent(record.req_ref),
-                                  _colspan = 3,
-                                  ),
-                               ),
+        rheader = DIV(TABLE(#TR(TH("%s: " % table.req_ref.label),
+                            #   TD(table.req_ref.represent(record.req_ref),
+                            #      _colspan = 3,
+                            #      ),
+                            #   ),
                             TR(TH("%s: " % table.item_id.label),
                                table.item_id.represent(record.item_id),
                                TH("%s: " % table.item_pack_id.label),
