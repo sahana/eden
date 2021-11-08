@@ -3762,11 +3762,12 @@ Thank you"""
                                                             filter_opts = org_ids,
                                                             )
 
-        from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineLink, s3_options_represent
-
         f = table.transport_type
-        f.requires = IS_IN_SET(transport_opts)
-        f.represent = s3_options_represent(transport_opts)
+        requires = f.requires
+        if hasattr(requires, "other"):
+            f.requires = requires.other
+
+        from s3 import S3SQLCustomForm, S3SQLInlineLink#, IS_ONE_OF
 
         crud_form = S3SQLCustomForm(S3SQLInlineLink("req",
                                                     field = "req_id",
@@ -3786,6 +3787,9 @@ Thank you"""
                                     "sender_id",
                                     "recipient_id",
                                     "transport_type",
+                                    "transported_by",
+                                    "transport_ref",
+                                    "registration_no",
                                     "status",
                                     "grn_status",
                                     "cert_status",
@@ -3938,11 +3942,12 @@ Thank you"""
         from .controllers import org_SiteRepresent
         table.to_site_id.requires.other.label = org_SiteRepresent()
 
-        from s3 import S3SQLCustomForm, S3SQLInlineLink, s3_options_represent
+        from s3 import S3SQLCustomForm, S3SQLInlineLink
 
         f = table.transport_type
-        f.requires = IS_IN_SET(transport_opts)
-        f.represent = s3_options_represent(transport_opts)
+        requires = f.requires
+        if hasattr(requires, "other"):
+            f.requires = requires.other
 
         crud_form = S3SQLCustomForm(S3SQLInlineLink("req",
                                                     field = "req_id",
@@ -3958,9 +3963,9 @@ Thank you"""
                                     "transport_type",
                                     "transported_by",
                                     "transport_ref",
-                                    "driver_name",
-                                    "driver_phone",
-                                    "vehicle_plate_no",
+                                    "registration_no",
+                                    #"driver_name",
+                                    #"driver_phone",
                                     # Will only appear in Update forms:
                                     "date",
                                     "delivery_date",
@@ -3985,7 +3990,7 @@ Thank you"""
                                       "status",
                                       #"driver_name",
                                       #"driver_phone",
-                                      #"vehicle_plate_no",
+                                      #"registration_no",
                                       #"time_out",
                                       #"comments",
                                       ],

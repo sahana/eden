@@ -4772,6 +4772,12 @@ class InventoryTrackingModel(S3Model):
         radio_widget = lambda field, value: \
                               RadioWidget().widget(field, value, cols = 2)
 
+        transport_opts = {"Air": T("Air"),
+                          "Sea": T("Sea"),
+                          "Road": T("Road"),
+                          "Hand": T("Hand"),
+                          }
+
         # ---------------------------------------------------------------------
         # Send (Outgoing / Dispatch / etc)
         #
@@ -4849,7 +4855,8 @@ class InventoryTrackingModel(S3Model):
                                ),
                      Field("transport_type",
                            label = T("Type of Transport"),
-                           represent = string_represent,
+                           represent = s3_options_represent(transport_opts),
+                           requires = IS_EMPTY_OR(IS_IN_SET(transport_opts)),
                            ),
                      Field("transported_by",
                            label = T("Transported by"),
@@ -4861,11 +4868,22 @@ class InventoryTrackingModel(S3Model):
                                          ),
                            ),
                      Field("transport_ref",
+                           #label = "AWB No", Air WayBill
+                           #label = "B/L No", Bill of Lading (Sea)
                            label = T("Transport Reference"),
                            represent = string_represent,
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" % (T("Transport Reference"),
-                                                             T("Consignment Number, Tracking Number, etc"),
+                                                             T("Air WayBill, Bill of Lading, Consignment Number, Tracking Number, etc"),
+                                                             ),
+                                         ),
+                           ),
+                     Field("registration_no",
+                           label = T("Registration Number"),
+                           represent = string_represent,
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Registration Number"),
+                                                             T("Flight Number, Vheicle Plate Number, Vessel Registration, etc"),
                                                              ),
                                          ),
                            ),
@@ -4877,10 +4895,6 @@ class InventoryTrackingModel(S3Model):
                            label = T("Driver Phone Number"),
                            represent = lambda v: v or "",
                            requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI()),
-                           ),
-                     Field("vehicle_plate_no",
-                           label = T("Vehicle Plate Number"),
-                           represent = string_represent,
                            ),
                      Field("time_in", "time",
                            label = T("Time In"),
@@ -5039,7 +5053,7 @@ class InventoryTrackingModel(S3Model):
                        "transport_type",
                        "driver_name",
                        "driver_phone",
-                       "vehicle_plate_no",
+                       "registration_no",
                        "time_out",
                        "comments",
                        ]
@@ -5147,10 +5161,37 @@ class InventoryTrackingModel(S3Model):
                                ),
                      Field("transport_type",
                            label = T("Type of Transport"),
-                           # Enable in template as-required
-                           readable = False,
-                           writable = False,
+                           represent = s3_options_represent(transport_opts),
+                           requires = IS_EMPTY_OR(IS_IN_SET(transport_opts)),
+                           ),
+                     Field("transported_by",
+                           label = T("Transported by"),
                            represent = string_represent,
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Transported by"),
+                                                             T("Freight company or organisation providing transport"),
+                                                             ),
+                                         ),
+                           ),
+                     Field("transport_ref",
+                           #label = "AWB No", Air WayBill
+                           #label = "B/L No", Bill of Lading (Sea)
+                           label = T("Transport Reference"),
+                           represent = string_represent,
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Transport Reference"),
+                                                             T("Air WayBill, Bill of Lading, Consignment Number, Tracking Number, etc"),
+                                                             ),
+                                         ),
+                           ),
+                     Field("registration_no",
+                           label = T("Registration Number"),
+                           represent = string_represent,
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Registration Number"),
+                                                             T("Flight Number, Vheicle Plate Number, Vessel Registration, etc"),
+                                                             ),
+                                         ),
                            ),
                      Field("status", "integer",
                            default = SHIP_STATUS_IN_PROCESS,
@@ -8909,6 +8950,23 @@ def inv_recv_controller():
                     s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv.js" % r.application)
                 else:
                     s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv.min.js" % r.application)
+                if recvtable.transport_type.writable:
+                    s3.js_global.append(
+'''i18n.AWB='%s'
+i18n.BL='%s'
+i18n.ref='%s'
+i18n.flight='%s'
+i18n.vessel='%s'
+i18n.vehicle='%s'
+i18n.reg='%s'
+''' % (T("AWB No"),
+       T("B/L No"),
+       T("Transport Reference"),
+       T("Flight"),
+       T("Vessel"),
+       T("Vehicle Plate Number"),
+       T("Registration Number"),
+       ))
                 # Only allow External Shipment Types (Internal Shipments have the recv auto-created)
                 # - no, need to be able to support Internal Shipments from sites not using the system
                 #recvtable.type.requires = IS_IN_SET(settings.get_inv_recv_types())
@@ -8937,6 +8995,19 @@ def inv_recv_controller():
                                            f.represent,
                                            sort = True,
                                            )
+            elif record:
+                transport_type = record.transport_type
+                if transport_type == "Air":
+                    recvtable.transport_ref.label = T("AWB No")
+                    recvtable.registration_no.label = T("Flight")
+                elif transport_type == "Sea":
+                    recvtable.transport_ref.label = T("B/L No")
+                    recvtable.registration_no.label = T("Vessel")
+                elif transport_type == "Road":
+                    recvtable.registration_no.label = T("Vehicle Plate Number")
+                elif transport_type == "Hand":
+                    recvtable.transport_ref.readable = False
+                    recvtable.registration_no.readable = False
 
         return True
     s3.prep = prep
@@ -10705,12 +10776,12 @@ def inv_req_drivers(row):
             (stable.req_ref == req_ref)
     drivers = current.db(query).select(stable.driver_name,
                                        stable.driver_phone,
-                                       stable.vehicle_plate_no,
+                                       stable.registration_no,
                                        )
     if drivers:
         drivers = ["%s %s %s" % (driver.driver_name or "",
                                  driver.driver_phone or "",
-                                 driver.vehicle_plate_no or "") \
+                                 driver.registration_no or "") \
                    for driver in drivers]
         return ",".join(drivers)
 
@@ -13303,36 +13374,66 @@ S3.supply.site_id=%s%s''' % (json.dumps(inv_data, separators=SEPARATORS),
                 set_send_attr(SHIP_STATUS_IN_PROCESS)
                 sendtable.send_ref.readable = False
 
-            if settings.get_inv_send_req() and \
-               (r.method == "create" or \
+            if (r.method == "create" or \
                 (r.method == "update" and record.status == SHIP_STATUS_IN_PROCESS)):
-                # Filter Requests to those which are:
-                # - Approved (or Open)
-                # - Have Items Requested From our sites which are not yet in-Transit/Fulfilled
-                sites = sendtable.site_id.requires.options(zero = False)
-                site_ids = [site[0] for site in sites]
-                rtable = s3db.inv_req
-                ritable = s3db.inv_req_item
-                if len(site_ids) > 1:
-                    site_query = (ritable.site_id.belongs(site_ids))
-                    if s3.debug:
-                        s3.scripts.append("/%s/static/scripts/S3/s3.inv_send.js" % r.application)
+                if s3.debug:
+                    s3.scripts.append("/%s/static/scripts/S3/s3.inv_send.js" % r.application)
+                else:
+                    s3.scripts.append("/%s/static/scripts/S3/s3.inv_send.min.js" % r.application)
+                if sendtable.transport_type.writable:
+                    s3.js_global.append(
+'''i18n.AWB='%s'
+i18n.BL='%s'
+i18n.ref='%s'
+i18n.flight='%s'
+i18n.vessel='%s'
+i18n.vehicle='%s'
+i18n.reg='%s'
+''' % (T("AWB No"),
+       T("B/L No"),
+       T("Transport Reference"),
+       T("Flight"),
+       T("Vessel"),
+       T("Vehicle Plate Number"),
+       T("Registration Number"),
+       ))
+                if settings.get_inv_send_req():
+                    # Filter Requests to those which are:
+                    # - Approved (or Open)
+                    # - Have Items Requested From our sites which are not yet in-Transit/Fulfilled
+                    sites = sendtable.site_id.requires.options(zero = False)
+                    site_ids = [site[0] for site in sites]
+                    rtable = s3db.inv_req
+                    ritable = s3db.inv_req_item
+                    if len(site_ids) > 1:
+                        site_query = (ritable.site_id.belongs(site_ids))
                     else:
-                        s3.scripts.append("/%s/static/scripts/S3/s3.inv_send.min.js" % r.application)
-                else:
-                    site_query = (ritable.site_id == site_ids[0])
-                query = (rtable.id == ritable.req_id) & \
-                        site_query & \
-                        (ritable.quantity_transit < ritable.quantity)
-                if settings.get_inv_req_workflow():
-                    query = (rtable.workflow_status == 3) & query
-                else:
-                    query = (rtable.fulfil_status.belongs((REQ_STATUS_NONE, REQ_STATUS_PARTIAL))) & query
-                f = s3db.inv_send_req.req_id
-                f.requires = IS_ONE_OF(db(query), "inv_req.id",
-                                       f.represent,
-                                       sort = True,
-                                       )
+                        site_query = (ritable.site_id == site_ids[0])
+                    query = (rtable.id == ritable.req_id) & \
+                            site_query & \
+                            (ritable.quantity_transit < ritable.quantity)
+                    if settings.get_inv_req_workflow():
+                        query = (rtable.workflow_status == 3) & query
+                    else:
+                        query = (rtable.fulfil_status.belongs((REQ_STATUS_NONE, REQ_STATUS_PARTIAL))) & query
+                    f = s3db.inv_send_req.req_id
+                    f.requires = IS_ONE_OF(db(query), "inv_req.id",
+                                           f.represent,
+                                           sort = True,
+                                           )
+            elif record:
+                transport_type = record.transport_type
+                if transport_type == "Air":
+                    sendtable.transport_ref.label = T("AWB No")
+                    sendtable.registration_no.label = T("Flight")
+                elif transport_type == "Sea":
+                    sendtable.transport_ref.label = T("B/L No")
+                    sendtable.registration_no.label = T("Vessel")
+                elif transport_type == "Road":
+                    sendtable.registration_no.label = T("Vehicle Plate Number")
+                elif transport_type == "Hand":
+                    sendtable.transport_ref.readable = False
+                    sendtable.registration_no.readable = False
 
         return True
     s3.prep = prep
@@ -13832,6 +13933,9 @@ def inv_send_process(r, **attr):
             "recipient_id": record.recipient_id,
             "site_id": record.to_site_id,
             "transport_type": record.transport_type,
+            "transported_by": record.transported_by,
+            "transport_ref": record.transport_ref,
+            "registration_no": record.registration_no,
             "comments": record.comments,
             "status": SHIP_STATUS_SENT,
             "type": 1, # "Another Inventory"

@@ -6371,7 +6371,7 @@ def config(settings):
                                               "status",
                                               #"driver_name",
                                               #"driver_phone",
-                                              #"vehicle_plate_no",
+                                              #"registration_no",
                                               #"time_out",
                                               "comments",
                                               ],
