@@ -2113,7 +2113,7 @@ class InventoryKittingModel(S3Model):
                                     ),
                   create_onaccept = self.inv_kitting_onaccept,
                   list_fields = ["site_id",
-                                 "req_ref",
+                                 #"req_ref",
                                  "quantity",
                                  "date",
                                  "repacked_id",
@@ -2175,65 +2175,64 @@ class InventoryKittingModel(S3Model):
         """
 
         form_vars = form.vars
+
         item_id = form_vars.item_id
-        item_pack_id = form_vars.item_pack_id
         quantity = form_vars.quantity
         site_id = form_vars.site_id
 
         db = current.db
         s3db = current.s3db
-        ktable = s3db.supply_kit_item
-        ptable = db.supply_item_pack
-        iitable = s3db.inv_inv_item
 
         # Get contents of this kit
-        query = (ktable.parent_item_id == item_id)
-        rows = db(query).select(ktable.item_id,
-                                ktable.quantity,
-                                ktable.item_pack_id,
-                                )
+        ktable = s3db.supply_kit_item
+        kit_items = db(ktable.parent_item_id == item_id).select(ktable.item_id,
+                                                                ktable.quantity,
+                                                                ktable.item_pack_id,
+                                                                )
+        item_ids = [row.item_id for row in kit_items]
 
+        # Lookup the Stock of these component items
+        iitable = s3db.inv_inv_item
+        ii_expiry_field = iitable.expiry_date
+
+        # Filter out Stock which is in Bad condition or Expired
+        query = (iitable.site_id == site_id) & \
+                (iitable.item_id.belongs(item_ids)) & \
+                (iitable.quantity > 0) & \
+                ((ii_expiry_field >= current.request.now) | ((ii_expiry_field == None))) & \
+                (iitable.status == 0)
+
+        wh_items = db(query).select(iitable.item_id,
+                                    iitable.quantity,
+                                    iitable.item_pack_id,
+                                    )
+
+        # Lookup Packs
+        item_pack_id = int(form_vars.item_pack_id)
+        item_pack_ids = [row.item_pack_id for row in kit_items] + [row.item_pack_id for row in wh_items]
+        item_pack_ids.append(item_pack_id)
+
+        ptable = db.supply_item_pack
+        packs = db(ptable.id.belongs(set(item_pack_ids))).select(ptable.id,
+                                                                 ptable.quantity,
+                                                                 )
+        packs = {p.id: p.quantity for p in packs}
+        
         # How many kits are we building?
-        p_id_field = ptable.id
-        p_qty_field = ptable.quantity
-        pack_qty = db(p_id_field == item_pack_id).select(p_qty_field,
-                                                         limitby = (0, 1),
-                                                         ).first().quantity
-        quantity = quantity * pack_qty
+        quantity = quantity * packs[item_pack_id]
 
         max_kits = None
 
-        ii_pack_field = iitable.item_pack_id
-        ii_qty_field = iitable.quantity
-        ii_expiry_field = iitable.expiry_date
-
-        # Base Query: The Facility at which we're building these kits
-        # Filter out Stock which is in Bad condition or Expired
-        squery = (iitable.site_id == site_id) & \
-                 (iitable.deleted == False) & \
-                 ((ii_expiry_field >= current.request.now) | ((ii_expiry_field == None))) & \
-                 (iitable.status == 0)
-
         # Loop through each supply_item in the kit
-        for record in rows:
+        for kit_item in kit_items:
             # How much of this supply_item is required per kit?
-            pack_qty = db(p_id_field == record.item_pack_id).select(p_qty_field,
-                                                                    limitby = (0, 1),
-                                                                    ).first().quantity
-            one_kit = record.quantity * pack_qty
+            one_kit = kit_item.quantity * packs[kit_item.item_pack_id]
 
             # How much of this supply_item do we have in stock?
             stock_amount = 0
-            query = squery & (iitable.item_id == record.item_id)
-            wh_items = db(query).select(#iitable.id,
-                                        ii_qty_field,
-                                        ii_pack_field,
-                                        )
-            for wh_item in wh_items:
-                pack_qty = db(p_id_field == wh_item.item_pack_id).select(p_qty_field,
-                                                                         limitby = (0, 1),
-                                                                         ).first().quantity
-                amount = wh_item.quantity * pack_qty
+            rows = wh_items.find(lambda row: row.item_id == kit_item.item_id)
+            for wh_item in rows:
+                amount = wh_item.quantity * packs[wh_item.item_pack_id]
                 stock_amount += amount
 
             # How many Kits can we create based on this item?
@@ -2245,8 +2244,6 @@ class InventoryKittingModel(S3Model):
                 # Reduce the total possible if less than for previous items
                 if kits < max_kits:
                     max_kits = kits
-
-        # @ToDo: Save the results for the onaccept?
 
         if max_kits is None:
             form.errors.item_id = current.T("This kit hasn't got any Kit Items defined")
@@ -2282,11 +2279,11 @@ class InventoryKittingModel(S3Model):
                                                                 ktable.quantity,
                                                                 ktable.item_pack_id,
                                                                 )
+        item_ids = [row.item_id for row in kit_items]
 
+        # Lookup the Stock of these component items
         iitable = s3db.inv_inv_item
-
         ii_id_field = iitable.id
-        ii_item_field = iitable.item_id
         ii_expiry_field = iitable.expiry_date
         ii_purchase_field = iitable.purchase_date
 
@@ -2296,18 +2293,35 @@ class InventoryKittingModel(S3Model):
         # We set expiry date of the kit to the oldest expiry date of the components
         expiry_date = None
 
-        # Base Query: The Facility at which we're building these kits
-        # Filter out Stock which is in Bad condition or Expired
-        squery = (iitable.site_id == site_id) & \
-                 (iitable.deleted == False) & \
-                 ((ii_expiry_field >= current.request.now) | ((ii_expiry_field == None))) & \
-                 (iitable.status == 0)
+        # Include Bins
+        ibtable = s3db.inv_inv_item_bin
+        ib_id_field = ibtable.id
+        left = ibtable.on(ibtable.inv_item_id == ii_id_field)
 
-        wh_packs = db(squery).select(iitable.item_pack_id)
+        # Filter out Stock which is in Bad condition or Expired
+        query = (iitable.site_id == site_id) & \
+                (iitable.item_id.belongs(item_ids)) & \
+                (iitable.quantity > 0) & \
+                ((ii_expiry_field >= current.request.now) | ((ii_expiry_field == None))) & \
+                (iitable.status == 0)
+
+        wh_items = db(query).select(ii_id_field,
+                                    iitable.quantity,
+                                    iitable.item_id,
+                                    iitable.item_pack_id,
+                                    iitable.item_source_no,
+                                    ii_expiry_field,
+                                    ii_purchase_field, # Included just for orderby on Postgres
+                                    ib_id_field,
+                                    ibtable.layout_id,
+                                    ibtable.quantity,
+                                    left = left,
+                                    orderby = orderby,
+                                    )
 
         # Lookup Packs
         item_pack_id = int(form_vars.item_pack_id)
-        pack_ids = [row.item_pack_id for row in kit_items] + [row.item_pack_id for row in wh_packs]
+        pack_ids = [row.item_pack_id for row in kit_items] + [row["inv_inv_item.item_pack_id"] for row in wh_items]
         pack_ids.append(item_pack_id)
 
         ptable = db.supply_item_pack
@@ -2319,42 +2333,21 @@ class InventoryKittingModel(S3Model):
         # How many kits are we building?
         quantity = form_vars.quantity * packs[item_pack_id]
 
-        # Common elements for query inside loop
-        ibtable = s3db.inv_inv_item_bin
-        ib_id_field = ibtable.id
-
-        fields = (ii_id_field,
-                  iitable.quantity,
-                  ii_expiry_field,
-                  ii_purchase_field, # Included just for orderby on Postgres
-                  iitable.item_pack_id,
-                  iitable.item_source_no,
-                  ib_id_field,
-                  ibtable.layout_id,
-                  ibtable.quantity,
-                  )
-
-        left = ibtable.on(ibtable.inv_item_id == ii_id_field)
-
         # Loop through each supply_item in the kit
         from operator import itemgetter
         insert = s3db.inv_kitting_item.insert
         inv_item_ids = []
         append = inv_item_ids.append
-        for record in kit_items:
+        for kit_item in kit_items:
             # How much of this supply_item is required per kit?
-            one_kit = record.quantity * packs[record.item_pack_id]
+            one_kit = kit_item.quantity * packs[kit_item.item_pack_id]
 
             # How much is required for all Kits?
             required = one_kit * quantity
 
-            # List of what we have available in stock
-            ritem_id = record.item_id
-            query = squery & (ii_item_field == ritem_id)
-
-            rows = db(query).select(left = left,
-                                    orderby = orderby,
-                                    *fields)
+            # What stock do we have for this item?
+            ritem_id = kit_item.item_id
+            rows = wh_items.find(lambda row: row["inv_inv_item.item_id"] == ritem_id)
 
             # Group by inv_item_id
             inv_items = {}
@@ -15375,7 +15368,9 @@ def inv_stock_card_update(inv_item_ids,
 
         if inv_quantity > binned_quantity:
             # We have some unbinned
-            bins.append(Storage(inv_inv_item_bin = Storage(layout_id = None)))
+            if binned_quantity > 0:
+                # We have some binned too, so the unbinned won't show as a separate row
+                bins.append(Storage(inv_inv_item_bin = Storage(layout_id = None)))
 
         # Read all matching inv_items
         query = (iitable.site_id == site_id) & \
