@@ -36,7 +36,7 @@ import sys
 from gluon import current
 
 # =============================================================================
-class S3Parsing(object):
+class S3Parsing:
     """
        Core Message Parsing Framework
        - reusable functions

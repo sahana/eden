@@ -63,7 +63,7 @@ def s3_fieldmethod(name, f, represent=None, search_field=None):
         fieldmethod = Field.Method(name, f)
 
     else:
-        class Handler(object):
+        class Handler:
             def __init__(self, method, row):
                 self.method=method
                 self.row=row
@@ -84,7 +84,7 @@ def s3_fieldmethod(name, f, represent=None, search_field=None):
     return fieldmethod
 
 # =============================================================================
-class S3ReusableField(object):
+class S3ReusableField:
     """
         DRY Helper for reusable fields:
 
@@ -172,7 +172,7 @@ class S3ReusableField(object):
                                                 )
 
 # =============================================================================
-class S3Represent(object):
+class S3Represent:
     """
         Scalable universal field representation for option fields and
         foreign keys. Can be subclassed and tailored to the particular
@@ -772,7 +772,7 @@ class S3Represent(object):
         return result
 
 # =============================================================================
-class S3RepresentLazy(object):
+class S3RepresentLazy:
     """
         Lazy Representation of a field value, utilizes the bulk-feature
         of S3Represent-style representation methods
@@ -905,7 +905,7 @@ ALL_META_FIELD_NAMES = ("uuid",
                         )
 
 # -----------------------------------------------------------------------------
-class S3MetaFields(object):
+class S3MetaFields:
     """ Class to standardize meta-fields """
 
     # -------------------------------------------------------------------------

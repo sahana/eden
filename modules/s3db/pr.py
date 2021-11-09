@@ -8158,6 +8158,8 @@ class pr_AssignMethod(S3Method):
             @param title: an alternative page title
         """
 
+        super(pr_AssignMethod, self).__init__()
+
         self.component = component
         if next_tab:
             self.next_tab = next_tab
@@ -11018,6 +11020,8 @@ class pr_PersonSearchAutocomplete(S3Method):
 
             @param search_fields: tuple|list of field selectors
         """
+
+        super(pr_PersonSearchAutocomplete, self).__init__()
 
         if search_fields is None:
             self.search_fields = ("first_name",

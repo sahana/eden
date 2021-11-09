@@ -225,7 +225,7 @@ GPS_SYMBOLS = ("Airport",
                )
 
 # -----------------------------------------------------------------------------
-class GIS(object):
+class GIS:
     """
         GeoSpatial functions
     """
@@ -8207,7 +8207,7 @@ def addFeatureResources(feature_resources):
     return layers_feature_resource
 
 # =============================================================================
-class Layer(object):
+class Layer:
     """
         Abstract base class for Layers from Catalogue
     """
@@ -8378,7 +8378,7 @@ class Layer(object):
             return '''S3.gis.%s=%s\n''' % (self.dictname, result)
 
     # -------------------------------------------------------------------------
-    class SubLayer(object):
+    class SubLayer:
         def __init__(self, record, openlayers):
             # Ensure all attributes available (even if Null)
             self.__dict__.update(record)
@@ -9444,7 +9444,7 @@ class LayerXYZ(Layer):
             return output
 
 # =============================================================================
-class Marker(object):
+class Marker:
     """
         Represents a Map Marker
 
@@ -9452,10 +9452,11 @@ class Marker(object):
     """
 
     def __init__(self,
-                 marker=None,
-                 marker_id=None,
-                 layer_id=None,
-                 tablename=None):
+                 marker = None,
+                 marker_id = None,
+                 layer_id = None,
+                 tablename = None,
+                 ):
         """
             @param marker: Storage object with image/height/width (looked-up in bulk)
             @param marker_id: id of record in gis_marker
@@ -9575,7 +9576,7 @@ class Marker(object):
         return marker
 
 # =============================================================================
-class Projection(object):
+class Projection:
     """
         Represents a Map Projection
     """
@@ -9598,7 +9599,7 @@ class Projection(object):
         self.epsg = projection.epsg
 
 # =============================================================================
-class Style(object):
+class Style:
     """
         Represents a Map Style
     """

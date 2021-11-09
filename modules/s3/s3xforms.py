@@ -176,7 +176,7 @@ class S3XForms(S3Method):
         return xforms
 
 # =============================================================================
-class S3XFormsWidget(object):
+class S3XFormsWidget:
     """ XForms Form Widget (Base Class) """
 
     def __init__(self, translate = True):
@@ -416,7 +416,7 @@ class S3XFormsUploadWidget(S3XFormsWidget):
         return TAG["upload"](self.label(), self.hint(), **attr)
 
 # =============================================================================
-class S3XFormsField(object):
+class S3XFormsField:
     """
         Class representing an XForms form field.
 
@@ -705,7 +705,7 @@ class S3XFormsField(object):
         return required
 
 # =============================================================================
-class S3XFormsForm(object):
+class S3XFormsForm:
     """ XForms Form Generator """
 
     def __init__(self, table, name=None, translate=True):

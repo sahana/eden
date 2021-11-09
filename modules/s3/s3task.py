@@ -55,7 +55,7 @@ from .s3validators import IS_UTC_DATETIME
 from .s3widgets import S3CalendarWidget, S3TimeIntervalWidget
 
 # -----------------------------------------------------------------------------
-class S3Task(object):
+class S3Task:
     """ Asynchronous Task Execution """
 
     TASK_TABLENAME = "scheduler_task"

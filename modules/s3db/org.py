@@ -8735,6 +8735,8 @@ class org_AssignMethod(S3Method):
             @param component: the Component in which to create records
         """
 
+        super(org_AssignMethod, self).__init__()
+
         self.component = component
 
     def apply_method(self, r, **attr):

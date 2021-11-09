@@ -51,7 +51,7 @@ REGEX_FILTER = re.compile(r".+\..+|.*\(.+\).*")
 HTTP_METHODS = ("GET", "PUT", "POST", "DELETE")
 
 # =============================================================================
-class S3Request(object):
+class S3Request:
     """
         Class to handle RESTful requests
     """

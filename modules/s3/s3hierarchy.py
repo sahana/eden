@@ -508,7 +508,7 @@ class S3HierarchyCRUD(S3Method):
         return result
 
 # =============================================================================
-class S3Hierarchy(object):
+class S3Hierarchy:
     """ Class representing an object hierarchy """
 
     # -------------------------------------------------------------------------

@@ -62,7 +62,7 @@ SERIALIZABLE_OPTS = ("autosync",
 ogetattr = object.__getattribute__
 
 # =============================================================================
-class S3Model(object):
+class S3Model:
     """ Base class for S3 models """
 
     _s3model = True
@@ -1818,7 +1818,7 @@ class S3Model(object):
         return (None, None, None)
 
 # =============================================================================
-class S3DynamicModel(object):
+class S3DynamicModel:
     """
         Class representing a dynamic table model
     """

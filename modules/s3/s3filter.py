@@ -75,7 +75,7 @@ from .s3widgets import ICON, S3CalendarWidget, S3CascadeSelectWidget, \
 SEPARATORS = (",", ":")
 
 # =============================================================================
-class S3FilterWidget(object):
+class S3FilterWidget:
     """ Filter widget for interactive search forms (base class) """
 
     #: the HTML class for the widget type
@@ -3080,7 +3080,7 @@ class S3EmptyFilter(S3FilterWidget):
         return INPUT(**attr)
 
 # =============================================================================
-class S3FilterForm(object):
+class S3FilterForm:
     """ Helper class to construct and render a filter form for a resource """
 
     def __init__(self, widgets, **attr):
@@ -3961,7 +3961,7 @@ class S3Filter(S3Method):
         return json.dumps(filters, separators=SEPARATORS)
 
 # =============================================================================
-class S3FilterString(object):
+class S3FilterString:
     """
         Helper class to render a human-readable representation of a
         filter query, as representation method of JSON-serialized

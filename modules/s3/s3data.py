@@ -47,7 +47,7 @@ from s3dal import Expression, S3DAL
 from .s3utils import s3_orderby_fields, s3_str, s3_set_extension
 
 # =============================================================================
-class S3DataTable(object):
+class S3DataTable:
     """ Class representing a data table """
 
     # The dataTable id if no explicit value has been provided
@@ -852,7 +852,7 @@ class S3DataTable(object):
             return structure
 
 # =============================================================================
-class S3DataList(object):
+class S3DataList:
     """
         Class representing a list of data cards
         -client-side implementation in static/scripts/S3/s3.dataLists.js
@@ -1066,7 +1066,7 @@ class S3DataList(object):
         return
 
 # =============================================================================
-class S3DataListLayout(object):
+class S3DataListLayout:
     """ DataList default layout """
 
     item_class = "thumbnail"

@@ -14201,6 +14201,8 @@ class project_Details(S3Method):
                          or a callable to produce such a widget config
         """
 
+        super(project_Details, self).__init__()
+
         self.form = form
 
     # -------------------------------------------------------------------------

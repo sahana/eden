@@ -9208,7 +9208,7 @@ def search_ac(r, **attr):
     return json.dumps(output, separators=SEPARATORS)
 
 # =============================================================================
-class S3XMLContents(object):
+class S3XMLContents:
     """
         Renderer for db-stored XML contents (e.g. CMS)
 

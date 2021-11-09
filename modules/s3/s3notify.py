@@ -47,7 +47,7 @@ from .s3datetime import s3_decode_iso_datetime, s3_encode_iso_datetime, s3_utc
 from .s3utils import s3_str, s3_truncate
 
 # =============================================================================
-class S3Notifications(object):
+class S3Notifications:
     """ Framework to send notifications about subscribed events """
 
     # -------------------------------------------------------------------------

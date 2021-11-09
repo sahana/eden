@@ -78,7 +78,7 @@ TWITTER_HAS_PREV_PREFIX = u'\u2026 '
 SENDER = re.compile(r"(.*)\s*\<(.+@.+)\>\s*")
 
 # =============================================================================
-class S3Msg(object):
+class S3Msg:
     """ Messaging framework """
 
     def __init__(self,

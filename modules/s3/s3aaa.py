@@ -5703,7 +5703,7 @@ Please go to %(url)s to approve this user."""
             return (table.organisation_id == None)
 
 # =============================================================================
-class S3Permission(object):
+class S3Permission:
     """ S3 Class to handle permissions """
 
     TABLENAME = "s3_permission"

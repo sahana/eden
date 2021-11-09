@@ -61,7 +61,7 @@ SEPARATORS = (",", ":")
 DEFAULT = lambda: None
 
 # =============================================================================
-class S3SQLForm(object):
+class S3SQLForm:
     """ SQL Form Base Class"""
 
     # -------------------------------------------------------------------------
@@ -1613,7 +1613,7 @@ class S3SQLCustomForm(S3SQLForm):
             return accept_id
 
 # =============================================================================
-class S3SQLFormElement(object):
+class S3SQLFormElement:
     """ SQL Form Element Base Class """
 
     # -------------------------------------------------------------------------
@@ -2215,7 +2215,7 @@ class SKIP_POST_VALIDATION(Validator):
         return value, None
 
 # =============================================================================
-class S3SQLSubFormLayout(object):
+class S3SQLSubFormLayout:
     """ Layout for S3SQLInlineComponent (Base Class) """
 
     # Layout-specific CSS class for the inline component

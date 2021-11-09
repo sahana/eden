@@ -5419,46 +5419,46 @@ class event_ScenarioActionPlan(S3Method):
             pwappend(widget)
 
             tablename = "event_scenario_human_resource"
-            widget = dict(# Use CRUD Strings (easier to customise)
-                          #label = "Human Resources",
-                          #label_create = "Add Human Resource",
-                          type = "datatable",
-                          actions = dt_row_actions("human_resource", tablename),
-                          tablename = tablename,
-                          context = "scenario",
-                          create_controller = "event",
-                          create_function = "scenario",
-                          create_component = "human_resource",
-                          #pagesize = None, # all records
-                          list_fields = ["job_title_id",
-                                         "person_id",
-                                         #"start_date",
-                                         #"end_date",
-                                         "comments",
-                                         ],
-                          )
+            widget = {# Use CRUD Strings (easier to customise)
+                      #"label": "Human Resources",
+                      #"label_create": "Add Human Resource",
+                      "type": "datatable",
+                      "actions": dt_row_actions("human_resource", tablename),
+                      "tablename": tablename,
+                      "context": "scenario",
+                      "create_controller": "event",
+                      "create_function": "scenario",
+                      "create_component": "human_resource",
+                      #"pagesize": None, # all records
+                      "list_fields": ["job_title_id",
+                                      "person_id",
+                                      #"start_date",
+                                      #"end_date",
+                                      "comments",
+                                      ],
+                      }
             pwappend(widget)
 
             tablename = "event_scenario_asset"
             r.customise_resource(tablename)
-            widget = dict(# Use CRUD Strings (easier to customise)
-                          #label = "Equipment",
-                          #label_create = "Add Equipment",
-                          type = "datatable",
-                          actions = dt_row_actions("scenario_asset", tablename),
-                          tablename = tablename,
-                          context = "scenario",
-                          create_controller = "event",
-                          create_function = "scenario",
-                          create_component = "asset",
-                          #pagesize = None, # all records
-                          list_fields = ["item_id",
-                                         "asset_id",
-                                         #"start_date",
-                                         #"end_date",
-                                         "comments",
-                                         ],
-                          )
+            widget = {# Use CRUD Strings (easier to customise)
+                      #"label": "Equipment",
+                      #"label_create": "Add Equipment",
+                      "type": "datatable",
+                      "actions": dt_row_actions("scenario_asset", tablename),
+                      "tablename": tablename,
+                      "context":"scenario",
+                      "create_controller": "event",
+                      "create_function": "scenario",
+                      "create_component": "asset",
+                      #"pagesize": None, # all records
+                      "list_fields": ["item_id",
+                                      "asset_id",
+                                      #"start_date",
+                                      #"end_date",
+                                      "comments",
+                                      ],
+                      }
             pwappend(widget)
 
             form = {"type": "form",
@@ -5639,6 +5639,8 @@ class event_EventAssignMethod(S3Method):
             @param component: the Component in which to create records
             @param next_tab: the component/method to redirect to after assigning
         """
+
+        super(event_EventAssignMethod, self).__init__()
 
         self.component = component
         if next_tab:
@@ -6046,12 +6048,16 @@ class event_IncidentAssignMethod(S3Method):
         e.g. Incident Report
     """
 
-    def __init__(self, component, next_tab=None
+    def __init__(self,
+                 component,
+                 next_tab = None,
                  ):
         """
             @param component: the Component in which to create records
             @param next_tab: the component/method to redirect to after assigning
         """
+
+        super(event_IncidentAssignMethod, self).__init__()
 
         self.component = component
         if next_tab:

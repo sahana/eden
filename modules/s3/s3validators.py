@@ -351,7 +351,7 @@ class IS_LAT_LON(Validator):
         return value
 
 # =============================================================================
-class IS_NUMBER(object):
+class IS_NUMBER:
     """
         Used by s3data.py to wrap IS_INT_AMOUNT & IS_FLOAT_AMOUNT
     """

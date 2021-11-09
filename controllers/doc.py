@@ -16,6 +16,11 @@ def index():
     return {"module_name": module_name}
 
 # =============================================================================
+def card_config():
+
+    return s3_rest_controller()
+
+# =============================================================================
 def document():
     """ RESTful CRUD controller """
 
@@ -34,9 +39,7 @@ def document():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller(rheader = document_rheader,
-                                )
-    return output
+    return s3_rest_controller(rheader = document_rheader)
 
 # -----------------------------------------------------------------------------
 def document_rheader(r):
@@ -131,8 +134,7 @@ def image():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller()
-    return output
+    return s3_rest_controller()
 
 # =============================================================================
 def bulk_upload():
@@ -145,7 +147,7 @@ def bulk_upload():
     """
 
     s3.stylesheets.append("plugins/fileuploader.css")
-    return dict()
+    return {}
 
 def upload_bulk():
     """
@@ -218,8 +220,9 @@ def ck_upload():
         Originally based on https://github.com/timrichardson/web2py_ckeditor4
     """
 
-    if request.method != "POST":
-        raise HTTP(405, "Only POST supported.")
+    # Assumed by presence of post_vars
+    #if request.method != "POST":
+    #    raise HTTP(405, "Only POST supported.")
 
     post_vars = request.post_vars
 
@@ -289,29 +292,23 @@ def ck_upload():
 def ck_browse():
     """
         Controller to view files uploaded to CKEditor by this User
-        https://ckeditor.com/docs/ckeditor4/latest/guide/dev_file_browser_api.html
 
-        @ToDo: Check Permissions
+        https://ckeditor.com/docs/ckeditor4/latest/guide/dev_file_browser_api.html
     """
 
     table = s3db.doc_ckeditor
-    #browse_filter = {}
-    set = db(table.deleted == False) # table.owned_by_user == auth.user.id
-    #for key, val in browse_filter.items():
-    #    if value[0] == "<":
-    #        set = set(table[key] < value[1:])
-    #    elif value[0] == ">":
-    #        set = set(table[key] > value[1:])
-    #    elif value[0] == "!":
-    #        set = set(table[key] != value[1:])
-    #    else:
-    #        set = set(table[key] == value)
 
-    rows = set.select(table.title,
-                      table.filename,
-                      table.upload,
-                      orderby = table.title,
-                      )
+    if auth.s3_has_role("ADMIN"):
+        query = (table.deleted == False)
+    else:
+        # @ToDo: More detailed permissions?
+        query = (table.owned_by_user == auth.user.id)
+
+    rows = db(query).select(table.title,
+                            table.filename,
+                            table.upload,
+                            orderby = table.title,
+                            )
 
     return {"rows": rows,
             "ckfuncnum": get_vars.CKEditorFuncNum,
@@ -321,8 +318,6 @@ def ck_browse():
 def ck_delete():
     """
         Controller to handle deletes in CKEditor
-
-        @ToDo: Check Permissions
     """
 
     try:
@@ -330,19 +325,16 @@ def ck_delete():
     except:
         raise HTTP(401, "Required argument filename missing.")
 
-    table = s3db.doc_ckeditor
-    db(table.upload == filename).delete()
-
-    # Delete the file from storage
-    #if self.settings.uploadfs:
-    #    self.settings.uploadfs.remove(filename)
-    #else:
-    filepath = os.path.join(request.folder, "uploads", filename)
-    os.unlink(filepath)
-
-# -----------------------------------------------------------------------------
-def card_config():
-
-    return s3_rest_controller()
+    if auth.s3_has_role("ADMIN"):
+        db(s3db.doc_ckeditor.upload == filename).delete()
+    else:
+        table = s3db.doc_ckeditor
+        record = db(table.upload == filename).select(table.id,
+                                                     table.owned_by_user,
+                                                     limitby = (0, 1),
+                                                     ).first()
+        if record and \
+           record.owned_by_user == auth.user.id:
+            db(table.id == record.id).delete()
 
 # END =========================================================================

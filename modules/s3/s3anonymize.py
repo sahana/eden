@@ -358,7 +358,7 @@ class S3Anonymize(S3Method):
                 onaccept(table, data, method="update")
 
 # =============================================================================
-class S3AnonymizeWidget(object):
+class S3AnonymizeWidget:
     """
         GUI widget for S3Anonymize
         - popup

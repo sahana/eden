@@ -8,7 +8,7 @@ from s3 import S3Method, s3_decode_iso_datetime, s3_str
 from s3.codecs.xls import S3XLS
 
 # =============================================================================
-class PerformanceIndicators(object):
+class PerformanceIndicators:
     """ Default Performance Indicators Set (Base Class) """
 
     def __init__(self):
@@ -360,6 +360,8 @@ class PerformanceIndicatorExport(S3Method):
 
             @param pitype: the performance indicator set
         """
+
+        super(PerformanceIndicatorExport, self).__init__()
 
         indicators = self.PISETS.get(pitype) if pitype else None
 

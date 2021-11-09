@@ -1338,7 +1338,7 @@ class S3RoleManager(S3Method):
         return output.read()
 
 # =============================================================================
-class S3PermissionWidget(object):
+class S3PermissionWidget:
     """
         Form widget to modify permissions of a role
     """
@@ -1700,18 +1700,18 @@ class S3PermissionWidget(object):
         current.response.s3.js_global.append("\n".join(strings))
 
 # =============================================================================
-class S3RolesWidget(object):
+class S3RolesWidget:
     """
         Form widget to assign roles to users
     """
 
     def __init__(self,
-                 mode="roles",
-                 items=None,
-                 use_realms=False,
-                 realm_types=None,
-                 realms=None,
-                 ajax_url=None,
+                 mode = "roles",
+                 items = None,
+                 use_realms = False,
+                 realm_types = None,
+                 realms = None,
+                 ajax_url = None,
                  ):
         """
             Constructor
@@ -1919,7 +1919,7 @@ class S3RolesWidget(object):
         current.response.s3.js_global.append("\n".join(strings))
 
 # =============================================================================
-class S3RolesExport(object):
+class S3RolesExport:
     """
         Roles Exporter
     """

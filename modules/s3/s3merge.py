@@ -778,7 +778,7 @@ class S3Merge(S3Method):
         return inp
 
 # =============================================================================
-class S3RecordMerger(object):
+class S3RecordMerger:
     """ Record Merger """
 
     def __init__(self, resource):

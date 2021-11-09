@@ -772,7 +772,7 @@ class S3Report(S3Method):
             scripts_append("/%s/static/scripts/d3/nv.d3.min.js" % appname)
 
 # =============================================================================
-class S3ReportForm(object):
+class S3ReportForm:
     """ Helper class to render a report form """
 
     def __init__(self, resource):
@@ -1312,7 +1312,7 @@ class S3ReportForm(object):
                         **attr)
 
 # =============================================================================
-class S3ReportRepresent(object):
+class S3ReportRepresent:
     """
         Method to represent the contributing records in a pivot table
         cell (cell explore)
@@ -1425,7 +1425,7 @@ class S3ReportRepresent(object):
         return represent
 
 # =============================================================================
-class S3PivotTableFact(object):
+class S3PivotTableFact:
     """ Class representing a fact layer """
 
     #: Supported aggregation methods
@@ -1724,7 +1724,7 @@ class S3PivotTableFact(object):
         return label
 
 # =============================================================================
-class S3PivotTable(object):
+class S3PivotTable:
     """ Class representing a pivot table of a resource """
 
     def __init__(self, resource, rows, cols, facts, strict=True, precision=None):

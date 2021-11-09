@@ -9260,6 +9260,8 @@ class dvr_AssignMethod(S3Method):
             @param next_tab: the component/method to redirect to after assigning
         """
 
+        super(dvr_AssignMethod, self).__init__()
+
         self.component = component
         self.next_tab = next_tab
         self.types = types

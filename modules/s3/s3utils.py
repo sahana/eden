@@ -2026,7 +2026,7 @@ def sort_dict_by_values(adict):
     return OrderedDict(sorted(adict.items(), key = lambda item: item[1]))
 
 # =============================================================================
-class S3PriorityRepresent(object):
+class S3PriorityRepresent:
     """
         Color-coded representation of priorities
     """
@@ -2078,7 +2078,7 @@ class S3PriorityRepresent(object):
         return self(value, row=row)
 
 # =============================================================================
-class Traceback(object):
+class Traceback:
     """ Generate the traceback for viewing error Tickets """
 
     def __init__(self, text):
@@ -2186,7 +2186,7 @@ def URL2(a=None, c=None, r=None):
     return url
 
 # =============================================================================
-class S3CustomController(object):
+class S3CustomController:
     """
         Base class for custom controllers (template/controllers.py),
         implements common helper functions
@@ -2219,7 +2219,7 @@ class S3CustomController(object):
             raise HTTP(404, msg)
 
 # =============================================================================
-class S3TypeConverter(object):
+class S3TypeConverter:
     """ Universal data type converter """
 
     @classmethod
@@ -2901,7 +2901,7 @@ class S3MultiPath:
                 return False
 
 # =============================================================================
-class StringTemplateParser(object):
+class StringTemplateParser:
     """
         Helper to parse string templates with named keys
 
@@ -2928,7 +2928,7 @@ class StringTemplateParser(object):
         return parser._keys
 
 # =============================================================================
-class S3MarkupStripper(HTMLParser, object): # enforce new-style class in Py2
+class S3MarkupStripper(HTMLParser):
     """ Simple markup stripper """
 
     def __init__(self):

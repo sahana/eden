@@ -785,7 +785,7 @@ class S3Organizer(S3Method):
         return formatted
 
 # =============================================================================
-class S3OrganizerWidget(object):
+class S3OrganizerWidget:
     """ Helper to configure and render the organizer UI widget """
 
     def __init__(self, resources):

@@ -47,7 +47,7 @@ from gluon.storage import Storage
 from .s3utils import s3_str
 
 # =============================================================================
-class S3NavigationItem(object):
+class S3NavigationItem:
     """
         Base class and API for navigation items.
 
@@ -1378,7 +1378,7 @@ def s3_rheader_tabs(r, tabs=None):
     return rheader_tabs.render(r)
 
 # =============================================================================
-class S3ComponentTabs(object):
+class S3ComponentTabs:
     """ Class representing a row of component tabs """
 
     def __init__(self, tabs=None):
@@ -1585,7 +1585,7 @@ class S3ComponentTabs(object):
                     tabs.insert(position, tab)
 
 # =============================================================================
-class S3ComponentTab(object):
+class S3ComponentTab:
     """ Class representing a single Component Tab """
 
     def __init__(self, tab):
@@ -1766,7 +1766,7 @@ class S3ScriptItem(S3NavigationItem):
         return ""
 
 # =============================================================================
-class S3ResourceHeader(object):
+class S3ResourceHeader:
     """ Simple Generic Resource Header for tabbed component views """
 
     def __init__(self, fields=None, tabs=None, title=None):

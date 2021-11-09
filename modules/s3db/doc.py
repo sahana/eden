@@ -816,6 +816,7 @@ class CKEditorModel(S3Model):
                                             IS_LENGTH(maxsize = 10485760, # 10 Mb
                                                       minsize = 0),
                                             ],
+                                autodelete = True,
                                 ),
                           *s3_meta_fields())
 

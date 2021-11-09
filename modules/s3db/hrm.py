@@ -5636,6 +5636,8 @@ class hrm_AssignMethod(S3Method):
             @param rheader: an rheader to show
         """
 
+        super(hrm_AssignMethod, self).__init__()
+
         self.component = component
         self.next_tab = next_tab
         self.types = types
@@ -9330,6 +9332,8 @@ class hrm_CV(S3Method):
                          or a callable to produce such a widget config
         """
 
+        super(hrm_CV, self).__init__()
+
         self.form = form
 
     # -------------------------------------------------------------------------
@@ -9747,6 +9751,8 @@ class hrm_Record(S3Method):
             @param other_experience: show widget with Other Experience, can
                                      be a dict with overrides for widget defaults
         """
+
+        super(hrm_Record, self).__init__()
 
         self.salary = salary
         self.awards = awards

@@ -49,7 +49,7 @@ class S3Sync(S3Method):
     def __init__(self):
         """ Constructor """
 
-        S3Method.__init__(self)
+        super(S3Sync, self).__init__()
 
         self.log = S3SyncLog()
         self._config = None
@@ -943,7 +943,7 @@ class S3SyncLog(S3Method):
             return None
 
 # =============================================================================
-class S3SyncRepository(object):
+class S3SyncRepository:
     """ Class representation of a peer repository """
 
     def __init__(self, repository):
@@ -1031,7 +1031,7 @@ class S3SyncRepository(object):
         self.archives = {}
 
 # =============================================================================
-class S3SyncBaseAdapter(object):
+class S3SyncBaseAdapter:
     """
         Sync Adapter (base class) - interface providing standard
         synchronization methods for the respective repository type.
@@ -1140,12 +1140,13 @@ class S3SyncBaseAdapter(object):
     def receive(self,
                 source,
                 resource,
-                strategy=None,
-                update_policy=None,
-                conflict_policy=None,
-                onconflict=None,
-                last_sync=None,
-                mixed=False):
+                strategy = None,
+                update_policy = None,
+                conflict_policy = None,
+                onconflict = None,
+                last_sync = None,
+                mixed = False,
+                ):
         """
             Respond to an incoming push from the peer repository
 
@@ -1168,7 +1169,7 @@ class S3SyncBaseAdapter(object):
         raise NotImplementedError
 
 # =============================================================================
-class S3SyncDataArchive(object):
+class S3SyncDataArchive:
     """
         Simple abstraction layer for (compressed) data archives, currently
         based on zipfile (Python standard library). Compression additionally

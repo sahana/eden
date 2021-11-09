@@ -56,7 +56,7 @@ DEFAULT = lambda: None
 PREPROCESS_OPTS = []
 
 # =============================================================================
-class S3MobileFormList(object):
+class S3MobileFormList:
     """
         Form List Generator
     """
@@ -215,7 +215,7 @@ class S3MobileFormList(object):
         return json.dumps(self.formlist, separators=SEPARATORS)
 
 # =============================================================================
-class S3MobileSchema(object):
+class S3MobileSchema:
     """
         Table schema for a mobile resource
     """
@@ -870,7 +870,7 @@ class S3MobileSchema(object):
         return row.uuid or None if row else None
 
 # =============================================================================
-class S3MobileForm(object):
+class S3MobileForm:
     """
         Mobile representation of an S3SQLForm
     """

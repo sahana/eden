@@ -537,7 +537,7 @@ class S3GroupedItemsReport(S3Method):
         s3.jquery_ready.append(script)
 
 # =============================================================================
-class S3GroupedItemsTable(object):
+class S3GroupedItemsTable:
     """
         Helper class to render representations of a grouped items report
     """
@@ -1048,7 +1048,7 @@ class S3GroupedItemsTable(object):
         return H2(title)
 
 # =============================================================================
-class S3GroupedItems(object):
+class S3GroupedItems:
     """
         Helper class representing dict-like items grouped by
         attribute values, used by S3GroupedItemsReport
@@ -1458,7 +1458,7 @@ class S3GroupedItems(object):
         return output
 
 # =============================================================================
-class S3GroupAggregate(object):
+class S3GroupAggregate:
     """ Class representing aggregated values """
 
     def __init__(self, method, key, values):

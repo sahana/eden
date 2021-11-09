@@ -71,7 +71,7 @@ from .s3fields import S3ReusableField
 """
 
 # =============================================================================
-class TranslateAPI(object):
+class TranslateAPI:
     """
         API class for the Translation module to get
         files, modules and strings individually
@@ -173,7 +173,7 @@ class TranslateAPI(object):
         return strings
 
 # =============================================================================
-class TranslateGetFiles(object):
+class TranslateGetFiles:
     """ Class to group files by modules """
 
     def __init__(self):
@@ -299,7 +299,7 @@ class TranslateGetFiles(object):
                     d["core"].append(curFile)
 
 # =============================================================================
-class TranslateParseFiles(object):
+class TranslateParseFiles:
     """
         Class to extract strings to translate from code files
     """
@@ -628,7 +628,7 @@ class TranslateParseFiles(object):
                             self.mflag = 0
 
 # =============================================================================
-class TranslateReadFiles(object):
+class TranslateReadFiles:
     """ Class to read code files """
 
     # ---------------------------------------------------------------------
@@ -965,7 +965,7 @@ class TranslateReadFiles(object):
         return database_strings
 
 # =============================================================================
-class Strings(object):
+class Strings:
     """ Class to manipulate strings and their files """
 
     # ---------------------------------------------------------------------
@@ -1338,7 +1338,7 @@ class Strings(object):
         return output.read()
 
 # =============================================================================
-class Pootle(object):
+class Pootle:
     """
         Class to synchronise a Pootle server's translation with the local
         one
@@ -1573,7 +1573,7 @@ class Pootle(object):
             os.unlink(pofilename)
 
 # =============================================================================
-class TranslateReportStatus(object):
+class TranslateReportStatus:
     """
         Class to report the percentage of translated strings for
         each module for a given language.
