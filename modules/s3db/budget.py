@@ -103,7 +103,7 @@ class BudgetModel(S3Model):
                        }
 
         # Currently only Monthly is supported
-        monitoring_opts = {1: current.messages["NONE"],
+        monitoring_opts = {1: NONE,
                            #2: T("Annually"),
                            3: T("Monthly"),
                            #3: T("Weekly"),
@@ -561,7 +561,7 @@ class BudgetMonitoringModel(S3Model):
             planned = row.planned
             if planned == 0.0:
                 # Can't divide by Zero
-                return current.messages["NONE"]
+                return NONE
         else:
             planned = None
         if hasattr(row, "value"):
@@ -585,11 +585,11 @@ class BudgetMonitoringModel(S3Model):
                 planned = r.planned
                 if planned == 0.0:
                     # Can't divide by Zero
-                    return current.messages["NONE"]
+                    return NONE
                 percentage = r.value / planned * 100
                 return "%s %%" % percentage
 
-        return current.messages["NONE"]
+        return NONE
 
 # =============================================================================
 class BudgetItemModel(S3Model):

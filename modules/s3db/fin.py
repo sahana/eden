@@ -60,10 +60,6 @@ class FinBankModel(S3Model):
         T = current.T
         db = current.db
 
-        messages = current.messages
-        NONE = messages.NONE
-        OBSOLETE = messages.OBSOLETE
-
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -174,7 +170,7 @@ class FinBankModel(S3Model):
                      Field("obsolete", "boolean",
                            default = False,
                            label = T("Obsolete"),
-                           represent = lambda opt: OBSOLETE if opt else NONE,
+                           represent = lambda opt: current.messages.OBSOLETE if opt else NONE,
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -465,8 +461,6 @@ class FinVoucherModel(S3Model):
 
         define_table = self.define_table
         crud_strings = s3.crud_strings
-
-        NONE = current.messages["NONE"]
 
         # Representation of bearer/provider
         pe_represent = self.pr_PersonEntityRepresent(show_label = False,
@@ -2084,7 +2078,7 @@ class FinVoucherModel(S3Model):
             else:
                 return T("Redeemed##fin")
         else:
-            return current.messages["NONE"]
+            return NONE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2261,7 +2255,7 @@ class FinVoucherModel(S3Model):
             else:
                 return T("Compensated##fin")
         else:
-            return current.messages["NONE"]
+            return NONE
 
 # =============================================================================
 class FinPaymentServiceModel(S3Model):

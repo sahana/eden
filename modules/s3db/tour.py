@@ -53,7 +53,6 @@ class GuidedTourModel(S3Model):
 
         T = current.T
         db = current.db
-        NONE = current.messages["NONE"]
         s3 = current.response.s3
 
         add_components = self.add_components

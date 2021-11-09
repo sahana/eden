@@ -53,10 +53,6 @@ class OCRDataModel(S3Model):
 
         #T = current.T
 
-        #messages = current.messages
-        #UNKNOWN_OPT = messages.UNKNOWN_OPT
-        #NONE = messages["NONE"]
-
         define_table = self.define_table
 
         # Upload folders

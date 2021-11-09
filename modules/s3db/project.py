@@ -87,7 +87,6 @@ __all__ = ("ProjectModel",
 import datetime
 import json
 
-from collections import OrderedDict
 from io import BytesIO
 
 from gluon import *
@@ -97,9 +96,6 @@ from ..s3 import *
 from s3layouts import S3PopupLink
 
 from .req import req_timeframe
-
-# Compact JSON encoding
-SEPARATORS = (",", ":")
 
 # Which options for the Status for a Task count as the task being 'Active'
 project_task_active_statuses = [2,
@@ -776,7 +772,7 @@ class ProjectModel(S3Model):
         if hasattr(row, "id"):
             project_id = row["id"]
         else:
-            return current.messages["NONE"]
+            return NONE
 
         table = current.s3db.project_indicator_data
         query = (table.deleted != True) & \
@@ -805,7 +801,6 @@ class ProjectModel(S3Model):
             # Can't divide by Zero
             return 0
 
-        NONE = current.messages["NONE"]
         percentages = 0
         for indicator_id in indicators:
             percentage = indicators[indicator_id]["percentage"]
@@ -833,7 +828,7 @@ class ProjectModel(S3Model):
                 (table.project_id == project_id)
         sum_field = table.amount.sum()
         return current.db(query).select(sum_field).first()[sum_field] or \
-               current.messages["NONE"]
+               NONE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1742,8 +1737,6 @@ class ProjectActivityTypeModel(S3Model):
         T = current.T
         db = current.db
 
-        NONE = current.messages["NONE"]
-
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -1927,7 +1920,7 @@ class ProjectActivityPersonModel(S3Model):
                                 ),
                           Field("relationship",
                                 label = T("Relationship"),
-                                represent = lambda v: v or current.messages["NONE"],
+                                represent = lambda v: v or NONE,
                                 comment = T("If not the Head of Household"),
                                 ),
                           # @ToDo: Option to draw this easily (mobile-only)
@@ -1961,8 +1954,6 @@ class ProjectActivityOrganisationModel(S3Model):
     def model(self):
 
         T = current.T
-
-        NONE = current.messages["NONE"]
 
         # ---------------------------------------------------------------------
         # Activities <> Organisations - Link table
@@ -2364,8 +2355,6 @@ class ProjectBeneficiaryModel(S3Model):
         s3 = current.response.s3
         settings = current.deployment_settings
 
-        NONE = current.messages["NONE"]
-
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -2721,7 +2710,7 @@ class ProjectBeneficiaryModel(S3Model):
         if row:
             return row.type
         if not record_id:
-            return current.messages["NONE"]
+            return NONE
 
         db = current.db
         table = db.project_beneficiary
@@ -3088,7 +3077,7 @@ class ProjectFrameworkModel(S3Model):
                                   ),
                       Field("time_frame",
                             label = T("Time Frame"),
-                            represent = lambda v: v or messages.NONE,
+                            represent = lambda v: v or NONE,
                             ),
                       *s3_meta_fields())
 
@@ -3210,7 +3199,6 @@ class ProjectHazardModel(S3Model):
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        NONE = current.messages["NONE"]
 
         # ---------------------------------------------------------------------
         # Hazard
@@ -3414,8 +3402,6 @@ class ProjectIndicatorModel(S3Model):
         db = current.db
         s3 = current.response.s3
         settings = current.deployment_settings
-
-        NONE = current.messages["NONE"]
 
         configure = self.configure
         crud_strings = s3.crud_strings
@@ -4150,7 +4136,6 @@ class ProjectOrganisationModel(S3Model):
         settings = current.deployment_settings
 
         messages = current.messages
-        NONE = messages["NONE"]
 
         # ---------------------------------------------------------------------
         # Project Organisations
@@ -4171,9 +4156,9 @@ class ProjectOrganisationModel(S3Model):
                           ),
                           self.org_organisation_id(
                                 requires = self.org_organisation_requires(
-                                                required=True,
+                                                required = True,
                                                 # Need to be able to add Partners/Donors not just Lead org
-                                                #updateable=True,
+                                                #updateable = True,
                                                 ),
                                 widget = None,
                                 comment = S3PopupLink(c = "org",
@@ -4412,8 +4397,6 @@ class ProjectPlanningModel(S3Model):
         T = current.T
         db = current.db
         settings = current.deployment_settings
-
-        NONE = current.messages["NONE"]
 
         add_components = self.add_components
         configure = self.configure
@@ -6205,7 +6188,7 @@ class ProjectPlanningModel(S3Model):
             planned = row.target_value
             if planned is None:
                 # Ignored
-                return current.messages["NONE"]
+                return NONE
         else:
             planned = None
 
@@ -6213,7 +6196,7 @@ class ProjectPlanningModel(S3Model):
             actual = row.value
             if actual is None:
                 # Ignored
-                return current.messages["NONE"]
+                return NONE
         else:
             actual = None
 
@@ -6232,7 +6215,7 @@ class ProjectPlanningModel(S3Model):
             if planned == 0.0:
                 if actual == 0.0:
                     # Ignored
-                    return current.messages["NONE"]
+                    return NONE
                 else:
                     # Treat as complete
                     return project_status_represent(100.0)
@@ -6241,7 +6224,7 @@ class ProjectPlanningModel(S3Model):
             return project_status_represent(percentage)
 
         # Ignored
-        return current.messages["NONE"]
+        return NONE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -6257,7 +6240,7 @@ class ProjectPlanningModel(S3Model):
             planned = row.target_value
             if planned is None:
                 # Ignored
-                return current.messages["NONE"]
+                return NONE
         else:
             planned = None
 
@@ -6265,7 +6248,7 @@ class ProjectPlanningModel(S3Model):
             actual = row.value
             if actual is None:
                 # Ignored
-                return current.messages["NONE"]
+                return NONE
         else:
             actual = None
 
@@ -6284,7 +6267,7 @@ class ProjectPlanningModel(S3Model):
             if planned == 0.0:
                 if actual == 0.0:
                     # Ignored
-                    return current.messages["NONE"]
+                    return NONE
                 else:
                     # Treat as complete
                     return project_status_represent(100.0)
@@ -6293,7 +6276,7 @@ class ProjectPlanningModel(S3Model):
             return project_status_represent(percentage)
 
         # Ignored
-        return current.messages["NONE"]
+        return NONE
 
 # =============================================================================
 def project_indicator_data_onaccept(form, status=True):
@@ -7194,8 +7177,6 @@ class project_SummaryReport(S3Method):
 
         db = current.db
         s3db = current.s3db
-
-        #NONE = current.messages["NONE"]
 
         status_from_activities = current.deployment_settings.get_project_status_from_activities()
 
@@ -8381,8 +8362,6 @@ class project_SummaryReport(S3Method):
         db = current.db
         s3db = current.s3db
 
-        NONE = current.messages["NONE"]
-
         status_from_activities = current.deployment_settings.get_project_status_from_activities()
 
         # Extract Data
@@ -8769,8 +8748,6 @@ class project_IndicatorSummaryReport(S3Method):
         db = current.db
         s3db = current.s3db
 
-        NONE = current.messages["NONE"]
-
         project_id = r.id
 
         status_field = self.status_field
@@ -8935,7 +8912,6 @@ class project_IndicatorSummaryReport(S3Method):
         T = current.T
         s3db = current.s3db
         response = current.response
-        NONE = current.messages["NONE"]
 
         record = r.record
 
@@ -9145,7 +9121,6 @@ class project_IndicatorSummaryReport(S3Method):
             redirect("/%s/project/project/%s" % (r.application, r.id))
 
         s3db = current.s3db
-        NONE = current.messages["NONE"]
 
         record = r.record
 
@@ -9882,8 +9857,6 @@ class ProjectProgrammeModel(S3Model):
         T = current.T
         db = current.db
 
-        NONE = current.messages["NONE"]
-
         budgets = current.deployment_settings.get_project_programme_budget()
 
         # ---------------------------------------------------------------------
@@ -10277,8 +10250,6 @@ class ProjectThemeModel(S3Model):
         define_table = self.define_table
         theme_percentages = current.deployment_settings.get_project_theme_percentages()
 
-        NONE = current.messages["NONE"]
-
         # ---------------------------------------------------------------------
         # Themes
         #
@@ -10596,15 +10567,15 @@ class ProjectDRRModel(S3Model):
         """ Option representation """
 
         if not opt:
-            return current.messages["NONE"]
+            return NONE
         if isinstance(opt, int):
             opts = [opt]
         elif not isinstance(opt, (list, tuple)):
-            return current.messages["NONE"]
+            return NONE
         else:
             opts = opt
         if opts[0] is None:
-            return current.messages["NONE"]
+            return NONE
         vals = ["HFA %s" % o for o in opts]
         return ", ".join(vals)
 
@@ -10621,8 +10592,6 @@ class ProjectDRRPPModel(S3Model):
 
         T = current.T
         db = current.db
-
-        NONE = current.messages["NONE"]
 
         local_currencies = list(current.deployment_settings.get_fin_currencies().keys())
         try:
@@ -10824,11 +10793,11 @@ class ProjectDRRPPModel(S3Model):
             opt = [opt]
         if isinstance(opt, (list, tuple)):
             if not opt or opt[0] is None:
-                return current.messages["NONE"]
+                return NONE
             else:
                 return ", ".join(["%s %s" % (prefix, o) for o in opt])
         else:
-            return current.messages["NONE"]
+            return NONE
 
 # =============================================================================
 class ProjectTargetModel(S3Model):
@@ -10867,8 +10836,8 @@ class ProjectTargetModel(S3Model):
             msg_record_created = T("Data Collection Target added to Project"),
             msg_record_modified = T("Data Collection Target updated"),
             msg_record_deleted = T("Data Collection Target removed from Project"),
-            msg_list_empty = T("No Data Collection Targets found for this Project")
-        )
+            msg_list_empty = T("No Data Collection Targets found for this Project"),
+            )
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -10904,10 +10873,6 @@ class ProjectTaskModel(S3Model):
         settings = current.deployment_settings
 
         project_id = self.project_project_id
-
-        messages = current.messages
-        NONE = messages["NONE"]
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         add_components = self.add_components
         configure = self.configure
@@ -11068,7 +11033,7 @@ class ProjectTaskModel(S3Model):
                            #widget = S3PersonAutocompleteWidget(field = "pe_id"),
                            #comment = DIV(_class = "tooltip",
                            #              _title = "%s|%s" % (T("Assigned to"),
-                           #                                  messages.AUTOCOMPLETE_HELP,
+                           #                                  current.messages.AUTOCOMPLETE_HELP,
                            #                                  ),
                            #              ),
                            ),
@@ -12416,7 +12381,7 @@ def multi_theme_percentage_represent(record_id):
     """
 
     if not record_id:
-        return current.messages["NONE"]
+        return NONE
 
     s3db = current.s3db
     table = s3db.project_theme_percentage
@@ -12922,7 +12887,7 @@ class ProjectThemeVirtualFields(object):
                                           )
 
         if not themes:
-            return current.messages["NONE"]
+            return NONE
 
         represent = ""
         for theme in themes:
@@ -12955,9 +12920,9 @@ def project_time_day(row):
     try:
         thisdate = row["project_time.date"]
     except AttributeError:
-        return current.messages["NONE"]
+        return NONE
     if not thisdate:
-        return current.messages["NONE"]
+        return NONE
 
     #now = current.request.utcnow
     #week = datetime.timedelta(days=7)
@@ -12982,9 +12947,9 @@ def project_time_week(row):
     try:
         thisdate = row["project_time.date"]
     except AttributeError:
-        return current.messages["NONE"]
+        return NONE
     if not thisdate:
-        return current.messages["NONE"]
+        return NONE
 
     day = thisdate.date()
     monday = day - datetime.timedelta(days=day.weekday())
@@ -13768,7 +13733,7 @@ def project_project_filters(org_label):
     if mode_drr and settings.get_project_hfa():
         hfa_opts = project_hfa_opts()
         options = dict((key, "HFA %s" % key) for key in hfa_opts)
-        #options[None] = current.messages["NONE"] # to search NO HFA
+        #options[None] = NONE # to search NO HFA
         append_filter(
             S3OptionsFilter("drr.hfa",
                             label = T("HFA"),

@@ -619,7 +619,7 @@ class SecurityStaffModel(S3Model):
             try:
                 opt = int(opt)
             except (ValueError, TypeError):
-                return current.messages["NONE"]
+                return NONE
             else:
                 opts = [opt]
                 vals = str(names.get(opt)["name"])

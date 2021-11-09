@@ -46,9 +46,6 @@ from gluon.languages import read_dict, write_dict
 from ..s3 import *
 from s3layouts import S3PopupLink
 
-# Compact JSON encoding
-SEPARATORS = (",", ":")
-
 # =============================================================================
 class DataCollectionTemplateModel(S3Model):
     """
@@ -2362,7 +2359,7 @@ def dc_rheader(r, tabs=None):
                 if record.options:
                     return ", ".join(record.options)
                 else:
-                    return current.messages["NONE"]
+                    return NONE
 
             rheader_fields = ([(T("Question"), "name")],
                               [(T("Options"), options)],

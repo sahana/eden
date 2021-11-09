@@ -74,9 +74,6 @@ class ShelterModel(S3Model):
         day_and_night = settings.get_cr_day_and_night()
         dynamic = settings.get_cr_shelter_population_dynamic()
 
-        messages = current.messages
-        NONE = messages["NONE"]
-
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -206,7 +203,7 @@ class ShelterModel(S3Model):
                      Field("obsolete", "boolean",
                            default = False,
                            label = T("Obsolete"),
-                           represent = lambda opt: messages.OBSOLETE if opt else NONE,
+                           represent = lambda opt: current.messages.OBSOLETE if opt else NONE,
                            readable = False,
                            writable = False,
                            ),
@@ -1059,7 +1056,7 @@ class ShelterHousingUnitModel(S3Model):
                     # Partial
                     return 1
 
-        return current.messages["NONE"]
+        return NONE
 
 # =============================================================================
 class ShelterInspectionModel(S3Model):

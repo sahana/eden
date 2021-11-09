@@ -54,11 +54,6 @@ class DVIModel(S3Model):
         person_id = self.pr_person_id
         location_id = self.gis_location_id
 
-        messages = current.messages
-        NONE = messages["NONE"]
-        OBSOLETE = messages.OBSOLETE
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
-
         YES = T("yes")
 
         configure = self.configure
@@ -201,7 +196,7 @@ class DVIModel(S3Model):
                      location_id(),
                      Field("obsolete", "boolean",
                            label = T("Obsolete"),
-                           represent = lambda opt: OBSOLETE if opt else NONE,
+                           represent = lambda opt: current.messages.OBSOLETE if opt else NONE,
                            default = False,
                            readable = False,
                            writable = False,
@@ -254,7 +249,8 @@ class DVIModel(S3Model):
                      super_link("pe_id", "pr_pentity"),
                      super_link("track_id", "sit_trackable"),
                      self.pr_pe_label(requires = [IS_NOT_EMPTY(error_message=T("Enter a unique label!")),
-                                                  IS_NOT_ONE_OF(db, "dvi_body.pe_label")]),
+                                                  IS_NOT_ONE_OF(db, "dvi_body.pe_label"),
+                                                  ]),
                      morgue_id(),
                      dvi_recreq_id(),
                      s3_datetime("date_of_recovery",
@@ -333,11 +329,11 @@ class DVIModel(S3Model):
         # Checklist of operations
         #
         checklist_item = S3ReusableField("checklist_item", "integer",
-                                         requires = IS_IN_SET(task_status, zero=None),
                                          default = 1,
                                          label = T("Checklist Item"),
-                                         represent = lambda opt: \
-                                                     task_status.get(opt, UNKNOWN_OPT))
+                                         represent = s3_options_represent(task_status),
+                                         requires = IS_IN_SET(task_status, zero=None),
+                                         )
 
         tablename = "dvi_checklist"
         define_table(tablename,
@@ -487,11 +483,13 @@ class DVIModel(S3Model):
                                                    table.location_id,
                                                    table.track_id,
                                                    table.date_of_recovery,
-                                                   limitby=(0, 1)).first()
+                                                   limitby = (0, 1),
+                                                   ).first()
         if body and body.location_id:
             tracker = S3Tracker()
-            tracker(record=body).set_location(body.location_id,
-                                              timestmp=body.date_of_recovery)
+            tracker(record = body).set_location(body.location_id,
+                                                timestmp = body.date_of_recovery,
+                                                )
 
     # -------------------------------------------------------------------------
     @staticmethod

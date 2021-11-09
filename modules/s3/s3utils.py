@@ -56,6 +56,54 @@ RCVARS = "rcvars"
 URLSCHEMA = re.compile(r"((?:(())(www\.([^/?#\s]*))|((http(s)?|ftp):)"
                        r"(//([^/?#\s]*)))([^?#\s]*)(\?([^#\s]*))?(#([^\s]*))?)")
 
+__all__ = ("NONE", # Consistency & RAD
+           "OrderedDict", # RAD
+           "S3CustomController",
+           "S3MarkupStripper",
+           "S3MultiPath",
+           "S3PriorityRepresent",
+           "S3TypeConverter",
+           "StringTemplateParser",
+           "Traceback",
+           "URL2",
+           "s3_addrow",
+           "s3_avatar_represent",
+           "s3_comments_represent",
+           "s3_datatable_truncate",
+           "s3_dev_toolbar",
+           "s3_flatlist",
+           "s3_format_fullname",
+           "s3_fullname",
+           "s3_fullname_bulk",
+           "s3_get_extension",
+           "s3_get_extension_from_url",
+           "s3_get_foreign_key",
+           "s3_get_last_record_id",
+           "s3_has_foreign_key",
+           "s3_keep_messages",
+           "s3_mark_required",
+           "s3_options_represent",
+           "s3_orderby_fields",
+           "s3_phone_represent",
+           "s3_qrcode_represent",
+           "s3_redirect_default",
+           "s3_remove_last_record_id",
+           "s3_represent_value",
+           "s3_required_label",
+           "s3_set_extension",
+           "s3_set_match_strings",
+           "s3_store_last_record_id",
+           "s3_str",
+           "s3_strip_markup",
+           "s3_text_represent",
+           "s3_truncate",
+           "s3_trunk8",
+           "s3_url_represent",
+           "s3_URLise",
+           "s3_validate",
+           "s3_yes_no_represent",
+           )
+
 # =============================================================================
 def s3_get_last_record_id(tablename):
     """
@@ -2892,6 +2940,7 @@ class S3MarkupStripper(HTMLParser, object): # enforce new-style class in Py2
     def stripped(self):
         return "".join(self.result)
 
+# -----------------------------------------------------------------------------
 def s3_strip_markup(text):
 
     try:

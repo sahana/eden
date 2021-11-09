@@ -6,7 +6,7 @@ from os import path
 from gluon import *
 from gluon.storage import Storage
 
-from s3 import ICON, IS_FLOAT_AMOUNT, s3_str, \
+from s3 import ICON, IS_FLOAT_AMOUNT, NONE, s3_str, \
                S3CustomController, S3Report, s3_request, S3Represent
 
 from s3db.inv import SHIP_DOC_PENDING, SHIP_DOC_COMPLETE, \
@@ -826,8 +826,12 @@ class inv_dashboard(S3CustomController):
         stockpile_weight = 0
         stockpile_volume = 0
         for row in rows:
-            stockpile_weight += row["inv_inv_item.total_weight"]()
-            stockpile_volume += row["inv_inv_item.total_volume"]()
+            weight = row["inv_inv_item.total_weight"]()
+            if weight != NONE:
+                stockpile_weight += weight
+            volume = row["inv_inv_item.total_volume"]()
+            if volume != NONE:
+                stockpile_volume += volume
 
         fields = ["id",
                   "track_item.total_weight",

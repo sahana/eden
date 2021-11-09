@@ -109,9 +109,7 @@ class EventModel(S3Model):
         define_table = self.define_table
         set_method = self.set_method
 
-        messages = current.messages
-        NONE = messages["NONE"]
-        #AUTOCOMPLETE_HELP = messages.AUTOCOMPLETE_HELP
+        #AUTOCOMPLETE_HELP = current.messages.AUTOCOMPLETE_HELP
 
         disaster = settings.get_event_label() # If we add more options in future then == "Disaster"
         exercise = settings.get_event_exercise()
@@ -607,7 +605,7 @@ class EventModel(S3Model):
         # Custom Method to Assign HRs
         set_method("event", "event",
                    method = "assign",
-                   action = self.pr_AssignMethod(component="human_resource"),
+                   action = self.pr_AssignMethod(component = "human_resource"),
                    )
 
         # ---------------------------------------------------------------------
@@ -930,9 +928,9 @@ class EventModel(S3Model):
         try:
             thisdate = row["event_event.start_date"]
         except AttributeError:
-            return current.messages["NONE"]
+            return NONE
         if not thisdate:
-            return current.messages["NONE"]
+            return NONE
 
         return thisdate.year
 
@@ -1494,7 +1492,7 @@ class EventAlertModel(S3Model):
                      Field("body", "text",
                            label = T("Message"),
                            requires = IS_NOT_EMPTY(),
-                           represent = lambda v: v or current.messages["NONE"],
+                           represent = lambda v: v or NONE,
                            ),
                      # Link to the Message once sent
                      self.msg_message_id(readable = False),

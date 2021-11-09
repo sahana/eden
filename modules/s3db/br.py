@@ -61,8 +61,6 @@ __all__ = ("BRCaseModel",
            "br_person_anonymize",
            )
 
-from collections import OrderedDict
-
 from gluon import *
 from gluon.storage import Messages, Storage
 
@@ -1337,7 +1335,6 @@ class BRAssistanceModel(S3Model):
         configure = self.configure
 
         labels = br_terminology()
-        NONE = current.messages["NONE"]
 
         case_activity_id = self.br_case_activity_id
 
@@ -2156,7 +2153,6 @@ class BRAssistanceOfferModel(S3Model):
         # Whether and how to use reference numbers in offers
         refno = settings.get_br_assistance_offer_refno()
 
-        NONE = current.messages["NONE"]
         string_represent = lambda v: v if v else NONE
 
         # ---------------------------------------------------------------------

@@ -854,7 +854,7 @@ class SyncDatasetModel(S3Model):
                                    ),
                          )
         else:
-            return current.messages["NONE"]
+            return NONE
 
 # =============================================================================
 class SyncLogModel(S3Model):
@@ -933,10 +933,6 @@ class SyncTaskModel(S3Model):
         db = current.db
         s3 = current.response.s3
 
-        messages = current.messages
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
-        NONE = messages["NONE"]
-
         crud_strings = s3.crud_strings
         define_table = self.define_table
 
@@ -978,8 +974,7 @@ class SyncTaskModel(S3Model):
             sync_policies.THIS: T("never update")
         }
 
-        sync_policy_represent = lambda opt: \
-                                opt and sync_policy.get(opt, UNKNOWN_OPT) or NONE
+        sync_policy_represent = s3_options_represent(sync_policy)
 
         tablename = "sync_task"
         define_table(tablename,
@@ -1163,7 +1158,8 @@ class SyncTaskModel(S3Model):
             msg_record_created = T("Resource configured"),
             msg_record_modified = T("Resource configuration updated"),
             msg_record_deleted = T("Resource configuration deleted"),
-            msg_list_empty = T("No resources configured yet"))
+            msg_list_empty = T("No resources configured yet"),
+            )
 
         # Resource Configuration
         configure(tablename,

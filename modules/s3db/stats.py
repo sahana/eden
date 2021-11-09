@@ -250,8 +250,6 @@ class StatsDemographicModel(S3Model):
         T = current.T
         db = current.db
 
-        NONE = current.messages["NONE"]
-
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table

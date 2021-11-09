@@ -51,7 +51,6 @@ __all__ = ("CAPAlertModel",
 import datetime
 import os
 
-from collections import OrderedDict
 from io import StringIO
 from urllib import request as urllib2
 from urllib.error import HTTPError, URLError
@@ -1006,7 +1005,7 @@ $.filterOptionsS3({
             else:
                 repr_str = current.s3db.cap_alert_represent(alert_id)
         else:
-            repr_str = current.messages["NONE"]
+            repr_str = NONE
 
         return repr_str
 
@@ -1532,7 +1531,7 @@ $.filterOptionsS3({
 
             # Clean up empty audience field
             audience = info.audience
-            if not audience or audience == current.messages["NONE"]:
+            if not audience or audience == NONE:
                 update["audience"] = None
 
             # Always US English:
@@ -2871,7 +2870,7 @@ class CAPWarningPriorityModel(S3Model):
         """
 
         if not color_code:
-            output = current.messages["NONE"]
+            output = NONE
         else:
             style = "width:%(size)s;height:%(size)s;background-color:#%(color)s;"
             output = DIV(_style = style % {"size": "2em", "color": color_code})
@@ -4531,7 +4530,7 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
                    _id=item_id,
                    )
     else:
-        if priority == current.messages["NONE"]:
+        if priority == NONE:
             priority = ""
         sender_name = record["cap_info.sender_name"]
         sent = record["cap_alert.sent"]

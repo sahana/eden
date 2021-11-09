@@ -111,8 +111,6 @@ class AssetModel(S3Model):
         organisation_id = self.org_organisation_id
         person_id = self.pr_person_id
 
-        NONE = current.messages["NONE"]
-
         settings = current.deployment_settings
         org_site_label = settings.get_org_site_label()
         #radios = settings.get_asset_radios()
@@ -1146,8 +1144,6 @@ def asset_rheader(r):
             T = current.T
             s3db = current.s3db
             s3 = current.response.s3
-
-            NONE = current.messages["NONE"]
 
             if record.type == ASSET_TYPE_TELEPHONE:
                 tabs = [(T("Asset Details"), None, {"native": True}),

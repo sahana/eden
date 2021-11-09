@@ -159,7 +159,7 @@ class ChannelModel(S3Model):
                      Field("status",
                            #label = T("Status"),
                            #represent = s3_yes_no_represent,
-                           represent = lambda v: v or current.messages["NONE"],
+                           represent = lambda v: v or NONE,
                            ),
                      *s3_meta_fields())
 
@@ -2129,7 +2129,7 @@ class TwitterModel(S3Model):
         """
 
         if not nickname:
-            return current.messages["NONE"]
+            return NONE
 
         db = current.db
         s3db = current.s3db
@@ -2525,10 +2525,6 @@ class BaseStationModel(S3Model):
 
         T = current.T
 
-        messages = current.messages
-        NONE = messages["NONE"]
-        OBSOLETE = messages.OBSOLETE
-
         # ---------------------------------------------------------------------
         # Base Stations (Cell Towers)
         #
@@ -2565,7 +2561,7 @@ class BaseStationModel(S3Model):
                           Field("obsolete", "boolean",
                                 default = False,
                                 label = T("Obsolete"),
-                                represent = lambda opt: OBSOLETE if opt else NONE,
+                                represent = lambda opt: current.messages.OBSOLETE if opt else NONE,
                                 readable = False,
                                 writable = False,
                                 ),

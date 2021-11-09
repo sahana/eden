@@ -55,7 +55,6 @@ __all__ = ("LocationModel",
 import json
 import os
 
-from collections import OrderedDict
 from io import BytesIO
 from uuid import uuid4
 
@@ -110,7 +109,6 @@ class LocationModel(S3Model):
         db = current.db
         messages = current.messages
         settings = current.deployment_settings
-        NONE = messages["NONE"]
 
         # Shortcuts
         #define_table = self.define_table
@@ -454,7 +452,7 @@ class LocationModel(S3Model):
         """ FK representation """
 
         if not code:
-            return current.messages["NONE"]
+            return NONE
 
         return current.gis.get_country(code, key_type="code") or \
                current.messages.UNKNOWN_OPT
@@ -912,7 +910,7 @@ class LocationModel(S3Model):
     @staticmethod
     def gis_level_represent(level):
         if not level:
-            return current.messages["NONE"]
+            return NONE
         elif level == "L0":
             return current.messages.COUNTRY
         else:
@@ -3063,7 +3061,6 @@ class LayerMapModel(S3Model):
         MAX_FILENAME_LENGTH = current.MAX_FILENAME_LENGTH
 
         messages = current.messages
-        NONE  = messages["NONE"]
         TRANSPARENT = T("Transparent?")
         BASE_LAYER = T("Base Layer?")
         LOCATION = T("Location")
@@ -4148,7 +4145,7 @@ class LayerMapModel(S3Model):
                                      ),
                          )
         else:
-            return current.messages["NONE"]
+            return NONE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4217,7 +4214,7 @@ class LayerMapModel(S3Model):
                                      ),
                          )
         else:
-            return current.messages["NONE"]
+            return NONE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4985,7 +4982,7 @@ def name_field():
 def desc_field():
     return S3ReusableField("description", "text",
                            label = current.T("Description"),
-                           represent = lambda v: v or current.messages["NONE"],
+                           represent = lambda v: v or NONE,
                            widget = s3_comments_widget,
                            )
 
@@ -4993,14 +4990,14 @@ def desc_field():
 def source_name_field():
     return S3ReusableField("source_name",
                            label = current.T("Source Name"),
-                           represent = lambda v: v or current.messages["NONE"],
+                           represent = lambda v: v or NONE,
                            )
 
 # =============================================================================
 def source_url_field():
     return S3ReusableField("source_url",
                            label = current.T("Source URL"),
-                           represent = lambda v: v or current.messages["NONE"],
+                           represent = lambda v: v or NONE,
                            requires = IS_EMPTY_OR(IS_URL(mode="generic")),
                            )
 
@@ -5832,7 +5829,7 @@ def gis_layer_represent(layer_id, row=None, show_link=True):
         s3db = current.s3db
         ltable = s3db.gis_layer_entity
     elif not layer_id:
-        return current.messages["NONE"]
+        return NONE
     else:
         db = current.db
         s3db = current.s3db

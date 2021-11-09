@@ -143,9 +143,6 @@ from s3layouts import S3PopupLink
 OU = 1 # role type which indicates hierarchy, see role_types
 OTHER_ROLE = 9
 
-# Compact JSON encoding
-SEPARATORS = (",", ":")
-
 # =============================================================================
 class PersonEntityModel(S3Model):
     """ Person Super-Entity """
@@ -782,7 +779,6 @@ class PersonModel(S3Model):
         settings = current.deployment_settings
 
         messages = current.messages
-        NONE = messages["NONE"]
 
         super_link = self.super_link
         add_components = self.add_components
@@ -1276,7 +1272,7 @@ class PersonModel(S3Model):
 
         age = cls.pr_age(row)
         if age is None or age < 0:
-            return current.messages["NONE"]
+            return NONE
         else:
             return age
 
@@ -1296,7 +1292,7 @@ class PersonModel(S3Model):
 
         age = cls.pr_age(row)
         if age is None or age < 0:
-            return current.messages["NONE"]
+            return NONE
         else:
             return current.deployment_settings.get_pr_age_group(age)
 
@@ -2423,8 +2419,6 @@ class PersonGroupModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
-
-        NONE = current.messages["NONE"]
 
         # ---------------------------------------------------------------------
         # Group Statuses
@@ -4023,7 +4017,7 @@ class PersonEntityContactModel(S3Model):
                            ),
                      Field("value", notnull=True,
                            label= T("Value"),
-                           represent = lambda v: v or messages["NONE"],
+                           represent = lambda v: v or NONE,
                            requires = IS_NOT_EMPTY(),
                            ),
                      Field("contact_description",
@@ -4392,7 +4386,7 @@ class PersonEntityImageModel(S3Model):
         """ Representation """
 
         if not image:
-            return current.messages["NONE"]
+            return NONE
 
         url_full = URL(c="default", f="download",
                        args = image,
@@ -5209,7 +5203,7 @@ class PersonAvailabilityModel(S3Model):
                            label = T("Hours per Week"),
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 85)),
                            represent = lambda v: str(v) if v is not None \
-                                                 else current.messages["NONE"],
+                                                 else NONE,
                            readable = False,
                            writable = False,
                            ),
@@ -5832,7 +5826,6 @@ class PersonEducationModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         messages = current.messages
-        NONE = messages["NONE"]
 
         auth = current.auth
         ADMIN = current.session.s3.system_roles.ADMIN
@@ -6299,8 +6292,6 @@ class PersonDetailsModel(S3Model):
         T = current.T
         settings = current.deployment_settings
         messages = current.messages
-
-        NONE = messages["NONE"]
 
         # ---------------------------------------------------------------------
         # Person Details
@@ -7926,7 +7917,7 @@ def pr_url_represent(url):
     """ Representation """
 
     if not url:
-        return current.messages["NONE"]
+        return NONE
 
     parts = url.split("/")
     image = parts[-1]
@@ -9064,7 +9055,6 @@ class pr_Template(S3Method):
                 rfields = {rfield.selector: rfield for rfield in data.rfields}
 
                 # Format Data
-                NONE = current.messages["NONE"]
                 prefix = resource.prefix_selector
 
                 doc_data = {}

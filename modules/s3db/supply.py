@@ -103,7 +103,6 @@ class SupplyModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
-        NONE = current.messages["NONE"]
         YES = T("Yes")
 
         is_float_represent = IS_FLOAT_AMOUNT.represent
@@ -873,7 +872,7 @@ $.filterOptionsS3({
         """
 
         if not record_id:
-            return current.messages["NONE"]
+            return NONE
 
         db = current.db
 
@@ -2291,7 +2290,7 @@ def supply_item_rheader(r):
             model_field = table.model
             if model_field.readable:
                 model_row = TR(TH("%s: " % model_field.label),
-                               item.model or current.messages["NONE"],
+                               item.model or NONE,
                                )
             else:
                 model_row = ""
@@ -2371,7 +2370,7 @@ def supply_item_entity_category(row):
     if record:
         return table.item_category_id.represent(record.item_category_id)
     else:
-        return current.messages["NONE"]
+        return NONE
 
 # -----------------------------------------------------------------------------
 def supply_item_entity_country(row):
@@ -2440,7 +2439,7 @@ def supply_item_entity_country(row):
     if record:
         return record.L0 or current.T("Unknown")
     else:
-        return current.messages["NONE"]
+        return NONE
 
 # -----------------------------------------------------------------------------
 def supply_item_entity_organisation(row):
@@ -2506,7 +2505,7 @@ def supply_item_entity_organisation(row):
     if record:
         return organisation_represent(record.organisation_id)
     else:
-        return current.messages["NONE"]
+        return NONE
 
 # -----------------------------------------------------------------------------
 def supply_item_entity_contacts(row):
@@ -2562,7 +2561,7 @@ def supply_item_entity_contacts(row):
         # @ToDo: Assets and req_items
         record = None
 
-    default = current.messages["NONE"]
+    default = NONE
 
     if not record:
         return default
@@ -2670,9 +2669,9 @@ def supply_item_entity_status(row):
 
     else:
         # @ToDo: Assets and req_items
-        return current.messages["NONE"]
+        return NONE
 
-    return status or current.messages["NONE"]
+    return status or NONE
 
 # =============================================================================
 def supply_item_controller():

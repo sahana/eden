@@ -80,9 +80,6 @@ from gluon.storage import Storage
 from ..s3 import *
 from s3layouts import S3PopupLink
 
-# Compact JSON encoding
-SEPARATORS = (",", ":")
-
 # =============================================================================
 class HRModel(S3Model):
 
@@ -108,8 +105,7 @@ class HRModel(S3Model):
         ADMIN = current.session.s3.system_roles.ADMIN
         is_admin = auth.s3_has_role(ADMIN)
 
-        messages = current.messages
-        AUTOCOMPLETE_HELP = messages.AUTOCOMPLETE_HELP
+        AUTOCOMPLETE_HELP = current.messages.AUTOCOMPLETE_HELP
         #ORGANISATION = messages.ORGANISATION
 
         add_components = self.add_components
@@ -452,7 +448,7 @@ class HRModel(S3Model):
                            ),
                      Field("code",
                            label = code_label,
-                           represent = lambda v: v or messages["NONE"],
+                           represent = lambda v: v or NONE,
                            readable = use_code,
                            writable = use_code,
                            ),
@@ -1882,7 +1878,6 @@ class HRJobModel(S3Model):
     def model(self):
 
         s3db = current.s3db
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         define_table = self.define_table
 
@@ -2018,8 +2013,7 @@ class HRJobModel(S3Model):
                      Field("type", "integer",
                            default = 1,
                            label = T("Type"),
-                           represent = lambda opt: \
-                                       hrm_type_opts.get(opt, UNKNOWN_OPT),
+                           represent = s3_options_represent(hrm_type_opts),
                            requires = IS_IN_SET(hrm_type_opts, zero=None),
                            ),
                      Field("number", "integer"),
@@ -2086,10 +2080,7 @@ class HRSkillModel(S3Model):
         organisation_id = self.org_organisation_id
         person_id = self.pr_person_id
 
-        messages = current.messages
-        NONE = messages["NONE"]
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
-        AUTOCOMPLETE_HELP = messages.AUTOCOMPLETE_HELP
+        AUTOCOMPLETE_HELP = current.messages.AUTOCOMPLETE_HELP
         ORGANISATION = settings.get_hrm_organisation_label()
 
         ADMIN = current.session.s3.system_roles.ADMIN
@@ -3948,7 +3939,7 @@ class HRSkillModel(S3Model):
                                      args = [value],
                                      ))
         else:
-            return current.messages["NONE"]
+            return NONE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5548,9 +5539,9 @@ def hrm_programme_hours_month(row):
     try:
         thisdate = row["hrm_programme_hours.date"]
     except AttributeError:
-        return current.messages["NONE"]
+        return NONE
     if not thisdate:
-        return current.messages["NONE"]
+        return NONE
 
     #thisdate = thisdate.date()
     month = thisdate.month
@@ -6186,7 +6177,7 @@ class hrm_TrainingRepresent(S3Represent):
 
         name = row["hrm_course.name"]
         if not name:
-            name = current.messages.UNKNOWN_OPT
+            name = NONE
         return name
 
 # =============================================================================
@@ -6270,10 +6261,10 @@ class hrm_TrainingEventRepresent(S3Represent):
         # Course Details
         course = row.get("hrm_course")
         if not course:
-            return current.messages.UNKNOWN_OPT
+            return NONE
         name = course.get("name")
         if not name:
-            name = current.messages.UNKNOWN_OPT
+            name = NONE
         representation = ["%s --" % name]
         append = representation.append
         code = course.get("code")
@@ -6320,7 +6311,7 @@ class hrm_TrainingEventRepresent(S3Represent):
 #    if row:
 #        id = row.id
 #    elif not id:
-#        return current.messages["NONE"]
+#        return NONE
 #    db = current.db
 #    s3db = current.s3db
 #    table = s3db.hrm_position
@@ -6339,7 +6330,7 @@ class hrm_TrainingEventRepresent(S3Represent):
 #            represent = "%s (%s)" % (represent,
 #                                     position.org_organisation.name)
 #    except:
-#        return current.messages["NONE"]
+#        return NONE
 #    return represent
 #
 # =============================================================================
@@ -6921,7 +6912,7 @@ def hrm_training_month(row):
     if date:
         return "%s/%02d" % (date.year, date.month)
     else:
-        return current.messages["NONE"]
+        return NONE
 
 # -------------------------------------------------------------------------
 def hrm_training_year(row):
@@ -6936,7 +6927,7 @@ def hrm_training_year(row):
     if date:
         return date.year
     else:
-        return current.messages["NONE"]
+        return NONE
 
 # =============================================================================
 def hrm_training_job_title(row):
@@ -6971,7 +6962,7 @@ def hrm_training_job_title(row):
                     output = jobtitle
             return output
 
-    return current.messages["NONE"]
+    return NONE
 
 # =============================================================================
 def hrm_training_organisation(row):
@@ -7004,7 +6995,7 @@ def hrm_training_organisation(row):
                     output = org_repr
             return output
 
-    return current.messages["NONE"]
+    return NONE
 
 # =============================================================================
 def hrm_rheader(r, tabs=None, profile=False):
@@ -7139,7 +7130,6 @@ def hrm_rheader(r, tabs=None, profile=False):
                     activity_type_ids = list(set(activity_type_ids))
                     # Represent
                     activity_types = s3db.vol_activity_activity_type.activity_type_id.represent.bulk(activity_type_ids)
-                    NONE = current.messages["NONE"]
                     if activity_types == [NONE]:
                         activity_types = NONE
                     else:
@@ -9223,7 +9213,6 @@ def hrm_xls_list_fields(r, staff=True, vol=True):
                                                                      )
     table.site_id.represent = s3db.org_SiteRepresent(show_type = False)
 
-    current.messages["NONE"] = "" # Don't want to see "-"
     ptable = s3db.pr_person
     ptable.middle_name.represent = lambda v: v or ""
     ptable.last_name.represent = lambda v: v or ""
@@ -9247,11 +9236,11 @@ def hrm_xls_list_fields(r, staff=True, vol=True):
         list_fields.append(("Organisation", "organisation_id"))
     if (staff and settings.get_hrm_use_job_titles()) or \
        (vol and settings.get_hrm_vol_roles()):
-        table.job_title_id.represent = S3Represent("hrm_job_title", translate=True) # Need to reinitialise to get the new value for NONE
+        table.job_title_id.represent = S3Represent("hrm_job_title", none="", translate=True) # Need to reinitialise to get the new value for none
         list_fields.append(("Job Title", "job_title_id"))
     if (staff and settings.get_hrm_staff_departments()) or \
        (vol and settings.get_hrm_vol_departments()):
-        table.department_id.represent = S3Represent("hrm_department") # Need to reinitialise to get the new value for NONE
+        table.department_id.represent = S3Represent("hrm_department", none="") # Need to reinitialise to get the new value for none
         list_fields.append(("Department", "department_id"))
     if staff or ("site_id" in settings.get_hrm_location_vol()):
         list_fields += [("Office", "site_id"),
@@ -9282,18 +9271,18 @@ def hrm_xls_list_fields(r, staff=True, vol=True):
         list_fields.append(("Home Postcode", "home_address.location_id$addr_postcode"))
 
     if settings.get_hrm_use_trainings():
-        s3db.hrm_training.course_id.represent = S3Represent("hrm_course", translate=True) # Need to reinitialise to get the new value for NONE
+        s3db.hrm_training.course_id.represent = S3Represent("hrm_course", none="", translate=True) # Need to reinitialise to get the new value for none
         list_fields.append(("Trainings", "person_id$training.course_id"))
     if settings.get_hrm_use_certificates():
         # @ToDo: Make Importable
-        s3db.hrm_certification.certificate_id.represent = S3Represent("hrm_certificate") # Need to reinitialise to get the new value for NONE
+        s3db.hrm_certification.certificate_id.represent = S3Represent("hrm_certificate", none="") # Need to reinitialise to get the new value for none
         list_fields.append(("Certificates", "person_id$certification.certificate_id"))
     if settings.get_hrm_use_skills():
-        s3db.hrm_competency.skill_id.represent = S3Represent("hrm_skill") # Need to reinitialise to get the new value for NONE
+        s3db.hrm_competency.skill_id.represent = S3Represent("hrm_skill", none="") # Need to reinitialise to get the new value for none
         list_fields.append(("Skills", "person_id$competency.skill_id"))
     if settings.get_hrm_use_education():
         etable = s3db.pr_education
-        etable.level_id.represent = S3Represent("pr_education_level") # Need to reinitialise to get the new value for NONE
+        etable.level_id.represent = S3Represent("pr_education_level", none="") # Need to reinitialise to get the new value for none
         etable.award.represent = lambda v: v or ""
         etable.major.represent = lambda v: v or ""
         etable.grade.represent = lambda v: v or ""
@@ -9312,7 +9301,7 @@ def hrm_xls_list_fields(r, staff=True, vol=True):
             list_fields.append(("Active", "details.active"))
         if settings.get_hrm_vol_experience() in ("programme", "both"):
             # @ToDo: Make Importable
-            s3db.hrm_programme_hours.programme_id.represent = S3Represent("hrm_programme") # Need to reinitialise to get the new value for NONE
+            s3db.hrm_programme_hours.programme_id.represent = S3Represent("hrm_programme", none="") # Need to reinitialise to get the new value for none
             list_fields.append(("Programs", "person_id$hours.programme_id"))
         if settings.get_hrm_use_awards():
             list_fields.append(("Awards", "person_id$award.award_id"))

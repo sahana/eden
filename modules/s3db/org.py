@@ -98,9 +98,6 @@ from ..s3 import *
 from s3dal import Row
 from s3layouts import S3PopupLink
 
-# Compact JSON encoding
-SEPARATORS = (",", ":")
-
 # =============================================================================
 class OrganisationModel(S3Model):
     """
@@ -123,7 +120,6 @@ class OrganisationModel(S3Model):
 
         add_components = self.add_components
         configure = self.configure
-        NONE = messages["NONE"]
 
         multiple_organisation_types = settings.get_org_organisation_types_multiple()
         use_country = settings.get_org_country()
@@ -1216,8 +1212,6 @@ class OrganisationGroupModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
-        NONE = current.messages["NONE"]
-
         # ---------------------------------------------------------------------
         # Organization Groups
         #
@@ -2107,8 +2101,6 @@ class OrganisationSectorModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-
-        NONE = current.messages["NONE"]
 
         location = current.session.s3.location_filter
         if location:
@@ -3283,10 +3275,6 @@ class SiteModel(S3Model):
         T = current.T
         auth = current.auth
 
-        messages = current.messages
-        NONE = messages["NONE"]
-        OBSOLETE = messages.OBSOLETE
-
         set_method = self.set_method
 
         site_id = "site_id"
@@ -3326,7 +3314,7 @@ class SiteModel(S3Model):
                           Field("obsolete", "boolean",
                                 default = False,
                                 label = T("Obsolete"),
-                                represent = lambda opt: OBSOLETE if opt else NONE,
+                                represent = lambda opt: current.messages.OBSOLETE if opt else NONE,
                                 readable = False,
                                 writable = False,
                                 ),
@@ -4483,10 +4471,6 @@ class FacilityModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
-        messages = current.messages
-        NONE = messages["NONE"]
-        OBSOLETE = messages.OBSOLETE
-
         hierarchical_facility_types = settings.get_org_facility_types_hierarchical()
 
         # ---------------------------------------------------------------------
@@ -4653,7 +4637,7 @@ class FacilityModel(S3Model):
                      Field("obsolete", "boolean",
                            default = False,
                            label = T("Obsolete"),
-                           represent = lambda opt: OBSOLETE if opt else NONE,
+                           represent = lambda opt: current.messages.OBSOLETE if opt else NONE,
                            readable = False,
                            writable = False,
                            ),
@@ -5140,10 +5124,6 @@ class OfficeModel(S3Model):
         db = current.db
         s3 = current.response.s3
 
-        messages = current.messages
-        NONE = messages["NONE"]
-        OBSOLETE = messages.OBSOLETE
-
         settings = current.deployment_settings
         add_components = self.add_components
         configure = self.configure
@@ -5197,7 +5177,9 @@ class OfficeModel(S3Model):
             msg_record_deleted = T("Office Type deleted"),
             msg_list_empty = T("No Office Types currently registered"))
 
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                translate = True,
+                                )
         office_type_id = S3ReusableField("office_type_id", "reference %s" % tablename,
                             label = T("Office Type"),
                             ondelete = "SET NULL",
@@ -5205,9 +5187,9 @@ class OfficeModel(S3Model):
                             requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_office_type.id",
                                                   represent,
-                                                  sort=True,
-                                                  filterby="organisation_id",
-                                                  filter_opts=filter_opts,
+                                                  sort = True,
+                                                  filterby = "organisation_id",
+                                                  filter_opts = filter_opts,
                                                   )),
                             sortby = "name",
                             comment = S3PopupLink(c = "org",
@@ -5297,7 +5279,7 @@ class OfficeModel(S3Model):
                      Field("obsolete", "boolean",
                            default = False,
                            label = T("Obsolete"),
-                           represent = lambda opt: OBSOLETE if opt else NONE,
+                           represent = lambda opt: current.messages.OBSOLETE if opt else NONE,
                            readable = False,
                            writable = False,
                            ),
@@ -5510,7 +5492,7 @@ def org_organisation_address(row):
         organisation_id = row.id
     except AttributeError:
         # not available
-        return current.messages["NONE"]
+        return NONE
 
     db = current.db
     s3db = current.s3db
@@ -5524,7 +5506,7 @@ def org_organisation_address(row):
                            limitby = (0, 1),
                            ).first()
 
-    return row.addr_street if row else current.messages["NONE"]
+    return row.addr_street if row else NONE
 
 # =============================================================================
 def org_organisation_logo(org,
@@ -6350,7 +6332,7 @@ class org_SiteCheckInMethod(S3Method):
                    "noPictureAvailable": s3_str(T("No picture available")),
                    "statusCheckedIn": s3_str(T("checked-in")),
                    "statusCheckedOut": s3_str(T("checked-out")),
-                   "statusNone": s3_str(current.messages["NONE"]),
+                   "statusNone": NONE,
                    "statusLabel": s3_str(T("Status")),
                    }
         self.inject_js(widget_id, options)
@@ -7092,7 +7074,7 @@ def org_rheader(r, tabs=None):
                 if rows:
                     return ", ".join([row.name for row in rows])
                 else:
-                    return current.messages["NONE"]
+                    return NONE
             rheader_fields = [["name",
                                "organisation_id",
                                "email",

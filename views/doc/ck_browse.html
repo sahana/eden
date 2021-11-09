@@ -1,4 +1,5 @@
-{{extend "layout.html"}}{{from gluon import current,URL}}
+{{include "jquery.html"}}
+{{from gluon import current,URL}}
 <style type="text/css">
 div.item {
  display: inline-block;
@@ -43,21 +44,23 @@ img {
 </style>
 {{
     def icon_url(category):
-        url = URL("static", "plugin_ckeditor/images") + "/page_white"
+        url = URL("static", "img")
         if category == "video":
-            return url + "_dvd.png"
+            return url + "/file/video.png"
+        elif category == "audio":
+            return url + "/file/audio.png"
         elif category == "pdf":
-            return url + "_acrobat.png"
+            return url + "/file/pdf.png"
+        elif category == "word":
+            return url + "/file/doc.png"
         elif category == "archive":
-            return url + "_compress.png"
+            return url + "/file/zip.png"
         elif category == "excel":
-            return url + "_excel.png"
-        elif category == "flash":
-            return url + "_flash.png"
+            return url + "/file/xls.png"
         elif category == "powerpoint":
-            return url + "_powerpoint.png"
+            return url + "/file/ppt.png"
         else:
-            return url + ".png"
+            return url + "/file/paperclip.png"
     pass
 }}
 <h3>Uploads</h3>
@@ -90,7 +93,7 @@ jQuery(function() {
     
     jQuery('.item').click(function() {
         var url = '{{=URL("default", "download")}}/' + jQuery(this).data('url');
-        window.opener.CKEDITOR.tools.callFunction({{=cknum}}, url);
+        window.opener.CKEDITOR.tools.callFunction({{=ckfuncnum}}, url);
         window.close();
     });
 });

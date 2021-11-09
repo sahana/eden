@@ -153,9 +153,7 @@ class FireStationModel(S3Model):
         T = current.T
         db = current.db
 
-        messages = current.messages
-        NONE = messages["NONE"]
-        OBSOLETE = messages.OBSOLETE
+        OBSOLETE = current.messages.OBSOLETE
 
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id

@@ -39,8 +39,6 @@ __all__ = ("VolunteerModel",
 
 import json
 
-from collections import OrderedDict
-
 from gluon import *
 from gluon.storage import Storage
 
@@ -520,9 +518,9 @@ def vol_activity_hours_month(row):
     try:
         thisdate = row["vol_activity_hours.date"]
     except AttributeError:
-        return current.messages["NONE"]
+        return NONE
     if not thisdate:
-        return current.messages["NONE"]
+        return NONE
 
     #thisdate = thisdate.date()
     month = thisdate.month
@@ -742,7 +740,7 @@ class VolunteerAwardModel(S3Model):
                 return A(origname,
                          _href=URL(c="default", f="download", args=[filename]))
         else:
-            return current.messages["NONE"]
+            return NONE
 
 # =============================================================================
 class VolunteerClusterModel(S3Model):
@@ -1182,7 +1180,6 @@ def vol_service_record(r, **attr):
                                     left = left,
                                     orderby = ~hrstable.date,
                                     )
-            NONE = current.messages["NONE"]
             for row in rows:
                 _row = row["vol_activity_hours"]
                 _date = _row.date
@@ -1244,7 +1241,6 @@ def vol_service_record(r, **attr):
                                     left = left,
                                     orderby = ~hrstable.date,
                                     )
-            NONE = current.messages["NONE"]
             for row in rows:
                 _row = row["hrm_programme_hours"]
                 _date = _row.date

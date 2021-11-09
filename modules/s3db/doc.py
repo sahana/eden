@@ -33,6 +33,7 @@ __all__ = ("DocumentLibrary",
            "DataCardModel",
            "doc_image_represent",
            "doc_document_list_layout",
+           "doc_filetype",
            )
 
 import os
@@ -66,8 +67,6 @@ class DocumentLibrary(S3Model):
         person_id = self.pr_person_id
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
-
-        NONE = current.messages["NONE"]
 
         # Shortcuts
         add_components = self.add_components
@@ -351,7 +350,7 @@ class DocumentLibrary(S3Model):
                                      )
                          )
         else:
-            return current.messages["NONE"]
+            return NONE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -622,7 +621,7 @@ def doc_image_represent(filename):
     """
 
     if not filename:
-        return current.messages["NONE"]
+        return NONE
 
     div = DIV(A(IMG(_src = URL(c="default", f="download",
                                args = filename,
@@ -681,7 +680,7 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
             # file name from the stored file name
             origname = current.s3db.doc_document.file.retrieve(filename)[0]
         except (IOError, TypeError):
-            origname = current.messages["NONE"]
+            origname = NONE
         doc_url = URL(c="default", f="download",
                       args = [filename],
                       )
@@ -796,7 +795,6 @@ class CKEditorModel(S3Model):
     """
 
     names = ("doc_ckeditor",
-             "doc_filetype",
              )
 
     def model(self):
@@ -824,42 +822,42 @@ class CKEditorModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {"doc_filetype": self.doc_filetype,
-                }
+        return {}
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def doc_filetype(filename):
-        """
-            Takes a filename and returns a category based on the file type.
-            Categories: word, excel, powerpoint, flash, pdf, image, video, audio, archive, other.
-        """
+# =============================================================================
+def doc_filetype(filename):
+    """
+        Takes a filename and returns a category based on the file type.
+        Categories: word, excel, powerpoint, flash, pdf, image, video, audio, archive, other.
 
-        ftype = "other"
+        Used by ck_browse.html
+    """
 
-        parts = os.path.splitext(filename)
-        if len(parts) > 1:
-            ext = parts[1][1:].lower()
-            if ext in ("png", "jpg", "jpeg", "gif"):
-                ftype = "image"
-            elif ext in ("avi", "mp4", "m4v", "ogv", "wmv", "mpg", "mpeg"):
-                ftype = "video"
-            elif ext in ("mp3", "m4a", "wav", "ogg", "aiff"):
-                ftype = "audio"
-            elif ext in ("zip", "7z", "tar", "gz", "tgz", "bz2", "rar"):
-                ftype = "archive"
-            elif ext in ("doc", "docx", "dot", "dotx", "rtf"):
-                ftype = "word"
-            elif ext in ("xls", "xlsx", "xlt", "xltx", "csv"):
-                ftype = "excel"
-            elif ext in ("ppt", "pptx"):
-                ftype = "powerpoint"
-            elif ext in ("flv", "swf"):
-                ftype = "flash"
-            elif ext == "pdf":
-                ftype = "pdf"
+    ftype = "other"
 
-        return ftype
+    parts = os.path.splitext(filename)
+    if len(parts) > 1:
+        ext = parts[1][1:].lower()
+        if ext in ("png", "jpg", "jpeg", "gif"):
+            ftype = "image"
+        elif ext in ("avi", "mp4", "m4v", "ogv", "wmv", "mpg", "mpeg"):
+            ftype = "video"
+        elif ext in ("mp3", "m4a", "wav", "ogg", "aiff"):
+            ftype = "audio"
+        elif ext in ("zip", "7z", "tar", "gz", "tgz", "bz2", "rar"):
+            ftype = "archive"
+        elif ext in ("doc", "docx", "dot", "dotx", "rtf"):
+            ftype = "word"
+        elif ext in ("xls", "xlsx", "xlt", "xltx", "csv"):
+            ftype = "excel"
+        elif ext in ("ppt", "pptx"):
+            ftype = "powerpoint"
+        #elif ext in ("flv", "swf"):
+        #    ftype = "flash"
+        elif ext == "pdf":
+            ftype = "pdf"
+
+    return ftype
 
 # =============================================================================
 class DataCardModel(S3Model):

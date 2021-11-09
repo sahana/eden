@@ -213,10 +213,17 @@ def ck_upload():
     """
         Controller to handle uploads to CKEditor
 
-        Based on https://github.com/timrichardson/web2py_ckeditor4
+        https://ckeditor.com/docs/ckeditor4/latest/guide/dev_file_upload.html
+
+        Originally based on https://github.com/timrichardson/web2py_ckeditor4
     """
 
-    upload = request.vars.upload
+    if request.method != "POST":
+        raise HTTP(405, "Only POST supported.")
+
+    post_vars = request.post_vars
+
+    upload = post_vars.upload
 
     if upload is None:
         raise HTTP(401, "Missing required upload.")
@@ -224,7 +231,11 @@ def ck_upload():
     if not hasattr(upload, "file"):
         raise HTTP(401, "Upload is not proper type.")
 
-    path = os.path.join(request.folder, "uploads")
+    token = post_vars.get("ckCsrfToken")
+
+    os_path = os.path
+
+    path = os_path.join(request.folder, "uploads")
 
     # Load Model
     table = s3db.doc_ckeditor
@@ -243,11 +254,11 @@ def ck_upload():
     #if self.settings.uploadfs:
     #    length = self.settings.uploadfs.getsize(new_filename)
     #else:
-    length = os.path.getsize(os.path.join(path, new_filename))
+    length = os_path.getsize(os_path.join(path, new_filename))
 
     mime_type = upload.headers["content-type"]
 
-    title = os.path.splitext(old_filename)[0]
+    title = os_path.splitext(old_filename)[0]
 
     result = table.validate_and_insert(title = title,
                                        filename = old_filename,
@@ -256,28 +267,35 @@ def ck_upload():
                                        mime_type = mime_type,
                                        )
 
-    if result.id:
-        text = ""
-    else:
-        text = result.errors
+    url = URL(c = "default",
+              f = "download",
+              args = [new_filename],
+              )
 
-    url = URL(c="default", f="download",
-              args = [new_filename])
+    output = {"uploaded": 1,
+              "fileName": old_filename,
+              "url": url,
+              }
+    if not result.id:
+        output["errors"] = {"message": result.errors,
+                            }
 
-    return {"text": text,
-            "cknum": request.vars.CKEditorFuncNum,
-            "url": url,
-            }
+    from s3 import SEPARATORS
+    response.headers["Content-Type"] = "application/json"
+    return json.dumps(output, separators=SEPARATORS)
 
 # -----------------------------------------------------------------------------
 def ck_browse():
     """
-        Controller to handle uploads to CKEditor
+        Controller to view files uploaded to CKEditor by this User
+        https://ckeditor.com/docs/ckeditor4/latest/guide/dev_file_browser_api.html
+
+        @ToDo: Check Permissions
     """
 
     table = s3db.doc_ckeditor
     #browse_filter = {}
-    set = db(table.id > 0)
+    set = db(table.deleted == False) # table.owned_by_user == auth.user.id
     #for key, val in browse_filter.items():
     #    if value[0] == "<":
     #        set = set(table[key] < value[1:])
@@ -288,16 +306,22 @@ def ck_browse():
     #    else:
     #        set = set(table[key] == value)
 
-    rows = set.select(orderby = table.title)
+    rows = set.select(table.title,
+                      table.filename,
+                      table.upload,
+                      orderby = table.title,
+                      )
 
     return {"rows": rows,
-            "cknum": request.vars.CKEditorFuncNum,
+            "ckfuncnum": get_vars.CKEditorFuncNum,
             }
 
 # -----------------------------------------------------------------------------
 def ck_delete():
     """
         Controller to handle deletes in CKEditor
+
+        @ToDo: Check Permissions
     """
 
     try:

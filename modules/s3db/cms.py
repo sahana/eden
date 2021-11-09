@@ -55,9 +55,6 @@ from gluon.storage import Storage
 from ..s3 import *
 from s3layouts import S3PopupLink
 
-# Compact JSON encoding
-SEPARATORS = (",", ":")
-
 # =============================================================================
 class CMSContentModel(S3Model):
     """
@@ -1750,7 +1747,6 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     db = current.db
     s3db = current.s3db
     settings = current.deployment_settings
-    NONE = current.messages["NONE"]
 
     org_field = settings.get_cms_organisation()
     # Convert to the right format for this context

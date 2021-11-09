@@ -64,11 +64,6 @@ class HospitalModel(S3Model):
         # HAVE compliance?
         have = settings.get_med_have()
 
-        messages = current.messages
-        NONE = messages["NONE"]
-        OBSOLETE = messages.OBSOLETE
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
-
         add_components = self.add_components
         super_link = self.super_link
 
@@ -188,7 +183,7 @@ class HospitalModel(S3Model):
                           Field("obsolete", "boolean",
                                 default = False,
                                 label = T("Obsolete"),
-                                represent = lambda opt: OBSOLETE if opt else NONE,
+                                represent = lambda opt: current.messages.OBSOLETE if opt else NONE,
                                 ),
                           s3_comments(),
                           *s3_meta_fields())
@@ -939,8 +934,6 @@ class HospitalStatusModel(S3Model):
 
         T = current.T
 
-        NONE = current.messages["NONE"]
-
         # ---------------------------------------------------------------------
         # Hospital status
         #
@@ -1303,10 +1296,6 @@ class PharmacyModel(S3Model):
 
         T = current.T
 
-        messages = current.messages
-        NONE = messages.NONE
-        OBSOLETE = messages.OBSOLETE
-
         # ---------------------------------------------------------------------
         # Pharmacies
         # - usually commercial
@@ -1359,7 +1348,7 @@ class PharmacyModel(S3Model):
                           Field("obsolete", "boolean",
                                 default = False,
                                 label = T("Obsolete"),
-                                represent = lambda opt: OBSOLETE if opt else NONE,
+                                represent = lambda opt: current.messages.OBSOLETE if opt else NONE,
                                 ),
                           s3_comments(),
                           *s3_meta_fields())
@@ -1463,7 +1452,6 @@ def med_hospital_rheader(r, tabs=None):
             status = lambda k: (s is not None and
                                 [stable[k].represent(s[k])] or
                                 [T("n/a")])[0]
-            NONE = current.messages["NONE"]
             total_beds = hospital.total_beds
             if total_beds is None:
                 total_beds = NONE

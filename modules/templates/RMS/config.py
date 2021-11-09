@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import json
 from collections import OrderedDict
 
 from gluon import current, IS_IN_SET, URL
 from gluon.storage import Storage
 
-from s3 import S3Method, S3Represent
+from s3 import S3Method, S3Represent, SEPARATORS
 
 from .controllers import deploy_index, inv_dashboard
 
@@ -5030,8 +5031,6 @@ Thank you"""
             #    dtable.allergies.writable = dtable.allergies.readable = True
             #    dtable.ethnicity.writable = dtable.ethnicity.readable = False
             #    dtable.other_details.writable = dtable.other_details.readable = False
-            #    import json
-            #    SEPARATORS = (",", ":")
             #    s3.jquery_ready.append('''S3.showHidden('%s',%s,'%s')''' % \
             #        ("allergic", json.dumps(["allergies"], separators=SEPARATORS), "pr_physical_description"))
 
@@ -6408,8 +6407,6 @@ Thank you"""
                 insert_index = crud_fields.index("transport_req") + 1
                 crud_fields.insert(insert_index, ("", "transport_type.value"))
 
-                import json
-                SEPARATORS = (",", ":")
                 s3 = current.response.s3
                 s3.jquery_ready.append('''S3.showHidden('%s',%s,'%s')''' % \
                     ("transport_req", json.dumps(["sub_transport_type_value"], separators=SEPARATORS), "inv_req"))

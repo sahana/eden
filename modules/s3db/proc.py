@@ -68,7 +68,7 @@ class ProcurementPlansModel(S3Model):
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        messages = current.messages
+        #messages = current.messages
         configure = self.configure
         settings = current.deployment_settings
 
@@ -77,7 +77,7 @@ class ProcurementPlansModel(S3Model):
         # =====================================================================
         # Planned Procurements
         #
-        proc_shipping_opts = {0: messages["NONE"],
+        proc_shipping_opts = {0: NONE,
                               1: T("Air"),
                               2: T("Rail"),
                               3: T("Road"),
@@ -257,7 +257,7 @@ class ProcurementPlansModel(S3Model):
         if row:
             table = current.db.proc_plan
         elif not plan_id:
-            return current.messages["NONE"]
+            return NONE
         else:
             db = current.db
             table = db.proc_plan
@@ -299,7 +299,7 @@ class PurchaseOrdersModel(S3Model):
         settings = current.deployment_settings
 
         SITE_LABEL = settings.get_org_site_label()
-        string_represent = lambda s: s if s else current.messages["NONE"]
+        string_represent = lambda s: s if s else NONE
         purchase_ref = S3ReusableField("purchase_ref",
                                        label = T("%(PO)s Number") % \
                                                {"PO": settings.get_proc_shortname()},

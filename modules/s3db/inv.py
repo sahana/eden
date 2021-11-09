@@ -124,9 +124,6 @@ from ..s3 import *
 from s3layouts import S3PopupLink
 from .supply import SupplyItemPackQuantity
 
-# Compact JSON encoding
-SEPARATORS = (",", ":")
-
 # Dependency list for translate-module
 depends = ["supply"]
 
@@ -232,7 +229,6 @@ inv_tracking_status = {"UNKNOWN"    : TRACK_STATUS_UNKNOWN,
 def inv_itn_field(**attr):
     label = current.deployment_settings.get_inv_itn_label()
     if label:
-        NONE = current.messages["NONE"]
         return S3ReusableField("item_source_no", length=16,
                                label = label,
                                represent = lambda v: v or NONE,
@@ -261,9 +257,7 @@ class WarehouseModel(S3Model):
         db = current.db
         auth = current.auth
 
-        messages = current.messages
-        NONE = messages["NONE"]
-        OBSOLETE = messages.OBSOLETE
+        OBSOLETE = current.messages.OBSOLETE
 
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
@@ -566,9 +560,6 @@ class InventoryModel(S3Model):
         define_table = self.define_table
 
         organisation_id = self.org_organisation_id
-
-        #messages = current.messages
-        NONE = current.messages["NONE"]
 
         settings = current.deployment_settings
         direct_stock_edits = settings.get_inv_direct_stock_edits()
@@ -1105,7 +1096,7 @@ $.filterOptionsS3({
             value = row.quantity * row.pack_value
         except (AttributeError, TypeError):
             # not available
-            return current.messages["NONE"]
+            return NONE
         else:
             return round(value, 2)
 
@@ -2584,7 +2575,6 @@ class InventoryOrderItemModel(S3Model):
     def model(self):
 
         T = current.T
-        NONE = current.messages["NONE"]
 
         # -----------------------------------------------------------------
         # Request Item Ordering
@@ -3079,7 +3069,7 @@ class InventoryPackageShipmentModel(S3Model):
 
         len_items = len(rows)
         if len_items == 0:
-            return current.messages["NONE"]
+            return NONE
         elif len_items == 1:
             return rows.first().name
         else:
@@ -3115,7 +3105,7 @@ class InventoryPackageShipmentModel(S3Model):
             volume = inv_send_package.volume if inv_send_package else None
 
         if volume is None:
-            return current.messages["NONE"]
+            return NONE
 
         volume = round(volume, 3)
 
@@ -3185,7 +3175,7 @@ class InventoryPackageShipmentModel(S3Model):
             weight = inv_send_package.weight if inv_send_package else None
 
         if weight is None:
-            return current.messages["NONE"]
+            return NONE
 
         weight = round(weight, 3)
 
@@ -3253,7 +3243,6 @@ class InventoryRequisitionModel(S3Model):
         settings = current.deployment_settings
 
         messages = current.messages
-        NONE = messages["NONE"]
         UNKNOWN_OPT = messages.UNKNOWN_OPT
         AUTOCOMPLETE_HELP = messages.AUTOCOMPLETE_HELP
 
@@ -4654,7 +4643,6 @@ class InventoryStockCardModel(S3Model):
         define_table = self.define_table
         settings = current.deployment_settings
 
-        NONE = current.messages["NONE"]
         WAREHOUSE = T(settings.get_inv_facility_label())
 
         is_float_represent = IS_FLOAT_AMOUNT.represent
@@ -4845,7 +4833,6 @@ class InventoryTrackingModel(S3Model):
                            TRACK_STATUS_RETURNING: T("Returning"),
                            }
 
-        NONE = current.messages["NONE"]
         SITE_LABEL = settings.get_org_site_label()
 
         document_filing = settings.get_inv_document_filing()
@@ -5811,7 +5798,7 @@ class InventoryTrackingModel(S3Model):
             return round(quantity * pack_value, 2)
         else:
             # Item lacks quantity, or value per pack, or both
-            return current.messages["NONE"]
+            return NONE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5839,7 +5826,7 @@ class InventoryTrackingModel(S3Model):
             volume = supply_item.volume if supply_item else None
 
         if volume is None:
-            return current.messages["NONE"]
+            return NONE
 
         if received:
             qfield = "recv_quantity"
@@ -5901,7 +5888,7 @@ class InventoryTrackingModel(S3Model):
             weight = supply_item.weight if supply_item else None
 
         if weight is None:
-            return current.messages["NONE"]
+            return NONE
 
         if received:
             qfield = "recv_quantity"
@@ -6037,7 +6024,7 @@ class InventoryTrackingModel(S3Model):
             else:
                 return value
         else:
-            return current.messages["NONE"]
+            return NONE
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -6064,7 +6051,7 @@ class InventoryTrackingModel(S3Model):
             else:
                 return B(value)
         else:
-            return current.messages["NONE"]
+            return NONE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -7246,7 +7233,7 @@ def inv_item_total_volume(row):
         volume = supply_item.volume if supply_item else None
 
     if volume is None:
-        return current.messages["NONE"]
+        return NONE
 
     try:
         quantity = inv_item.quantity
@@ -7306,7 +7293,7 @@ def inv_item_total_weight(row):
         weight = supply_item.weight if supply_item else None
 
     if weight is None:
-        return current.messages["NONE"]
+        return NONE
 
     try:
         quantity = inv_item.quantity
@@ -10853,7 +10840,7 @@ def inv_req_details(row):
                  for item in items]
         return ",".join(items)
 
-    return current.messages["NONE"]
+    return NONE
 
 # =============================================================================
 def inv_req_drivers(row):
@@ -10885,7 +10872,7 @@ def inv_req_drivers(row):
                    for driver in drivers]
         return ",".join(drivers)
 
-    return current.messages["NONE"]
+    return NONE
 
 # =============================================================================
 def inv_req_form(r, **attr):
@@ -11947,7 +11934,7 @@ def inv_req_rheader(r, check_page=False):
                                table.requester_id.represent(record.requester_id),
                                ),
                             TR(TH("%s: " % table.purpose.label),
-                               record.purpose or current.messages["NONE"],
+                               record.purpose or NONE,
                                ),
                             TR(TH("%s: " % table.comments.label),
                                TD(record.comments or "",
@@ -12545,7 +12532,6 @@ def inv_rheader(r):
         db = current.db
         item_id = record.item_id
         site_id = record.site_id
-        NONE = current.messages["NONE"]
 
         # Lookup Item Details
         itable = s3db.supply_item
@@ -14379,7 +14365,7 @@ def inv_send_rheader(r):
                                                                ).first()
                 address = s3db.gis_LocationRepresent(address_only = True)(site.location_id)
             else:
-                address = current.messages["NONE"]
+                address = NONE
             if settings.get_inv_send_req():
                 req_ref_label = TH("%s: " % table.req_ref.label)
                 ltable = s3db.inv_send_req
@@ -15147,7 +15133,7 @@ def inv_track_item_quantity_needed(row):
         req_item_id = None
 
     if not req_item_id:
-        return current.messages["NONE"]
+        return NONE
 
     s3db = current.s3db
 
@@ -15172,7 +15158,7 @@ def inv_track_item_quantity_needed(row):
         quantity_needed = (rim.quantity - quantity_shipped) * \
                            row.supply_item_pack.quantity
     else:
-        return current.messages["NONE"]
+        return NONE
 
     return quantity_needed
 
@@ -16270,8 +16256,6 @@ class inv_InvItemRepresent(S3Represent):
         else:
             expires = ""
 
-        NONE = current.messages["NONE"]
-
         items = []
         append = items.append
         for string in [sitem.name, expires, ctn, org, item_bin]:
@@ -16619,7 +16603,7 @@ class inv_ReqRefRepresent(S3Represent):
             @param row: the Row
         """
 
-        return row.req_ref or current.messages["NONE"]
+        return row.req_ref or NONE
 
 # =============================================================================
 class inv_SendRepresent(S3Represent):

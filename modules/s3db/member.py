@@ -498,7 +498,7 @@ class MemberModel(S3Model):
             else:
                 return OVERDUE
 
-        return current.messages["NONE"]
+        return NONE
 
     # ---------------------------------------------------------------------
     @staticmethod

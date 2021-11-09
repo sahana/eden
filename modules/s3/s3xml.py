@@ -58,6 +58,12 @@ ogetattr = object.__getattribute__
 # Compact JSON encoding
 SEPARATORS = (",", ":")
 
+__all__ = ("SEPARATORS", # Consistency & RAD
+           "S3XML",
+           #"S3EntityResolver",
+           "S3XMLFormat",
+           )
+
 # =============================================================================
 class S3XML(S3Codec):
     """
