@@ -80,6 +80,8 @@ __all__ = ("NONE", # Consistency & RAD
            "s3_get_foreign_key",
            "s3_get_last_record_id",
            "s3_has_foreign_key",
+           "s3_include_debug_css",
+           "s3_include_debug_js",
            "s3_keep_messages",
            "s3_mark_required",
            "s3_options_represent",

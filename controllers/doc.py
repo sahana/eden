@@ -229,9 +229,10 @@ def ck_upload():
         raise HTTP(401, "Missing required upload.")
 
     if not hasattr(upload, "file"):
-        raise HTTP(401, "Upload is not proper type.")
+        raise HTTP(401, "Upload is not a file")
 
-    token = post_vars.get("ckCsrfToken")
+    if post_vars.get("ckCsrfToken") != request.cookies["ckCsrfToken"].value:
+        raise HTTP(401, "CSRF failure")
 
     os_path = os.path
 
