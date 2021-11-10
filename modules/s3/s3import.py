@@ -4611,7 +4611,7 @@ class S3BulkImporter(object):
 
         # Check if the source file is accessible
         try:
-            openFile = open(filename, "r")
+            open_file = open(filename, "r", encoding="utf-8")
         except IOError:
             return "Unable to open file %s" % filename
 
@@ -4641,7 +4641,7 @@ class S3BulkImporter(object):
                     acl_value |= acl.ALL
             return acl_value
 
-        reader = self.csv.DictReader(openFile)
+        reader = self.csv.DictReader(open_file)
         roles = {}
         acls = {}
         args = {}
