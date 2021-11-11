@@ -99,14 +99,19 @@ class S3DashboardContext:
             if self.representation == "popup":
                 # Display human-readable error message
                 headers = {}
-                body = DIV(message, _style="color:red")
+                body = DIV(message,
+                           _style = "color:red",
+                           )
             else:
                 headers = {"Content-Type":"application/json"}
-                body = current.xml.json_message(success=False,
-                                                statuscode=status,
-                                                message=message,
+                body = current.xml.json_message(success = False,
+                                                statuscode = status,
+                                                message = message,
                                                 )
-            raise HTTP(status, body=body, web2py_error=message, **headers)
+            raise HTTP(status,
+                       body = body,
+                       web2py_error = message,
+                       **headers)
 
     # -------------------------------------------------------------------------
     # Getters and setters for shared context variables
@@ -236,12 +241,12 @@ class S3DashboardConfig:
         """
 
         if isinstance(layout, dict):
-            config = layout
-            title = config.get("title", current.T("Dashboard"))
-            layout = config.get("layout")
-            widgets = config.get("widgets", widgets)
-            default = config.get("default", default)
-            configurable = config.get("configurable", configurable)
+            config_get = layout.get
+            title = config_get("title", current.T("Dashboard"))
+            layout = config_get("layout")
+            widgets = config_get("widgets", widgets)
+            default = config_get("default", default)
+            configurable = config_get("configurable", configurable)
 
         # Configuration ID
         # - None means the hardcoded default
@@ -483,7 +488,11 @@ class S3DashboardLayout:
         return ""
 
     # -------------------------------------------------------------------------
-    def add_widget(self, widget, channel=DEFAULT, position=None):
+    def add_widget(self,
+                   widget,
+                   channel = DEFAULT,
+                   position = None,
+                   ):
         """
             Add contents to layout,
             - can be overwritten in subclasses (e.g. to dynamically
@@ -586,23 +595,23 @@ class S3DashboardBoxesLayout(S3DashboardLayout):
 
         contents = TAG[""](
                     DIV(channel("N",
-                                _class="small-12 columns db-box db-box-n",
+                                _class = "small-12 columns db-box db-box-n",
                                 ),
                         _class="row",
                         ),
                     DIV(channel("W",
-                                _class="small-3 columns db-box db-box-w",
+                                _class = "small-3 columns db-box db-box-w",
                                 ),
                         channel("C",
-                                _class="small-6 columns db-box db-box-c",
+                                _class = "small-6 columns db-box db-box-c",
                                 ),
                         channel("E",
-                                _class="small-3 columns db-box db-box-e",
+                                _class = "small-3 columns db-box db-box-e",
                                 ),
                         _class="row",
                         ),
                     DIV(channel("S",
-                                _class="small-12 columns db-box db-box-s",
+                                _class = "small-12 columns db-box db-box-s",
                                 ),
                         _class="row",
                         ),
@@ -669,7 +678,7 @@ class S3Dashboard:
             config = S3DashboardConfig(config)
         self._config = config
 
-        self.context = S3DashboardContext(dashboard=self)
+        self.context = S3DashboardContext(dashboard = self)
 
         available_layouts = dict(self.layouts)
         if layouts:
@@ -857,7 +866,8 @@ class S3Dashboard:
                            _class = "db-config-on%s" % hide,
                            ),
                       ICON("done",
-                           _class = "db-config-off hide"),
+                           _class = "db-config-off hide",
+                           ),
                       _class = "db-config",
                       data = {"mode": "off"},
                       )
@@ -1027,7 +1037,12 @@ class S3DashboardAgent:
         - manages the widget configuration
     """
 
-    def __init__(self, agent_id, widget=None, config=None, version=None):
+    def __init__(self,
+                 agent_id,
+                 widget = None,
+                 config = None,
+                 version = None,
+                 ):
         """
             Initialize the agent
 
@@ -1153,8 +1168,8 @@ class S3DashboardAgent:
 
         # Add the widget to the layout
         layout.add_widget(widget,
-                          channel=channel,
-                          position=position,
+                          channel = channel,
+                          position = position,
                           )
 
     # -------------------------------------------------------------------------
@@ -1199,7 +1214,8 @@ class S3DashboardAgent:
                                upload = s3.download_url,
                                separator = "",
                                submit_button = settings.submit_button,
-                               buttons = buttons)
+                               buttons = buttons,
+                               )
 
         # Process the form
         formname = "config/%s" % self.agent_id
@@ -1255,7 +1271,12 @@ class S3DashboardWidget:
     # -------------------------------------------------------------------------
     # Methods to be implemented by subclasses
     # -------------------------------------------------------------------------
-    def widget(self, agent_id, config, version=None, context=None):
+    def widget(self,
+               agent_id,
+               config,
+               version = None,
+               context = None,
+               ):
         """
             Construct the XML for this widget
 
@@ -1352,9 +1373,10 @@ class S3DashboardWidget:
     @classmethod
     def inject_script(cls,
                       agent_id,
-                      version=None,
-                      widget_class="dashboardWidget",
-                      options=None):
+                      version = None,
+                      widget_class = "dashboardWidget",
+                      options = None,
+                      ):
         """
             Helper method to inject the init script for a particular agent,
             usually called by widget() method.
@@ -1401,12 +1423,18 @@ class S3DashboardWidget:
             @return: the XML for the task bar
         """
 
-        return DIV(SPAN(ICON("move", _class="db-task-move"),
-                        _class="db-configbar-left",
+        return DIV(SPAN(ICON("move",
+                             _class = "db-task-move",
+                             ),
+                        _class = "db-configbar-left",
                         ),
-                   SPAN(ICON("delete", _class="db-task-delete"),
-                        ICON("settings", _class="db-task-config"),
-                        _class="db-configbar-right",
+                   SPAN(ICON("delete",
+                             _class = "db-task-delete",
+                             ),
+                        ICON("settings",
+                             _class = "db-task-config",
+                             ),
+                        _class = "db-configbar-right",
                         ),
                    _class = "db-configbar",
                    )
@@ -1415,11 +1443,10 @@ class S3DashboardWidget:
     # Base class methods
     # -------------------------------------------------------------------------
     def __init__(self,
-                 label=None,
-                 defaults=None,
-                 on_create_agent=None,
-                 **options
-                 ):
+                 label = None,
+                 defaults = None,
+                 on_create_agent = None,
+                 **options):
         """
             Initialize the widget, called when configuring an available
             widget for the dashboard.
@@ -1451,7 +1478,12 @@ class S3DashboardWidget:
         self.script_loaded = False
 
     # -------------------------------------------------------------------------
-    def create_agent(self, agent_id, config=None, version=None, context=None):
+    def create_agent(self,
+                     agent_id,
+                     config = None,
+                     version = None,
+                     context = None,
+                     ):
         """
             Create an agent for this widget
 
@@ -1475,9 +1507,9 @@ class S3DashboardWidget:
         else:
             # Create a new agent
             agent = S3DashboardAgent(agent_id,
-                                     widget=self,
-                                     config=agent_config,
-                                     version=version,
+                                     widget = self,
+                                     config = agent_config,
+                                     version = version,
                                      )
             self.agents[agent_id] = agent
 
@@ -1501,7 +1533,7 @@ class S3DashboardWidget:
         s3 = current.response.s3
         scripts = s3.scripts
 
-        path = self.get_script_path(debug=s3.debug)
+        path = self.get_script_path(debug = s3.debug)
         if path:
             appname = current.request.application
 
