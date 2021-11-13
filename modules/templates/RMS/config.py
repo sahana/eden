@@ -16,6 +16,8 @@ RED_CROSS = "Red Cross / Red Crescent"
 
 # Names of Orgs with specific settings
 HNRC = "Honduran Red Cross"
+PARC = "Red Cross Society of Panama"
+#PYRC = "Paraguayan Red Cross"
 
 def config(settings):
     """
@@ -55,7 +57,9 @@ def config(settings):
     # Uncomment to show a default cancel button in standalone create/update forms
     settings.ui.default_cancel_button = True
     # Limit Export Formats
-    settings.ui.export_formats = ("xls","pdf")
+    settings.ui.export_formats = ("xls",
+                                  "pdf",
+                                  )
 
     def datatables_responsive(default):
         """ Responsive behavior of datatables (lazy setting) """
@@ -743,7 +747,7 @@ def config(settings):
         #if root_org in (ARCS, IRCS):
         #    # Simple checkbox
         #    return True
-        #elif root_org in (CVTL, PMI, PRC):
+        #elif root_org in (CVTL, PMI, PYRC):
         #    # Use formula based on hrm_programme
         #    return vol_programme_active
         #elif root_org in (CRMADA, ):
@@ -1555,7 +1559,7 @@ def config(settings):
         auth = current.auth
         messages = auth.messages
         messages.lock_keys = False
-        if auth.root_org_name() == "Red Cross Society of Panama":
+        if auth.root_org_name() == PARC:
             messages.welcome_email = \
 """Estimado, estimada,
 Le damos la más cordial bienvenida al Sistema de Gestión de Recursos (RMS).
@@ -4679,8 +4683,8 @@ Thank you"""
     # -------------------------------------------------------------------------
     def customise_pr_address_resource(r, tablename):
 
-        #if current.auth.root_org_name() in ("Honduran Red Cross",
-        #                                    "Paraguayan Red Cross",
+        #if current.auth.root_org_name() in (HNRC,
+        #                                    PYRC,
         #                                    ):
             # Location Hierarchy loaded: Leave things as they are since we have the
         #   pass
@@ -6633,7 +6637,10 @@ class PrintableShipmentForm(S3Method):
                 elif tablename == "inv_send":
                     output = self.waybill(r, **attr)
                 elif tablename == "inv_recv":
-                    output = self.goods_received_note(r, **attr)
+                    if current.auth.root_org_name() == HNRC:
+                        output = self.grn_hnrc(r, **attr)
+                    else:
+                        output = self.grn(r, **attr)
                 else:
                     # Not supported
                     r.error(405, current.ERROR.BAD_METHOD)
@@ -6654,13 +6661,12 @@ class PrintableShipmentForm(S3Method):
         """
 
         T = current.T
-        s3db = current.s3db
 
         # Master record (=inv_req)
-        resource = s3db.resource(r.tablename,
-                                 id = r.id,
-                                 components = ["req_item"],
-                                 )
+        resource = current.s3db.resource(r.tablename,
+                                         id = r.id,
+                                         components = ["req_item"],
+                                         )
 
         # Columns and data for the form header
         header_fields = ["req_ref",
@@ -6731,7 +6737,7 @@ class PrintableShipmentForm(S3Method):
         """
 
         row = data.rows[0]
-        labels = dict((rfield.colname, rfield.label) for rfield in data.rfields)
+        labels = {rfield.colname: rfield.label for rfield in data.rfields}
         def row_(left, right):
             return cls._header_row(left, right, row=row, labels=labels)
 
@@ -6748,8 +6754,14 @@ class PrintableShipmentForm(S3Method):
 
         # Waybill details
         dtable = TABLE(
-                    TR(TD(DIV(logo, H4(name)), _colspan = 2),
-                       TD(DIV(title), _colspan = 2),
+                    TR(TD(DIV(logo,
+                              H4(name),
+                              ),
+                          _colspan = 2,
+                          ),
+                       TD(DIV(title),
+                          _colspan = 2,
+                          ),
                        ),
                     row_("inv_req.req_ref", None),
                     row_("inv_req.date", "inv_req.date_required"),
@@ -6931,7 +6943,7 @@ class PrintableShipmentForm(S3Method):
         """
 
         row = data.rows[0]
-        labels = dict((rfield.colname, rfield.label) for rfield in data.rfields)
+        labels = {rfield.colname: rfield.label for rfield in data.rfields}
         def row_(left, right):
             return cls._header_row(left, right, row=row, labels=labels)
 
@@ -7004,22 +7016,192 @@ class PrintableShipmentForm(S3Method):
                      )
 
     # -------------------------------------------------------------------------
-    def goods_received_note(self, r, **attr):
+    def grn(self, r, **attr):
         """
-            GRN (Goods Received Note)
+            GRN (Goods Received Note) for French Red Cross (& current default)
+
+            @param r: the S3Request instance
+            @param attr: controller attributes
+        """
+
+        from gluon import DIV, IMG, TABLE, TR, TH, TD
+
+        #T = current.T
+        T = lambda v: v
+        db = current.db
+        s3db = current.s3db
+
+        # Master record (=inv_recv)
+        record = r.record
+        recv_ref = record.recv_ref
+
+        # Get organisation logo
+        otable = s3db.org_organisation
+        org = db(otable.id == current.auth.root_org()).select(otable.logo,
+                                                              limitby = (0, 1),
+                                                              ).first()
+        if org:
+            logo = URL(c="default", f="download",
+                       args = org.logo,
+                       )
+        else:
+            # Use default IFRC
+            logo = "/%s/static/themes/RMS/img/logo_small.png" % r.application
+
+        #styles = {}
+
+        def pdf_header(r):
+            return DIV(TABLE(TR(TD(IMG(_src = logo,
+                                       ),
+                                   _colspan = 6,
+                                   ),
+                                TH(T("COUNTRY CODE"),
+                                   _align = "center",
+                                   _valign = "middle",
+                                   ),
+                                TH(T("GRN NUMBER"),
+                                   _align = "center",
+                                   _valign = "middle",
+                                   _colspan = 2,
+                                   ),
+                                ),
+                             TR(TD(T("GOODS RECEIVED NOTE / Accusé de Réception"),
+                                   _align = "center",
+                                   _colspan = 6,
+                                   ),
+                                TD(""), # @ToDo: Country Code?
+                                TD(recv_ref,
+                                   _align = "center",
+                                   _colspan = 2,
+                                   ),
+                                ),
+                             TR(TH(T("DELEGATION/CONSIGNEE (LOCATION)"),
+                                   _align = "center",
+                                   _colspan = 2,
+                                   ),
+                                TD("", # @ToDo: Recipient NS
+                                   _align = "center",
+                                   _colspan = 2,
+                                   ),
+                                TH(T("RECEIVED FROM / reçu de"),
+                                   _align = "center",
+                                   _colspan = 3,
+                                   ),
+                                TD("", # @ToDo: Received From
+                                   _align = "center",
+                                   _colspan = 2,
+                                   ),
+                                ),
+                             ))
+
+        def pdf_body(r):
+            return DIV()
+
+        def pdf_footer(r):
+            return DIV(TABLE(TR(TH(T("Delivered By"),
+                                   _align = "center",
+                                   ),
+                                TH(T("Date"),
+                                   _align = "center",
+                                   ),
+                                TH(T("Function"),
+                                   _align = "center",
+                                   _colspan = 2,
+                                   ),
+                                TH("%s (%s)" % (T("Name"),
+                                                T("in Block Letter"),
+                                                ),
+                                   _align = "center",
+                                   _colspan = 3,
+                                   ),
+                                TH(T("Signature"),
+                                   _align = "center",
+                                   _colspan = 2,
+                                   ),
+                                ),
+                             TR(TD(""),
+                                TD(""),
+                                TD("",
+                                   _colspan = 2,
+                                   ),
+                                TD("",
+                                   _colspan = 3,
+                                   ),
+                                TD("",
+                                   _colspan = 2,
+                                   ),
+                                ),
+                             TR(TH(T("Received By"),
+                                   _align = "center",
+                                   ),
+                                TH(T("Date"),
+                                   _align = "center",
+                                   ),
+                                TH(T("Function"),
+                                   _align = "center",
+                                   _colspan = 2,
+                                   ),
+                                TH("%s (%s)" % (T("Name"),
+                                                T("in Block Letter"),
+                                                ),
+                                   _align = "center",
+                                   _colspan = 3,
+                                   ),
+                                TH(T("Signature / Stamp"),
+                                   _align = "center",
+                                   _colspan = 2,
+                                   ),
+                                ),
+                             TR(TD(""),
+                                TD(""),
+                                TD("",
+                                   _colspan = 2,
+                                   ),
+                                TD("",
+                                   _colspan = 3,
+                                   ),
+                                TD("",
+                                   _colspan = 2,
+                                   ),
+                                ),
+                             ))
+
+        from s3.s3export import S3Exporter
+        exporter = S3Exporter().pdf
+        return exporter(r.resource,
+                        request = r,
+                        pdf_title = T(current.deployment_settings.get_inv_recv_form_name()),
+                        pdf_filename = recv_ref,
+                        pdf_header = pdf_header,
+                        pdf_header_padding = 12,
+                        #method = "list",
+                        #pdf_componentname = "track_item",
+                        #list_fields = list_fields,
+                        pdf_callback = pdf_body,
+                        pdf_footer = pdf_footer,
+                        pdf_hide_comments = True,
+                        #pdf_html_styles = styles,
+                        pdf_table_autogrow = "B",
+                        pdf_orientation = "Landscape",
+                        **attr
+                        )
+
+    # -------------------------------------------------------------------------
+    def grn_hnrc(self, r, **attr):
+        """
+            GRN (Goods Received Note) for HNRC: Honduran Red Cross
 
             @param r: the S3Request instance
             @param attr: controller attributes
         """
 
         T = current.T
-        s3db = current.s3db
 
         # Master record (=inv_recv)
-        resource = s3db.resource(r.tablename,
-                                 id = r.id,
-                                 components = ["track_item"],
-                                 )
+        resource = current.s3db.resource(r.tablename,
+                                         id = r.id,
+                                         components = ["track_item"],
+                                         )
 
         # Columns and data for the form header
         header_fields = ["eta",
@@ -7044,7 +7226,7 @@ class PrintableShipmentForm(S3Method):
             r.error(404, current.ERROR.BAD_RECORD)
 
         # Generate PDF header
-        pdf_header = self.goods_received_note_header(header_data)
+        pdf_header = self.grn_hnrc_header(header_data)
 
         # Filename from send_ref
         header_row = header_data.rows[0]
@@ -7052,9 +7234,7 @@ class PrintableShipmentForm(S3Method):
 
         # Component (=inv_track_item)
         component = resource.components["track_item"]
-        body_fields = [#"recv_bin",
-                       "recv_bin_id",
-                       "item_id",
+        body_fields = ["item_id",
                        "item_pack_id",
                        "recv_quantity",
                        (T("Total Volume (m3)"), "total_recv_volume"),
@@ -7087,7 +7267,7 @@ class PrintableShipmentForm(S3Method):
                                      totals_label = T("Total"),
                                      title = T("Goods Received Note"),
                                      pdf_header = pdf_header,
-                                     pdf_footer = self.goods_received_note_footer,
+                                     pdf_footer = self.grn_hnrc_footer,
                                      )
 
         # ...and export it as PDF
@@ -7095,15 +7275,15 @@ class PrintableShipmentForm(S3Method):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def goods_received_note_header(cls, data):
+    def grn_hnrc_header(cls, data):
         """
-            Header for Goods Received Notes
+            Header for Goods Received Notes for HNRC: Honduran Red Cross
 
             @param data: the S3ResourceData for the inv_recv
         """
 
         row = data.rows[0]
-        labels = dict((rfield.colname, rfield.label) for rfield in data.rfields)
+        labels = {rfield.colname: rfield.label for rfield in data.rfields}
         def row_(left, right):
             return cls._header_row(left, right, row=row, labels=labels)
 
@@ -7143,9 +7323,9 @@ class PrintableShipmentForm(S3Method):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def goods_received_note_footer(r):
+    def grn_hnrc_footer(r):
         """
-            Footer for Goods Received Notes
+            Footer for Goods Received Notes for HNRC: Honduran Red Cross
 
             @param r: the S3Request
         """

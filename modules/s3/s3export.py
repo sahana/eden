@@ -70,12 +70,13 @@ class S3Exporter(object):
 
     # -------------------------------------------------------------------------
     def json(self, resource,
-             start=None,
-             limit=None,
-             fields=None,
-             orderby=None,
-             represent=False,
-             tooltip=None):
+             start = None,
+             limit = None,
+             fields = None,
+             orderby = None,
+             represent = False,
+             tooltip = None,
+             ):
         """
             Export a resource as JSON
 
@@ -129,10 +130,11 @@ class S3Exporter(object):
 
         # Get the data
         _rows = resource.select(fields,
-                                start=start,
-                                limit=limit,
-                                orderby=orderby,
-                                represent=represent).rows
+                                start = start,
+                                limit = limit,
+                                orderby = orderby,
+                                represent = represent,
+                                ).rows
 
         # Simplify to plain fieldnames for fields in this table
         tn = "%s." % resource.tablename
@@ -216,8 +218,8 @@ class S3Exporter(object):
     # -------------------------------------------------------------------------
     def pdf(self, *args, **kwargs):
 
-        codec = S3Codec.get_codec("pdf").encode
-        return codec(*args, **kwargs)
+        codec = S3Codec.get_codec("pdf")
+        return codec.encode(*args, **kwargs)
 
     # -------------------------------------------------------------------------
     def pdfcard(self, *args, **kwargs):
@@ -228,19 +230,19 @@ class S3Exporter(object):
     # -------------------------------------------------------------------------
     def shp(self, *args, **kwargs):
 
-        codec = S3Codec.get_codec("shp").encode
-        return codec(*args, **kwargs)
+        codec = S3Codec.get_codec("shp")
+        return codec.encode(*args, **kwargs)
 
     # -------------------------------------------------------------------------
     def svg(self, *args, **kwargs):
 
-        codec = S3Codec.get_codec("svg").encode
-        return codec(*args, **kwargs)
+        codec = S3Codec.get_codec("svg")
+        return codec.encode(*args, **kwargs)
 
     # -------------------------------------------------------------------------
     def xls(self, *args, **kwargs):
 
-        codec = S3Codec.get_codec("xls").encode
-        return codec(*args, **kwargs)
+        codec = S3Codec.get_codec("xls")
+        return codec.encode(*args, **kwargs)
 
 # End =========================================================================

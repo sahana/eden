@@ -8651,6 +8651,13 @@ def inv_recv_controller():
         if record:
             status = record.status
 
+        export_formats = settings.ui.export_formats
+        if "pdf" in export_formats:
+            # Use 'form' instead of standard PDF exporter
+            export_formats = list(export_formats)
+            export_formats.remove("pdf")
+            settings.ui.export_formats = export_formats
+
         if r.component:
             if r.component_name == "document":
                 # Simplify a little
@@ -9201,11 +9208,6 @@ def inv_recv_form (r, **attr):
     table.site_id.label = T("By %(site)s") % {"site": T(settings.get_inv_facility_label())}
     table.site_id.represent = current.s3db.org_site_represent
 
-    record = db(table.id == r.id).select(table.recv_ref,
-                                         limitby = (0, 1),
-                                         ).first()
-    recv_ref = record.recv_ref
-
     list_fields = ["item_id",
                    (T("Weight (kg)"), "item_id$weight"),
                    (T("Volume (m3)"), "item_id$volume"),
@@ -9215,7 +9217,6 @@ def inv_recv_form (r, **attr):
                    "recv_quantity",
                    "currency",
                    "pack_value",
-                   "layout_id",
                    ]
 
     from s3.s3export import S3Exporter
@@ -9224,7 +9225,7 @@ def inv_recv_form (r, **attr):
                     request = r,
                     method = "list",
                     pdf_title = T(settings.get_inv_recv_form_name()),
-                    pdf_filename = recv_ref,
+                    pdf_filename = r.record.recv_ref,
                     list_fields = list_fields,
                     pdf_hide_comments = True,
                     pdf_componentname = "track_item",
@@ -9382,38 +9383,37 @@ def inv_recv_rheader(r):
 # ---------------------------------------------------------------------
 def inv_recv_pdf_footer(r):
     """
+        Default Footer for PDF of GRN
+        - called by inv_recv_form
+        - has come from Red Cross
     """
 
-    record = r.record
-    if record:
-        T = current.T
-        footer = DIV(TABLE(TR(TH(T("Delivered By")),
-                              TH(T("Date")),
-                              TH(T("Function")),
-                              TH(T("Name")),
-                              TH(T("Signature")),
-                              ),
-                           TR(TD(),
-                              TD(),
-                              TD(),
-                              TD(),
-                              TD(),
-                              ),
-                           TR(TH(T("Received By")),
-                              TH(T("Date")),
-                              TH(T("Function")),
-                              TH(T("Name")),
-                              TH(T("Signature / Stamp")),
-                              ),
-                           TR(TD(),
-                              TD(),
-                              TD(),
-                              TD(),
-                              TD(),
-                              ),
-                           ))
-        return footer
-    return None
+    T = current.T
+    return DIV(TABLE(TR(TH(T("Delivered By")),
+                        TH(T("Date")),
+                        TH(T("Function")),
+                        TH(T("Name")),
+                        TH(T("Signature")),
+                        ),
+                     TR(TD(),
+                        TD(),
+                        TD(),
+                        TD(),
+                        TD(),
+                        ),
+                     TR(TH(T("Received By")),
+                        TH(T("Date")),
+                        TH(T("Function")),
+                        TH(T("Name")),
+                        TH(T("Signature / Stamp")),
+                        ),
+                     TR(TD(),
+                        TD(),
+                        TD(),
+                        TD(),
+                        TD(),
+                        ),
+                     ))
 
 # =============================================================================
 def inv_recv_process(r, **attr):
@@ -10880,8 +10880,6 @@ def inv_req_form(r, **attr):
         Generate a PDF of a Request Form
     """
 
-    record = r.record
-
     pdf_componentname = "req_item"
     list_fields = ["item_id",
                    "item_pack_id",
@@ -10892,7 +10890,7 @@ def inv_req_form(r, **attr):
                    ]
 
     if current.deployment_settings.get_inv_use_req_number():
-        filename = record.req_ref
+        filename = r.record.req_ref
     else:
         filename = None
 
@@ -10907,7 +10905,7 @@ def inv_req_form(r, **attr):
                     pdf_hide_comments = True,
                     pdf_componentname = pdf_componentname,
                     pdf_header_padding = 12,
-                    #pdf_footer = inv_recv_pdf_footer,
+                    #pdf_footer = inv_req_pdf_footer,
                     pdf_table_autogrow = "B",
                     pdf_orientation = "Landscape",
                     **attr
@@ -12852,6 +12850,13 @@ def inv_send_controller():
         settings = current.deployment_settings
         send_req = settings.get_inv_send_req()
 
+        export_formats = settings.ui.export_formats
+        if "pdf" in export_formats:
+            # Use 'form' instead of standard PDF exporter
+            export_formats = list(export_formats)
+            export_formats.remove("pdf")
+            settings.ui.export_formats = export_formats
+
         record = r.record
         if record:
             status = record.status
@@ -13624,16 +13629,10 @@ def inv_send_form(r, **attr):
     tracktable.send_inv_item_id.readable = False
     tracktable.recv_inv_item_id.readable = False
 
-    record = db(table.id == r.id).select(table.send_ref,
-                                         limitby = (0, 1),
-                                         ).first()
-    send_ref = record.send_ref
-
     list_fields = [(T("Item Code"), "item_id$code"),
                    "item_id",
                    (T("Weight (kg)"), "item_id$weight"),
                    (T("Volume (m3)"), "item_id$volume"),
-                   "layout_id",
                    "item_source_no",
                    "item_pack_id",
                    "quantity",
@@ -13655,7 +13654,7 @@ def inv_send_form(r, **attr):
                     method = "list",
                     pdf_componentname = "track_item",
                     pdf_title = settings.get_inv_send_form_name(),
-                    pdf_filename = send_ref,
+                    pdf_filename = r.record.send_ref,
                     list_fields = list_fields,
                     pdf_hide_comments = True,
                     pdf_header_padding = 12,
@@ -14618,54 +14617,53 @@ def inv_send_rheader(r):
 # ---------------------------------------------------------------------
 def inv_send_pdf_footer(r):
     """
-        Footer for the Waybill
+        Default Footer for the Waybill
+        - called by inv_send_form
+        - has come from Red Cross
     """
 
-    if r.record:
-        T = current.T
-        footer = DIV(TABLE(TR(TH(T("Commodities Loaded")),
-                              TH(T("Date")),
-                              TH(T("Function")),
-                              TH(T("Name")),
-                              TH(T("Signature")),
-                              TH(T("Location (Site)")),
-                              TH(T("Condition")),
-                              ),
-                           TR(TD(T("Loaded By")),
-                              TD(),
-                              TD(),
-                              TD(),
-                              TD(),
-                              TD(),
-                              TD(),
-                              ),
-                           TR(TD(T("Transported By")),
-                              TD(),
-                              TD(),
-                              TD(),
-                              TD(),
-                              TD(),
-                              TD(),
-                              ),
-                           TR(TH(T("Reception")),
-                              TH(T("Date")),
-                              TH(T("Function")),
-                              TH(T("Name")),
-                              TH(T("Signature")),
-                              TH(T("Location (Site)")),
-                              TH(T("Condition")),
-                              ),
-                           TR(TD(T("Received By")),
-                              TD(),
-                              TD(),
-                              TD(),
-                              TD(),
-                              TD(),
-                              TD(),
-                              ),
-                           ))
-        return footer
-    return None
+    T = current.T
+    return DIV(TABLE(TR(TH(T("Commodities Loaded")),
+                        TH(T("Date")),
+                        TH(T("Function")),
+                        TH(T("Name")),
+                        TH(T("Signature")),
+                        TH(T("Location (Site)")),
+                        TH(T("Condition")),
+                        ),
+                     TR(TD(T("Loaded By")),
+                        TD(),
+                        TD(),
+                        TD(),
+                        TD(),
+                        TD(),
+                        TD(),
+                        ),
+                     TR(TD(T("Transported By")),
+                        TD(),
+                        TD(),
+                        TD(),
+                        TD(),
+                        TD(),
+                        TD(),
+                        ),
+                     TR(TH(T("Reception")),
+                        TH(T("Date")),
+                        TH(T("Function")),
+                        TH(T("Name")),
+                        TH(T("Signature")),
+                        TH(T("Location (Site)")),
+                        TH(T("Condition")),
+                        ),
+                     TR(TD(T("Received By")),
+                        TD(),
+                        TD(),
+                        TD(),
+                        TD(),
+                        TD(),
+                        TD(),
+                        ),
+                     ))
 
 # =============================================================================
 def inv_stock_movements(resource, selectors, orderby):

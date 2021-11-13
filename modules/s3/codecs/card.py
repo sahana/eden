@@ -182,7 +182,7 @@ class S3PDFCard(S3Codec):
         output_stream = BytesIO()
         doc.build(flowables,
                   output_stream,
-                  #canvasmaker=canvas.Canvas,   # is default
+                  #canvasmaker = canvas.Canvas,   # is default
                   )
 
         output_stream.seek(0)
@@ -215,7 +215,12 @@ class S3PDFCard(S3Codec):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def get_flowables(layout, resource, items, labels=None, cards_per_page=1):
+    def get_flowables(layout,
+                      resource,
+                      items,
+                      labels = None,
+                      cards_per_page = 1,
+                      ):
         """
             Get the Flowable-instances for the data items
 
@@ -481,10 +486,10 @@ class S3PDFCardLayout(Flowable):
     def __init__(self,
                  resource,
                  item,
-                 labels=None,
-                 common=None,
-                 backside=False,
-                 multiple=False,
+                 labels = None,
+                 common = None,
+                 backside = False,
+                 multiple = False,
                  ):
         """
             Constructor

@@ -9293,18 +9293,29 @@ def org_logo_represent(org = None,
             if logo:
                 # Select resized version if-available
                 size = (width, None)
-                image = s3db.pr_image_library_represent(logo, size=size)
-                url_small = URL(c="default", f="download", args=image)
+                from .pr import pr_image_library_represent
+                image = pr_image_library_represent(logo, size=size)
+                url_small = URL(c="default", f="download",
+                                args = image,
+                                )
                 alt = "%s logo" % org
-                logo = IMG(_src=url_small, _alt=alt, _width=width)
+                logo = IMG(_src = url_small,
+                           _alt = alt,
+                           _width = width,
+                           )
 
     if not logo and fallback_org:
         # Default to fallback org
-        logo = org_logo_represent(org=fallback_org, width=width)
+        logo = org_logo_represent(org = fallback_org,
+                                  width = width,
+                                  )
 
     if not logo:
         # Placeholder
-        logo = IMG(_src="", _alt="logo", _width=width)
+        logo = IMG(_src = "",
+                   _alt = "logo",
+                   _width = width,
+                   )
 
     return (org, logo)
 

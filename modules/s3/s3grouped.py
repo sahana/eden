@@ -30,7 +30,7 @@
 __all__ = ("S3GroupedItemsReport",
            "S3GroupedItemsTable",
            "S3GroupedItems",
-           "S3GroupAggregate",
+           #"S3GroupAggregate",
            )
 
 import json
@@ -139,7 +139,10 @@ class S3GroupedItemsReport(S3Method):
         groupby = report_config_get("groupby_cols")
         aggregate = report_config_get("aggregate_cols")
 
-        gi = S3GroupedItems(items, groupby=groupby, aggregate=aggregate)
+        gi = S3GroupedItems(items,
+                            groupby = groupby,
+                            aggregate = aggregate,
+                            )
 
         # Report title
         title = report_config_get("title")
@@ -218,7 +221,7 @@ class S3GroupedItemsReport(S3Method):
                                                 representation = "json",
                                                 vars = r.get_vars,
                                                 ))
-            totals_label = report_config.get("totals_label", T("Total"))
+            totals_label = report_config_get("totals_label", T("Total"))
 
             options = {"ajaxURL": ajaxurl,
                        "totalsLabel": s3_str(totals_label).upper(),
@@ -241,8 +244,8 @@ class S3GroupedItemsReport(S3Method):
 
         elif representation == "pdf":
             # PDF Export
-            totals_label = report_config.get("totals_label", T("Total"))
-            pdf_header = report_config.get("pdf_header", DEFAULT)
+            totals_label = report_config_get("totals_label", T("Total"))
+            pdf_header = report_config_get("pdf_header", DEFAULT)
             gi_table = S3GroupedItemsTable(resource,
                                            title = title,
                                            data = data,
@@ -254,8 +257,8 @@ class S3GroupedItemsReport(S3Method):
 
         elif representation == "xls":
             # XLS Export
-            field_types = report_config.get("ftypes")
-            totals_label = report_config.get("totals_label", T("Total"))
+            field_types = report_config_get("ftypes")
+            totals_label = report_config_get("totals_label", T("Total"))
             gi_table = S3GroupedItemsTable(resource,
                                            title = title,
                                            data = data,
@@ -279,7 +282,6 @@ class S3GroupedItemsReport(S3Method):
         """
 
         r = self.request
-        get_vars = r.get_vars
 
         # Get the resource configuration
         config = self.resource.get_config("grouped")
@@ -287,8 +289,10 @@ class S3GroupedItemsReport(S3Method):
             # No reports implemented for this resource
             r.error(405, current.ERROR.NOT_IMPLEMENTED)
 
+        get_vars_get = r.get_vars.get
+
         # Which report?
-        report = get_vars.get("report", "default")
+        report = get_vars_get("report", "default")
         if isinstance(report, list):
             report = report[-1]
 
@@ -301,7 +305,7 @@ class S3GroupedItemsReport(S3Method):
             report_config = dict(report_config)
 
         # Orderby
-        orderby = get_vars.get("orderby")
+        orderby = get_vars_get("orderby")
         if isinstance(orderby, list):
             orderby = ",".join(orderby).split(",")
         if not orderby:
@@ -671,7 +675,7 @@ class S3GroupedItemsTable:
 
         aggregate = self.aggregate
         if aggregate:
-            functions = dict((c, m) for m, c in aggregate)
+            functions = {c: m for m, c in aggregate}
         else:
             functions = {}
 

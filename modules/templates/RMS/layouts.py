@@ -468,7 +468,8 @@ class S3OrgMenuLayout(S3NavigationItem):
 
                 if record.logo:
                     size = (60, None)
-                    image = s3db.pr_image_library_represent(record.logo, size=size)
+                    from s3db.pr import pr_image_library_represent
+                    image = pr_image_library_represent(record.logo, size=size)
                     url_small = URL(c="default", f="download",
                                     args = image,
                                     )

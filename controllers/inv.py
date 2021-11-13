@@ -224,7 +224,8 @@ S3.supply.itemPackID=%s%s''' % (packs,
                               pdf_orientation = "Landscape",
                               pdf_table_autogrow = "B",
                               pdf_groupby = "site_id, item_id",
-                              pdf_orderby = "expiry_date, supply_org_id",
+                              # Not actioned:
+                              #pdf_orderby = "expiry_date, supply_org_id",
                               replace_option = T("Remove existing data before import"),
                               rheader = inv_rheader,
                               )
