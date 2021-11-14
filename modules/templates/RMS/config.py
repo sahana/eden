@@ -7024,7 +7024,7 @@ class PrintableShipmentForm(S3Method):
             @param attr: controller attributes
         """
 
-        from gluon import DIV, IMG, TABLE, TR, TH, TD
+        from gluon import BR, DIV, IMG, TABLE, TR, TH, TD
 
         #T = current.T
         T = lambda v: v
@@ -7032,8 +7032,14 @@ class PrintableShipmentForm(S3Method):
         s3db = current.s3db
 
         # Master record (=inv_recv)
+        table = s3db.inv_recv
         record = r.record
         recv_ref = record.recv_ref
+        from_site_id = record.from_site_id
+        if from_site_id:
+            received_from = table.from_site_id.represent(from_site_id)
+        else:
+            received_from = table.organisation_id.represent(record.organisation_id)
 
         # Get organisation logo
         otable = s3db.org_organisation
@@ -7041,6 +7047,7 @@ class PrintableShipmentForm(S3Method):
                                                               limitby = (0, 1),
                                                               ).first()
         if org:
+            # @ToDo: Resize?
             logo = URL(c="default", f="download",
                        args = org.logo,
                        )
@@ -7065,7 +7072,9 @@ class PrintableShipmentForm(S3Method):
                                    _colspan = 2,
                                    ),
                                 ),
-                             TR(TD(T("GOODS RECEIVED NOTE / Accusé de Réception"),
+                             TR(TD("%s / %s" % (T("GOODS RECEIVED NOTE"),
+                                                T("Accusé de Réception"),
+                                                ),
                                    _align = "center",
                                    _colspan = 6,
                                    ),
@@ -7075,20 +7084,50 @@ class PrintableShipmentForm(S3Method):
                                    _colspan = 2,
                                    ),
                                 ),
-                             TR(TH(T("DELEGATION/CONSIGNEE (LOCATION)"),
-                                   _align = "center",
+                             TR(TH("%s\n(%s)" % (T("DELEGATION/CONSIGNEE"),
+                                                 T("LOCATION"),
+                                                 ),
+                                   _align = "right",
                                    _colspan = 2,
                                    ),
                                 TD("", # @ToDo: Recipient NS
                                    _align = "center",
                                    _colspan = 2,
                                    ),
-                                TH(T("RECEIVED FROM / reçu de"),
+                                TH("%s / %s" % (T("RECEIVED FROM"),
+                                                T("reçu de"),
+                                                ),
                                    _align = "center",
                                    _colspan = 3,
                                    ),
-                                TD("", # @ToDo: Received From
+                                TD(received_from,
                                    _align = "center",
+                                   _colspan = 2,
+                                   ),
+                                ),
+                             TR(TD("",
+                                   _colspan = 9,
+                                   ),
+                                ),
+                             TR(TH("%s\n%s" % (T("DATE OF ARRIVAL"),
+                                               T("Date de réception"),
+                                               ),
+                                   _align = "right",
+                                   ),
+                                TD(table.date.represent(record.date),
+                                   _align = "center",
+                                   ),
+                                TH(T("DOCUMENT WELL RECEIVED"),
+                                   _align = "center",
+                                   _colspan = 2,
+                                   ),
+                                TD("", # Leave Blank?
+                                   ),
+                                TH(T("IF NO, PLEASE SPECIFY"),
+                                   _align = "center",
+                                   _colspan = 2,
+                                   ),
+                                TD("", # Leave Blank?
                                    _colspan = 2,
                                    ),
                                 ),

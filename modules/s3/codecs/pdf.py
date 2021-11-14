@@ -51,7 +51,7 @@ try:
     from reportlab.graphics.shapes import Drawing, Line
     from reportlab.lib import colors
     from reportlab.lib.colors import Color, HexColor
-    from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
+    from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT#, TA_JUSTIFY
     from reportlab.lib.pagesizes import A4, LETTER, landscape, portrait
     from reportlab.lib.styles import getSampleStyleSheet
     from reportlab.lib.units import inch
@@ -1733,25 +1733,47 @@ class S3html2pdf():
         # Standard styles
         styleSheet = getSampleStyleSheet()
 
-        self.plainstyle = styleSheet["Normal"]
-        self.plainstyle.fontName = self.font_name
-        self.plainstyle.fontSize = 9
+        plainstyle = styleSheet["Normal"]
+        plainstyle.fontName = self.font_name
+        plainstyle.fontSize = 9
+        self.plainstyle = plainstyle
 
-        self.boldstyle = deepcopy(styleSheet["Normal"])
-        self.boldstyle.fontName = self.font_name_bold
-        self.boldstyle.fontSize = 10
+        plainstyle_para = deepcopy(plainstyle)
+        plainstyle_para.spaceAfter = 8
+        self.plainstyle_para = plainstyle_para
 
-        self.titlestyle = deepcopy(styleSheet["Normal"])
-        self.titlestyle.fontName = self.font_name_bold
-        self.titlestyle.fontSize = 16
+        plainstyle_center = deepcopy(plainstyle)
+        plainstyle_center.alignment = TA_CENTER
+        self.plainstyle_center = plainstyle_center
 
-        self.normalstyle = self.plainstyle
+        plainstyle_right = deepcopy(plainstyle)
+        plainstyle_right.alignment = TA_RIGHT
+        self.plainstyle_right = plainstyle_right
+
+        boldstyle = deepcopy(plainstyle)
+        boldstyle.fontName = self.font_name_bold
+        boldstyle.fontSize = 10
+        self.boldstyle = boldstyle
+
+        boldstyle_center = deepcopy(boldstyle)
+        boldstyle_center.alignment = TA_CENTER
+        self.boldstyle_center = boldstyle_center
+
+        boldstyle_right = deepcopy(boldstyle)
+        boldstyle_right.alignment = TA_RIGHT
+        self.boldstyle_right = boldstyle_right
+
+        titlestyle = deepcopy(boldstyle)
+        titlestyle.fontSize = 16
+        titlestyle.spaceAfter = 8
+        titlestyle = titlestyle
 
         # To add more PDF styles define the style above (just like the titlestyle)
         # Then add the style and the name to the lookup dict below
+        #- only applied currently to P/H tags
         # These can then be added to the html in the code as follows:
         # TD("Waybill", _class="pdf_title")
-        self.style_lookup = {"pdf_title": self.titlestyle,
+        self.style_lookup = {"pdf_title": titlestyle,
                              }
 
         # Additional styles from the caller
@@ -1769,15 +1791,13 @@ class S3html2pdf():
     # -------------------------------------------------------------------------
     def select_tag(self,
                    html,
-                   align = TA_LEFT,
-                   title = False,
+                   style = None,
                    ):
         """
             Parses the element and converts it into a format for ReportLab
 
             @param html: the element to convert
-            @param align: the alignment that the text should have
-            @param title: whether the text should be formatted as a title
+            @param style: the style to use
 
             @return: a list containing text that ReportLab can use
         """
@@ -1798,15 +1818,11 @@ class S3html2pdf():
             html = s3_str(html)
             if "<" in html:
                 html = s3_strip_markup(html)
-            if title:
-                style = self.boldstyle
-                style.alignment = align
-                para = [Paragraph(biDiText(html), style)]
-            else:
-                style = self.normalstyle
-                style.alignment = align
-                para = [Paragraph(biDiText(html), style)]
-            #self.normalstyle = self.plainstyle
+            text = biDiText(html)
+            text = text.replace("\n", "<br/>")
+            if not style:
+                style = self.plainstyle
+            para = [Paragraph(text, style)]
             return para
         return None
 
@@ -1821,10 +1837,10 @@ class S3html2pdf():
             _class = html.attributes["_class"]
         except (AttributeError, KeyError):
             return False
+
         if _class in self.exclude_class_list:
             return True
-        if _class in self.style_lookup:
-            self.normalstyle = self.style_lookup[_class]
+
         return False
 
     # -------------------------------------------------------------------------
@@ -1842,8 +1858,10 @@ class S3html2pdf():
             result = select_tag(component)
             if result != None:
                 content += result
+
         if content == []:
             return None
+
         return content
 
     # -------------------------------------------------------------------------
@@ -1861,8 +1879,10 @@ class S3html2pdf():
             result = select_tag(component)
             if result != None:
                 content += result
+
         if content == []:
             return None
+
         return content
 
     # -------------------------------------------------------------------------
@@ -1932,49 +1952,56 @@ class S3html2pdf():
     # -------------------------------------------------------------------------
     def parse_p(self, html):
         """
-            Parses a P element and converts it into a format for ReportLab
+            Parses a P or H element and converts it into a format for ReportLab
 
             @param html: the P element to convert
             @return: a list containing text that ReportLab can use
         """
 
-        font_sizes = {"p": 9,
-                      "h1": 18,
-                      "h2": 16,
-                      "h3": 14,
-                      "h4": 12,
-                      "h5": 10,
-                      "h6": 9,
-                      }
+        style = None
 
-        font_size = None
-        title = False
         try:
-            tag = html.tag
-        except AttributeError:
+            _class = html.attributes["_class"]
+        except KeyError:
             pass
         else:
-            font_size = font_sizes.get(tag)
-            title = tag != "p"
-        style = self.boldstyle if title else self.normalstyle
+            if _class in self.style_lookup:
+                style = self.style_lookup[_class]
 
-        if font_size:
-            default_font_size = style.fontSize
-            style.fontSize = font_size
-            style.spaceAfter = 8
+        if not style:
+            tag = html.tag
+            title = tag != "p"
+            if title:
+                if tag == "h2":
+                    style = self.titlestyle
+                else:    
+                    # Need to create a custom style
+                    style = deepcopy(self.boldstyle)
+                    font_sizes = {#"p": 9, # self.plainstyle default
+                                  "h1": 18,
+                                  #"h2": 16, # self.titlestyle default
+                                  "h3": 14,
+                                  "h4": 12,
+                                  "h5": 10,
+                                  "h6": 9,
+                                  }
+                    style.fontSize = font_sizes.get(tag)
+                    style.spaceAfter = 8
+            else:
+                style = self.plainstyle_para
 
         content = []
         select_tag = self.select_tag
         for component in html.components:
-            result = select_tag(component, title=title)
+            result = select_tag(component,
+                                style = style,
+                                )
             if result != None:
                 content += result
 
-        if font_size:
-            style.fontSize = default_font_size
-
         if content == []:
             return None
+
         return content
 
     # -------------------------------------------------------------------------
@@ -1986,7 +2013,11 @@ class S3html2pdf():
             @return: a list containing text that ReportLab can use
         """
 
-        table_classes = (html["_class"] or "").split()
+        _class = html["_class"]
+        if _class:
+            table_classes = _class.split()
+        else:
+            table_classes = []
 
         style = [("FONTSIZE", (0, 0), (-1, -1), self.fontsize),
                  ("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -2135,37 +2166,64 @@ class S3html2pdf():
                 rappend("")
                 continue
 
+            if isinstance(component, TH):
+                title = True
+            else:
+                title = False
+
             attr_get = component.attributes.get
             rowspan = attr_get("_rowspan")
             if rowspan:
                 # @ToDo: Centre the text across the rows
                 rowspans[rspan_index] = rowspan - 1
 
-            cell_align = attr_get("_align", TA_LEFT)
-            if cell_align != TA_LEFT:
+            cell_align = attr_get("_align", "LEFT")
+            if cell_align == "LEFT":
+                text_align = TA_LEFT
+            else:
                 cell_align = cell_align.upper()
                 if cell_align == "CENTER":
-                    cell_align = TA_CENTER
+                    text_align = TA_CENTER
                 elif cell_align == "RIGHT":
-                    cell_align = TA_RIGHT
+                    text_align = TA_RIGHT
                 else:
-                    cell_align = TA_LEFT
+                    text_align = TA_LEFT
+
             cell_valign = attr_get("_valign")
             if cell_valign:
                 cell_valign = cell_valign.upper()
 
+            if title:
+                if text_align == TA_LEFT:
+                    style = self.boldstyle
+                elif text_align == TA_CENTER:
+                    style = self.boldstyle_center
+                elif text_align == TA_RIGHT:
+                    style = self.boldstyle_right
+                #elif text_align == TA_JUSTIFY:
+                #    style = self.boldstyle_justify
+            else:
+                if text_align == TA_LEFT:
+                    style = self.plainstyle
+                elif text_align == TA_CENTER:
+                    style = self.plainstyle_center
+                elif text_align == TA_RIGHT:
+                    style = self.plainstyle_right
+                #elif text_align == TA_JUSTIFY:
+                #    style = self.plainstyle_justify
+
+            if row_color and \
+               row_color != colors.black:
+                # Need to create a custom style
+                style = deepcopy(style)
+                style.textColor = row_color
+
             colspan = attr_get("_colspan", 1)
             for detail in component.components:
-                if row_color:
-                    self.normalstyle.textColor = row_color
-                else:
-                    # Reset to black
-                    self.normalstyle.textColor = colors.black
 
                 # Render cell content
                 result = select_tag(detail,
-                                    align = cell_align,
-                                    title = isinstance(component, TH),
+                                    style = style,
                                     )
                 if result is None:
                     continue
@@ -2173,15 +2231,18 @@ class S3html2pdf():
 
                 # Add cell styles
                 cell = (colCnt, rowCnt)
-                if row_color:
-                    sappend(("TEXTCOLOR", cell, cell, row_color))
+                # Always done in the Paragraph
+                #if row_color:
+                #    sappend(("TEXTCOLOR", cell, cell, row_color))
                 if row_background:
                     sappend(("BACKGROUND", cell, cell, row_background))
-                elif isinstance(component, TH):
+                elif title:
                     sappend(("BACKGROUND", cell, cell, colors.lightgrey))
-                    sappend(("FONTNAME", cell, cell, font_name_bold))
-                # Doesn't work as the cell contains a Paragraph & the alignment needs setting there
-                #if cell_align:
+                    # Always done in the Paragraph
+                    #sappend(("FONTNAME", cell, cell, font_name_bold))
+                # Doesn't work for cells which contain a Paragraph as the alignment needs setting there
+                # - if we need to align Images then uncomment this
+                #if cell_align != "LEFT":
                 #    sappend(("ALIGN", cell, cell, cell_align))
                 if cell_valign:
                     sappend(("VALIGN", cell, cell, cell_valign))
@@ -2240,15 +2301,15 @@ class S3html2pdf():
         """
 
         if not val:
-            color = None
+            return None
+
+        if val[:1] == "#":
+            color = HexColor(val)
         else:
-            if val[:1] == "#":
-                color = HexColor(val)
-            else:
-                try:
-                    color = object.__getattribute__(colors, val)
-                except AttributeError:
-                    color = None
+            try:
+                color = object.__getattribute__(colors, val)
+            except AttributeError:
+                color = None
         return color
 
 # =============================================================================
