@@ -9266,48 +9266,50 @@ def inv_recv_rheader(r):
                                                                 limitby = (0, 1),
                                                                 ).first()
             try:
-                org_id = site.organisation_id
+                organisation_id = site.organisation_id
             except AttributeError:
-                org_id = None
-            logo = s3db.org_organisation_logo(org_id)
-            shipment_details = TABLE(
-                          TR(TD(T(settings.get_inv_recv_form_name()),
-                                _colspan = 2,
-                                _class = "pdf_title",
-                                ),
-                             TD(logo, _colspan=2),
-                             ),
-                          TR(TH("%s: " % table.recv_ref.label),
-                             TD(table.recv_ref.represent(record.recv_ref))
-                             ),
-                          TR(TH("%s: " % table.status.label),
-                             table.status.represent(record.status),
-                             ),
-                          TR(TH("%s: " % table.eta.label),
-                             table.eta.represent(record.eta),
-                             TH("%s: " % table.date.label),
-                             table.date.represent(record.date),
-                             ),
-                          TR(TH("%s: " % table.from_site_id.label),
-                             table.from_site_id.represent(record.from_site_id),
-                             TH("%s: " % table.site_id.label),
-                             table.site_id.represent(record.site_id),
-                             ),
-                          TR(TH("%s: " % table.sender_id.label),
-                             s3_fullname(record.sender_id),
-                             TH("%s: " % table.recipient_id.label),
-                             s3_fullname(record.recipient_id),
-                             ),
-                          TR(TH("%s: " % table.send_ref.label),
-                             table.send_ref.represent(record.send_ref),
-                             # Duplicate! req_ref?
-                             #TH("%s: " % table.recv_ref.label),
-                             #table.recv_ref.represent(record.recv_ref),
-                             ),
-                          TR(TH("%s: " % table.comments.label),
-                             TD(record.comments or "", _colspan=3),
-                             ),
-                           )
+                organisation_id = None
+            from .org import org_organisation_logo
+            logo = org_organisation_logo(organisation_id)
+            shipment_details = TABLE(TR(TD(T(settings.get_inv_recv_form_name()),
+                                           _class = "pdf_title",
+                                           _colspan = 2,
+                                           ),
+                                        TD(logo,
+                                           _colspan = 2,
+                                           ),
+                                        ),
+                                     TR(TH("%s: " % table.recv_ref.label),
+                                        TD(table.recv_ref.represent(record.recv_ref))
+                                        ),
+                                     TR(TH("%s: " % table.status.label),
+                                        table.status.represent(record.status),
+                                        ),
+                                     TR(TH("%s: " % table.eta.label),
+                                        table.eta.represent(record.eta),
+                                        TH("%s: " % table.date.label),
+                                        table.date.represent(record.date),
+                                        ),
+                                     TR(TH("%s: " % table.from_site_id.label),
+                                        table.from_site_id.represent(record.from_site_id),
+                                        TH("%s: " % table.site_id.label),
+                                        table.site_id.represent(record.site_id),
+                                        ),
+                                     TR(TH("%s: " % table.sender_id.label),
+                                        s3_fullname(record.sender_id),
+                                        TH("%s: " % table.recipient_id.label),
+                                        s3_fullname(record.recipient_id),
+                                        ),
+                                     TR(TH("%s: " % table.send_ref.label),
+                                        table.send_ref.represent(record.send_ref),
+                                        # Duplicate! req_ref?
+                                        #TH("%s: " % table.recv_ref.label),
+                                        #table.recv_ref.represent(record.recv_ref),
+                                        ),
+                                     TR(TH("%s: " % table.comments.label),
+                                        TD(record.comments or "", _colspan=3),
+                                        ),
+                                     )
 
             rfooter = TAG[""]()
             action = DIV()
@@ -11884,10 +11886,11 @@ def inv_req_rheader(r, check_page=False):
                              ),
                           )
         if site_id:
-            org_id = db(stable.site_id == site_id).select(stable.organisation_id,
-                                                          limitby = (0, 1),
-                                                          ).first().organisation_id
-            logo = s3db.org_organisation_logo(org_id)
+            site = db(stable.site_id == site_id).select(stable.organisation_id,
+                                                        limitby = (0, 1),
+                                                        ).first()
+            from .org import org_organisation_logo
+            logo = org_organisation_logo(site.organisation_id)
             if logo:
                 headerTR.append(TD(logo,
                                    _colspan = 2,
@@ -12403,7 +12406,8 @@ def inv_rheader(r):
         rheader_fields, rheader_tabs = rheader(r, table=table, record=record)
 
         # Inject logo
-        logo = s3db.org_organisation_logo(record.organisation_id)
+        from .org import org_organisation_logo
+        logo = org_organisation_logo(record.organisation_id)
         if logo:
             rheader = DIV(TABLE(TR(TD(logo),
                                    TD(rheader_fields)
@@ -14339,8 +14343,8 @@ def inv_send_rheader(r):
                                                             stable.instance_type,
                                                             limitby = (0, 1),
                                                             ).first()
-                org_id = site.organisation_id
-                logo = s3db.org_organisation_logo(org_id) or ""
+                from .org import org_organisation_logo
+                logo = org_organisation_logo(site.organisation_id)
                 instance_table = s3db[site.instance_type]
                 if "phone1" in instance_table.fields:
                     site = db(instance_table.site_id == site_id).select(instance_table.phone1,
@@ -14353,7 +14357,6 @@ def inv_send_rheader(r):
                     phone1 = None
                     phone2 = None
             else:
-                org_id = None
                 logo = ""
                 phone1 = None
                 phone2 = None

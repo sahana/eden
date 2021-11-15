@@ -38,7 +38,7 @@ from io import BytesIO
 from urllib.parse import unquote
 
 from gluon import current, redirect, URL, \
-                  A, DIV, H1, H2, H3, H4, H5, H6, IMG, P, \
+                  A, B, DIV, H1, H2, H3, H4, H5, H6, I, IMG, P, \
                   TABLE, TBODY, TD, TFOOT, TH, THEAD, TR
 from gluon.storage import Storage
 from gluon.contenttype import contenttype
@@ -99,31 +99,57 @@ def set_fonts(instance):
 
     font_set = current.deployment_settings.get_pdf_export_font()
     if font_set:
-        try:
+        if isinstance(font_set, tuple):
             font_name = font_set[0]
             font_name_bold = font_set[1]
-            folder = current.request.folder
-            # Requires the font-files at /static/fonts/<font_name>.ttf
-            pdfmetrics.registerFont(TTFont(font_name, os.path.join(folder,
-                                                                   "static",
-                                                                   "fonts",
-                                                                   "%s.ttf" % font_name)))
-            pdfmetrics.registerFont(TTFont(font_name_bold, os.path.join(folder,
-                                                                        "static",
-                                                                        "fonts",
-                                                                        "%s.ttf" % font_name_bold)))
-        except:
-            current.log.error("%s Font not found: Please install it to see the correct fonts in PDF exports" % font_set[0])
-            # Use the default "Helvetica" and "Helvetica-Bold"
-            instance.font_name = "Helvetica"
-            instance.font_name_bold = "Helvetica-Bold"
+            #font_name_italic = font_set[2]
+            try:
+                folder = current.request.folder
+                os_path_join = os.path.join
+                registerFont = pdfmetrics.registerFont
+                # Requires the font-files at /static/fonts/<font_name>.ttf
+                registerFont(TTFont(font_name, os_path_join(folder,
+                                                            "static",
+                                                            "fonts",
+                                                            "%s.ttf" % font_name,
+                                                            )))
+                registerFont(TTFont(font_name_bold, os_path_join(folder,
+                                                                 "static",
+                                                                 "fonts",
+                                                                 "%s.ttf" % font_name_bold,
+                                                                 )))
+                #registerFont(TTFont(font_name_italic, os_path_join(folder,
+                #                                                   "static",
+                #                                                   "fonts",
+                #                                                   "%s.ttf" % font_name_italic,
+                #                                                   )))
+            except:
+                current.log.error("%s Font not found: Please install it to see the correct fonts in PDF exports" % font_name)
+            else:
+                instance.font_name = font_name
+                instance.font_name_bold = font_name_bold
+                #instance.font_name_italic = font_name_italic
+                return
         else:
-            instance.font_name = font_name
-            instance.font_name_bold = font_name_bold
-    else:
-        # Use the default "Helvetica" and "Helvetica-Bold"
-        instance.font_name = "Helvetica"
-        instance.font_name_bold = "Helvetica-Bold"
+            try:
+                # Requires the font-file at /static/fonts/<font_name>.ttf
+                pdfmetrics.registerFont(TTFont(font_name, os.path.join(current.request.folder,
+                                                                       "static",
+                                                                       "fonts",
+                                                                       "%s.ttf" % font_set,
+                                                                       )))
+            except:
+                current.log.error("%s Font not found: Please install it to see the correct fonts in PDF exports" % font_set)
+            else:
+                instance.font_name = font_set
+                instance.font_name_bold = font_set
+                #instance.font_name_italic = font_set
+                return
+
+    # Use the default "Helvetica"
+    instance.font_name = "Helvetica"
+    instance.font_name_bold = "Helvetica-Bold"
+    #instance.font_name_italic = "Helvetica-Oblique"
 
 # -----------------------------------------------------------------------------
 def biDiText(text):
@@ -173,9 +199,7 @@ class S3RL_PDF(S3Codec):
             RL_ERROR = "Python needs the ReportLab module installed for PDF export"
         )
 
-        # Fonts
-        self.font_name = None
-        self.font_name_bold = None
+        # Set Fonts
         set_fonts(self)
 
     # -------------------------------------------------------------------------
@@ -234,8 +258,6 @@ class S3RL_PDF(S3Codec):
         # Settings
         attr_get = attr.get
         r = self.r = attr_get("request", None)
-        self.list_fields = attr_get("list_fields")
-        self.table_autogrow = attr_get("pdf_table_autogrow")
 
         # Get the title & filename
         now = current.request.now.isoformat()[:19].replace("T", " ")
@@ -314,10 +336,12 @@ class S3RL_PDF(S3Codec):
                                                    )
 
         else:
+            self.list_fields = attr_get("list_fields")
             self.pdf_groupby = attr_get("pdf_groupby")
             # Not actioned currently:
             #self.pdf_orderby = attr_get("pdf_orderby")
             self.pdf_hide_comments = attr_get("pdf_hide_comments")
+            self.table_autogrow = attr_get("pdf_table_autogrow")
             pdf_componentname = attr_get("pdf_componentname", None)
             if pdf_componentname: # and resource.parent is None:
                 # Enforce a particular component
@@ -370,7 +394,11 @@ class S3RL_PDF(S3Codec):
         return doc.output.getvalue()
 
     # -------------------------------------------------------------------------
-    def get_html_flowable(self, rules, printable_width, styles=None):
+    def get_html_flowable(self,
+                          rules,
+                          printable_width,
+                          styles = None,
+                          ):
         """
             Function to convert the rules passed in to a flowable.
             The rules (for example) could be an rHeader callback
@@ -405,8 +433,8 @@ class S3RL_PDF(S3Codec):
             # Static HTML
             html = rules
 
-        parser = S3html2pdf(pageWidth = printable_width,
-                            exclude_class_list = ["tabs"],
+        parser = S3html2pdf(page_width = printable_width,
+                            exclude_class_list = ["tabs"], # rheader
                             styles = styles,
                             )
         result = parser.parse(html)
@@ -790,8 +818,6 @@ class S3PDFList(object):
         self.totalrows = totalrows
 
         # Set fonts
-        self.font_name = None
-        self.font_name_bold = None
         set_fonts(self)
 
         self.styles = self.get_styles()
@@ -1040,8 +1066,6 @@ class S3PDFTable(object):
         self.autogrow = autogrow
 
         # Set fonts
-        self.font_name = None
-        self.font_name_bold = None
         set_fonts(self)
 
         # Determine list fields and collect the labels
@@ -1705,30 +1729,25 @@ class S3html2pdf():
     """
 
     def __init__(self,
-                 pageWidth,
+                 page_width,
                  exclude_class_list = None,
                  styles = None,
                  ):
         """
             Constructor
 
-            @param pageWidth: the printable width
+            @param page_width: the printable width
             @param exclude_class_list: list of classes for elements to skip
             @param styles: the styles dict from the caller (e.g. pdf_html_styles)
         """
 
-        # Fonts
-        self.font_name = None
-        self.font_name_bold = None
+        # Set Fonts
         set_fonts(self)
 
-        if exclude_class_list is None:
-            self.exclude_class_list = []
-        else:
-            self.exclude_class_list = exclude_class_list
+        self.exclude_class_list = exclude_class_list or []
 
-        self.pageWidth = pageWidth
-        self.fontsize = 10
+        self.page_width = page_width
+        #self.fontsize = 10
 
         # Standard styles
         styleSheet = getSampleStyleSheet()
@@ -1791,12 +1810,14 @@ class S3html2pdf():
     # -------------------------------------------------------------------------
     def select_tag(self,
                    html,
+                   strip_markup = True,
                    style = None,
                    ):
         """
             Parses the element and converts it into a format for ReportLab
 
             @param html: the element to convert
+            @param strip_markup: whether to strip markup
             @param style: the style to use
 
             @return: a list containing text that ReportLab can use
@@ -1816,7 +1837,7 @@ class S3html2pdf():
             return self.parse_div(html)
         elif isinstance(html, (str, lazyT)):
             html = s3_str(html)
-            if "<" in html:
+            if strip_markup and "<" in html:
                 html = s3_strip_markup(html)
             text = biDiText(html)
             text = text.replace("\n", "<br/>")
@@ -1830,7 +1851,6 @@ class S3html2pdf():
     def exclude_tag(self, html):
         """
             Work out whether to exclude a Tag based on it's class
-            Set the PDF style from the class if one of the standard ones
         """
 
         try:
@@ -1847,6 +1867,8 @@ class S3html2pdf():
     def parse_div(self, html):
         """
             Parses a DIV element and converts it into a format for ReportLab
+
+            @ToDo: Add support for B & I
 
             @param html: the DIV element to convert
             @return: a list containing text that ReportLab can use
@@ -1921,7 +1943,9 @@ class S3html2pdf():
                     # @ToDo: Allow use of subfolders!
                     src = src.rsplit("/", 1) # Don't use os.sep here
                     src = os.path.join(request.folder,
-                                       "uploads", src[1])
+                                       "uploads",
+                                       src[1],
+                                       )
             src = unquote(src)
             if os.path.exists(src):
                 from reportlab.platypus import Image
@@ -2019,34 +2043,34 @@ class S3html2pdf():
         else:
             table_classes = []
 
-        style = [("FONTSIZE", (0, 0), (-1, -1), self.fontsize),
-                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                 ("FONTNAME", (0, 0), (-1, -1), self.font_name),
-                 ]
+        table_style = [#("FONTNAME", (0, 0), (-1, -1), self.font_name),   # Done in Paragraph
+                       #("FONTSIZE", (0, 0), (-1, -1), self.fontsize),    # Done in Paragraph
+                       ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                       ]
         if "no-grid" not in table_classes:
-            style.append(("GRID", (0, 0), (-1, -1), 0.5, colors.grey))
+            table_style.append(("GRID", (0, 0), (-1, -1), 0.5, colors.grey))
 
         content = self.parse_table_components(html,
-                                              style = style,
+                                              style = table_style,
                                               )[0]
 
         if content == []:
             return None
 
         table = Table(content,
-                      style = style,
-                      hAlign = "LEFT",
-                      vAlign = "TOP",
+                      style = table_style,
+                      hAlign = "LEFT",  # defaults to "CENTER"
+                      vAlign = "TOP",   # defaults to "MIDDLE", but we control via the table_style instead...this seems to do nothing
                       repeatRows = 1 if "repeat-header" in table_classes else 0,
                       )
 
         if "shrink-to-fit" in table_classes:
             # Calculate column widths
-            table.wrap(self.pageWidth, 0)
+            pw = self.page_width
+            table.wrap(pw, 0)
 
             cw = table._colWidths
             tw = sum(cw)
-            pw = self.pageWidth
 
             if tw and tw > pw:
                 # Table overflows => adjust column widths proportionally
@@ -2055,11 +2079,11 @@ class S3html2pdf():
 
                 # Re-instantiate with colWidths
                 table = Table(content,
-                              style = style,
+                              colWidths = cw,
+                              style = table_style,
                               hAlign = "LEFT",
-                              vAlign = "Top",
+                              vAlign = "TOP",
                               repeatRows = 1 if "repeat-header" in table_classes else 0,
-                              colWidths = cw
                               )
 
         return [table]
@@ -2069,7 +2093,7 @@ class S3html2pdf():
                                table,
                                content = None,
                                row_count = 0,
-                               style = None,
+                               table_style = None,
                                ):
         """
             Parses TABLE components
@@ -2077,7 +2101,7 @@ class S3html2pdf():
             @param table: the TABLE instance or a subcomponent of it
             @param content: the current content array
             @param row_count: the current number of rows in the content array
-            @param style: the style list
+            @param table_style: the table_style list
         """
 
         if content is None:
@@ -2100,11 +2124,11 @@ class S3html2pdf():
                 content, row_count = parse(component,
                                            content = content,
                                            row_count = row_count,
-                                           style = style,
+                                           table_style = table_style,
                                            )
 
             elif isinstance(component, TR):
-                result = parse_tr(component, style, row_count, rowspans)
+                result = parse_tr(component, table_style, row_count, rowspans)
                 row_count += 1
 
             if result != None:
@@ -2113,12 +2137,12 @@ class S3html2pdf():
         return content, row_count
 
     # -------------------------------------------------------------------------
-    def parse_tr(self, html, style, rowCnt, rowspans):
+    def parse_tr(self, html, table_style, rowCnt, rowspans):
         """
             Parses a TR element and converts it into a format for ReportLab
 
             @param html: the TR element to convert
-            @param style: the default style
+            @param table_style: the table_style list
             @param rowCnt: the row counter
             @param rowspans: the remaining rowspans (if any)
 
@@ -2135,12 +2159,10 @@ class S3html2pdf():
 
         row = []
         rappend = row.append
-        sappend = style.append
-
-        select_tag = self.select_tag
-        font_name_bold = self.font_name_bold
+        sappend = table_style.append
 
         exclude_tag = self.exclude_tag
+        select_tag = self.select_tag
 
         colCnt = 0
         rspan_index = -1
@@ -2177,6 +2199,10 @@ class S3html2pdf():
                 # @ToDo: Centre the text across the rows
                 rowspans[rspan_index] = rowspan - 1
 
+            cell_valign = attr_get("_valign")
+            if cell_valign:
+                cell_valign = cell_valign.upper()
+
             cell_align = attr_get("_align", "LEFT")
             if cell_align == "LEFT":
                 text_align = TA_LEFT
@@ -2189,72 +2215,116 @@ class S3html2pdf():
                 else:
                     text_align = TA_LEFT
 
-            cell_valign = attr_get("_valign")
-            if cell_valign:
-                cell_valign = cell_valign.upper()
-
-            if title:
-                if text_align == TA_LEFT:
-                    style = self.boldstyle
-                elif text_align == TA_CENTER:
-                    style = self.boldstyle_center
-                elif text_align == TA_RIGHT:
-                    style = self.boldstyle_right
-                #elif text_align == TA_JUSTIFY:
-                #    style = self.boldstyle_justify
+            cell_style = None
+            try:
+                _class = component.attributes["_class"]
+            except KeyError:
+                pass
             else:
-                if text_align == TA_LEFT:
-                    style = self.plainstyle
-                elif text_align == TA_CENTER:
-                    style = self.plainstyle_center
-                elif text_align == TA_RIGHT:
-                    style = self.plainstyle_right
-                #elif text_align == TA_JUSTIFY:
-                #    style = self.plainstyle_justify
+                if _class in self.style_lookup:
+                    cell_style = self.style_lookup[_class]
 
-            if row_color and \
-               row_color != colors.black:
-                # Need to create a custom style
-                style = deepcopy(style)
-                style.textColor = row_color
+            if not cell_style:
+                if title:
+                    if text_align == TA_LEFT:
+                        cell_style = self.boldstyle
+                    elif text_align == TA_CENTER:
+                        cell_style = self.boldstyle_center
+                    elif text_align == TA_RIGHT:
+                        cell_style = self.boldstyle_right
+                    #elif text_align == TA_JUSTIFY:
+                    #    cell_style = self.boldstyle_justify
+                else:
+                    if text_align == TA_LEFT:
+                        cell_style = self.plainstyle
+                    elif text_align == TA_CENTER:
+                        cell_style = self.plainstyle_center
+                    elif text_align == TA_RIGHT:
+                        cell_style = self.plainstyle_right
+                    #elif text_align == TA_JUSTIFY:
+                    #    cell_style = self.plainstyle_justify
+
+                if row_color and \
+                   row_color != colors.black:
+                    # Need to create a custom style
+                    cell_style = deepcopy(cell_style)
+                    cell_style.textColor = row_color
 
             colspan = attr_get("_colspan", 1)
+            parse = False
             for detail in component.components:
+                if isinstance(detail, DIV):
+                    if isinstance(detail, (B, I)):
+                        continue
+                    parse = True
+                    break
+
+            if parse:
+                # Components present which need full parsing
+                # - each element will be in a separate Paragraph
+                cell = []
+                for detail in component.components:
+                    # Render cell content
+                    result = select_tag(detail,
+                                        #strip_markup = True,
+                                        style = cell_style,
+                                        )
+                    if result is None:
+                        continue
+                    cell.append(result)
+
+                len_cell = len(cell)
+                if len_cell == 1:
+                    rappend(cell[0])
+                elif len_cell > 1:
+                    rappend(cell)
+
+            else:
+                # Components don't need full parsing
+                # - keep B, I elements within a single Paragraph
+                text = ""
+                strip_markup = True
+                for detail in component.components:
+                    if isinstance(detail, (B, I)):
+                        strip_markup = False
+
+                    text = "%s%s" % (text, detail)
 
                 # Render cell content
-                result = select_tag(detail,
-                                    style = style,
+                result = select_tag(text,
+                                    strip_markup = strip_markup,
+                                    style = cell_style,
                                     )
                 if result is None:
                     continue
                 rappend(result)
 
-                # Add cell styles
-                cell = (colCnt, rowCnt)
+            # Add cell styles
+            cell = (colCnt, rowCnt)
+            # Always done in the Paragraph
+            #if row_color:
+            #    sappend(("TEXTCOLOR", cell, cell, row_color))
+            if row_background:
+                sappend(("BACKGROUND", cell, cell, row_background))
+            elif title:
+                sappend(("BACKGROUND", cell, cell, colors.lightgrey))
                 # Always done in the Paragraph
-                #if row_color:
-                #    sappend(("TEXTCOLOR", cell, cell, row_color))
-                if row_background:
-                    sappend(("BACKGROUND", cell, cell, row_background))
-                elif title:
-                    sappend(("BACKGROUND", cell, cell, colors.lightgrey))
-                    # Always done in the Paragraph
-                    #sappend(("FONTNAME", cell, cell, font_name_bold))
-                # Doesn't work for cells which contain a Paragraph as the alignment needs setting there
-                # - if we need to align Images then uncomment this
-                #if cell_align != "LEFT":
-                #    sappend(("ALIGN", cell, cell, cell_align))
-                if cell_valign:
-                    sappend(("VALIGN", cell, cell, cell_valign))
+                #sappend(("FONTNAME", cell, cell, self.font_name_bold))
+            # Doesn't work for cells which contain a Paragraph as the alignment needs setting there
+            # - if we need to align Images then uncomment this
+            #if cell_align != "LEFT":
+            #    sappend(("ALIGN", cell, cell, cell_align))
+            if cell_valign:
+                sappend(("VALIGN", cell, cell, cell_valign))
 
-                # Column span
-                if colspan > 1:
-                    for i in range(1, colspan):
-                        rappend("")
-                    sappend(("SPAN", cell, (colCnt + colspan - 1, rowCnt)))
-                    colCnt += colspan
-                else:
-                    colCnt += 1
+            # Column span
+            if colspan > 1:
+                for i in range(1, colspan):
+                    rappend("")
+                sappend(("SPAN", cell, (colCnt + colspan - 1, rowCnt)))
+                colCnt += colspan
+            else:
+                colCnt += 1
 
         if row == []:
             return None

@@ -5524,24 +5524,44 @@ def org_organisation_logo(org,
     if not org:
         return None
 
-    s3db = current.s3db
     if isinstance(org, Row):
         # Do not repeat the lookup if already done by IS_ONE_OF or RHeader
         record = org
     else:
-        table = s3db.org_organisation
-        record = current.db(table.id == org).select(table.name,
+        table = current.s3db.org_organisation
+        record = current.db(table.id == org).select(table.id,
+                                                    table.name,
                                                     table.acronym,
                                                     table.logo,
+                                                    table.root_organisation,
                                                     limitby = (0, 1),
                                                     ).first()
 
-    if record and record.logo:
+    try:
+        logo = record.logo
+    except:
+        logo = None
+
+    if not logo:
+        root_organisation = record.root_organisation
+        if root_organisation != record.id:
+            record = current.db(table.id == root_organisation).select(table.name,
+                                                                      table.acronym,
+                                                                      table.logo,
+                                                                      limitby = (0, 1),
+                                                                      ).first()
+            try:
+                logo = record.logo
+            except:
+                pass
+
+    if logo:
         #format = None
         #if type == "bmp":
         #    format = "bmp"
         size = (60, None)
-        image = s3db.pr_image_library_represent(record.logo, size=size)
+        from .pr import pr_image_library_represent
+        image = pr_image_library_represent(record.logo, size=size)
         url_small = URL(c="default", f="download",
                         args = image,
                         )
@@ -5554,6 +5574,7 @@ def org_organisation_logo(org,
                    _width = 60,
                    )
         return logo
+
     return ""
 
 # =============================================================================

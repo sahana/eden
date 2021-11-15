@@ -973,30 +973,21 @@ def vol_service_record(r, **attr):
 
         # Header
         s3db = current.s3db
-        otable = db.org_organisation
-        org_id = record.organisation_id
-        org = db(otable.id == org_id).select(otable.name,
-                                             otable.acronym, # Present for consistent cache key
-                                             otable.logo,
-                                             limitby = (0, 1),
-                                             ).first()
+        organisation_id = record.organisation_id
         if settings.get_L10n_translate_org_organisation():
-            org_name = s3db.org_OrganisationRepresent(parent = False,
-                                                      acronym = False)(org_id)
+            from .org import org_OrganisationRepresent
+            org_name = org_OrganisationRepresent(parent = False,
+                                                 acronym = False,
+                                                 )(organisation_id)
         else:
+            otable = db.org_organisation
+            org = db(otable.id == organisation_id).select(otable.name,
+                                                          limitby = (0, 1),
+                                                          ).first()
             org_name = org.name
 
-        logo = org.logo
-        if logo:
-            logo = s3db.org_organisation_logo(org)
-        elif settings.get_org_branches():
-            root_org = current.cache.ram(
-                # Common key with auth.root_org
-                "root_org_%s" % org_id,
-                lambda: s3db.org_root_organisation(org_id),
-                time_expire=120
-                )
-            logo = s3db.org_organisation_logo(root_org)
+        from .org import org_organisation_logo
+        logo = org_organisation_logo(organisation_id)
 
         inner_table = TABLE(TR(TH(vol_name)),
                             TR(TD(org_name)))

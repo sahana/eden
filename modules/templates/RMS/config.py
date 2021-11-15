@@ -7,7 +7,7 @@ from collections import OrderedDict
 from gluon import current, IS_IN_SET, URL
 from gluon.storage import Storage
 
-from s3 import S3Method, S3Represent, SEPARATORS
+from s3 import NONE, S3Method, S3Represent, SEPARATORS
 
 from .controllers import deploy_index, inv_dashboard
 
@@ -826,7 +826,7 @@ def config(settings):
     # Uncomment if you need a simpler (but less accountable) process for managing stock levels
     #settings.inv.direct_stock_edits = True
     settings.inv.stock_count = False
-    settings.inv.item_status = {#0: current.messages["NONE"], # Not defined yet
+    settings.inv.item_status = {#0: NONE, # Not defined yet
                                 0: T("Good"),
                                 1: T("Damaged"),
                                 #1: T("Dump"),
@@ -834,7 +834,7 @@ def config(settings):
                                 #3: T("Reject"),
                                 #4: T("Surplus")
                                 }
-    settings.inv.recv_types = {#0: current.messages["NONE"], In Shipment Types
+    settings.inv.recv_types = {#0: NONE, In Shipment Types
                                #11: T("Internal Shipment"), In Shipment Types
                                32: T("Donation"),
                                34: T("Purchase"),
@@ -3121,33 +3121,23 @@ Thank you"""
                                                       )
 
             # Logo
-            otable = db.org_organisation
-            org_id = record.organisation_id
-            org = db(otable.id == org_id).select(otable.name,
-                                                 otable.acronym, # Present for consistent cache key
-                                                 otable.logo,
-                                                 limitby = (0, 1),
-                                                 ).first()
-            #if settings.get_L10n_translate_org_organisation():
-            #org_name = org_represent(org_id)
-            #else:
-            #    org_name = org.name
-
-            logo = org.logo
-            if logo:
-                logo = org_organisation_logo(org)
-            elif settings.get_org_branches():
-                from s3db.org import org_root_organisation
-                root_org = current.cache.ram(
-                    # Common key with auth.root_org
-                    "root_org_%s" % org_id,
-                    lambda: org_root_organisation(org_id),
-                    time_expire = 120
-                    )
-                logo = org_organisation_logo(root_org)
+            logo = org_organisation_logo(record.organisation_id)
 
             # Read the report
-            report = db(rtable.training_event_id == r.id).select(limitby = (0, 1),
+            report = db(rtable.training_event_id == r.id).select(rtable.person_id,
+                                                                 rtable.job_title_id,
+                                                                 rtable.organisation_id,
+                                                                 rtable.date,
+                                                                 rtable.purpose,
+                                                                 rtable.objectives,
+                                                                 rtable.methodology,
+                                                                 rtable.actions,
+                                                                 rtable.participants,
+                                                                 rtable.results,
+                                                                 rtable.followup,
+                                                                 rtable.additional,
+                                                                 rtable.comments,
+                                                                 limitby = (0, 1),
                                                                  ).first()
 
             # Header
@@ -7016,22 +7006,295 @@ class PrintableShipmentForm(S3Method):
                      )
 
     # -------------------------------------------------------------------------
+    #def grn_new(self, r, **attr):
     def grn(self, r, **attr):
         """
             GRN (Goods Received Note) for French Red Cross (& current default)
+
+            Using ReportLab's PLATYPUS direct
 
             @param r: the S3Request instance
             @param attr: controller attributes
         """
 
-        from gluon import BR, DIV, IMG, TABLE, TR, TH, TD
+        import os
 
-        #T = current.T
-        T = lambda v: v
+        from copy import deepcopy
+        from io import BytesIO
+
+        from gluon.html import B, I
+        from gluon.contenttype import contenttype
+
+        from reportlab.lib import colors
+        from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT#, TA_JUSTIFY
+        from reportlab.lib.pagesizes import A4, LETTER, landscape
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.lib.units import cm, inch
+        from reportlab.pdfgen import canvas
+        from reportlab.platypus import SimpleDocTemplate, \
+                                       Image, \
+                                       Paragraph, \
+                                       Table
+
+        # Styles
+        styleSheet = getSampleStyleSheet()
+
+        style = styleSheet["Normal"]
+        style.fontName = "Helvetica"
+        style.fontSize = 9
+
+        style_center = deepcopy(style)
+        style_center.alignment = TA_CENTER
+
+        style_right = deepcopy(style)
+        style_right.alignment = TA_RIGHT
+
+        style_8_center = deepcopy(style_center)
+        style_8_center.fontSize = 8
+
+        style_12_center = deepcopy(style_center)
+        style_12_center.fontSize = 12
+
+        style_18_center = deepcopy(style_center)
+        style_18_center.fontSize = 18
+
+        size = current.deployment_settings.get_pdf_size()
+        if size == "Letter":
+            pagesize = landscape(LETTER)
+        elif size == "A4" or not isinstance(size, tuple):
+            pagesize = landscape(A4)
+        else:
+            pagesize = landscape(size)
+
         db = current.db
         s3db = current.s3db
 
-        # Master record (=inv_recv)
+        # Master record
+        recv_table = s3db.inv_recv
+        record = r.record
+        recv_ref = record.recv_ref
+        date = recv_table.date.represent(record.date)
+        from_site_id = record.from_site_id
+        if from_site_id:
+            received_from = recv_table.from_site_id.represent(from_site_id,
+                                                              show_link = False,
+                                                              )
+        else:
+            received_from = recv_table.organisation_id.represent(record.organisation_id,
+                                                                 show_link = False,
+                                                                 )
+
+        # Get organisation logo
+        stable = s3db.org_site
+        site = db(stable.site_id == record.site_id).select(stable.organisation_id,
+                                                           limitby = (0, 1),
+                                                           ).first()
+        organisation_id = site.organisation_id
+
+        from s3db.org import org_root_organisation_name
+        recipient_ns = org_root_organisation_name(organisation_id)
+
+        otable = s3db.org_organisation
+        org = db(otable.id == organisation_id).select(otable.logo,
+                                                      otable.root_organisation,
+                                                      limitby = (0, 1),
+                                                      ).first()
+        logo = org.logo
+        if not logo:
+            root_organisation = org.root_organisation
+            if organisation_id != root_organisation:
+                org = db(otable.id == root_organisation).select(otable.logo,
+                                                                limitby = (0, 1),
+                                                                ).first()
+                logo = org.logo
+
+        if logo:
+            src = os.path.join(r.folder,
+                               "uploads",
+                               logo,
+                               )
+        else:
+            # Use default IFRC
+            src = os.path.join(r.folder,
+                               "static",
+                               "themes",
+                               "RMS",
+                               "img",
+                               "logo_small.png",
+                               )
+
+        logo = Image(src)
+
+        # Assuming 96dpi original resolution
+        resolution = 96
+        iwidth = logo.drawWidth
+        iheight = logo.drawHeight
+        height = 50 * inch / resolution
+        width = iwidth * (height / iheight)
+        logo.drawHeight = height
+        logo.drawWidth = width
+
+        output = BytesIO()
+        doc = SimpleDocTemplate(output,
+                                title = recv_ref,
+                                pagesize = pagesize,
+                                leftMargin = 0.3 * inch,
+                                rightMargin = 0.3 * inch,
+                                topMargin = 0.5 * inch,
+                                bottomMargin = 0.5 * inch,
+                                )
+
+        lightgrey = colors.lightgrey
+        table_style = [("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                       ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                       ("SPAN", (0, 0), (5, 0)),
+                       ("SPAN", (7, 0), (8, 0)),
+                       ("BACKGROUND", (6, 0), (8, 0), lightgrey),
+                       ("SPAN", (0, 1), (5, 1)),
+                       ("SPAN", (7, 1), (8, 1)),
+                       ("SPAN", (0, 3), (1, 3)),
+                       ("SPAN", (2, 3), (3, 3)),
+                       ("SPAN", (4, 3), (6, 3)),
+                       ("SPAN", (7, 3), (8, 3)),
+                       ("BACKGROUND", (0, 3), (0, 3), lightgrey),
+                       ("BACKGROUND", (4, 3), (4, 3), lightgrey),
+                       ("SPAN", (2, 5), (3, 5)),
+                       ("SPAN", (5, 5), (6, 5)),
+                       ("SPAN", (7, 5), (8, 5)),
+                       ("BACKGROUND", (0, 5), (0, 5), lightgrey),
+                       ("BACKGROUND", (2, 5), (3, 5), lightgrey),
+                       ("BACKGROUND", (5, 5), (6, 5), lightgrey),
+                       ]
+
+        spacer = ["",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  ]
+
+        content = [[logo,
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    Paragraph(str(B("COUNTRY CODE")), style_center),
+                    Paragraph(str(B("GRN NUMBER")), style_center),
+                    "",
+                    ],
+                   [Paragraph("%s / %s" % (B("GOODS RECEIVED NOTE"),
+                                           I("Accusé de Réception"),
+                                           ), style_18_center),
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "", # @ToDo: Country Code?
+                    Paragraph(str(B(recv_ref)), style_12_center),
+                    "",
+                    ],
+                   spacer,
+                   [Paragraph("%s<br/>(%s)" % (B("DELEGATION/CONSIGNEE"),
+                                               B("LOCATION"),
+                                               ), style_right),
+                    "",
+                    Paragraph(recipient_ns, style_8_center),
+                    "",
+                    Paragraph("%s / %s" % (B("RECEIVED FROM"),
+                                           I("reçu de"),
+                                           ), style_center),
+                    "",
+                    "",
+                    Paragraph(received_from, style_center),
+                    "",
+                    ],
+                   spacer,
+                   [Paragraph("%s<br/>(%s)" % (B("DATE OF ARRIVAL"),
+                                               I("Date de réception"),
+                                               ), style_right),
+                    Paragraph(date, style_center),
+                    Paragraph(str(B("DOCUMENT WELL RECEIVED")), style_center),
+                    "",
+                    "",
+                    Paragraph(str(B("IF NO, PLEASE SPECIFY")), style_center),
+                    "",
+                    "",
+                    "",
+                    ],
+                   spacer,
+                   ]
+
+        table = Table(content,
+                      colWidths = (4.17 * cm,
+                                   2.73 * cm,
+                                   1.20 * cm,
+                                   4.06 * cm,
+                                   2.29 * cm,
+                                   3.13 * cm,
+                                   2.03 * cm,
+                                   6.25 * cm,
+                                   1.33 * cm,
+                                   ),
+                      rowHeights = (1.64 * cm,
+                                    1.16 * cm,
+                                    0.16 * cm,
+                                    0.82 * cm,
+                                    0.21 * cm,
+                                    1.06 * cm,
+                                    0.25 * cm,
+                                    ),
+                      style = table_style,
+                      hAlign = "LEFT",   # defaults to "CENTER"
+                      vAlign = "MIDDLE", # defaults to "MIDDLE", but better to specify
+                      )
+
+        doc.build([table],
+                  canvasmaker = canvas.Canvas, # S3NumberedCanvas
+                  )
+
+        # Return the generated PDF
+        response = current.response
+        if response:
+            filename = "%s.pdf" % recv_ref
+            if "uwsgi_scheme" in current.request.env:
+                # Running uwsgi then we can't have unicode filenames
+                # Accent Folding
+                def string_escape(s):
+                    import unicodedata
+                    return unicodedata.normalize("NFD", s).encode("ascii", "ignore").decode("utf-8")
+                filename = string_escape(filename)
+            disposition = 'attachment; filename="%s"' % filename
+            response.headers["Content-Type"] = contenttype(".pdf")
+            response.headers["Content-disposition"] = disposition
+
+        return output.getvalue()
+
+    # -------------------------------------------------------------------------
+    #def grn(self, r, **attr):
+    def grn_oldway(self, r, **attr):
+        """
+            GRN (Goods Received Note) for French Red Cross (& current default)
+
+            Using S3html2pdf to convert gluon.html TABLE
+
+            @param r: the S3Request instance
+            @param attr: controller attributes
+        """
+
+        from gluon import B, BR, DIV, I, IMG, TABLE, TD, TH, TR
+
+        # Not translated (has both English & French elements within)
+        #T = current.T
+        db = current.db
+        s3db = current.s3db
+
+        # Master record
         table = s3db.inv_recv
         record = r.record
         recv_ref = record.recv_ref
@@ -7042,50 +7305,109 @@ class PrintableShipmentForm(S3Method):
             received_from = table.organisation_id.represent(record.organisation_id)
 
         # Get organisation logo
+        stable = s3db.org_site
+        site = db(stable.site_id == record.site_id).select(stable.organisation_id,
+                                                           limitby = (0, 1),
+                                                           ).first()
+        organisation_id = site.organisation_id
+
         otable = s3db.org_organisation
-        org = db(otable.id == current.auth.root_org()).select(otable.logo,
-                                                              limitby = (0, 1),
-                                                              ).first()
-        if org:
-            # @ToDo: Resize?
+        org = db(otable.id == organisation_id).select(otable.logo,
+                                                      otable.root_organisation,
+                                                      limitby = (0, 1),
+                                                      ).first()
+        logo = org.logo
+        if not logo:
+            root_organisation = org.root_organisation
+            if organisation_id != root_organisation:
+                org = db(otable.id == root_organisation).select(otable.logo,
+                                                                limitby = (0, 1),
+                                                                ).first()
+                logo = org.logo
+
+        if logo:
             logo = URL(c="default", f="download",
-                       args = org.logo,
+                       args = logo,
                        )
         else:
             # Use default IFRC
             logo = "/%s/static/themes/RMS/img/logo_small.png" % r.application
 
+        # Received Items
+        ttable = s3db.inv_track_item
+        itable = s3db.supply_item
+        ptable = s3db.supply_item_pack
+        query = (ttable.recv_id == record.id) & \
+                (ttable.item_id == itable.id) & \
+                (ttable.item_pack_id == ptable.id)
+        items = db(query).select(itable.code,
+                                 itable.name,
+                                 ttable.item_source_no,
+                                 ttable.recv_quantity,
+                                 ptable.name,
+                                 ptable.quantity,
+                                 itable.weight,
+                                 )
+
+        body = TABLE()
+        bappend = body.append
+
+        for row in items:
+            item = row["supply_item"]
+            pack = row["supply_item_pack"]
+            track_item = row["inv_track_item"]
+            quantity = track_item.recv_quantity
+            pack_details = pack.name
+            weight = item.weight
+            if weight:
+                pack_weight = weight * pack.quantity
+                pack_details = "%s / %s" % (pack_details,
+                                            round(pack_weight, 2),
+                                            )
+                total_weight = round(pack_weight * quantity, 2)
+            else:
+                total_weight = NONE
+            body_row = TR(TD(item.code or NONE),
+                          TD(item.name),
+                          TD(track_item.item_source_no or NONE),
+                          TD(quantity),
+                          TD(pack_details),
+                          TD(total_weight),
+                          )
+            bappend(body_row)
+
+
         #styles = {}
 
         def pdf_header(r):
             return DIV(TABLE(TR(TD(IMG(_src = logo,
+                                       _height = 50,
                                        ),
                                    _colspan = 6,
                                    ),
-                                TH(T("COUNTRY CODE"),
+                                TH("COUNTRY CODE",
                                    _align = "center",
                                    _valign = "middle",
                                    ),
-                                TH(T("GRN NUMBER"),
+                                TH("GRN NUMBER",
                                    _align = "center",
                                    _valign = "middle",
                                    _colspan = 2,
                                    ),
                                 ),
-                             TR(TD("%s / %s" % (T("GOODS RECEIVED NOTE"),
-                                                T("Accusé de Réception"),
-                                                ),
+                             TR(TD(B("GOODS RECEIVED NOTE"),
+                                   I(" / %s" % "Accusé de Réception"),
                                    _align = "center",
                                    _colspan = 6,
                                    ),
                                 TD(""), # @ToDo: Country Code?
-                                TD(recv_ref,
+                                TD(B(recv_ref),
                                    _align = "center",
                                    _colspan = 2,
                                    ),
                                 ),
-                             TR(TH("%s\n(%s)" % (T("DELEGATION/CONSIGNEE"),
-                                                 T("LOCATION"),
+                             TR(TH("%s\n(%s)" % ("DELEGATION/CONSIGNEE",
+                                                 "LOCATION",
                                                  ),
                                    _align = "right",
                                    _colspan = 2,
@@ -7094,9 +7416,8 @@ class PrintableShipmentForm(S3Method):
                                    _align = "center",
                                    _colspan = 2,
                                    ),
-                                TH("%s / %s" % (T("RECEIVED FROM"),
-                                                T("reçu de"),
-                                                ),
+                                TH("RECEIVED FROM",
+                                   I(" / %s" % "reçu de"),
                                    _align = "center",
                                    _colspan = 3,
                                    ),
@@ -7109,21 +7430,20 @@ class PrintableShipmentForm(S3Method):
                                    _colspan = 9,
                                    ),
                                 ),
-                             TR(TH("%s\n%s" % (T("DATE OF ARRIVAL"),
-                                               T("Date de réception"),
-                                               ),
+                             TR(TH("DATE OF ARRIVAL",
+                                   I("\n%s" % "Date de réception"),
                                    _align = "right",
                                    ),
                                 TD(table.date.represent(record.date),
                                    _align = "center",
                                    ),
-                                TH(T("DOCUMENT WELL RECEIVED"),
+                                TH("DOCUMENT WELL RECEIVED",
                                    _align = "center",
                                    _colspan = 2,
                                    ),
                                 TD("", # Leave Blank?
                                    ),
-                                TH(T("IF NO, PLEASE SPECIFY"),
+                                TH("IF NO, PLEASE SPECIFY",
                                    _align = "center",
                                    _colspan = 2,
                                    ),
@@ -7131,29 +7451,126 @@ class PrintableShipmentForm(S3Method):
                                    _colspan = 2,
                                    ),
                                 ),
+                             TR(TD("",
+                                   _colspan = 9,
+                                   ),
+                                ),
+                             TR(TH("MEANS OF TRANSPORT",
+                                   I("\n%s" % "Moyen de transport"),
+                                   _align = "center",
+                                   ),
+                                TH("ROAD",
+                                   "\n",
+                                   "AIR",
+                                   "\n",
+                                   "SEA",
+                                   "\n",
+                                   "Handcarried",
+                                   _align = "right",
+                                   ),
+                                # @ToDo Checkboxes
+                                TD(TABLE(TR(TD("")),
+                                         TR(TD("")),
+                                         TR(TD("")),
+                                         TR(TD("")),
+                                         ),
+                                   ),
+                                TD(TABLE(TR(TD("AWB no:")),
+                                         TR(TD("Waybill n°/ CMR n°:")),
+                                         TR(TD("B/L n°:")),
+                                         TR(TD("Waybill No.:")),
+                                         ),
+                                   _colspan = 2,
+                                   ),
+                                TD(TABLE(TR(TH("FLIGHT N°:"),
+                                            TD(""),
+                                            ),
+                                         TR(TH("REGISTRATION N°:"),
+                                            TD(""),
+                                            ),
+                                         TR(TH("VESSEL:"),
+                                            TD(""),
+                                            ),
+                                         ),
+                                   _colspan = 4,
+                                   ),
+                                ),
                              ))
 
         def pdf_body(r):
-            return DIV()
+            #TABLE(TR(TH("GOODS RECEIVED",
+                                       #      I("/ %s" % "Marchandises reçues"),
+                                       #      _colpsan = 3,
+                                       #      ),
+                                       #   TH("FOR FOOD INDICATE NET WEIGHT",
+                                       #      _colpsan = 3,
+                                       #      ),
+                                       #   ),
+            body.insert(0, TR(TH("ITEMS CODE",
+                                 "\n",
+                                 I("Description générale et remarques"),
+                                 ),
+                              TH("DESCRIPTION",
+                                 "\n",
+                                 I("Code article"),
+                                 ),
+                              TH("COMMODITY TRACKING N° OR DONOR",
+                                 ),
+                              TH("NB. OF UNITS",
+                                 "\n",
+                                 I("nb. colis"),
+                                 ),
+                              TH("UNIT TYPE/WEIGHT",
+                                 "\n",
+                                 I("type d'unité/poids"),
+                                 ),
+                              TH("WEIGHT (kg)",
+                                 "\n",
+                                 I("Total (kg)"),
+                                 ),
+                              TH(B("RECEIVED ACCORDING TO DOCUMENT AND RECEIVED IN GOOD CONDITIONS"),
+                                 I("\n%s" % "Reçu selon documents et en bonne condition"),
+                                 ),
+                              TH(B("CLAIM"),
+                                 I("\n%s" % "Réclamation"),
+                                 ),
+                              ),
+                        )
+
+            bappend(TR(TD(B("COMMENTS"),
+                          I(" / %s" % "Observations"),
+                          _colspan = 8,
+                          ),
+                       ))
+            bappend(TR(TD("\n\n\n\n",
+                          _colspan = 8,
+                          ),
+                       ))
+            bappend(TR(TD("",
+                          _colspan = 8,
+                          ),
+                       ))
+
+            return DIV(body)
 
         def pdf_footer(r):
-            return DIV(TABLE(TR(TH(T("Delivered By"),
+            return DIV(TABLE(TR(TH("DELIVERED BY",
                                    _align = "center",
                                    ),
-                                TH(T("Date"),
+                                TH("DATE",
                                    _align = "center",
                                    ),
-                                TH(T("Function"),
+                                TH("FUNCTION",
                                    _align = "center",
                                    _colspan = 2,
                                    ),
-                                TH("%s (%s)" % (T("Name"),
-                                                T("in Block Letter"),
+                                TH("%s (%s)" % ("NAME",
+                                                "IN BLOCK LETTER",
                                                 ),
                                    _align = "center",
                                    _colspan = 3,
                                    ),
-                                TH(T("Signature"),
+                                TH("SIGNATURE",
                                    _align = "center",
                                    _colspan = 2,
                                    ),
@@ -7170,23 +7587,23 @@ class PrintableShipmentForm(S3Method):
                                    _colspan = 2,
                                    ),
                                 ),
-                             TR(TH(T("Received By"),
+                             TR(TH("RECEIVED BY",
                                    _align = "center",
                                    ),
-                                TH(T("Date"),
+                                TH("DATE",
                                    _align = "center",
                                    ),
-                                TH(T("Function"),
+                                TH("FUNCTION",
                                    _align = "center",
                                    _colspan = 2,
                                    ),
-                                TH("%s (%s)" % (T("Name"),
-                                                T("in Block Letter"),
+                                TH("%s (%s)" % ("NAME",
+                                                "IN BLOCK LETTER",
                                                 ),
                                    _align = "center",
                                    _colspan = 3,
                                    ),
-                                TH(T("Signature / Stamp"),
+                                TH("SIGNATURE / STAMP",
                                    _align = "center",
                                    _colspan = 2,
                                    ),
@@ -7209,7 +7626,7 @@ class PrintableShipmentForm(S3Method):
         exporter = S3Exporter().pdf
         return exporter(r.resource,
                         request = r,
-                        pdf_title = T(current.deployment_settings.get_inv_recv_form_name()),
+                        pdf_title = current.deployment_settings.get_inv_recv_form_name(),
                         pdf_filename = recv_ref,
                         pdf_header = pdf_header,
                         pdf_header_padding = 12,

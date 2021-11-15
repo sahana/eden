@@ -8492,7 +8492,8 @@ class project_SummaryReport(S3Method):
         report_title = s3_str(T("Project Summary Report"))
         filename = "%s_%s.pdf" % (report_title, s3_str(project_title))
 
-        header = DIV(s3db.org_organisation_logo(organisation_id),
+        from .org import org_organisation_logo
+        header = DIV(org_organisation_logo(organisation_id),
                      date_represent(r.utcnow),
                      # @ToDo: This is overflowing
                      )

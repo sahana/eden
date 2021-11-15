@@ -127,27 +127,27 @@ class S3Config(Storage):
                     }
 
     # PDF fonts for each language
-    # fontset format -> [normal-version, bold-version]
-    # defaults to ["Helvetica", "Helvetica-Bold"] if not-specified here
+    # - either a single string or a tuple of (normal-version, bold-version) #, italic-version)
+    # defaults to ("Helvetica", "Helvetica-Bold") #, "Helvetica-Oblique") if not-specified here
     # Requires installation of appropriate font - e.g. using import_font in tasks.cfg
     # Unifont can be downloaded from http://unifoundry.com/unifont/index.html
-    fonts = {"ar": ["unifont", "unifont"], # Note that this isn't an ideal font for Arabic as it doesn't support reshaping. We use arabic_reshaper to improve this.
-             #"dv": ["unifont", "unifont"],
-             "dz": ["unifont", "unifont"],
-             "km": ["unifont", "unifont"],
-             "ko": ["unifont", "unifont"],
-             "mn": ["unifont", "unifont"],
-             "my": ["unifont", "unifont"],
-             "ne": ["unifont", "unifont"],
-             "pl": ["unifont", "unifont"],
-             "prs": ["unifont", "unifont"],
-             "ps": ["unifont", "unifont"],
-             "th": ["unifont", "unifont"],
-             "tr": ["unifont", "unifont"],
-             "ur": ["unifont", "unifont"],
-             "vi": ["unifont", "unifont"],
-             "zh-cn": ["unifont", "unifont"],
-             "zh-tw": ["unifont", "unifont"],
+    fonts = {"ar": "unifont", # Note that this isn't an ideal font for Arabic as it doesn't support reshaping. We use arabic_reshaper to improve this.
+             #"dv": "unifont",
+             "dz": "unifont",
+             "km": "unifont",
+             "ko": "unifont",
+             "mn": "unifont",
+             "my": "unifont",
+             "ne": "unifont",
+             "pl": "unifont",
+             "prs": "unifont",
+             "ps": "unifont",
+             "th": "unifont",
+             "tr": "unifont",
+             "ur": "unifont",
+             "vi": "unifont",
+             "zh-cn": "unifont",
+             "zh-tw": "unifont",
              }
 
     # Can be over-ridden in the template as settings.L10n.languages_by_country
