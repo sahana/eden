@@ -275,8 +275,17 @@ def grn(r, **attr):
     style_right = deepcopy(style)
     style_right.alignment = TA_RIGHT
 
+    style_6_center = deepcopy(style_center)
+    style_6_center.fontSize = 6
+
+    style_7_center = deepcopy(style_center)
+    style_7_center.fontSize = 7
+
     style_8_center = deepcopy(style_center)
     style_8_center.fontSize = 8
+
+    style_8_right = deepcopy(style_8_center)
+    style_8_right.alignment = TA_RIGHT
 
     style_12_center = deepcopy(style_center)
     style_12_center.fontSize = 12
@@ -390,7 +399,23 @@ def grn(r, **attr):
                    ("BACKGROUND", (0, 5), (0, 5), lightgrey),
                    ("BACKGROUND", (2, 5), (3, 5), lightgrey),
                    ("BACKGROUND", (5, 5), (6, 5), lightgrey),
+                   ("SPAN", (0, 7), (0, 10)),
+                   ("SPAN", (5, 7), (6, 7)),
+                   ("SPAN", (5, 8), (6, 8)),
+                   ("SPAN", (5, 9), (6, 9)),
+                   ("SPAN", (7, 7), (8, 7)),
+                   ("SPAN", (7, 8), (8, 8)),
+                   ("SPAN", (7, 9), (8, 9)),
+                   ("BACKGROUND", (0, 7), (1, 10), lightgrey),
+                   ("BACKGROUND", (5, 7), (6, 9), lightgrey),
+                   ("SPAN", (0, 12), (3, 12)),
+                   ("SPAN", (4, 12), (6, 12)),
+                   ("SPAN", (1, 13), (2, 13)),
+                   ("SPAN", (7, 12), (7, 13)),
+                   ("SPAN", (8, 12), (8, 13)),
+                   ("BACKGROUND", (0, 12), (8, 13), lightgrey),
                    ]
+    sappend = table_style.append
 
     spacer = ["",
               "",
@@ -403,7 +428,9 @@ def grn(r, **attr):
               "",
               ]
 
-    content = [[logo,
+    content = [
+               # Row 0
+               [logo,
                 "",
                 "",
                 "",
@@ -413,6 +440,7 @@ def grn(r, **attr):
                 Paragraph(str(B("GRN NUMBER")), style_center),
                 "",
                 ],
+               # Row 1
                [Paragraph("%s / %s" % (B("GOODS RECEIVED NOTE"),
                                        I("Accusé de Réception"),
                                        ), style_18_center),
@@ -425,7 +453,9 @@ def grn(r, **attr):
                 Paragraph(str(B(recv_ref)), style_12_center),
                 "",
                 ],
+               # Row 2
                spacer,
+               # Row 3
                [Paragraph("%s<br/>(%s)" % (B("DELEGATION/CONSIGNEE"),
                                            B("LOCATION"),
                                            ), style_right),
@@ -440,10 +470,12 @@ def grn(r, **attr):
                 Paragraph(received_from, style_center),
                 "",
                 ],
+               # Row 4
                spacer,
-               [Paragraph("%s<br/>(%s)" % (B("DATE OF ARRIVAL"),
-                                           I("Date de réception"),
-                                           ), style_right),
+               # Row 5
+               [Paragraph("%s<br/>%s" % (B("DATE OF ARRIVAL"),
+                                         I("Date de réception"),
+                                         ), style_right),
                 Paragraph(date, style_center),
                 Paragraph(str(B("DOCUMENT WELL RECEIVED")), style_center),
                 "",
@@ -453,8 +485,231 @@ def grn(r, **attr):
                 "",
                 "",
                 ],
+               # Row 6
                spacer,
+               # Row 7
+               [Paragraph("%s<br/>%s" % (B("MEANS OF TRANSPORT"),
+                                         I("Moyen de transport"),
+                                         ), style_center),
+                Paragraph(str(B("Air")), style_right),
+                "", # @ToDo: Checkbox
+                Paragraph(str(B("AWB n°:")), style),
+                "",
+                Paragraph(str(B("FLIGHT N°")), style_right),
+                "",
+                "",
+                "",
+                ],
+               # Row 8
+               ["",
+                Paragraph(str(B("Road")), style_right),
+                "", # @ToDo: Checkbox
+                Paragraph(str(B("Waybill n°/ CMR n°:")), style),
+                "",
+                Paragraph(str(B("REGISTRATION N°")), style_right),
+                "",
+                "",
+                "",
+                ],
+               # Row 9
+               ["",
+                Paragraph(str(B("Sea")), style_right),
+                "", # @ToDo: Checkbox
+                Paragraph(str(B("B/L n°:")), style),
+                "",
+                Paragraph(str(B("VESSEL")), style_right),
+                "",
+                "",
+                "",
+                ],
+               # Row 10
+               ["",
+                Paragraph("Handcarried by", style_8_right),
+                "", # @ToDo: Checkbox
+                Paragraph(str(B("Waybill n°:")), style),
+                "",
+                "",
+                "",
+                "",
+                "",
+                ],
+               # Row 11
+               spacer,
+               # Row 12
+               [Paragraph("%s / %s" % (B("GOODS RECEIVED"),
+                                       I("Marchandises reçues"),
+                                       ), style_7_center),
+                "",
+                "",
+                "",
+                Paragraph(str(I("FOR FOOD INDICATE NET WEIGHT")), style_7_center),
+                "",
+                "",
+                Paragraph("%s<br/>%s" % (B("RECEIVED ACCORDING TO DOCUMENT AND RECEIVED IN GOOD CONDITIONS"),
+                                         I("Reçu selon documents et en bonne condition"),
+                                         ), style_7_center),
+
+                Paragraph("%s<br/>%s" % (B("CLAIM"),
+                                         I("Réclamation"),
+                                         ), style_7_center),
+                ],
+               # Row 13
+               [Paragraph("%s<br/>%s" % (B("ITEMS CODE"),
+                                         I("Description générale et remarques"),
+                                         ), style_6_center),
+                Paragraph("%s<br/>%s" % (B("DESCRIPTION"),
+                                         I("Code article"),
+                                         ), style_6_center),
+                "",
+                Paragraph(str(B("COMMODITY TRACKING N° OR DONOR")), style_7_center),
+                Paragraph("%s<br/>%s" % (B("NB. OF UNITS"),
+                                         I("nb. colis"),
+                                         ), style_6_center),
+                Paragraph("%s<br/>%s" % (B("UNIT TYPE/WEIGHT"),
+                                         I("type d'unité/poids"),
+                                         ), style_6_center),
+                Paragraph("%s<br/>%s" % (B("WEIGHT (kg)"),
+                                         I("Total (kg)"),
+                                         ), style_6_center),
+                "",
+                "",
+                ],
                ]
+    cappend = content.append
+
+    rowHeights = [1.64 * cm,
+                  1.16 * cm,
+                  0.16 * cm,
+                  0.82 * cm,
+                  0.21 * cm,
+                  1.06 * cm,
+                  0.25 * cm,
+                  0.56 * cm,
+                  0.56 * cm,
+                  0.56 * cm,
+                  0.56 * cm,
+                  0.24 * cm,
+                  0.40 * cm,
+                  0.85 * cm,
+                  ]
+    rappend = rowHeights.append
+
+    # Received Items
+    ttable = s3db.inv_track_item
+    itable = s3db.supply_item
+    ptable = s3db.supply_item_pack
+    query = (ttable.recv_id == record.id) & \
+            (ttable.item_id == itable.id) & \
+            (ttable.item_pack_id == ptable.id)
+    items = db(query).select(itable.code,
+                             itable.name,
+                             ttable.item_source_no,
+                             ttable.recv_quantity,
+                             ptable.name,
+                             ptable.quantity,
+                             itable.weight,
+                             )
+
+    rowNo = 14
+    for row in items:
+        item = row["supply_item"]
+        pack = row["supply_item_pack"]
+        track_item = row["inv_track_item"]
+        quantity = track_item.recv_quantity
+        pack_details = pack.name
+        weight = item.weight
+        if weight:
+            pack_weight = weight * pack.quantity
+            pack_details = "%s / %s" % (pack_details,
+                                        round(pack_weight, 2),
+                                        )
+            total_weight = round(pack_weight * quantity, 2)
+        else:
+            total_weight = NONE
+        body_row = [Paragraph(item.code or NONE, style_7_center),
+                    Paragraph(item.name, style_7_center),
+                    "",
+                    Paragraph(track_item.item_source_no or NONE, style_7_center),
+                    Paragraph(str(quantity), style_7_center),
+                    Paragraph(pack_details, style_7_center),
+                    Paragraph(str(total_weight), style_7_center),
+                    "", # @ToDo: Checkbox
+                    ]
+        rappend(0.67 * cm)
+        sappend(("SPAN", (1, rowNo), (2, rowNo)))
+        cappend(body_row)
+        rowNo += 1
+
+    rowHeights += [0.32 * cm,
+                   0.45 * cm,
+                   2.04 * cm,
+                   0.32 * cm,
+                   0.39 * cm,
+                   0.81 * cm,
+                   0.39 * cm,
+                   0.81 * cm,
+                   ]
+
+    table_style += [("SPAN", (0, rowNo + 1), (8, rowNo + 1)),
+                    ("SPAN", (0, rowNo + 2), (8, rowNo + 2)),
+                    ("SPAN", (2, rowNo + 4), (3, rowNo + 4)),
+                    ("SPAN", (4, rowNo + 4), (6, rowNo + 4)),
+                    ("SPAN", (7, rowNo + 4), (8, rowNo + 4)),
+                    ("SPAN", (2, rowNo + 5), (3, rowNo + 5)),
+                    ("SPAN", (4, rowNo + 5), (6, rowNo + 5)),
+                    ("SPAN", (7, rowNo + 5), (8, rowNo + 5)),
+                    ("SPAN", (2, rowNo + 6), (3, rowNo + 6)),
+                    ("SPAN", (4, rowNo + 6), (6, rowNo + 6)),
+                    ("SPAN", (7, rowNo + 6), (8, rowNo + 6)),
+                    ("SPAN", (2, rowNo + 7), (3, rowNo + 7)),
+                    ("SPAN", (4, rowNo + 7), (6, rowNo + 7)),
+                    ("SPAN", (7, rowNo + 7), (8, rowNo + 7)),
+                    ("BACKGROUND", (0, rowNo + 4), (8, rowNo + 4), lightgrey),
+                    ("BACKGROUND", (0, rowNo + 6), (8, rowNo + 6), lightgrey),
+                    ]
+
+    content += [spacer,
+                [Paragraph("%s / %s" % (B("COMMENTS"),
+                                        I("Observations"),
+                                        ), style),
+                 "",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "",
+                 ],
+                spacer,
+                spacer,
+                [Paragraph(str(B("DELIVERED BY")), style_8_center),
+                 Paragraph(str(B("DATE")), style_8_center),
+                 Paragraph(str(B("FUNCTION")), style_8_center),
+                 "",
+                 Paragraph("%s (%s)" % (B("NAME"),
+                                        "IN BLOCK LETTER",
+                                        ), style_8_center),
+                 "",
+                 "",
+                 Paragraph(str(B("SIGNATURE")), style_8_center),
+                 "",
+                 ],
+                spacer,
+                [Paragraph(str(B("RECEIVED BY")), style_8_center),
+                 Paragraph(str(B("DATE")), style_8_center),
+                 Paragraph(str(B("FUNCTION")), style_8_center),
+                 "",
+                 Paragraph("%s (%s)" % (B("NAME"),
+                                        "IN BLOCK LETTER",
+                                        ), style_8_center),
+                 "",
+                 "",
+                 Paragraph(str(B("SIGNATURE / STAMP")), style_8_center),
+                 "",
+                 ],
+                spacer,
+                ]
 
     table = Table(content,
                   colWidths = (4.17 * cm,
@@ -467,14 +722,7 @@ def grn(r, **attr):
                                6.25 * cm,
                                1.33 * cm,
                                ),
-                  rowHeights = (1.64 * cm,
-                                1.16 * cm,
-                                0.16 * cm,
-                                0.82 * cm,
-                                0.21 * cm,
-                                1.06 * cm,
-                                0.25 * cm,
-                                ),
+                  rowHeights = rowHeights,
                   style = table_style,
                   hAlign = "LEFT",   # defaults to "CENTER"
                   vAlign = "MIDDLE", # defaults to "MIDDLE", but better to specify
@@ -698,8 +946,6 @@ def grn_S3html2pdf(r, **attr):
         @param attr: controller attributes
     """
 
-    from gluon import B, BR, DIV, I, IMG, TABLE, TD, TH, TR
-
     # Not translated (has both English & French elements within)
     #T = current.T
     db = current.db
@@ -786,7 +1032,6 @@ def grn_S3html2pdf(r, **attr):
                       TD(total_weight),
                       )
         bappend(body_row)
-
 
     #styles = {}
 
