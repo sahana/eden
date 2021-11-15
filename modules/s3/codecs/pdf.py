@@ -1785,7 +1785,7 @@ class S3html2pdf():
         titlestyle = deepcopy(boldstyle)
         titlestyle.fontSize = 16
         titlestyle.spaceAfter = 8
-        titlestyle = titlestyle
+        self.titlestyle = titlestyle
 
         # To add more PDF styles define the style above (just like the titlestyle)
         # Then add the style and the name to the lookup dict below
@@ -2051,7 +2051,7 @@ class S3html2pdf():
             table_style.append(("GRID", (0, 0), (-1, -1), 0.5, colors.grey))
 
         content = self.parse_table_components(html,
-                                              style = table_style,
+                                              table_style = table_style,
                                               )[0]
 
         if content == []:
