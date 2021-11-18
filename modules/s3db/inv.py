@@ -9574,9 +9574,9 @@ def inv_recv_process(r, **attr):
 
     if inv_item_ids:
         # Lookup sending inventory source_types
-        stock_items = db(iitable.belongs(set(inv_item_ids))).select(iitable.id,
-                                                                    iitable.source_type,
-                                                                    )
+        stock_items = db(iitable.id.belongs(set(inv_item_ids))).select(iitable.id,
+                                                                       iitable.source_type,
+                                                                       )
         stock_items = {s.id: s.source_type for s in stock_items}
 
     # Move all the items into the Stock, update any Requisitions & make any Adjustments
@@ -9662,7 +9662,7 @@ def inv_recv_process(r, **attr):
         else:
             # Add a new item
             if send_inv_item_id:
-                source_type = stock_items[send_inv_item_id].source_type
+                source_type = stock_items[send_inv_item_id]
             elif DONATION:
                 source_type = 1 # Donation
             else:

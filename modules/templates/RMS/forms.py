@@ -5,6 +5,7 @@ import os
 from copy import deepcopy
 from io import BytesIO
 
+from reportlab.graphics import shapes
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT#, TA_JUSTIFY
 from reportlab.lib.pagesizes import A4, LETTER, landscape
@@ -19,7 +20,7 @@ from reportlab.platypus import SimpleDocTemplate, \
 from gluon import *
 from gluon.contenttype import contenttype
 
-from s3 import NONE, S3GroupedItems, S3GroupedItemsTable
+from s3 import NONE, S3GroupedItems, S3GroupedItemsTable, s3_truncate
 from s3.s3export import S3Exporter
 
 from .layouts import OM
@@ -297,6 +298,68 @@ def grn(r, **attr):
     style_18_center = deepcopy(style_center)
     style_18_center.fontSize = 18
 
+    Line = shapes.Line
+    checkbox = shapes.Drawing(0.5 * cm, # width
+                              0.5 * cm, # height
+                              Line(0.1 * cm, # x1
+                                   0.1 * cm, # y1
+                                   0.4 * cm, # x2
+                                   0.1 * cm, # y2
+                                   strokeWidth = 2,
+                                   ),
+                              Line(0.4 * cm, # x1
+                                   0.1 * cm, # y1
+                                   0.4 * cm, # x2
+                                   0.4 * cm, # y2
+                                   strokeWidth = 2,
+                                   ),
+                              Line(0.4 * cm, # x1
+                                   0.4 * cm, # y1
+                                   0.1 * cm, # x2
+                                   0.4 * cm, # y2
+                                   ),
+                              Line(0.1 * cm, # x1
+                                   0.4 * cm, # y1
+                                   0.1 * cm, # x2
+                                   0.1 * cm, # y2
+                                   ),
+                              )
+    checked = shapes.Drawing(0.5 * cm, # width
+                             0.5 * cm, # height
+                             Line(0.1 * cm, # x1
+                                  0.1 * cm, # y1
+                                  0.4 * cm, # x2
+                                  0.1 * cm, # y2
+                                  strokeWidth = 2,
+                                  ),
+                             Line(0.4 * cm, # x1
+                                  0.1 * cm, # y1
+                                  0.4 * cm, # x2
+                                  0.4 * cm, # y2
+                                  strokeWidth = 2,
+                                  ),
+                             Line(0.4 * cm, # x1
+                                  0.4 * cm, # y1
+                                  0.1 * cm, # x2
+                                  0.4 * cm, # y2
+                                  ),
+                             Line(0.1 * cm, # x1
+                                  0.4 * cm, # y1
+                                  0.1 * cm, # x2
+                                  0.1 * cm, # y2
+                                  ),
+                             Line(0.1 * cm, # x1
+                                  0.1 * cm, # y1
+                                  0.4 * cm, # x2
+                                  0.4 * cm, # y2
+                                  ),
+                             Line(0.4 * cm, # x1
+                                  0.1 * cm, # y1
+                                  0.1 * cm, # x2
+                                  0.4 * cm, # y2
+                                  ),
+                             )
+
     size = current.deployment_settings.get_pdf_size()
     if size == "Letter":
         pagesize = landscape(LETTER)
@@ -313,18 +376,54 @@ def grn(r, **attr):
     record = r.record
     recv_ref = record.recv_ref
     date = recv_table.date.represent(record.date)
+    wb = record.send_ref
+    transport_type = record.transport_type
+    if transport_type == "Air":
+        awb = record.transport_ref or ""
+        cmr = ""
+        bl = ""
+        flight = record.registration_no or ""
+        reg = ""
+        vessel = ""
+    elif transport_type == "Sea":
+        awb = ""
+        cmr = ""
+        bl = record.transport_ref or ""
+        flight = ""
+        reg = ""
+        vessel = record.registration_no or ""
+    elif transport_type == "Road":
+        awb = ""
+        cmr = record.transport_ref or ""
+        bl = ""
+        flight = ""
+        reg = record.registration_no or ""
+        vessel = ""
+    #elif transport_type == "Hand":
+    else:
+        awb = ""
+        cmr = ""
+        bl = ""
+        flight = ""
+        reg = ""
+        vessel = ""
+
+    stable = s3db.org_site
+    otable = s3db.org_organisation
+
     from_site_id = record.from_site_id
     if from_site_id:
-        received_from = recv_table.from_site_id.represent(from_site_id,
-                                                          show_link = False,
-                                                          )
+        site = db(stable.site_id == from_site_id).select(stable.name,
+                                                         limitby = (0, 1),
+                                                         ).first()
+        received_from = site.name
     else:
-        received_from = recv_table.organisation_id.represent(record.organisation_id,
-                                                             show_link = False,
-                                                             )
+        org = db(otable.id == record.organisation_id).select(otable.name,
+                                                             limitby = (0, 1),
+                                                             ).first()
+        received_from = org.name
 
-    # Get organisation logo
-    stable = s3db.org_site
+    # Get organisation country & logo
     site = db(stable.site_id == record.site_id).select(stable.organisation_id,
                                                        limitby = (0, 1),
                                                        ).first()
@@ -333,8 +432,8 @@ def grn(r, **attr):
     from s3db.org import org_root_organisation_name
     recipient_ns = org_root_organisation_name(organisation_id)
 
-    otable = s3db.org_organisation
-    org = db(otable.id == organisation_id).select(otable.logo,
+    org = db(otable.id == organisation_id).select(otable.country,
+                                                  otable.logo,
                                                   otable.root_organisation,
                                                   limitby = (0, 1),
                                                   ).first()
@@ -342,7 +441,8 @@ def grn(r, **attr):
     if not logo:
         root_organisation = org.root_organisation
         if organisation_id != root_organisation:
-            org = db(otable.id == root_organisation).select(otable.logo,
+            org = db(otable.id == root_organisation).select(otable.country,
+                                                            otable.logo,
                                                             limitby = (0, 1),
                                                             ).first()
             logo = org.logo
@@ -407,11 +507,15 @@ def grn(r, **attr):
                    ("SPAN", (5, 7), (6, 7)),
                    ("SPAN", (5, 8), (6, 8)),
                    ("SPAN", (5, 9), (6, 9)),
+                   ("SPAN", (3, 7), (4, 7)),
                    ("SPAN", (7, 7), (8, 7)),
+                   ("SPAN", (3, 8), (4, 8)),
                    ("SPAN", (7, 8), (8, 8)),
+                   ("SPAN", (3, 9), (4, 9)),
                    ("SPAN", (7, 9), (8, 9)),
                    ("BACKGROUND", (0, 7), (1, 10), lightgrey),
                    ("BACKGROUND", (5, 7), (6, 9), lightgrey),
+                   ("SPAN", (3, 10), (4, 10)),
                    ("SPAN", (0, 12), (3, 12)),
                    ("SPAN", (4, 12), (6, 12)),
                    ("SPAN", (1, 13), (2, 13)),
@@ -453,7 +557,7 @@ def grn(r, **attr):
                 "",
                 "",
                 "",
-                "", # @ToDo: Country Code?
+                Paragraph(str(B(org.country)), style_12_center),
                 Paragraph(str(B(recv_ref)), style_12_center),
                 "",
                 ],
@@ -496,41 +600,49 @@ def grn(r, **attr):
                                          I("Moyen de transport"),
                                          ), style_center),
                 Paragraph(str(B("Air")), style_right),
-                "", # @ToDo: Checkbox
-                Paragraph(str(B("AWB n°:")), style),
+                checked if transport_type == "Air" else checkbox,
+                Paragraph("%s: %s" % (B("AWB n°"),
+                                      awb,
+                                      ), style),
                 "",
                 Paragraph(str(B("FLIGHT N°")), style_right),
                 "",
-                "",
+                Paragraph(flight, style_center),
                 "",
                 ],
                # Row 8
                ["",
                 Paragraph(str(B("Road")), style_right),
-                "", # @ToDo: Checkbox
-                Paragraph(str(B("Waybill n°/ CMR n°:")), style),
+                checked if transport_type == "Road" else checkbox,
+                Paragraph("%s: %s" % (B("Waybill n°/ CMR n°"),
+                                      cmr,
+                                      ), style),
                 "",
                 Paragraph(str(B("REGISTRATION N°")), style_right),
                 "",
-                "",
+                Paragraph(reg, style_center),
                 "",
                 ],
                # Row 9
                ["",
                 Paragraph(str(B("Sea")), style_right),
-                "", # @ToDo: Checkbox
-                Paragraph(str(B("B/L n°:")), style),
+                checked if transport_type == "Sea" else checkbox,
+                Paragraph("%s: %s" % (B("B/L n°"),
+                                      bl,
+                                      ), style),
                 "",
                 Paragraph(str(B("VESSEL")), style_right),
                 "",
-                "",
+                Paragraph(vessel, style_center),
                 "",
                 ],
                # Row 10
                ["",
                 Paragraph("Handcarried by", style_8_right),
-                "", # @ToDo: Checkbox
-                Paragraph(str(B("Waybill n°:")), style),
+                checked if transport_type == "Hand" else checkbox,
+                Paragraph("%s: %s" % (B("Waybill n°"),
+                                      wb,
+                                      ), style),
                 "",
                 "",
                 "",
@@ -631,13 +743,14 @@ def grn(r, **attr):
         else:
             total_weight = NONE
         body_row = [Paragraph(item.code or NONE, style_7_center),
-                    Paragraph(item.name, style_7_center),
+                    Paragraph(s3_truncate(item.name, 30), style_6_center),
                     "",
                     Paragraph(track_item.item_source_no or NONE, style_7_center),
                     Paragraph(str(quantity), style_7_center),
                     Paragraph(pack_details, style_7_center),
                     Paragraph(str(total_weight), style_7_center),
-                    "", # @ToDo: Checkbox
+                    "",
+                    checkbox,
                     ]
         rappend(0.67 * cm)
         sappend(("SPAN", (1, rowNo), (2, rowNo)))
@@ -685,7 +798,16 @@ def grn(r, **attr):
                  "",
                  "",
                  ],
-                spacer,
+                [Paragraph(record.comments or "", style_8_center),
+                 "",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "",
+                 "",
+                 ],
                 spacer,
                 [Paragraph(str(B("DELIVERED BY")), style_8_center),
                  Paragraph(str(B("DATE")), style_8_center),
@@ -772,17 +894,85 @@ def waybill(r, **attr):
     style_center.fontSize = 9
     style_center.alignment = TA_CENTER
 
+    style_6_center = deepcopy(style_center)
+    style_6_center.fontSize = 6
+
     style_7_center = deepcopy(style_center)
     style_7_center.fontSize = 7
 
     style_8_center = deepcopy(style_center)
     style_8_center.fontSize = 8
 
+    style_8 = deepcopy(style_8_center)
+    style_8.alignment = TA_LEFT
+
     style_16_center = deepcopy(style_center)
     style_16_center.fontSize = 16
 
-    style_20_center = deepcopy(style_center)
-    style_20_center.fontSize = 20
+    style_22_center = deepcopy(style_center)
+    style_22_center.fontSize = 22
+
+    Line = shapes.Line
+    checkbox = shapes.Drawing(0.5 * cm, # width
+                              0.5 * cm, # height
+                              Line(0.1 * cm, # x1
+                                   0.1 * cm, # y1
+                                   0.4 * cm, # x2
+                                   0.1 * cm, # y2
+                                   strokeWidth = 2,
+                                   ),
+                              Line(0.4 * cm, # x1
+                                   0.1 * cm, # y1
+                                   0.4 * cm, # x2
+                                   0.4 * cm, # y2
+                                   strokeWidth = 2,
+                                   ),
+                              Line(0.4 * cm, # x1
+                                   0.4 * cm, # y1
+                                   0.1 * cm, # x2
+                                   0.4 * cm, # y2
+                                   ),
+                              Line(0.1 * cm, # x1
+                                   0.4 * cm, # y1
+                                   0.1 * cm, # x2
+                                   0.1 * cm, # y2
+                                   ),
+                              )
+    checked = shapes.Drawing(0.5 * cm, # width
+                             0.5 * cm, # height
+                             Line(0.1 * cm, # x1
+                                  0.1 * cm, # y1
+                                  0.4 * cm, # x2
+                                  0.1 * cm, # y2
+                                  strokeWidth = 2,
+                                  ),
+                             Line(0.4 * cm, # x1
+                                  0.1 * cm, # y1
+                                  0.4 * cm, # x2
+                                  0.4 * cm, # y2
+                                  strokeWidth = 2,
+                                  ),
+                             Line(0.4 * cm, # x1
+                                  0.4 * cm, # y1
+                                  0.1 * cm, # x2
+                                  0.4 * cm, # y2
+                                  ),
+                             Line(0.1 * cm, # x1
+                                  0.4 * cm, # y1
+                                  0.1 * cm, # x2
+                                  0.1 * cm, # y2
+                                  ),
+                             Line(0.1 * cm, # x1
+                                  0.1 * cm, # y1
+                                  0.4 * cm, # x2
+                                  0.4 * cm, # y2
+                                  ),
+                             Line(0.4 * cm, # x1
+                                  0.1 * cm, # y1
+                                  0.1 * cm, # x2
+                                  0.4 * cm, # y2
+                                  ),
+                             )
 
     size = current.deployment_settings.get_pdf_size()
     if size == "Letter":
@@ -800,6 +990,8 @@ def waybill(r, **attr):
     record = r.record
     send_ref = record.send_ref
     date = send_table.date.represent(record.date)
+    transport_type = record.transport_type
+
     stable = s3db.org_site
     otable = s3db.org_organisation
     # Lookup recipient
@@ -817,13 +1009,14 @@ def waybill(r, **attr):
                                                         limitby = (0, 1),
                                                         ).first()
     recipient_ns = org.name
-    # Get site name and organisation logo
+    # Get site name and organisation country/logo
     site = db(stable.site_id == record.site_id).select(stable.name,
                                                        stable.organisation_id,
                                                        limitby = (0, 1),
                                                        ).first()
     organisation_id = site.organisation_id
-    org = db(otable.id == organisation_id).select(otable.logo,
+    org = db(otable.id == organisation_id).select(otable.country,
+                                                  otable.logo,
                                                   otable.root_organisation,
                                                   limitby = (0, 1),
                                                   ).first()
@@ -831,7 +1024,8 @@ def waybill(r, **attr):
     if not logo:
         root_organisation = org.root_organisation
         if organisation_id != root_organisation:
-            org = db(otable.id == root_organisation).select(otable.logo,
+            org = db(otable.id == root_organisation).select(otable.country,
+                                                            otable.logo,
                                                             limitby = (0, 1),
                                                             ).first()
             logo = org.logo
@@ -880,7 +1074,7 @@ def waybill(r, **attr):
                    ("SPAN", (11, 0), (13, 0)),
                    ("BACKGROUND", (4, 0), (7, 0), lightgrey),
                    ("BACKGROUND", (9, 0), (13, 0), lightgrey),
-                   ("SPAN", (0, 1), (3, 1)),
+                   ("SPAN", (0, 1), (3, 2)),
                    ("SPAN", (5, 1), (7, 1)),
                    ("SPAN", (11, 1), (13, 1)),
                    ("BACKGROUND", (9, 1), (9, 1), lightgrey),
@@ -897,9 +1091,13 @@ def waybill(r, **attr):
                    ("SPAN", (3, 5), (11, 5)),
                    ("BACKGROUND", (12, 5), (12, 5), lightgrey),
                    ("SPAN", (3, 6), (5, 6)),
+                   ("SPAN", (6, 6), (7, 6)),
+                   ("SPAN", (9, 6), (10, 6)),
                    ("BACKGROUND", (3, 6), (5, 6), lightgrey),
                    ("BACKGROUND", (11, 6), (12, 6), lightgrey),
                    ("SPAN", (3, 7), (5, 7)),
+                   ("SPAN", (6, 7), (7, 7)),
+                   ("SPAN", (9, 7), (10, 7)),
                    ("BACKGROUND", (3, 7), (5, 7), lightgrey),
                    ("BACKGROUND", (12, 7), (12, 7), lightgrey),
                    ("SPAN", (1, 9), (2, 9)),
@@ -925,8 +1123,7 @@ def waybill(r, **attr):
               "",
               ]
 
-    content = [
-               # Row 0
+    content = [# Row 0
                [logo,
                 "",
                 "",
@@ -947,7 +1144,7 @@ def waybill(r, **attr):
                # Row 1
                [Paragraph("%s / %s" % (B("WAYBILL"),
                                        B("DELIVERY NOTE"),
-                                       ), style_20_center),
+                                       ), style_22_center),
                 "",
                 "",
                 "",
@@ -957,7 +1154,7 @@ def waybill(r, **attr):
                 "",
                 "",
                 Paragraph(str(B("WB")), style_8_center),
-                "",
+                Paragraph(str(B(org.country)), style_center),
                 Paragraph(str(B(send_ref)), style_center),
                 "",
                 "",
@@ -974,7 +1171,7 @@ def waybill(r, **attr):
                 "",
                 Paragraph(str(B("PL REFERENCE")), style_8_center),
                 "",
-                "",
+                Paragraph(send_ref, style_8_center),
                 "",
                 "",
                 ],
@@ -1014,7 +1211,7 @@ def waybill(r, **attr):
                 "",
                 "",
                 Paragraph(str(B("ROAD")), style_8_center),
-                "", # @ToDo: Checkbox
+                checked if transport_type == "Road" else checkbox,
                 ],
                # Row 5
                ["",
@@ -1030,7 +1227,7 @@ def waybill(r, **attr):
                 "",
                 "",
                 Paragraph(str(B("AIR")), style_8_center),
-                "", # @ToDo: Checkbox
+                checked if transport_type == "Air" else checkbox,
                 ],
                # Row 6
                ["",
@@ -1048,7 +1245,7 @@ def waybill(r, **attr):
                 "",
                 Paragraph(str(B("ETD")), style_center),
                 Paragraph(str(B("SEA")), style_8_center),
-                "", # @ToDo: Checkbox
+                checked if transport_type == "Sea" else checkbox,
                 ],
                # Row 7
                ["",
@@ -1059,14 +1256,14 @@ def waybill(r, **attr):
                                        ), style_center),
                 "",
                 "",
-                "",
+                Paragraph(record.registration_no or "", style_center),
                 "",
                 "",
                 "",
                 "",
                 "",
                 Paragraph(str(B("HAND")), style_8_center),
-                "", # @ToDo: Checkbox
+                checked if transport_type == "Hand" else checkbox,
                 ],
                spacer,
                # Row 9
@@ -1162,7 +1359,7 @@ def waybill(r, **attr):
             total_volume = round(total_volume, 2)
         else:
             total_volume = NONE
-        body_row = [Paragraph(item.name, style_7_center),
+        body_row = [Paragraph(s3_truncate(item.name, 30), style_6_center),
                     Paragraph(track_item.item_source_no or NONE, style_7_center),
                     "",
                     Paragraph(str(quantity), style_7_center),
@@ -1276,7 +1473,7 @@ def waybill(r, **attr):
                 spacer,
                 spacer,
                 spacer,
-                [Paragraph(str(B("COMMODITIES LOADED")), style_8_center),
+                [Paragraph(str(B("COMMODITIES LOADED")), style_8),
                  "",
                  Paragraph(str(B("DATE")), style_8_center),
                  Paragraph(str(B("FUNCTION")), style_8_center),
@@ -1293,7 +1490,7 @@ def waybill(r, **attr):
                  ],
                 [Paragraph("%s / %s" % (B("LOADED BY"),
                                         I("Chargé par"),
-                                        ), style_8_center),
+                                        ), style_8),
                  "",
                  "",
                  "",
@@ -1310,7 +1507,7 @@ def waybill(r, **attr):
                  ],
                 [Paragraph("%s / %s" % (B("TRANSPORTED BY"),
                                         I("transporté par (1)"),
-                                        ), style_8_center),
+                                        ), style_8),
                  "",
                  "",
                  "",
@@ -1325,7 +1522,7 @@ def waybill(r, **attr):
                  "",
                  "",
                  ],
-                [Paragraph(str(B("RECEPTION")), style_8_center),
+                [Paragraph(str(B("RECEPTION")), style_8),
                  "",
                  Paragraph(str(B("DATE")), style_8_center),
                  Paragraph(str(B("FUNCTION")), style_8_center),
@@ -1342,7 +1539,7 @@ def waybill(r, **attr):
                  ],
                 [Paragraph("%s / %s" % (B("RECEIVED BY"),
                                         I("Reçu par"),
-                                        ), style_8_center),
+                                        ), style_8),
                  "",
                  "",
                  "",

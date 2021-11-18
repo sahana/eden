@@ -129,8 +129,16 @@ def set_fonts(instance):
                 instance.font_name = font_name
                 instance.font_name_bold = font_name_bold
                 #instance.font_name_italic = font_name_italic
+                #instance.font_name_bold_italic = font_name_bold_italic
+                # @ToDo: To have B & I tags work with non-built-in fonts, need to form a family:
+                #from reportlab.lib.fonts import addMapping
+                #addMapping(font_name, 0, 0, font_name)
+                #addMapping(font_name, 0, 1, font_name_italic)
+                #addMapping(font_name, 1, 0, font_name_bold)
+                #addMapping(font_name, 1, 1, font_name_bold_italic)
                 return
         else:
+            # e.g. Unifont
             try:
                 # Requires the font-file at /static/fonts/<font_name>.ttf
                 pdfmetrics.registerFont(TTFont(font_name, os.path.join(current.request.folder,
@@ -144,12 +152,14 @@ def set_fonts(instance):
                 instance.font_name = font_set
                 instance.font_name_bold = font_set
                 #instance.font_name_italic = font_set
+                #instance.font_name_bold_italic = font_set
                 return
 
     # Use the default "Helvetica"
     instance.font_name = "Helvetica"
     instance.font_name_bold = "Helvetica-Bold"
     #instance.font_name_italic = "Helvetica-Oblique"
+    #instance.font_name_bold_italic = "Helvetica-BoldOblique"
 
 # -----------------------------------------------------------------------------
 def biDiText(text):
