@@ -1354,3 +1354,126 @@ body.rtl .username i.icon, body.rtl .username i.fa {
   padding-left: 0;
   padding-right: 0.2rem;
 }
+
+/* line 1, ../scss/custom/_wizard.scss */
+.steps {
+  padding-left: 0;
+  list-style: none;
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size: 12px;
+  line-height: 1;
+  margin: 30px auto;
+  border-radius: 3px;
+}
+
+/* line 11, ../scss/custom/_wizard.scss */
+.steps strong {
+  font-size: 14px;
+  display: block;
+  line-height: 1.4;
+}
+
+/* line 17, ../scss/custom/_wizard.scss */
+.steps > li {
+  position: relative;
+  display: block;
+  /* border: 1px solid #ddd; */
+  padding: 12px 50px 8px 50px;
+  width: 140px;
+  height: 40px;
+}
+
+@media (min-width: 768px) {
+  /* line 27, ../scss/custom/_wizard.scss */
+  .steps > li {
+    float: left;
+  }
+
+  /* line 28, ../scss/custom/_wizard.scss */
+  .steps .past {
+    color: #666;
+    background: #ececec;
+  }
+
+  /* line 29, ../scss/custom/_wizard.scss */
+  .steps .present {
+    color: #000;
+  }
+
+  /* line 30, ../scss/custom/_wizard.scss */
+  .steps .future {
+    color: #777;
+    background: #efefef;
+  }
+
+  /* line 32, ../scss/custom/_wizard.scss */
+  .steps li > span:after,
+  .steps li > span:before {
+    content: "";
+    display: block;
+    width: 0px;
+    height: 0px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: solid transparent;
+    border-left-color: #f0f0f0;
+    border-width: 30px;
+  }
+
+  /* line 46, ../scss/custom/_wizard.scss */
+  .steps li > span:after {
+    top: -5px;
+    z-index: 1;
+    border-left-color: white;
+    border-width: 34px;
+  }
+
+  /* line 53, ../scss/custom/_wizard.scss */
+  .steps li > span:before {
+    z-index: 2;
+  }
+
+  /* line 55, ../scss/custom/_wizard.scss */
+  .steps li.past + li > span:before {
+    border-left-color: #ececec;
+  }
+
+  /* line 56, ../scss/custom/_wizard.scss */
+  .steps li.present + li > span:before {
+    border-left-color: #fff;
+  }
+
+  /* line 57, ../scss/custom/_wizard.scss */
+  .steps li.future + li > span:before {
+    border-left-color: #efefef;
+  }
+
+  /* line 59, ../scss/custom/_wizard.scss */
+  .steps li:first-child > span:after,
+  .steps li:first-child > span:before {
+    display: none;
+  }
+
+  /* Arrows at start and end */
+  /* line 63, ../scss/custom/_wizard.scss */
+  .steps li:first-child i,
+  .steps li:last-child i {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: solid transparent;
+    border-left-color: white;
+    border-width: 30px;
+  }
+
+  /* line 74, ../scss/custom/_wizard.scss */
+  .steps li:last-child i {
+    left: auto;
+    right: -30px;
+    border-left-color: transparent;
+    border-top-color: white;
+    border-bottom-color: white;
+  }
+}

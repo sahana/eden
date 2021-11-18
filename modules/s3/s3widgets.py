@@ -3292,11 +3292,12 @@ class S3EmbeddedComponentWidget(FormWidget):
     """
 
     def __init__(self,
-                 link=None,
-                 component=None,
-                 autocomplete=None,
-                 link_filter=None,
-                 select_existing=True):
+                 link = None,
+                 component = None,
+                 autocomplete = None,
+                 link_filter = None,
+                 select_existing = True,
+                 ):
         """
             Constructor
 

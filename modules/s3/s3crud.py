@@ -161,12 +161,16 @@ class S3CRUD(S3Method):
         if method == "datatable":
             output = self._datatable(r, **_attr)
             if isinstance(output, dict):
-                output = DIV(output["items"], _id="table-container")
+                output = DIV(output["items"],
+                             _id = "table-container",
+                             )
             return output
         elif method == "datalist":
             output = self._datalist(r, **_attr)
             if isinstance(output, dict) and "items" in output:
-                output = DIV(output["items"], _id="list-container")
+                output = DIV(output["items"],
+                             _id = "list-container",
+                             )
             return output
         elif method == "create":
             return self._widget_create(r, **_attr)
@@ -182,18 +186,6 @@ class S3CRUD(S3Method):
             @param attr: dictionary of parameters for the method handler
         """
 
-        session = current.session
-        request = self.request
-        response = current.response
-
-        resource = self.resource
-        table = resource.table
-        tablename = resource.tablename
-
-        representation = r.representation
-
-        output = {}
-
         native = r.method == "create"
 
         # Get table configuration
@@ -205,12 +197,24 @@ class S3CRUD(S3Method):
             else:
                 return {"form": None}
 
-        authorised = self._permitted(method="create")
+        authorised = self._permitted("create")
         if not authorised:
             if native:
                 r.unauthorised()
             else:
                 return {"form": None}
+
+        session = current.session
+        request = self.request
+        response = current.response
+
+        resource = self.resource
+        table = resource.table
+        tablename = resource.tablename
+
+        representation = r.representation
+
+        output = {}
 
         # Get callbacks
         onvalidation = _config("create_onvalidation") or \
@@ -250,7 +254,8 @@ class S3CRUD(S3Method):
             link = None
             if r.component:
 
-                defaults = r.component.get_defaults(r.record)
+                record = r.record
+                defaults = r.component.get_defaults(record)
 
                 if resource.link is None:
                     # Apply component defaults
@@ -284,13 +289,16 @@ class S3CRUD(S3Method):
                         table[k].default = v
 
                     # Configure post-process to add a link table entry
-                    link = Storage(resource=resource.link, master=r.record)
+                    link = Storage(resource = resource.link,
+                                   master = record,
+                                   )
 
             get_vars = r.get_vars
+            get_vars_get = get_vars.get
 
             # Hierarchy parent
             hierarchy = None
-            link_to_parent = get_vars.get("link_to_parent")
+            link_to_parent = get_vars_get("link_to_parent")
             if link_to_parent:
                 try:
                     parent = int(link_to_parent)
@@ -307,14 +315,14 @@ class S3CRUD(S3Method):
                             r.error(404, sys.exc_info()[1])
 
             # Organizer
-            organizer = get_vars.get("organizer")
+            organizer = get_vars_get("organizer")
             if organizer:
                 self._set_organizer_dates(organizer)
 
             # Copy record
             from_table = None
-            from_record = get_vars.get("from_record")
-            map_fields = get_vars.get("from_fields")
+            from_record = get_vars_get("from_record")
+            map_fields = get_vars_get("from_fields")
 
             if from_record:
                 del get_vars["from_record"] # forget it
@@ -330,8 +338,8 @@ class S3CRUD(S3Method):
                 except ValueError:
                     r.error(404, current.ERROR.BAD_RECORD)
                 authorised = current.auth.s3_has_permission("read",
-                                                    from_table._tablename,
-                                                    from_record)
+                                                            from_table._tablename,
+                                                            from_record)
                 if not authorised:
                     r.unauthorised()
                 if map_fields:
@@ -412,8 +420,10 @@ class S3CRUD(S3Method):
             else:
                 if r.http == "POST" and "interim_save" in r.post_vars:
                     next_vars = self._remove_filters(r.get_vars)
-                    create_next = r.url(target="[id]", method="update",
-                                        vars=next_vars)
+                    create_next = r.url(target = "[id]",
+                                        method = "update",
+                                        vars = next_vars,
+                                        )
                 elif r.http == "POST" and "save_close" in r.post_vars:
                     create_next = _config("create_next_close")
                 elif session.s3.rapid_data_entry and not r.component:
@@ -429,13 +439,16 @@ class S3CRUD(S3Method):
                     create_next = _config("create_next")
 
                 if not create_next:
-                    next_vars = self._remove_filters(r.get_vars)
+                    next_vars = self._remove_filters(get_vars)
                     if r.component:
-                        self.next = r.url(method = "", vars = next_vars)
+                        self.next = r.url(method = "",
+                                          vars = next_vars,
+                                          )
                     else:
                         self.next = r.url(id = "[id]",
                                           method = "read",
-                                          vars = next_vars)
+                                          vars = next_vars,
+                                          )
                 elif callable(create_next):
                     self.next = create_next(r)
                 else:
@@ -458,7 +471,8 @@ class S3CRUD(S3Method):
                                           #link = link,
                                           message = message,
                                           subheadings = subheadings,
-                                          format = representation)
+                                          format = representation,
+                                          )
 
         elif representation == "csv":
             import cgi
@@ -623,7 +637,7 @@ class S3CRUD(S3Method):
             # try to create one if the user is permitted
             if not record_id and component and not component.multiple:
                 empty = True
-                authorised = self._permitted(method="create")
+                authorised = self._permitted("create")
                 if authorised and _config("insertable", True):
                     # This should become Native
                     r.method = "create"
@@ -863,6 +877,27 @@ class S3CRUD(S3Method):
             @param attr: dictionary of parameters for the method handler
         """
 
+        # Get the target record ID
+        record_id = self.record_id
+        if r.interactive and not record_id:
+            r.error(404, current.ERROR.BAD_RECORD)
+
+        # Get table configuration
+        _config = self._config
+
+        # Check if editable
+        editable = _config("editable", True)
+        if not editable:
+            if r.interactive:
+                return self.read(r, **attr)
+            else:
+                r.error(405, current.ERROR.METHOD_DISABLED)
+
+        # Check permission for update
+        authorised = self._permitted("update")
+        if not authorised:
+            r.unauthorised()
+
         resource = self.resource
         table = resource.table
         tablename = resource.tablename
@@ -871,32 +906,11 @@ class S3CRUD(S3Method):
 
         output = {}
 
-        # Get table configuration
-        _config = self._config
-        editable = _config("editable", True)
-
         # Get callbacks
         onvalidation = _config("update_onvalidation") or \
                        _config("onvalidation")
         onaccept = _config("update_onaccept") or \
                    _config("onaccept")
-
-        # Get the target record ID
-        record_id = self.record_id
-        if r.interactive and not record_id:
-            r.error(404, current.ERROR.BAD_RECORD)
-
-        # Check if editable
-        if not editable:
-            if r.interactive:
-                return self.read(r, **attr)
-            else:
-                r.error(405, current.ERROR.METHOD_DISABLED)
-
-        # Check permission for update
-        authorised = self._permitted(method="update")
-        if not authorised:
-            r.unauthorised()
 
         if r.interactive or representation == "plain":
 
@@ -945,7 +959,9 @@ class S3CRUD(S3Method):
                     field.readable = False
                     field.writable = False
                 else:
-                    link = Storage(resource=resource.link, master=r.record)
+                    link = Storage(resource = resource.link,
+                                   master = r.record,
+                                   )
 
             # Success message
             message = crud_string(self.tablename, "msg_record_modified")
@@ -968,7 +984,8 @@ class S3CRUD(S3Method):
                                     message = message,
                                     link = link,
                                     subheadings = subheadings,
-                                    format = representation)
+                                    format = representation,
+                                    )
             except HTTP as e:
                 message = current.ERROR.BAD_RECORD \
                           if e.status == 404 else e.message
@@ -987,7 +1004,7 @@ class S3CRUD(S3Method):
             # Add delete and list buttons
             buttons = self.render_buttons(r,
                                           ["delete"],
-                                          record_id=record_id,
+                                          record_id = record_id,
                                           **attr)
             if buttons:
                 output["buttons"] = buttons
@@ -1026,7 +1043,9 @@ class S3CRUD(S3Method):
                 if not update_next:
                     next_vars = self._remove_filters(r.get_vars)
                     if r.component:
-                        self.next = r.url(method="", vars=next_vars)
+                        self.next = r.url(method = "",
+                                          vars = next_vars,
+                                          )
                     else:
                         self.next = r.url(id = "[id]",
                                           method = "read",
