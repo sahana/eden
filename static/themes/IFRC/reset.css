@@ -56,6 +56,9 @@ caption, th, td {
     font-weight: normal;
     float:none !important;
 }
+body.rtl caption, body.rtl th, body.rtl td {
+    text-align: right;
+}
 table, th, td {
     vertical-align: middle;
 }

@@ -791,7 +791,7 @@ class EdenDocTemplate(BaseDocTemplate):
         return (table, style)
 
 # =============================================================================
-class S3PDFList(object):
+class S3PDFList:
     """ Export resource data as list-style report """
 
     def __init__(self,
@@ -997,28 +997,28 @@ class S3PDFList(object):
 
         styles = {}
 
-        styles["inline"] = style = getSampleStyleSheet()["Normal"]
-        style.spaceAfter = 6
-        style.fontName = self.font_name
+        styles["inline"] = style_inline = getSampleStyleSheet()["Normal"]
+        style_inline.spaceAfter = 6
+        style_inline.fontName = self.font_name
 
-        styles["indented"] = style = getSampleStyleSheet()["Normal"]
-        style.leftIndent = style.rightIndent = 12
-        style.spaceAfter = 6
-        style.fontName = self.font_name
+        styles["indented"] = style_indented = getSampleStyleSheet()["Normal"]
+        style_indented.leftIndent = style_indented.rightIndent = 12
+        style_indented.spaceAfter = 6
+        style_indented.fontName = self.font_name
 
-        styles["indented_bold"] = style = getSampleStyleSheet()["Normal"]
-        style.leftIndent = style.rightIndent = 12
-        style.spaceAfter = 6
-        style.fontName = self.font_name_bold
+        styles["indented_bold"] = style_indented_bold = getSampleStyleSheet()["Normal"]
+        style_indented_bold.leftIndent = style_indented_bold.rightIndent = 12
+        style_indented_bold.spaceAfter = 6
+        style_indented_bold.fontName = self.font_name_bold
 
-        styles["warning"] = style = getSampleStyleSheet()["Normal"]
-        style.textColor = colors.red
-        style.fontSize = 12
+        styles["warning"] = style_warning = getSampleStyleSheet()["Normal"]
+        style_warning.textColor = colors.red
+        style_warning.fontSize = 12
 
         return styles
 
 # =============================================================================
-class S3PDFTable(object):
+class S3PDFTable:
     """
         Class to build a table that can then be placed in a pdf document
         The table will be formatted so that it fits on the page.
@@ -1222,9 +1222,9 @@ class S3PDFTable(object):
         if not data or not (data[0]):
             return None
 
-        style = self.table_style(0, len(data), len(self.labels) - 1)
+        table_style = self.table_style(0, len(data), len(self.labels) - 1)
 
-        self.parts = self.calc(data, style)
+        self.parts = self.calc(data, table_style)
 
         return self.presentation()
 
@@ -1295,7 +1295,7 @@ class S3PDFTable(object):
         return data
 
     # -------------------------------------------------------------------------
-    def calc(self, data, style):
+    def calc(self, data, table_style):
         """
             Compute rendering parameters:
                  - formatted output data
@@ -1318,12 +1318,12 @@ class S3PDFTable(object):
                                    )
 
         # Make a copy so it can be changed
-        style = style[:]
+        table_style = table_style[:]
 
         # Build the table to determine row heights and column widths
         table = Table(data,
                       repeatRows = 1,
-                      style = style,
+                      style = table_style,
                       hAlign = "LEFT",
                       )
         temp_doc.build(None, [table], None)
@@ -1389,10 +1389,10 @@ class S3PDFTable(object):
                     adj_data.append(temp_row)
 
             # Rebuild temp_doc to re-calculate col widths and row heights
-            style[1] = ("FONTSIZE", (0, 0), (-1, -1), fontsize)
+            table_style[1] = ("FONTSIZE", (0, 0), (-1, -1), fontsize)
             table = Table(adj_data,
                           repeatRows = 1,
-                          style = style,
+                          style = table_style,
                           colWidths = col_widths,
                           hAlign = "LEFT",
                           )
@@ -1500,12 +1500,12 @@ class S3PDFTable(object):
                         row_heights = list(row_heights) + \
                                       [default_row_height] * num_extra_rows
 
-            style = self.table_style(start_row, num_rows, len(col_widths) - 1)
-            (part, style) = main_doc.addCellStyling(part, style)
+            table_style = self.table_style(start_row, num_rows, len(col_widths) - 1)
+            (part, table_style) = main_doc.addCellStyling(part, table_style)
 
             p = Table(part,
                       repeatRows = 1,
-                      style = style,
+                      style = table_style,
                       hAlign = "LEFT",
                       colWidths = col_widths,
                       rowHeights = row_heights,
