@@ -46,6 +46,23 @@ from .s3utils import NONE, s3_str, S3MarkupStripper
 from .s3validators import IS_ISO639_2_LANGUAGE_CODE, IS_ONE_OF, IS_UTC_DATE, IS_UTC_DATETIME
 from .s3widgets import S3CalendarWidget, S3DateWidget
 
+__all__ = ("s3_fieldmethod",
+           "S3ReusableField",
+           "S3Represent",
+           "S3RepresentLazy",
+           "S3MetaFields",
+           "s3_all_meta_field_names",
+           "s3_meta_fields",
+           "s3_comments",
+           "s3_currency",
+           "s3_date",
+           "s3_datetime",
+           "s3_time",
+           "s3_language",
+           "s3_role_required",
+           "s3_roles_permitted",
+           )
+
 # =============================================================================
 def s3_fieldmethod(name, f, represent=None, search_field=None):
     """

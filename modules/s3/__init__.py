@@ -98,11 +98,10 @@ from .s3grouped import *
 from .s3report import *
 from .s3timeplot import *
 
-# Profiles
+# Pages
 from .s3profile import *
-
-# Summary
 from .s3summary import *
+from .s3wizard import *
 
 # Dashboards
 from .s3dashboard import *

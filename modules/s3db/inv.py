@@ -8659,14 +8659,15 @@ def inv_recv_controller():
             settings.ui.export_formats = export_formats
 
         if r.component:
-            if r.component_name == "document":
+            component_name = r.component_name
+            if component_name == "document":
                 # Simplify a little
                 table = s3db.doc_document
                 table.file.required = True
                 table.url.readable = table.url.writable = False
                 table.date.readable = table.date.writable = False
 
-            elif r.component_name == "track_item":
+            elif component_name == "track_item":
 
                 # Security-wise, we are already covered by configure()
                 # Performance-wise, we should optimise for UI-acessible flows
@@ -16746,7 +16747,7 @@ class inv_TrackItemRepresent(S3Represent):
 
         send_inv_item_id = row.send_inv_item_id
         if not send_inv_item_id:
-            return str(row.id)
+            return NONE
 
         return current.db.inv_track_item.send_inv_item_id.represent(send_inv_item_id,
                                                                     show_link = False,

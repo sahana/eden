@@ -209,7 +209,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     from s3 import S3Compose, S3Filter, S3GroupedItemsReport, S3HierarchyCRUD, \
                    S3Importer, S3Map, S3Merge, S3MobileCRUD, S3Organizer, \
                    S3OrgRoleManager, S3Profile, S3Report, S3Summary, \
-                   S3TimePlot, S3XForms, search_ac
+                   S3TimePlot, S3XForms, S3Wizard, search_ac
     from s3db.cms import S3CMS
 
     set_handler = r.set_handler
@@ -235,6 +235,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     set_handler("summary", S3Summary)
     set_handler("timeplot", S3TimePlot)
     set_handler("xform", S3XForms)
+    set_handler("wizard", S3Wizard)
 
     # Don't load S3PDF unless needed (very slow import with Reportlab)
     method = r.method

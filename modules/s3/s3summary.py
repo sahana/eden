@@ -35,6 +35,9 @@ from .s3filter import S3FilterForm
 from .s3gis import MAP
 from .s3rest import S3Method
 
+__all__ = ("S3Summary",
+           )
+
 # =============================================================================
 class S3Summary(S3Method):
     """ Resource Summary Pages """
