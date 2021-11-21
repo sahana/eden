@@ -3288,7 +3288,7 @@ class S3EmbeddedComponentWidget(FormWidget):
     """
         Widget used by S3CRUD for link-table components with actuate="embed".
         Uses s3.embed_component.js for client-side processing, and
-        S3CRUD._postprocess_embedded to receive the data.
+        postprocess_embedded in s3crud.py to receive the data.
     """
 
     def __init__(self,

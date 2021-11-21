@@ -1356,57 +1356,85 @@ body.rtl .username i.icon, body.rtl .username i.fa {
 }
 
 /* line 1, ../scss/custom/_wizard.scss */
+.crud-submit-button.next {
+  margin-left: 0.9375rem;
+}
+
+/* Uses ideas from https://codepen.io/audreyfeldroy/pen/tvxAz and https://coderwall.com/p/-7trcg/simple-css-only-wizard-progress-tracker */
+/* line 7, ../scss/custom/_wizard.scss */
 .steps {
   padding-left: 0;
   list-style: none;
-  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  /*font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;*/
   font-size: 12px;
   line-height: 1;
   margin: 30px auto;
   border-radius: 3px;
 }
 
-/* line 11, ../scss/custom/_wizard.scss */
+/* line 17, ../scss/custom/_wizard.scss */
 .steps strong {
   font-size: 14px;
   display: block;
   line-height: 1.4;
 }
 
-/* line 17, ../scss/custom/_wizard.scss */
+/* line 23, ../scss/custom/_wizard.scss */
 .steps > li {
   position: relative;
   display: block;
-  /* border: 1px solid #ddd; */
   padding: 12px 50px 8px 50px;
-  width: 140px;
-  height: 40px;
+  max-width: 240px;
+  height: 60px;
 }
 
+/* line 30, ../scss/custom/_wizard.scss */
+.steps[data-steps="2"] li {
+  width: 50%;
+}
+
+/* line 31, ../scss/custom/_wizard.scss */
+.steps[data-steps="3"] li {
+  width: 33%;
+}
+
+/* line 32, ../scss/custom/_wizard.scss */
+.steps[data-steps="4"] li {
+  width: 25%;
+}
+
+/* line 33, ../scss/custom/_wizard.scss */
+.steps[data-steps="5"] li {
+  width: 20%;
+}
+
+/* Arrows on bigger screens */
+/* @ToDo: Something else for smaller screens */
 @media (min-width: 768px) {
-  /* line 27, ../scss/custom/_wizard.scss */
+  /* line 38, ../scss/custom/_wizard.scss */
   .steps > li {
     float: left;
   }
 
-  /* line 28, ../scss/custom/_wizard.scss */
+  /* line 39, ../scss/custom/_wizard.scss */
   .steps .past {
-    color: #666;
-    background: #ececec;
+    color: #fff;
+    background: #50a8d6;
   }
 
-  /* line 29, ../scss/custom/_wizard.scss */
-  .steps .present {
-    color: #000;
+  /* line 40, ../scss/custom/_wizard.scss */
+  .steps .current {
+    color: #fff;
+    background: #367494;
   }
 
-  /* line 30, ../scss/custom/_wizard.scss */
+  /* line 41, ../scss/custom/_wizard.scss */
   .steps .future {
     color: #777;
-    background: #efefef;
+    background: #f5f5f5;
   }
 
-  /* line 32, ../scss/custom/_wizard.scss */
+  /* line 43, ../scss/custom/_wizard.scss */
   .steps li > span:after,
   .steps li > span:before {
     content: "";
@@ -1421,7 +1449,7 @@ body.rtl .username i.icon, body.rtl .username i.fa {
     border-width: 30px;
   }
 
-  /* line 46, ../scss/custom/_wizard.scss */
+  /* line 57, ../scss/custom/_wizard.scss */
   .steps li > span:after {
     top: -5px;
     z-index: 1;
@@ -1429,34 +1457,34 @@ body.rtl .username i.icon, body.rtl .username i.fa {
     border-width: 34px;
   }
 
-  /* line 53, ../scss/custom/_wizard.scss */
+  /* line 64, ../scss/custom/_wizard.scss */
   .steps li > span:before {
     z-index: 2;
   }
 
-  /* line 55, ../scss/custom/_wizard.scss */
+  /* line 66, ../scss/custom/_wizard.scss */
   .steps li.past + li > span:before {
-    border-left-color: #ececec;
+    border-left-color: #50a8d6;
   }
 
-  /* line 56, ../scss/custom/_wizard.scss */
-  .steps li.present + li > span:before {
-    border-left-color: #fff;
+  /* line 67, ../scss/custom/_wizard.scss */
+  .steps li.current + li > span:before {
+    border-left-color: #367494;
   }
 
-  /* line 57, ../scss/custom/_wizard.scss */
+  /* line 68, ../scss/custom/_wizard.scss */
   .steps li.future + li > span:before {
-    border-left-color: #efefef;
+    border-left-color: #f5f5f5;
   }
 
-  /* line 59, ../scss/custom/_wizard.scss */
+  /* line 70, ../scss/custom/_wizard.scss */
   .steps li:first-child > span:after,
   .steps li:first-child > span:before {
     display: none;
   }
 
   /* Arrows at start and end */
-  /* line 63, ../scss/custom/_wizard.scss */
+  /* line 74, ../scss/custom/_wizard.scss */
   .steps li:first-child i,
   .steps li:last-child i {
     display: block;
@@ -1468,7 +1496,7 @@ body.rtl .username i.icon, body.rtl .username i.fa {
     border-width: 30px;
   }
 
-  /* line 74, ../scss/custom/_wizard.scss */
+  /* line 85, ../scss/custom/_wizard.scss */
   .steps li:last-child i {
     left: auto;
     right: -30px;

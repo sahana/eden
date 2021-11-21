@@ -1033,7 +1033,7 @@ class S3SQLCustomForm(S3SQLForm):
 
             # Build the data Storage for the form
             pkey = self.table._id
-            data = Storage({pkey.name:record[pkey]})
+            data = Storage({pkey.name: record[pkey]})
             for alias, name, field in fields:
 
                 if alias is None:

@@ -5452,6 +5452,7 @@ class InventoryTrackingModel(S3Model):
                   orderby = "inv_recv.date desc",
                   sortby = [[6, "desc"], [1, "asc"]],
                   super_entity = ("doc_entity",),
+                  wizard = inv_Recv_Wizard(),
                   )
 
         # Components
@@ -16400,6 +16401,63 @@ class inv_RecvRepresent(S3Represent):
             v = "%s)" % v 
 
         return v
+
+# =============================================================================
+class inv_Recv_Wizard(S3CrudWizard):
+    """
+        Wizard for Receiving a New Shipment
+    """
+
+    def __init__(self):
+
+        T = current.T
+
+        super(inv_Recv_Wizard, self).__init__()
+
+        self.pages = [{"page": "recv",
+                       "label": T("Basic info"),
+                       },
+                      {"page": "items",
+                       "label": T("Add Items"),
+                       "component": "track_item",
+                       },
+                      {"page": "bins",
+                       "label": T("Allocate to Bins"),
+                       "component": "track_item",
+                       },
+                      {"page": "process",
+                       "label": T("Process"),
+                       },
+                      {"page": "document",
+                       "label": T("Upload GRN"),
+                       "component": "document",
+                       },
+                      ]
+
+    # -------------------------------------------------------------------------
+    def _form(self, r):
+        """
+            Produce the correct form for the current page
+        """
+
+        current_page = r.get_vars.get("page")
+        if current_page == "recv":
+            # Create or Update form
+            return super(inv_Recv_Wizard, self)._form(r)
+        if current_page == "items":
+            # Return the List of Items
+            # - without Bin allocations
+            return ""
+        if current_page == "bins":
+            # Return the List of Items in the Shipment
+            # - along with Bin allocations
+            return ""
+        if current_page == "process":
+            # Return a button to Process the Incoming Shipment
+            return ""
+        if current_page == "document":
+            # Return a create form for GRN upload, or the List of uploaded Documents if they exist already
+            return ""
 
 # =============================================================================
 class inv_ReqRepresent(S3Represent):

@@ -32,7 +32,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3CRUD",)
+__all__ = ("S3CRUD",
+           "embed_component",
+           )
 
 import json
 
@@ -265,7 +267,7 @@ class S3CRUD(S3Method):
                         ctable[k].default = v
 
                     # Configure post-process for S3EmbeddedComponentWidget
-                    link = self._embed_component(resource, record=r.id)
+                    link = embed_component(resource, record=r.id)
 
                     # Set default value for parent key (fkey)
                     pkey = resource.pkey
@@ -551,13 +553,17 @@ class S3CRUD(S3Method):
                 # JS Cancel (no redirect with embedded form)
                 s3 = response.s3
                 cancel = s3.cancel
-                s3.cancel = {"hide": "list-add", "show": "show-add-btn"}
+                s3.cancel = {"hide": "list-add",
+                             "show": "show-add-btn",
+                             }
 
                 form = self.create(r, **attr).get("form", None)
                 if form and form.accepted and self.next:
                     # Tell the summary handler that we're done
                     # and supposed to redirect to another view
-                    return {"success": True, "next": self.next}
+                    return {"success": True,
+                            "next": self.next,
+                            }
 
                 # Restore standard view and cancel-config
                 response.view = view
@@ -946,7 +952,7 @@ class S3CRUD(S3Method):
             link = None
             if r.component:
                 if resource.link is None:
-                    link = self._embed_component(resource, record=r.id)
+                    link = embed_component(resource, record=r.id)
                     pkey = resource.pkey
                     fkey = resource.fkey
                     field = table[fkey]
@@ -3013,143 +3019,6 @@ class S3CRUD(S3Method):
 
         return {"item": item}
 
-
-    # -------------------------------------------------------------------------
-    def _embed_component(self, resource, record=None):
-        """
-            Renders the right key constraint in a link table as
-            S3EmbeddedComponentWidget and stores the postprocess hook.
-
-            @param resource: the link table resource
-        """
-
-        link = None
-
-        component = resource.linked
-        if component is not None and component.actuate == "embed":
-
-            ctablename = component.tablename
-            attr = {"link": resource.tablename,
-                    "component": ctablename,
-                    }
-
-            autocomplete = component.autocomplete
-            if autocomplete and autocomplete in component.table:
-                attr["autocomplete"] = autocomplete
-
-            if record is not None:
-                attr["link_filter"] = "%s.%s.%s.%s.%s" % \
-                                        (resource.tablename,
-                                         component.lkey,
-                                         record,
-                                         component.rkey,
-                                         component.fkey,
-                                         )
-
-            rkey = component.rkey
-            if rkey in resource.table:
-                field = resource.table[rkey]
-                field.widget = S3EmbeddedComponentWidget(**attr)
-                field.comment = None
-
-            callback = self._postprocess_embedded
-            postprocess = lambda form, key=rkey, component=ctablename: \
-                                 callback(form, key=key, component=component)
-            link = Storage(postprocess = postprocess)
-
-        return link
-
-    # -------------------------------------------------------------------------
-    def _postprocess_embedded(self, form, component=None, key=None):
-        """
-            Post-processes a form with an S3EmbeddedComponentWidget and
-            created/updates the component record.
-
-            @param form: the form
-            @param component: the component tablename
-            @param key: the field name of the foreign key for the component
-                        in the link table
-        """
-
-        s3db = current.s3db
-        request = current.request
-
-        get_config = lambda key, tablename=component: \
-                            s3db.get_config(tablename, key, None)
-        try:
-            selected = form.vars[key]
-        except (AttributeError, KeyError):
-            selected = None
-
-        if request.env.request_method == "POST":
-            db = current.db
-            table = db[component]
-
-            # Extract data for embedded form from post_vars
-            post_vars = request.post_vars
-            form_vars = Storage(table._filter_fields(post_vars))
-
-            # Pass values through validator to convert them into db-format
-            for k in form_vars:
-                value, error = s3_validate(table, k, form_vars[k])
-                if not error:
-                    form_vars[k] = value
-
-            _form = Storage(vars = form_vars, errors = Storage())
-            if _form.vars:
-                if selected:
-                    form_vars[table._id.name] = selected
-                    # Onvalidation
-                    onvalidation = get_config("update_onvalidation") or \
-                                   get_config("onvalidation")
-                    callback(onvalidation, _form) # , tablename=component (if we ever define callbacks as a dict with tablename)
-                    # Update the record if no errors
-                    if not _form.errors:
-                        db(table._id == selected).update(**_form.vars)
-                    else:
-                        form.errors.update(_form.errors)
-                        return
-                    # Update super-entity links
-                    s3db.update_super(table, {"id": selected})
-                    # Update realm
-                    update_realm = s3db.get_config(table, "update_realm")
-                    if update_realm:
-                        current.auth.set_realm_entity(table, selected,
-                                                      force_update=True)
-                    # Onaccept
-                    onaccept = get_config("update_onaccept") or \
-                               get_config("onaccept")
-                    callback(onaccept, _form) # , tablename=component (if we ever define callbacks as a dict with tablename)
-                else:
-                    form_vars.pop(table._id.name, None)
-                    # Onvalidation
-                    onvalidation = get_config("create_onvalidation") or \
-                                   get_config("onvalidation")
-                    callback(onvalidation, _form) # , tablename=component (if we ever define callbacks as a dict with tablename)
-                    # Insert the record if no errors
-                    if not _form.errors:
-                        selected = table.insert(**_form.vars)
-                    else:
-                        form.errors.update(_form.errors)
-                        return
-                    if selected:
-                        # Update post_vars and form.vars
-                        post_vars[key] = str(selected)
-                        form.request_vars[key] = str(selected)
-                        form.vars[key] = selected
-                        # Update super-entity links
-                        s3db.update_super(table, {"id": selected})
-                        # Set record owner
-                        auth = current.auth
-                        auth.s3_set_record_owner(table, selected)
-                        auth.s3_make_session_owner(table, selected)
-                        # Onaccept
-                        onaccept = get_config("create_onaccept") or \
-                                   get_config("onaccept")
-                        callback(onaccept, _form) # , tablename=component (if we ever define callbacks as a dict with tablename)
-                    else:
-                        form.errors[key] = current.T("Could not create record.")
-
     # -------------------------------------------------------------------------
     @staticmethod
     def _linkto(r, authorised=None, update=None, native=False):
@@ -3429,5 +3298,140 @@ class S3CRUD(S3Method):
             limit = default_limit
 
         return start, limit
+
+# =============================================================================
+def embed_component(resource, record=None):
+    """
+        Renders the right key constraint in a link table as
+        S3EmbeddedComponentWidget and stores the postprocess hook.
+
+        @param resource: the link table resource
+    """
+
+    link = None
+
+    component = resource.linked
+    if component is not None and component.actuate == "embed":
+
+        ctablename = component.tablename
+        attr = {"link": resource.tablename,
+                "component": ctablename,
+                }
+
+        autocomplete = component.autocomplete
+        if autocomplete and autocomplete in component.table:
+            attr["autocomplete"] = autocomplete
+
+        if record is not None:
+            attr["link_filter"] = "%s.%s.%s.%s.%s" % \
+                                    (resource.tablename,
+                                     component.lkey,
+                                     record,
+                                     component.rkey,
+                                     component.fkey,
+                                     )
+
+        rkey = component.rkey
+        if rkey in resource.table:
+            field = resource.table[rkey]
+            field.widget = S3EmbeddedComponentWidget(**attr)
+            field.comment = None
+
+        postprocess = lambda form, key=rkey, component=ctablename: \
+                             postprocess_embedded(form, key=key, component=component)
+        link = Storage(postprocess = postprocess)
+
+    return link
+
+# -------------------------------------------------------------------------
+def postprocess_embedded(form, component=None, key=None):
+    """
+        Post-processes a form with an S3EmbeddedComponentWidget and
+        created/updates the component record.
+
+        @param form: the form
+        @param component: the component tablename
+        @param key: the field name of the foreign key for the component
+                    in the link table
+    """
+
+    s3db = current.s3db
+    request = current.request
+
+    get_config = lambda key, tablename=component: \
+                        s3db.get_config(tablename, key, None)
+    try:
+        selected = form.vars[key]
+    except (AttributeError, KeyError):
+        selected = None
+
+    if request.env.request_method == "POST":
+        db = current.db
+        table = db[component]
+
+        # Extract data for embedded form from post_vars
+        post_vars = request.post_vars
+        form_vars = Storage(table._filter_fields(post_vars))
+
+        # Pass values through validator to convert them into db-format
+        for k in form_vars:
+            value, error = s3_validate(table, k, form_vars[k])
+            if not error:
+                form_vars[k] = value
+
+        _form = Storage(vars = form_vars, errors = Storage())
+        if _form.vars:
+            if selected:
+                form_vars[table._id.name] = selected
+                # Onvalidation
+                onvalidation = get_config("update_onvalidation") or \
+                               get_config("onvalidation")
+                callback(onvalidation, _form) # , tablename=component (if we ever define callbacks as a dict with tablename)
+                # Update the record if no errors
+                if not _form.errors:
+                    db(table._id == selected).update(**_form.vars)
+                else:
+                    form.errors.update(_form.errors)
+                    return
+                # Update super-entity links
+                s3db.update_super(table, {"id": selected})
+                # Update realm
+                update_realm = s3db.get_config(table, "update_realm")
+                if update_realm:
+                    current.auth.set_realm_entity(table, selected,
+                                                  force_update=True)
+                # Onaccept
+                onaccept = get_config("update_onaccept") or \
+                           get_config("onaccept")
+                callback(onaccept, _form) # , tablename=component (if we ever define callbacks as a dict with tablename)
+            else:
+                form_vars.pop(table._id.name, None)
+                # Onvalidation
+                onvalidation = get_config("create_onvalidation") or \
+                               get_config("onvalidation")
+                callback(onvalidation, _form) # , tablename=component (if we ever define callbacks as a dict with tablename)
+                # Insert the record if no errors
+                if not _form.errors:
+                    selected = table.insert(**_form.vars)
+                else:
+                    form.errors.update(_form.errors)
+                    return
+                if selected:
+                    # Update post_vars and form.vars
+                    post_vars[key] = str(selected)
+                    form.request_vars[key] = str(selected)
+                    form.vars[key] = selected
+                    # Update super-entity links
+                    s3db.update_super(table, {"id": selected})
+                    # Set record owner
+                    auth = current.auth
+                    auth.s3_set_record_owner(table, selected)
+                    auth.s3_make_session_owner(table, selected)
+                    # Onaccept
+                    onaccept = get_config("create_onaccept") or \
+                               get_config("onaccept")
+                    callback(onaccept, _form) # , tablename=component (if we ever define callbacks as a dict with tablename)
+                else:
+                    form.errors[key] = current.T("Could not create record.")
 
 # END =========================================================================

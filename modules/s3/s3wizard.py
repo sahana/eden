@@ -34,6 +34,7 @@ from gluon.html import *
 from gluon.storage import Storage
 from gluon.tools import redirect
 
+from .s3crud import embed_component
 from .s3forms import S3SQLDefaultForm
 from .s3rest import S3Method
 from .s3utils import s3_redirect_default
@@ -62,40 +63,62 @@ class S3Wizard(S3Method):
         page = r.get_vars.get("page")
         if not page:
             # Use the 1st page
-            r.get_vars["page"] = wizard.pages[0]
+            r.get_vars["page"] = wizard.pages[0]["page"]
 
-        output = {"form": wizard.form(r),
-                  "header": wizard.header(r),
-                  }
+        # Allow the Wizard class access to the Method methods
+        wizard.method = self
 
+        # Hide other navigation to keep focus on the workflow
+        current.menu.main = ""
+        current.menu.options = None
+
+        # Select the View template
         current.response.view = "wizard.html"
 
-        return output
+        return wizard(r)
 
 # =============================================================================
 class S3CrudWizard:
     """
         Base Class
 
-        Each Wizard should inherit from this & configure it's pages
+        Each Wizard should inherit from this & configure it's pages & form method
     """
 
     # -------------------------------------------------------------------------
     def __init__(self):
 
         self.cancel = None # Page to go to upon 'Cancel'...defaults to List View for Resource
-        self.pages = [#{"page": "recv", # visible to developers via r.get_vars, can be used by prep/customise
-                      # "label": T("Basic info"), # visible to users via header
-                      # },
+        self.method = None
+        self.pages = [{"page": "basic", # visible to developers via r.get_vars, can be used by prep/customise
+                       "label": current.T("Basic info"), # visible to users via header
+                       },
                       ]
 
     # -------------------------------------------------------------------------
-    def form(self, r):
+    def __call__(self, r):
+
+        output = {"header": self._header(r),
+                  "form": self._form(r),
+                  }
+        items = self._items(r)
+        if items:
+            output["items"] = items
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def _form(self, r):
         """
-            Back/Next[|Finish]/Cancel buttons at bottom (Back/Next|Finish=Save, Cancel goes to list view for resource)
+            Produce the correct form for the current page
+            - base class is create/update form for master resource
         """
 
-        _config = self._config
+        pages = self.pages
+        current_page = r.get_vars.get("page")
+
+        method = self.method
+        _config = method._config
         resource = r.resource
 
         sqlform = _config("crud_form", S3SQLDefaultForm())
@@ -122,7 +145,7 @@ class S3CrudWizard:
                         ctable[k].default = v
 
                 # Configure post-process for S3EmbeddedComponentWidget
-                link = self._embed_component(resource, record=r.id)
+                link = embed_component(resource, record=r.id)
 
                 # Set default value for parent key (fkey)
                 pkey = resource.pkey
@@ -154,10 +177,10 @@ class S3CrudWizard:
         if update:
             # Update form
             if not _config("editable", True) or \
-               not self._permitted("update"):
+               not method._permitted("update"):
                 r.unauthorised()
-            record_id = self.record_id
-            message = self.crud_string(self.tablename, "msg_record_modified")
+            record_id = method.record_id
+            message = method.crud_string(method.tablename, "msg_record_modified")
             onvalidation = _config("update_onvalidation") or \
                            _config("onvalidation")
             onaccept = _config("update_onaccept") or \
@@ -165,10 +188,10 @@ class S3CrudWizard:
         else:
             # Create form
             if not _config("insertable", True) or \
-               not self._permitted("create"):
+               not method._permitted("create"):
                 r.unauthorised()
             record_id = None
-            message = self.crud_string(self.tablename, "msg_record_created")
+            message = method.crud_string(method.tablename, "msg_record_created")
             onvalidation = _config("create_onvalidation") or \
                            _config("onvalidation")
             onaccept = _config("create_onaccept") or \
@@ -177,12 +200,20 @@ class S3CrudWizard:
         s3 = current.response.s3
         settings = s3.crud
         s3.cancel = self.cancel or r.url(method = "")
-        settings.submit_button = "Next" # or "Finish"
-        #settings.custom_submit = [(name, label, _class)] # Back
+        settings.submit_button = "Back"
+        if current_page == pages[-1]["page"]:
+            label = "Finish"
+        else:
+            label = "Next"
+        settings.custom_submit = [("next",
+                                   label,
+                                   "small button next",
+                                   ),
+                                  ]
 
-        form = sqlform(request = self.request,
+        form = sqlform(request = r,
                        resource = resource,
-                       record_id = self.record_id,
+                       record_id = method.record_id,
                        onvalidation = onvalidation,
                        onaccept = onaccept,
                        link = link,
@@ -191,14 +222,29 @@ class S3CrudWizard:
                        format = r.representation,
                        )
 
+        if current_page == pages[0]["page"]:
+            # Disable the Back button
+            try:
+                form[0][-1][0][1][0][0]["_disabled"] = True
+            except (KeyError, IndexError, TypeError):
+                # Submit button has been removed or a different formstyle,
+                # such as Bootstrap
+                pass
+        
+        if not update and form.accepted:
+            # If a create has been accepted then the next step of the wizard should use the new record
+            record_id = form.session.rcvars[r.tablename]
+            _next = method.next.replace("/wizard", "/%s/wizard" % record_id)
+            method.next = _next
+            
         return form
 
     # -------------------------------------------------------------------------
-    def header(self, r):
+    def _header(self, r):
         """
             Provide a visual of how many steps there are & which step we are on
 
-            Uses visual ideas from https://codepen.io/audreyfeldroy/pen/tvxAz
+            CSS in static/themes/default/scss/theme/_wizard.scss
         """
 
         T = current.T
@@ -208,20 +254,21 @@ class S3CrudWizard:
         steps = []
         sappend = steps.append
         step = 1
+        _back = None
         _next = None
         past = True
         for page in self.pages:
-            if page["page"] == current_page:
+            _page = page["page"]
+            if _page == current_page:
                 _class = "current"
                 past = False
             elif past:
                 _class = "past"
+                _back = _page # Last past
             else:
                 _class = "future"
                 if not _next:
-                    get_vars = dict(r.get_vars)
-                    get_vars.update(page = page["page"])
-                    _next = r.url(vars = get_vars)
+                    _next = _page # 1st future
             sappend(LI(SPAN(STRONG(T("Step %d") % step)),
                        page["label"],
                        I(),
@@ -229,10 +276,40 @@ class S3CrudWizard:
                        ))
             step += 1
 
-        self.next = _next # @ToDo: This needs to vary whether Back or Next selected!
+        # Configure Next
+        # @ToDo: If form was a create then we need to add the new record_id
+        if r.http == "POST":
+            get_vars = dict(r.get_vars)
+            if "next" in r.post_vars:
+                get_vars.update(page = _next)
+            else:
+                get_vars.update(page = _back)
+            self.method.next = r.url(vars = get_vars)
 
-        return UL(*steps,
-                  _class = "steps",
-                  )
+        ul = UL(*steps,
+                _class = "steps",
+                )
+        # Include the number of steps to have each step use the available width
+        ul["_data-steps"] = len(steps)
+        return ul
+
+    # -------------------------------------------------------------------------
+    def _items(self, r):
+        """
+            Provide a list of Component Items
+        """
+
+        pages = self.pages
+        current_page = r.get_vars.get("page")
+
+        component = None
+        for page in pages:
+            if current_page == page["page"]:
+                component = page.get("component")
+                break
+
+        if not component:
+            # No List View
+            return
 
 # END =========================================================================
