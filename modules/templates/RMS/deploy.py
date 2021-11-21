@@ -1504,7 +1504,6 @@ def deploy_rheader(r, tabs=None, profile=False):
                                               "deploy_mission",
                                               record_id = r.id,
                                               ):
-                    crud_button = S3CRUD.crud_button
                     edit_btn = crud_button(T("Edit"),
                                            _href = r.url(method="update"),
                                            )

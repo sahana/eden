@@ -202,11 +202,11 @@ S3.supply.itemPackID=%s%s''' % (packs,
                                 "site": r.record.site_id,
                                 },
                         )
-            from s3 import S3CRUD
-            add_btn = S3CRUD.crud_button(label = T("New Adjustment"),
-                                         _href = _href,
-                                         _id = "add-btn",
-                                         )
+            from s3 import crud_button
+            add_btn = crud_button(label = T("New Adjustment"),
+                                  _href = _href,
+                                  _id = "add-btn",
+                                  )
             if settings.ui.formstyle == "bootstrap":
                 add_btn.add_class("btn btn-primary")
             else:

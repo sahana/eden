@@ -39,7 +39,7 @@ from io import StringIO
 from gluon import current, URL, DIV, SPAN, SQLFORM, INPUT, A, LI, UL
 
 from s3dal import Field
-from .s3crud import S3CRUD
+from .s3crud import S3CRUD, crud_button
 from .s3rest import S3Method
 from .s3query import FS
 from .s3utils import s3_str, s3_mark_required
@@ -198,7 +198,6 @@ class S3RoleManager(S3Method):
             response.view = "admin/roles.html"
 
             # Page actions
-            crud_button = S3CRUD.crud_button
             page_actions = DIV(crud_button(T("Create Role"),
                                            _href = r.url(method = "create"),
                                            ),
@@ -877,7 +876,6 @@ class S3RoleManager(S3Method):
 
             # Show a back-button since OrgAdmins have no other obvious
             # way to return to the list (no left menu)
-            crud_button = S3CRUD.crud_button
             output["list_btn"] = crud_button(T("Back to User List"),
                                              icon = "return",
                                              _href = r.url(id = "",
@@ -1026,12 +1024,12 @@ class S3RoleManager(S3Method):
 
             # Default RHeader and View
             if "rheader" not in attr:
-                return_btn = S3CRUD.crud_button("Back to Roles List",
-                                                icon = "return",
-                                                _href = r.url(id = "",
-                                                              method = "",
-                                                              ),
-                                                )
+                return_btn = crud_button("Back to Roles List",
+                                         icon = "return",
+                                         _href = r.url(id = "",
+                                                       method = "",
+                                                       ),
+                                         )
                 output["rheader"] = DIV(return_btn,
                                         _class = "rheader",
                                         )

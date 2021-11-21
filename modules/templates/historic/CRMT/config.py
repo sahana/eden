@@ -1283,8 +1283,8 @@ def config(settings):
         #        buttons = output.get("buttons")
         #        if buttons and "edit_btn" in buttons:
         #            # Override Edit-button (to go to the profile page)
-        #            from s3 import S3CRUD
-        #            buttons["edit_btn"] = S3CRUD.crud_button(
+        #            from s3 import crud_button
+        #            buttons["edit_btn"] = crud_button(
         #                                        current.messages.UPDATE,
         #                                        icon="icon-edit",
         #                                        _href=r.url(method="profile"),

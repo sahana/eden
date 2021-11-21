@@ -34,7 +34,7 @@ from gluon.html import *
 from gluon.storage import Storage
 from gluon.tools import redirect
 
-from .s3crud import embed_component
+from .s3crud import crud_button, embed_component
 from .s3forms import S3SQLDefaultForm
 from .s3rest import S3Method
 from .s3utils import s3_redirect_default
@@ -73,9 +73,9 @@ class S3Wizard(S3Method):
         current.menu.options = None
 
         # Select the View template
-        current.response.view = "wizard.html"
+        current.response.view = self._view(r, "wizard.html")
 
-        return wizard(r)
+        return wizard(r, **attr)
 
 # =============================================================================
 class S3CrudWizard:
@@ -89,6 +89,7 @@ class S3CrudWizard:
     def __init__(self):
 
         self.cancel = None # Page to go to upon 'Cancel'...defaults to List View for Resource
+        self.new_id = None
         self.method = None
         self.pages = [{"page": "basic", # visible to developers via r.get_vars, can be used by prep/customise
                        "label": current.T("Basic info"), # visible to users via header
@@ -96,14 +97,16 @@ class S3CrudWizard:
                       ]
 
     # -------------------------------------------------------------------------
-    def __call__(self, r):
+    def __call__(self, r, **attr):
 
-        output = {"header": self._header(r),
-                  "form": self._form(r),
-                  }
-        items = self._items(r)
-        if items:
-            output["items"] = items
+        if r.representation == "aadata":
+            # dataTable paging
+            return self._select(r, **attr)
+        else:
+            # Assume HTML
+            output = self._select(r, **attr)
+            output["form"] = self._form(r)
+            output["header"] = self._header(r)
 
         return output
 
@@ -111,7 +114,7 @@ class S3CrudWizard:
     def _form(self, r):
         """
             Produce the correct form for the current page
-            - base class is create/update form for master resource
+            - includes a simplified/merged version of S3CRUD.create / S3CRUD.update
         """
 
         pages = self.pages
@@ -119,22 +122,29 @@ class S3CrudWizard:
 
         method = self.method
         _config = method._config
-        resource = r.resource
+        resource = method.resource
+        component = r.component
+        s3 = current.response.s3
 
         sqlform = _config("crud_form", S3SQLDefaultForm())
 
-        record_id = r.id
-        if record_id:
-            update = True
+        if component:
+            update = r.component_id
         else:
-            update = False
+            update = r.id
 
         # Component join
         link = None
-        if r.component:
+        if component:
+            # JS Cancel (no redirect with embedded form)
+            s3.cancel = {"hide": "list-add",
+                         "show": "show-add-btn",
+                         }
+
             record = r.record
             if not update:
-                defaults = r.component.get_defaults(record)
+                defaults = component.get_defaults(record)
+                table = resource.table
 
             if resource.link is None:
                 if not update:
@@ -173,6 +183,21 @@ class S3CrudWizard:
                 link = Storage(resource = resource.link,
                                master = record,
                                )
+        else:
+            # Back / Next [or Finish] / Cancel buttons for Wizard
+            # @ToDo: Also add these to the Component View (underneath Table)
+            s3.cancel = self.cancel or r.url(method = "")          
+            settings = s3.crud
+            settings.submit_button = "Back"
+            if current_page == pages[-1]["page"]:
+                label = "Finish"
+            else:
+                label = "Next"
+            settings.custom_submit = [("next",
+                                       label,
+                                       "small button next",
+                                       ),
+                                      ]
 
         if update:
             # Update form
@@ -195,25 +220,11 @@ class S3CrudWizard:
             onvalidation = _config("create_onvalidation") or \
                            _config("onvalidation")
             onaccept = _config("create_onaccept") or \
-                       _config("onaccept")
-
-        s3 = current.response.s3
-        settings = s3.crud
-        s3.cancel = self.cancel or r.url(method = "")
-        settings.submit_button = "Back"
-        if current_page == pages[-1]["page"]:
-            label = "Finish"
-        else:
-            label = "Next"
-        settings.custom_submit = [("next",
-                                   label,
-                                   "small button next",
-                                   ),
-                                  ]
+                       _config("onaccept")  
 
         form = sqlform(request = r,
                        resource = resource,
-                       record_id = method.record_id,
+                       record_id = record_id,
                        onvalidation = onvalidation,
                        onaccept = onaccept,
                        link = link,
@@ -222,21 +233,21 @@ class S3CrudWizard:
                        format = r.representation,
                        )
 
-        if current_page == pages[0]["page"]:
-            # Disable the Back button
-            try:
-                form[0][-1][0][1][0][0]["_disabled"] = True
-            except (KeyError, IndexError, TypeError):
-                # Submit button has been removed or a different formstyle,
-                # such as Bootstrap
-                pass
-        
-        if not update and form.accepted:
-            # If a create has been accepted then the next step of the wizard should use the new record
-            record_id = form.session.rcvars[r.tablename]
-            _next = method.next.replace("/wizard", "/%s/wizard" % record_id)
-            method.next = _next
-            
+        if not component:
+            if current_page == pages[0]["page"]:
+                # Disable the Back button
+                try:
+                    form[0][-1][0][1][0][0]["_disabled"] = True
+                except (KeyError, IndexError, TypeError):
+                    # Submit button has been removed or a different formstyle,
+                    # such as Bootstrap
+                    pass
+
+            if not update and \
+               form.accepted:
+                # If a master record create has been accepted then the next step of the wizard should use the new record
+                self.new_id = form.session.rcvars[r.tablename]
+
         return form
 
     # -------------------------------------------------------------------------
@@ -250,6 +261,7 @@ class S3CrudWizard:
         T = current.T
 
         current_page = r.get_vars.get("page")
+        pages = self.pages
 
         steps = []
         sappend = steps.append
@@ -257,11 +269,12 @@ class S3CrudWizard:
         _back = None
         _next = None
         past = True
-        for page in self.pages:
+        for page in pages:
             _page = page["page"]
             if _page == current_page:
                 _class = "current"
                 past = False
+                this = step - 1
             elif past:
                 _class = "past"
                 _back = _page # Last past
@@ -277,14 +290,19 @@ class S3CrudWizard:
             step += 1
 
         # Configure Next
-        # @ToDo: If form was a create then we need to add the new record_id
         if r.http == "POST":
-            get_vars = dict(r.get_vars)
+            next_vars = dict(r.get_vars)
             if "next" in r.post_vars:
-                get_vars.update(page = _next)
+                next_vars.update(page = _next)
+                component = pages[this + 1].get("component")
             else:
-                get_vars.update(page = _back)
-            self.method.next = r.url(vars = get_vars)
+                next_vars.update(page = _back)
+                component = pages[this - 1].get("component")
+            record_id = r.id or self.new_id
+            self.method.next = r.url(id = record_id,
+                                     component = component,
+                                     vars = next_vars,
+                                     )
 
         ul = UL(*steps,
                 _class = "steps",
@@ -294,22 +312,220 @@ class S3CrudWizard:
         return ul
 
     # -------------------------------------------------------------------------
-    def _items(self, r):
+    def _select(self, r, **attr):
         """
             Provide a list of Component Items
         """
 
-        pages = self.pages
-        current_page = r.get_vars.get("page")
-
-        component = None
-        for page in pages:
-            if current_page == page["page"]:
-                component = page.get("component")
-                break
-
-        if not component:
+        if not r.component:
             # No List View
-            return
+            return {}
+
+        output = self._datatable(r, **attr)
+
+        if r.representation == "aadata":
+            return output
+
+        method = self.method
+        resource = method.resource
+        if resource.get_config("insertable", True):
+            # Add a hidden add-form and a button to activate it
+            tablename = resource.tablename
+            output["addtitle"] = method.crud_string(tablename, "label_create")
+            output["showadd_btn"] = crud_button(None,
+                                                tablename = tablename,
+                                                name = "label_create",
+                                                icon = "add",
+                                                _id = "show-add-btn",
+                                                )
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def _datatable(self, r, **attr):
+        """
+            Get a data table
+            - comes from S3CRUD._datatable
+
+            @param r: the S3Request
+            @param attr: parameters for the method handler
+        """
+
+        method = self.method
+
+        # Check permission to read in this table
+        if not self.method._permitted():
+            r.unauthorised()
+
+        resource = self.method.resource
+        get_config = resource.get_config
+
+        # Get table-specific parameters
+
+        # List ID
+        list_id = attr.get("list_id", "datatable")
+
+        # List fields
+        list_fields = resource.list_fields()
+
+        # Default orderby
+        orderby = get_config("orderby", None)
+
+        response = current.response
+        s3 = response.s3
+        representation = r.representation
+
+        # Pagination
+        get_vars = r.get_vars
+        if representation == "aadata":
+            start, limit = self.method._limits(get_vars)
+        else:
+            # Initial page request always uses defaults (otherwise
+            # filtering and pagination would have to be relative to
+            # the initial limits, but there is no use-case for that)
+            start = None
+            limit = None if s3.no_sspag else 0
+
+        # Initialize output
+        output = {}
+
+        # Linkto
+        #linkto = get_config("linkto", None)
+        #if not linkto:
+        #    linkto = self._linkto(r)
+
+        left = []
+        distinct = False
+        dtargs = attr.get("dtargs", {})
+
+        if r.interactive:
+
+            # How many records per page?
+            if s3.dataTable_pageLength:
+                display_length = s3.dataTable_pageLength
+            else:
+                display_length = 25
+
+            # Server-side pagination?
+            if not s3.no_sspag:
+                dt_pagination = "true"
+                if not limit:
+                    limit = 2 * display_length
+                current.session.s3.filter = get_vars
+                if orderby is None:
+                    dt_sorting = {"iSortingCols": "1",
+                                  "sSortDir_0": "asc"
+                                  }
+
+                    if len(list_fields) > 1:
+                        dt_sorting["bSortable_0"] = "false"
+                        dt_sorting["iSortCol_0"] = "1"
+                    else:
+                        dt_sorting["bSortable_0"] = "true"
+                        dt_sorting["iSortCol_0"] = "0"
+
+                    orderby, left = resource.datatable_filter(list_fields,
+                                                              dt_sorting,
+                                                              )[1:3]
+            else:
+                dt_pagination = "false"
+
+            # Get the data table
+            dt, totalrows = resource.datatable(fields = list_fields,
+                                               start = start,
+                                               limit = limit,
+                                               left = left,
+                                               orderby = orderby,
+                                               distinct = distinct,
+                                               )
+            displayrows = totalrows
+
+            if not dt.data:
+                # Empty table - or just no match?
+                #if dt.empty:
+                #    datatable = DIV(self.method.crud_string(resource.tablename,
+                #                                            "msg_list_empty"),
+                #                    _class = "empty")
+                #else:
+                #    #datatable = DIV(self.method.crud_string(resource.tablename,
+                #                                             "msg_no_match"),
+                #                     _class = "empty")
+
+                # Must include export formats to allow subsequent unhiding
+                # when Ajax (un-)filtering produces exportable table contents:
+                #s3.no_formats = True
+
+                if r.component and "showadd_btn" in output:
+                    # Hide the list and show the form by default
+                    del output["showadd_btn"]
+                    datatable = ""
+
+            # Always show table, otherwise it can't be Ajax-filtered
+            # @todo: need a better algorithm to determine total_rows
+            #        (which excludes URL filters), so that datatables
+            #        shows the right empty-message (ZeroRecords instead
+            #        of EmptyTable)
+            dtargs["dt_pagination"] = dt_pagination
+            dtargs["dt_pageLength"] = display_length
+            dtargs["dt_base_url"] = r.url(method="", vars={})
+            dtargs["dt_permalink"] = r.url()
+            datatable = dt.html(totalrows,
+                                displayrows,
+                                id = list_id,
+                                **dtargs)
+
+            # View + data
+            output["items"] = datatable
+
+        elif representation == "aadata":
+
+            # Apply datatable filters
+            searchq, orderby, left = resource.datatable_filter(list_fields,
+                                                               get_vars)
+            if searchq is not None:
+                totalrows = resource.count()
+                resource.add_filter(searchq)
+            else:
+                totalrows = None
+
+            # Orderby fallbacks
+            if orderby is None:
+                orderby = get_config("orderby", None)
+
+            # Get a data table
+            if totalrows != 0:
+                dt, displayrows = resource.datatable(fields = list_fields,
+                                                     start = start,
+                                                     limit = limit,
+                                                     left = left,
+                                                     orderby = orderby,
+                                                     distinct = distinct,
+                                                     )
+            else:
+                dt, displayrows = None, 0
+            if totalrows is None:
+                totalrows = displayrows
+
+            # Echo
+            draw = int(get_vars.get("draw", 0))
+
+            # Representation
+            if dt is not None:
+                output = dt.json(totalrows,
+                                 displayrows,
+                                 list_id,
+                                 draw,
+                                 **dtargs)
+            else:
+                output = '{"recordsTotal":%s,' \
+                         '"recordsFiltered":0,' \
+                         '"dataTable_id":"%s",' \
+                         '"draw":%s,' \
+                         '"data":[]}' % (totalrows, list_id, draw)
+
+        else:
+            r.error(415, current.ERROR.BAD_FORMAT)
+
+        return output
 
 # END =========================================================================

@@ -5158,6 +5158,7 @@ class InventoryTrackingModel(S3Model):
                   orderby = "inv_send.date desc",
                   sortby = [[5, "desc"], [1, "asc"]],
                   super_entity = ("doc_entity",),
+                  wizard = inv_Send_Wizard(),
                   )
 
         # ---------------------------------------------------------------------
@@ -8876,7 +8877,7 @@ def inv_recv_controller():
                     if r.interactive:
                         s3.crud_strings.inv_recv.title_update = \
                         s3.crud_strings.inv_recv.title_display = T("Process Received Shipment")
-                        if r.method in (None, "update"):
+                        if r.method in (None, "update", "wizard"):
                             # Limit to Bins from this site
                             from .org import org_site_layout_config
                             irbtable = s3db.inv_recv_item_bin
@@ -9040,7 +9041,7 @@ def inv_recv_controller():
                     # Don't want to see in Create forms
                     recvtable.status.readable = False
 
-            if r.method == "create" or \
+            if r.method in ("create", "wizard") or \
                (r.method == "update" and record.status == SHIP_STATUS_IN_PROCESS):
                 if s3.debug:
                     s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv.js" % r.application)
@@ -12866,7 +12867,8 @@ def inv_send_controller():
         record = r.record
         if record:
             status = record.status
-        elif r.method == "create":
+        elif r.method == "create" or \
+             (r.method == "wizard" and r.get_vars.get("page") == "send"):
             req_id = r.get_vars.get("req_id")
             if req_id:
                 rtable = s3db.inv_req
@@ -13198,7 +13200,7 @@ def inv_send_controller():
                     crud_strings.title_update = \
                     crud_strings.title_display = T("Process Shipment to Send")
 
-                    if r.method in (None, "update"):
+                    if r.method in (None, "update", "wizard"):
                         # Limit to Bins from this site
                         from .org import org_site_layout_config
                         isbtable = s3db.inv_send_item_bin
@@ -13472,7 +13474,7 @@ S3.supply.site_id=%s%s''' % (json.dumps(inv_data, separators=SEPARATORS),
                 set_send_attr(SHIP_STATUS_IN_PROCESS)
                 sendtable.send_ref.readable = False
 
-            if (r.method == "create" or \
+            if (r.method in ("create", "wizard") or \
                 (r.method == "update" and record.status == SHIP_STATUS_IN_PROCESS)):
                 if s3.debug:
                     s3.scripts.append("/%s/static/scripts/S3/s3.inv_send.js" % r.application)
@@ -16435,29 +16437,38 @@ class inv_Recv_Wizard(S3CrudWizard):
                       ]
 
     # -------------------------------------------------------------------------
+    def __call__(self, r, **attr):
+    
+        if r.record and r.record.status != SHIP_STATUS_IN_PROCESS:
+            # Cannot use the Wizard
+            redirect(r.url(method = None))
+
+        return super(inv_Recv_Wizard, self).__call__(r, **attr)
+
+    # -------------------------------------------------------------------------
     def _form(self, r):
         """
             Produce the correct form for the current page
         """
 
         current_page = r.get_vars.get("page")
-        if current_page == "recv":
-            # Create or Update form
-            return super(inv_Recv_Wizard, self)._form(r)
-        if current_page == "items":
-            # Return the List of Items
-            # - without Bin allocations
-            return ""
-        if current_page == "bins":
-            # Return the List of Items in the Shipment
-            # - along with Bin allocations
-            return ""
         if current_page == "process":
             # Return a button to Process the Incoming Shipment
-            return ""
-        if current_page == "document":
-            # Return a create form for GRN upload, or the List of uploaded Documents if they exist already
-            return ""
+            # @ToDo: Back/Next/Cancel buttons
+            #        - have this button be the Next? or else add JS
+            return A(current.T("Receive Shipment"),
+                     _href = URL(c = "inv",
+                                 f = "recv",
+                                 args = [r.id,
+                                         "process",
+                                         ],
+                                 ),
+                     _id = "recv-process",
+                     _class = "action-btn",
+                     )
+        else:
+            # Create or Update form
+            return super(inv_Recv_Wizard, self)._form(r)
 
 # =============================================================================
 class inv_ReqRepresent(S3Represent):
@@ -16752,6 +16763,72 @@ class inv_SendRepresent(S3Represent):
             v = "%s)" % v 
 
         return v
+
+# =============================================================================
+class inv_Send_Wizard(S3CrudWizard):
+    """
+        Wizard for Sending a New Shipment
+    """
+
+    def __init__(self):
+
+        T = current.T
+
+        super(inv_Send_Wizard, self).__init__()
+
+        self.pages = [{"page": "send",
+                       "label": T("Basic info"),
+                       },
+                      {"page": "items",
+                       "label": T("Add Items"),
+                       "component": "track_item",
+                       },
+                      {"page": "packaging",
+                       "label": T("Packaging"),
+                       "component": "send_package",
+                       },
+                      {"page": "process",
+                       "label": T("Process"),
+                       },
+                      {"page": "document",
+                       "label": T("Upload WB"),
+                       "component": "document",
+                       },
+                      ]
+
+    # -------------------------------------------------------------------------
+    def __call__(self, r, **attr):
+    
+        if r.record and r.record.status != SHIP_STATUS_IN_PROCESS:
+            # Cannot use the Wizard
+            redirect(r.url(method = None))
+
+        return super(inv_Send_Wizard, self).__call__(r, **attr)
+
+    # -------------------------------------------------------------------------
+    def _form(self, r):
+        """
+            Produce the correct form for the current page
+        """
+
+        current_page = r.get_vars.get("page")
+        if current_page == "process":
+            # Return a button to Process the Outgoing Shipment
+            # @ToDo: Back/Next/Cancel buttons
+            #        - have this button be the Next? or else add JS
+            return A(current.T("Send Shipment"),
+                     _href = URL(c = "inv",
+                                 f = "send",
+                                 args = [r.id,
+                                         "process",
+                                         ],
+                                 ),
+                     _id = "send-process",
+                     _class = "action-btn",
+                     )
+        else:
+            # Create or Update form
+            return super(inv_Send_Wizard, self)._form(r)
 
 # =============================================================================
 class inv_TrackItemRepresent(S3Represent):

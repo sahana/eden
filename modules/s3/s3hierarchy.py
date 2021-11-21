@@ -41,7 +41,7 @@ from gluon.tools import callback
 
 from .s3utils import s3_str
 from .s3rest import S3Method
-from .s3crud import S3CRUD
+from .s3crud import crud_button
 from .s3widgets import SEPARATORS
 
 DEFAULT = lambda: None
@@ -223,12 +223,12 @@ class S3HierarchyCRUD(S3Method):
                             representation = "popup",
                             vars = {"refresh": widget_id},
                             )
-                add_btn = S3CRUD.crud_button(tablename = tablename,
-                                             name = "label_create",
-                                             _class = "s3_modal",
-                                             _href = _href,
-                                             _id = "add-btn",
-                                             )
+                add_btn = crud_button(tablename = tablename,
+                                      name = "label_create",
+                                      _class = "s3_modal",
+                                      _href = _href,
+                                      _id = "add-btn",
+                                      )
                 if current.deployment_settings.ui.formstyle == "bootstrap":
                     add_btn.add_class("btn btn-primary")
                 else:

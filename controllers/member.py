@@ -20,7 +20,9 @@ def index_alt():
     """
 
     # Just redirect to the list of Members
-    s3_redirect_default(URL(f="membership", args=["summary"]))
+    s3_redirect_default(URL(f = "membership",
+                            args = ["summary"],
+                            ))
 
 # =============================================================================
 def membership_type():
@@ -31,8 +33,7 @@ def membership_type():
     if not auth.s3_has_role("ADMIN"):
         s3.filter = auth.filter_by_root_org(s3db.member_membership_type)
 
-    output = s3_rest_controller()
-    return output
+    return s3_rest_controller()
 
 # =============================================================================
 def membership():
@@ -70,12 +71,14 @@ def membership():
                            ] + list_fields
 
             s3db.configure("member_membership",
-                           list_fields = list_fields)
+                           list_fields = list_fields,
+                           )
 
         return True
     s3.prep = prep
 
-    return s3_rest_controller(rheader = s3db.member_rheader)
+    from s3db.member import member_rheader
+    return s3_rest_controller(rheader = member_rheader)
 
 # =============================================================================
 def person():
@@ -193,9 +196,9 @@ def person():
                 # Provide correct list-button (non-native controller)
                 buttons = output["buttons"]
                 if "list_btn" in buttons:
-                    crud_button = r.resource.crud.crud_button
+                    from s3 import crud_button
                     buttons["list_btn"] = crud_button(None,
-                                                      tablename="member_membership",
+                                                      tablename = "member_membership",
                                                       name = "label_list_button",
                                                       _href = URL(c="member", f="membership"),
                                                       _id = "list-btn",
@@ -203,10 +206,10 @@ def person():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller("pr", "person",
-                                replace_option = T("Remove existing data before import"),
-                                rheader = s3db.member_rheader,
-                                )
-    return output
+    from s3db.member import member_rheader
+    return s3_rest_controller("pr", "person",
+                              replace_option = T("Remove existing data before import"),
+                              rheader = member_rheader,
+                              )
 
 # END =========================================================================

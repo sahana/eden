@@ -9185,11 +9185,11 @@ def hrm_training_event_controller():
     #                   _class = "s3_modal"
     #               else:
     #                   _class = "action-btn s3_modal"
-    #               import_btn = S3CRUD.crud_button(label = current.T("Import Participants"),
-    #                                               _class = _class,
-    #                                               _href = URL(f="training", args="import.popup",
-    #                                                           vars={"~.training_event_id":r.id}),
-    #                                               )
+    #               import_btn = crud_button(label = current.T("Import Participants"),
+    #                                        _class = _class,
+    #                                        _href = URL(f="training", args="import.popup",
+    #                                                    vars={"~.training_event_id":r.id}),
+    #                                        )
     #               output["showadd_btn"] = TAG[""](showadd_btn, import_btn)
     #    return output
     #s3.postp = postp

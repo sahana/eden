@@ -33,6 +33,7 @@
 """
 
 __all__ = ("S3CRUD",
+           "crud_button",
            "embed_component",
            )
 
@@ -574,11 +575,11 @@ class S3CRUD(S3Method):
                     if form_postp:
                         form_postp(form)
                     output["form"] = form
-                    output["showadd_btn"] = self.crud_button(tablename = tablename,
-                                                             name = "label_create",
-                                                             icon = "add",
-                                                             _id = "show-add-btn",
-                                                             )
+                    output["showadd_btn"] = crud_button(tablename = tablename,
+                                                        name = "label_create",
+                                                        icon = "add",
+                                                        _id = "show-add-btn",
+                                                        )
                     addtitle = self.crud_string(tablename, "label_create")
                     output["addtitle"] = addtitle
                     if r.http == "POST":
@@ -593,11 +594,11 @@ class S3CRUD(S3Method):
 
             elif addbtn:
                 # No form, just Add-button linked to create-view
-                add_btn = self.crud_button(tablename = tablename,
-                                           name = "label_create",
-                                           icon = "add",
-                                           _id = "add-btn",
-                                           )
+                add_btn = crud_button(tablename = tablename,
+                                      name = "label_create",
+                                      icon = "add",
+                                      _id = "add-btn",
+                                      )
                 output["buttons"] = {"add_btn": add_btn}
 
         view = self._view(r, "listadd.html")
@@ -1197,11 +1198,8 @@ class S3CRUD(S3Method):
         """
 
         resource = self.resource
-
         tablename = resource.tablename
         get_config = resource.get_config
-
-        list_fields = get_config("list_fields", None)
 
         representation = r.representation
         if representation in ("html", "iframe", "aadata", "dl", "popup"):
@@ -1292,7 +1290,7 @@ class S3CRUD(S3Method):
                                            _class = "filter-form",
                                            _id = "%s-filter-form" % target
                                            )
-                fresource = current.s3db.resource(resource.tablename) # Use a clean resource
+                fresource = current.s3db.resource(tablename) # Use a clean resource
                 alias = resource.alias if r.component else None
                 output["list_filter_form"] = filter_form.html(fresource,
                                                               get_vars,
@@ -1304,13 +1302,8 @@ class S3CRUD(S3Method):
                 output["list_filter_form"] = ""
 
             # Add-form or -button
-            insertable = get_config("insertable", True)
-            if insertable:
-
-                addbtn = get_config("addbtn", False)
-                listadd = get_config("listadd", True)
-
-                if listadd:
+            if get_config("insertable", True):
+                if get_config("listadd", True):
                     # Save the view
                     response = current.response
                     view = response.view
@@ -1318,27 +1311,27 @@ class S3CRUD(S3Method):
                     # JS Cancel (no redirect with embedded form)
                     s3 = response.s3
                     cancel = s3.cancel
-                    s3.cancel = {"hide": "list-add", "show": "show-add-btn"}
+                    s3.cancel = {"hide": "list-add",
+                                 "show": "show-add-btn",
+                                 }
 
                     # Add a hidden add-form and a button to activate it
                     form = self.create(r, **attr).get("form", None)
                     if form is not None:
                         output["form"] = form
-                        addtitle = self.crud_string(tablename, "label_create")
-                        output["addtitle"] = addtitle
-                        showadd_btn = self.crud_button(None,
-                                                       tablename = tablename,
-                                                       name = "label_create",
-                                                       icon = "add",
-                                                       _id = "show-add-btn",
-                                                       )
-                        output["showadd_btn"] = showadd_btn
+                        output["addtitle"] = crud_string(tablename, "label_create")
+                        output["showadd_btn"] = crud_button(None,
+                                                            tablename = tablename,
+                                                            name = "label_create",
+                                                            icon = "add",
+                                                            _id = "show-add-btn",
+                                                            )
 
                     # Restore the view
                     response.view = view
                     s3.cancel = cancel
 
-                elif addbtn:
+                elif get_config("addbtn", False):
                     # Add an action-button linked to the create view
                     buttons = self.render_buttons(r, ["add"], **attr)
                     if buttons:
@@ -1369,7 +1362,7 @@ class S3CRUD(S3Method):
                 else:
                     raise HTTP(404, body="Record not Found")
             else:
-                rows = resource.select(list_fields,
+                rows = resource.select(get_config("list_fields"),
                                        limit = None,
                                        as_rows = True,
                                        )
@@ -1426,20 +1419,20 @@ class S3CRUD(S3Method):
         elif representation == "shp":
             exporter = S3Exporter().shp
             return exporter(resource,
-                            list_fields = list_fields,
+                            list_fields = get_config("list_fields"),
                             **attr)
 
         elif representation == "svg":
             exporter = S3Exporter().svg
             return exporter(resource,
-                            list_fields = list_fields,
+                            list_fields = get_config("list_fields"),
                             **attr)
 
         elif representation == "xls":
             report_groupby = get_config("report_groupby", None)
             exporter = S3Exporter().xls
             return exporter(resource,
-                            list_fields = list_fields,
+                            list_fields = get_config("list_fields"),
                             report_groupby = report_groupby,
                             **attr)
 
@@ -1480,15 +1473,13 @@ class S3CRUD(S3Method):
         """
 
         # Check permission to read in this table
-        authorised = self._permitted()
-        if not authorised:
+        if not self._permitted():
             r.unauthorised()
 
         resource = self.resource
         get_config = resource.get_config
 
         # Get table-specific parameters
-        linkto = get_config("linkto", None)
 
         # List ID
         list_id = attr.get("list_id", "datatable")
@@ -1518,6 +1509,7 @@ class S3CRUD(S3Method):
         output = {}
 
         # Linkto
+        linkto = get_config("linkto", None)
         if not linkto:
             linkto = self._linkto(r)
 
@@ -2414,85 +2406,6 @@ class S3CRUD(S3Method):
     # -------------------------------------------------------------------------
     # Utility functions
     # -------------------------------------------------------------------------
-    @staticmethod
-    def crud_button(label = None,
-                    tablename = None,
-                    name = None,
-                    icon = None,
-                    _href = None,
-                    _id = None,
-                    _class = None,
-                    _title = None,
-                    _target = None,
-                    **attr
-                    ):
-        """
-            Generate a CRUD action button
-
-            @param label: the link label (None if using CRUD string)
-            @param tablename: the name of table for CRUD string selection
-            @param name: name of CRUD string for the button label
-            @param icon: name of the icon (e.g. "add")
-            @param _href: the target URL
-            @param _id: the HTML id of the link
-            @param _class: the HTML class of the link
-            @param _title: the HTML title of the link
-            @param _target: the HTML target of the link
-
-            @keyword custom: custom CRUD button (just add classes)
-        """
-
-        settings = current.deployment_settings
-
-        # If using Bootstrap then we need to amend our core HTML markup
-        bootstrap = settings.ui.formstyle == "bootstrap"
-
-        # Custom button?
-        if "custom" in attr:
-            custom = attr["custom"]
-            if custom is None:
-                custom = ""
-            elif bootstrap and hasattr(custom, "add_class"):
-                custom.add_class("btn btn-primary")
-            return custom
-
-        # Default class
-        if _class is None and not bootstrap:
-            _class = "action-btn"
-
-        # Default label
-        if name:
-            labelstr = S3CRUD.crud_string(tablename, name)
-        else:
-            labelstr = str(label)
-
-        # Show icon on button?
-        if icon and settings.get_ui_use_button_icons():
-            button = A(ICON(icon),
-                       labelstr,
-                       _id = _id,
-                       _class = _class,
-                       )
-        else:
-            button = A(labelstr,
-                       _id = _id,
-                       _class = _class,
-                       )
-
-        # Button attributes
-        if _href:
-            button["_href"] = _href
-        if _title:
-            button["_title"] = _title
-        if _target:
-            button["_target"] = _target
-
-        # Additional classes?
-        if bootstrap:
-            button.add_class("btn btn-primary")
-        return button
-
-    # -------------------------------------------------------------------------
     def last_update(self):
         """
             Get the last update meta-data of the current record
@@ -2565,7 +2478,6 @@ class S3CRUD(S3Method):
         remove_filters = self._remove_filters
         crud_string = self.crud_string
         config = self._config
-        crud_button = self.crud_button
 
         # Add button
         if "add" in buttons and config("insertable", True):
@@ -3298,6 +3210,84 @@ class S3CRUD(S3Method):
             limit = default_limit
 
         return start, limit
+
+# =============================================================================
+def crud_button(label = None,
+                tablename = None,
+                name = None,
+                icon = None,
+                _href = None,
+                _id = None,
+                _class = None,
+                _title = None,
+                _target = None,
+                **attr
+                ):
+    """
+        Generate a CRUD action button
+
+        @param label: the link label (None if using CRUD string)
+        @param tablename: the name of table for CRUD string selection
+        @param name: name of CRUD string for the button label
+        @param icon: name of the icon (e.g. "add")
+        @param _href: the target URL
+        @param _id: the HTML id of the link
+        @param _class: the HTML class of the link
+        @param _title: the HTML title of the link
+        @param _target: the HTML target of the link
+
+        @keyword custom: custom CRUD button (just add classes)
+    """
+
+    settings = current.deployment_settings
+
+    # If using Bootstrap then we need to amend our core HTML markup
+    bootstrap = settings.ui.formstyle == "bootstrap"
+
+    # Custom button?
+    if "custom" in attr:
+        custom = attr["custom"]
+        if custom is None:
+            custom = ""
+        elif bootstrap and hasattr(custom, "add_class"):
+            custom.add_class("btn btn-primary")
+        return custom
+
+    # Default class
+    if _class is None and not bootstrap:
+        _class = "action-btn"
+
+    # Default label
+    if name:
+        labelstr = S3CRUD.crud_string(tablename, name)
+    else:
+        labelstr = str(label)
+
+    # Show icon on button?
+    if icon and settings.get_ui_use_button_icons():
+        button = A(ICON(icon),
+                   labelstr,
+                   _id = _id,
+                   _class = _class,
+                   )
+    else:
+        button = A(labelstr,
+                   _id = _id,
+                   _class = _class,
+                   )
+
+    # Button attributes
+    if _href:
+        button["_href"] = _href
+    if _title:
+        button["_title"] = _title
+    if _target:
+        button["_target"] = _target
+
+    # Additional classes?
+    if bootstrap:
+        button.add_class("btn btn-primary")
+    return button
 
 # =============================================================================
 def embed_component(resource, record=None):
