@@ -128,6 +128,7 @@ class S3CrudWizard:
     def __init__(self):
 
         self.cancel = None # Page to go to upon 'Cancel'...defaults to List View for Resource
+        self.empty = False
         self.new_id = None
         self.method = None
         self.pages = [{"page": "basic", # visible to developers via r.get_vars, can be used by prep/customise
@@ -372,37 +373,13 @@ class S3CrudWizard:
         return ul
 
     # -------------------------------------------------------------------------
-    def _select(self, r, **attr):
-        """
-            Provide a list of Component Items
-        """
-
-        if r.component_id or not r.component:
-            # No List View
-            return {}
-
-        output = self._datatable(r, **attr)
-
-        if r.representation == "aadata":
-            return output
-
-        resource = self.method.resource
-        if resource.get_config("insertable", True) and "showadd_btn" not in output:
-            # Add a button to activate the add form which gets hidden in the view
-            output["showadd_btn"] = crud_button(None,
-                                                tablename = resource.tablename,
-                                                name = "label_create",
-                                                icon = "add",
-                                                _id = "show-add-btn",
-                                                )
- 
-        return output
-
-    # -------------------------------------------------------------------------
     def _controls(self, r, next_btn=None):
         """
             Add Back / Next / Cancel buttons
             - for _select() & custom pages
+
+            NB We do NOT have these buttons at the bottom of component_id forms...UX would be too confusing (instead Cancel back to List & access from there...)
+            @ToDo: Sshould we colour the Wizard buttons differently? Match the header...
         """
 
         T = current.T
@@ -473,6 +450,11 @@ class S3CrudWizard:
                              _class = "crud-submit-button button small next",
                              )
 
+        if self.empty and pages[this].get("required"):
+            # No components added yet, but they need to be before we move on
+            next_btn["_disabled"] = True
+            del next_btn["_href"]
+
         controls = DIV(back_btn,
                        next_btn,
                        A(T("Cancel"),
@@ -483,6 +465,33 @@ class S3CrudWizard:
                        )
 
         return controls
+
+    # -------------------------------------------------------------------------
+    def _select(self, r, **attr):
+        """
+            Provide a list of Component Items
+        """
+
+        if r.component_id or not r.component:
+            # No List View
+            return {}
+
+        output = self._datatable(r, **attr)
+
+        if r.representation == "aadata":
+            return output
+
+        resource = self.method.resource
+        if resource.get_config("insertable", True) and "showadd_btn" not in output:
+            # Add a button to activate the add form which gets hidden in the view
+            output["showadd_btn"] = crud_button(None,
+                                                tablename = resource.tablename,
+                                                name = "label_create",
+                                                icon = "add",
+                                                _id = "show-add-btn",
+                                                )
+ 
+        return output
 
     # -------------------------------------------------------------------------
     def _datatable(self, r, **attr):
@@ -599,6 +608,7 @@ class S3CrudWizard:
                 #s3.no_formats = True
 
                 # Hide the list and show the form by default
+                self.empty = True
                 output["showadd_btn"] = None
 
             # Always show table, otherwise it can't be Ajax-filtered

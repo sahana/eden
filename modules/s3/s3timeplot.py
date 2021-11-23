@@ -113,27 +113,28 @@ class S3TimePlot(S3Method):
 
         # Read the relevant GET vars
         report_vars, get_vars = self.get_options(r, resource)
+        get_vars_get = get_vars.get
 
         # Parse event timestamp option
-        timestamp = get_vars.get("timestamp")
+        timestamp = get_vars_get("timestamp")
         event_start, event_end = self.parse_timestamp(timestamp)
 
         # Parse fact option
-        fact = get_vars.get("fact")
+        fact = get_vars_get("fact")
         try:
             facts = S3TimeSeriesFact.parse(fact)
         except SyntaxError:
             r.error(400, sys.exc_info()[1])
-        baseline = get_vars.get("baseline")
+        baseline = get_vars_get("baseline")
 
         # Parse grouping axes
-        rows = get_vars.get("rows")
-        cols = get_vars.get("cols")
+        rows = get_vars_get("rows")
+        cols = get_vars_get("cols")
 
         # Parse event frame parameters
-        start = get_vars.get("start")
-        end = get_vars.get("end")
-        slots = get_vars.get("slots")
+        start = get_vars_get("start")
+        end = get_vars_get("end")
+        slots = get_vars_get("slots")
 
         if visible:
             # Create time series
@@ -716,6 +717,7 @@ class S3TimeSeries:
         """ Return the time series as JSON-serializable dict """
 
         rfields = self.rfields
+        rfields_get = rfields.get
 
         # Fact Data
         fact_data = []
@@ -728,19 +730,19 @@ class S3TimeSeries:
                               ))
 
         # Event start and end selectors
-        rfield = rfields.get("event_start")
+        rfield = rfields_get("event_start")
         if rfield:
             event_start = rfield.selector
         else:
             event_start = None
-        rfield = rfields.get("event_end")
+        rfield = rfields_get("event_end")
         if rfield:
             event_end = rfield.selector
         else:
             event_end = None
 
         # Rows
-        rows = rfields.get("rows")
+        rows = rfields_get("rows")
         if rows:
             rows_sorted = self._represent_axis(rows, self.rows_keys)
             rows_keys = [row[0] for row in rows_sorted]
@@ -753,7 +755,7 @@ class S3TimeSeries:
             rows_data = None
 
         # Columns
-        cols = rfields.get("cols")
+        cols = rfields_get("cols")
         if cols:
             cols_sorted = self._represent_axis(cols, self.cols_keys)
             cols_keys = [col[0] for col in cols_sorted]
@@ -780,7 +782,7 @@ class S3TimeSeries:
             append(item)
 
         # Baseline
-        rfield = rfields.get("baseline")
+        rfield = rfields_get("baseline")
         if rfield:
             baseline = (rfield.selector,
                         str(rfield.label),
@@ -1025,18 +1027,19 @@ class S3TimeSeries:
 
         resource = self.resource
         rfields = self.rfields
+        rfields_get = rfields.get
 
         # Fields to extract
         cumulative = False
-        event_start = rfields.get("event_start")
+        event_start = rfields_get("event_start")
         fields = {event_start.selector}
-        event_end = rfields.get("event_end")
+        event_end = rfields_get("event_end")
         if event_end:
             fields.add(event_end.selector)
-        rows_rfield = rfields.get("rows")
+        rows_rfield = rfields_get("rows")
         if rows_rfield:
             fields.add(rows_rfield.selector)
-        cols_rfield = rfields.get("cols")
+        cols_rfield = rfields_get("cols")
         if cols_rfield:
             fields.add(cols_rfield.selector)
         fact_columns = []
@@ -1077,7 +1080,7 @@ class S3TimeSeries:
 
         # Compute baseline
         value = None
-        baseline_rfield = rfields.get("baseline")
+        baseline_rfield = rfields_get("baseline")
         if baseline_rfield:
             baseline_table = current.db[baseline_rfield.tname]
             pkey = str(baseline_table._id)
@@ -1175,13 +1178,14 @@ class S3TimeSeries:
         # Defaults
         if not event_start:
             table = resource.table
+            fields = table.fields
             for fname in ("date", "start_date", "created_on"):
-                if fname in table.fields:
+                if fname in fields:
                     event_start = fname
                     break
             if event_start and not event_end:
                 for fname in ("end_date",):
-                    if fname in table.fields:
+                    if fname in fields:
                         event_end = fname
                         break
         if not event_start:

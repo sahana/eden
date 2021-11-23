@@ -3859,6 +3859,23 @@ Thank you"""
             return result
         s3.prep = custom_prep
 
+        # Custom postp
+        #standard_postp = s3.postp
+        def custom_postp(r, output):
+            # Call standard postp (doesn't exist)
+            #if callable(standard_postp):
+            #    output = standard_postp(r, output)
+
+            if r.method == None and isinstance(output, dict):
+                try:
+                    # Launch Wizard, not Create form
+                    output["buttons"]["add_btn"]["_href"] = URL(args = "wizard")
+                except KeyError:
+                    pass
+
+            return output
+        s3.postp = custom_postp
+
         return attr
 
     settings.customise_inv_recv_controller = customise_inv_recv_controller
@@ -4020,7 +4037,8 @@ Thank you"""
                 s3.crud_strings["doc_document"].label_create = T("File Signed Document")
                 field = current.s3db.doc_document.name
                 field.label = T("Type")
-                document_type_opts = {"REQ": T("Requisition"),
+                document_type_opts = {"PL": T("Picking List"),
+                                      "REQ": T("Requisition"),
                                       "WB": T("Waybill"),
                                       }
                 #from gluon import IS_IN_SET
@@ -4047,6 +4065,23 @@ Thank you"""
 
             return result
         s3.prep = custom_prep
+
+        # Custom postp
+        #standard_postp = s3.postp
+        def custom_postp(r, output):
+            # Call standard postp (doesn't exist)
+            #if callable(standard_postp):
+            #    output = standard_postp(r, output)
+
+            if r.method == None and isinstance(output, dict):
+                try:
+                    # Launch Wizard, not Create form
+                    output["buttons"]["add_btn"]["_href"] = URL(args = "wizard")
+                except KeyError:
+                    pass
+
+            return output
+        s3.postp = custom_postp
 
         return attr
 

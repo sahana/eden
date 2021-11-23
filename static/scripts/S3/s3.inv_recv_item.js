@@ -105,7 +105,18 @@ $(document).ready(function() {
             }
 
             if (first) {
-                 // Don't clear for first run of update forms
+                // Don't clear for first run of update forms
+                // Set sendQuantity and recvQuantity
+                sendQuantity = QuantityField.val();
+                if (sendQuantity) {
+                    sendQuantity = parseFloat(sendQuantity);
+                }
+                recvQuantity = RecvQuantityField.val();
+                if (recvQuantity) {
+                    recvQuantity = parseFloat(recvQuantity);
+                } else {
+                    recvQuantity = sendQuantity;
+                }
             } else {
                 update = false;
                 QuantityField.val('');
@@ -237,6 +248,7 @@ $(document).ready(function() {
                 sendQuantity = parseFloat(sendQuantity);
                 recvQuantity = RecvQuantityField.val();
                 if (recvQuantity) {
+                    recvQuantity = parseFloat(recvQuantity);
                     if (recvQuantity > sendQuantity) {
                         // @ToDo: i18n
                         message = 'Quantity Sent increased to Quantity Received';

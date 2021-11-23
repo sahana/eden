@@ -4679,6 +4679,10 @@ class InventoryStockCardModel(S3Model):
                                               required = True,
                                               ),
                      inv_itn_field()(),
+                     self.org_organisation_id("supply_org_id",
+                                              label = T("Supplier/Donor"),
+                                              ondelete = "SET NULL",
+                                              ),
                      s3_date("expiry_date",
                              label = T("Expiry Date"),
                              represent = inv_expiry_date_represent,
@@ -5106,11 +5110,8 @@ class InventoryTrackingModel(S3Model):
 
         # Components
         add_components(tablename,
-
                        inv_track_item = "send_id",
-
                        inv_send_package = "send_id",
-
                        # Requisitions
                        inv_send_req = "send_id",
                        inv_req = {"link": "inv_send_req",
@@ -5456,9 +5457,7 @@ class InventoryTrackingModel(S3Model):
 
         # Components
         add_components(tablename,
-
                        inv_track_item = "recv_id",
-
                        # Requisitions
                        inv_recv_req = "recv_id",
                        inv_req = {"link": "inv_recv_req",
@@ -7848,6 +7847,9 @@ def inv_package_labels(r, **attr):
 
         This is exported in XLS format to be user-editable
         - we don't have the width x length x height
+
+        @ToDo: Add Number of Packages!
+        @ToDo: Handle multiple Item Types/Package
     """
 
     from s3.codecs.xls import S3XLS
@@ -8018,7 +8020,7 @@ def inv_package_labels(r, **attr):
         send_package_id = send_package.id
         package_items = items.find(lambda row: row["inv_send_package_item.send_package_id"] == send_package_id)
 
-        # @ToDo: Handle Multiple Items on a Pallet
+        # @ToDo: Handle Multiple Item Types on a Pallet
         item = package_items.first()
 
         # Set column Widths
@@ -8667,6 +8669,16 @@ def inv_recv_controller():
                 table.file.required = True
                 table.url.readable = table.url.writable = False
                 table.date.readable = table.date.writable = False
+                if r.method == "wizard":
+                    table.name.comment = A(ICON("print"),
+                                           " ",
+                                           settings.get_inv_recv_shortname(),
+                                           _href = URL(args = [record.id,
+                                                               "form",
+                                                               ]
+                                                       ),
+                                           _class = "action-btn",
+                                           )
 
             elif component_name == "track_item":
 
@@ -8888,18 +8900,27 @@ def inv_recv_controller():
                     crud_form = set_track_attr(TRACK_STATUS_PREPARING)
                     tracktable.status.readable = False
 
-                list_fields = [#"status",
-                               "item_id",
-                               "item_pack_id",
-                               "quantity",
-                               "recv_quantity",
-                               "recv_bin.layout_id",
-                               "owner_org_id",
-                               "supply_org_id",
-                               ]
-                if track_pack_values:
-                    list_fields.insert(4, "pack_value")
-                    list_fields.insert(4, "currency")
+                if page == "bins":
+                    list_fields = ["item_id",
+                                   "recv_quantity",
+                                   "recv_bin.layout_id",
+                                   ]
+                else:
+                    list_fields = [#"status",
+                                   "item_id",
+                                   "item_pack_id",
+                                   "quantity",
+                                   "recv_quantity",
+                                   "recv_bin.layout_id",
+                                   "owner_org_id",
+                                   "supply_org_id",
+                                   ]
+                    if track_pack_values:
+                        list_fields.insert(4, "pack_value")
+                        list_fields.insert(4, "currency")
+                    if page == "items":
+                        # Bins are handled on a separate step
+                        list_fields.remove("recv_bin.layout_id")
 
                 if status:
                     # Lock the record so it can't be fiddled with
@@ -12628,6 +12649,9 @@ def inv_rheader(r):
                                TH("%s: " % T("Stock Minimum")),
                                stock_minimum,
                                ),
+                            TR(TH("%s: " % table.supply_org_id.label),
+                               table.supply_org_id.represent(record.supply_org_id),
+                               ),
                             ),
                       #rheader_tabs,
                       )
@@ -12941,6 +12965,16 @@ def inv_send_controller():
                 table.file.required = True
                 table.url.readable = table.url.writable = False
                 table.date.readable = table.date.writable = False
+                if r.method == "wizard":
+                    table.name.comment = A(ICON("print"),
+                                           " ",
+                                           settings.get_inv_send_shortname(),
+                                           _href = URL(args = [record.id,
+                                                               "form",
+                                                               ]
+                                                       ),
+                                           _class = "action-btn",
+                                           )
 
             elif cname == "send_package":
 
@@ -15330,6 +15364,7 @@ def inv_stock_card_update(inv_item_ids,
                             iitable.site_id,
                             iitable.item_id,
                             iitable.item_source_no,
+                            iitable.supply_org_id,
                             iitable.expiry_date,
                             iitable.item_pack_id,
                             iitable.quantity,
@@ -15375,12 +15410,14 @@ def inv_stock_card_update(inv_item_ids,
         site_id = inv_item.site_id
         item_id = inv_item.item_id
         item_source_no = inv_item.item_source_no
+        supply_org_id = inv_item.supply_org_id
         expiry_date = inv_item.expiry_date
 
         # Search for existing Stock Card
         query = (sctable.site_id == site_id) & \
                 (sctable.item_id == item_id) & \
                 (sctable.item_source_no == item_source_no) & \
+                (sctable.supply_org_id == supply_org_id) & \
                 (sctable.expiry_date == expiry_date)
 
         exists = db(query).select(sctable.id,
@@ -15394,6 +15431,7 @@ def inv_stock_card_update(inv_item_ids,
                                      item_id = item_id,
                                      item_pack_id = packs_by_item[item_id],
                                      item_source_no = item_source_no,
+                                     supply_org_id = supply_org_id,
                                      expiry_date = expiry_date,
                                      )
             onaccept = s3db.get_config("inv_stock_card", "create_onaccept")
@@ -16469,7 +16507,7 @@ class inv_Recv_Wizard(S3CrudWizard):
         super(inv_Recv_Wizard, self).__init__()
 
         self.pages = [{"page": "recv",
-                       "label": T("Basic info"),
+                       "label": T("Incoming Shipment"),
                        },
                       {"page": "items",
                        "label": T("Add Items"),
@@ -16481,7 +16519,9 @@ class inv_Recv_Wizard(S3CrudWizard):
                        "component": "track_item",
                        },
                       {"page": "document",
-                       "label": T("Upload GRN"),
+                       "label": "%s %s" % (T("Upload"),
+                                           current.deployment_settings.get_inv_recv_shortname(),
+                                           ),
                        "component": "document",
                        },
                       {"page": "process",
@@ -16494,13 +16534,17 @@ class inv_Recv_Wizard(S3CrudWizard):
     
         if r.record and r.record.status != SHIP_STATUS_IN_PROCESS:
             # Cannot use the Wizard
-            redirect(r.url(method = None))
+            redirect(r.url(method = "",
+                           component = "",
+                           vars = {},
+                           ))
 
         current_page = r.get_vars.get("page")
         if current_page == "process":
             # Return a button to Process the Incoming Shipment
             T = current.T
-            current.response.s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_rheader.js" % r.application)
+            # Script already added as rheader being run, even though not displayed in page
+            #current.response.s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_rheader.js" % r.application)
             next_btn = A(T("Finish"),
                          _href = URL(c = "inv",
                                      f = "recv",
@@ -16511,7 +16555,9 @@ class inv_Recv_Wizard(S3CrudWizard):
                          _id = "recv-process",
                          _class = "crud-submit-button button small next",
                          )
-            return {"form": P(T("Clicking Finish will add all the Items from the Shipment to the Inventory.")),
+            return {"form": DIV(P(T("Clicking Finish will add all the Items from the Shipment to the Inventory.")),
+                                P(T("This step cannot be reversed.")),
+                                ),
                     "controls": self._controls(r, next_btn=next_btn),
                     "header": self._header(r),
                     }
@@ -16825,7 +16871,7 @@ class inv_Send_Wizard(S3CrudWizard):
         super(inv_Send_Wizard, self).__init__()
 
         self.pages = [{"page": "send",
-                       "label": T("Basic info"),
+                       "label": T("Outgoing Shipment"),
                        },
                       {"page": "items",
                        "label": T("Add Items"),
@@ -16837,7 +16883,9 @@ class inv_Send_Wizard(S3CrudWizard):
                        "component": "send_package",
                        },
                       {"page": "document",
-                       "label": T("Upload WB"),
+                       "label": "%s %s" % (T("Upload"),
+                                           current.deployment_settings.get_inv_send_shortname(),
+                                           ),
                        "component": "document",
                        },
                       {"page": "process",
@@ -16850,13 +16898,17 @@ class inv_Send_Wizard(S3CrudWizard):
     
         if r.record and r.record.status != SHIP_STATUS_IN_PROCESS:
             # Cannot use the Wizard
-            redirect(r.url(method = None))
+            redirect(r.url(method = "",
+                           component = "",
+                           vars = {},
+                           ))
 
         current_page = r.get_vars.get("page")
         if current_page == "process":
             # Return a button to Process the Outgoing Shipment
             T = current.T
-            current.response.s3.scripts.append("/%s/static/scripts/S3/s3.inv_send_rheader.js" % r.application)
+            # Script already added as rheader being run, even though not displayed in page
+            #current.response.s3.scripts.append("/%s/static/scripts/S3/s3.inv_send_rheader.js" % r.application)
             next_btn = A(T("Finish"),
                          _href = URL(c = "inv",
                                      f = "send",
@@ -16867,7 +16919,9 @@ class inv_Send_Wizard(S3CrudWizard):
                          _id = "send-process",
                          _class = "crud-submit-button button small next",
                          )
-            return {"form": P(T("Clicking Finish will remove all the Items in the Shipment from the Inventory.")),
+            return {"form": DIV(P(T("Clicking Finish will remove all the Items in the Shipment from the Inventory.")),
+                                P(T("This step cannot be reversed.")),
+                                ),
                     "controls": self._controls(r, next_btn=next_btn),
                     "header": self._header(r),
                     }

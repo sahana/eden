@@ -2757,7 +2757,7 @@ def supply_item_controller():
                                "url": URL(c = "inv",
                                           f = "stock_card",
                                           args = ["[id]",
-                                                  "stock_log",
+                                                  "log",
                                                   ],
                                           ),
                                "_class": "action-btn",

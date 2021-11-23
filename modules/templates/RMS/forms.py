@@ -398,7 +398,7 @@ def grn(r, **attr):
         flight = ""
         reg = record.registration_no or ""
         vessel = ""
-    #elif transport_type == "Hand":
+    #elif transport_type == "Hand": or Rail
     else:
         awb = ""
         cmr = ""
@@ -502,7 +502,7 @@ def grn(r, **attr):
                    ("BACKGROUND", (0, 5), (0, 5), lightgrey),
                    ("BACKGROUND", (2, 5), (3, 5), lightgrey),
                    ("BACKGROUND", (5, 5), (6, 5), lightgrey),
-                   ("SPAN", (0, 7), (0, 10)),
+                   ("SPAN", (0, 7), (0, 11)),
                    ("SPAN", (5, 7), (6, 7)),
                    ("SPAN", (5, 8), (6, 8)),
                    ("SPAN", (5, 9), (6, 9)),
@@ -512,15 +512,16 @@ def grn(r, **attr):
                    ("SPAN", (7, 8), (8, 8)),
                    ("SPAN", (3, 9), (4, 9)),
                    ("SPAN", (7, 9), (8, 9)),
-                   ("BACKGROUND", (0, 7), (1, 10), lightgrey),
+                   ("BACKGROUND", (0, 7), (1, 11), lightgrey),
                    ("BACKGROUND", (5, 7), (6, 9), lightgrey),
                    ("SPAN", (3, 10), (4, 10)),
-                   ("SPAN", (0, 12), (3, 12)),
-                   ("SPAN", (4, 12), (6, 12)),
-                   ("SPAN", (1, 13), (2, 13)),
-                   ("SPAN", (7, 12), (7, 13)),
-                   ("SPAN", (8, 12), (8, 13)),
-                   ("BACKGROUND", (0, 12), (8, 13), lightgrey),
+                   ("SPAN", (3, 11), (4, 11)),
+                   ("SPAN", (0, 13), (3, 13)),
+                   ("SPAN", (4, 13), (6, 13)),
+                   ("SPAN", (1, 14), (2, 14)),
+                   ("SPAN", (7, 13), (7, 15)),
+                   ("SPAN", (8, 13), (8, 15)),
+                   ("BACKGROUND", (0, 13), (8, 14), lightgrey),
                    ]
     sappend = table_style.append
 
@@ -535,8 +536,7 @@ def grn(r, **attr):
               "",
               ]
 
-    content = [
-               # Row 0
+    content = [# Row 0
                [logo,
                 "",
                 "",
@@ -637,8 +637,8 @@ def grn(r, **attr):
                 ],
                # Row 10
                ["",
-                Paragraph("Handcarried by", style_8_right),
-                checked if transport_type == "Hand" else checkbox,
+                Paragraph(str(B("Rail")), style_right),
+                checked if transport_type == "Rail" else checkbox,
                 Paragraph("%s: %s" % (B("Waybill n°"),
                                       wb,
                                       ), style),
@@ -649,8 +649,19 @@ def grn(r, **attr):
                 "",
                 ],
                # Row 11
-               spacer,
+               ["",
+                Paragraph("Handcarried by", style_8_right),
+                checked if transport_type == "Hand" else checkbox,
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                ],
                # Row 12
+               spacer,
+               # Row 13
                [Paragraph("%s / %s" % (B("GOODS RECEIVED"),
                                        I("Marchandises reçues"),
                                        ), style_7_center),
@@ -668,7 +679,7 @@ def grn(r, **attr):
                                          I("Réclamation"),
                                          ), style_7_center),
                 ],
-               # Row 13
+               # Row 14
                [Paragraph("%s<br/>%s" % (B("ITEMS CODE"),
                                          I("Description générale et remarques"),
                                          ), style_6_center),
@@ -677,11 +688,11 @@ def grn(r, **attr):
                                          ), style_6_center),
                 "",
                 Paragraph(str(B("COMMODITY TRACKING N° OR DONOR")), style_7_center),
-                Paragraph("%s<br/>%s" % (B("NB. OF UNITS"),
-                                         I("nb. colis"),
-                                         ), style_6_center),
                 Paragraph("%s<br/>%s" % (B("UNIT TYPE/WEIGHT"),
                                          I("type d'unité/poids"),
+                                         ), style_6_center),
+                Paragraph("%s<br/>%s" % (B("NB. OF UNITS"),
+                                         I("nb. colis"),
                                          ), style_6_center),
                 Paragraph("%s<br/>%s" % (B("WEIGHT (kg)"),
                                          I("Total (kg)"),
@@ -699,6 +710,7 @@ def grn(r, **attr):
                   0.21 * cm,
                   1.06 * cm,
                   0.25 * cm,
+                  0.56 * cm,
                   0.56 * cm,
                   0.56 * cm,
                   0.56 * cm,
@@ -725,7 +737,7 @@ def grn(r, **attr):
                              itable.weight,
                              )
 
-    rowNo = 14
+    rowNo = 15
     for row in items:
         item = row["supply_item"]
         pack = row["supply_item_pack"]
@@ -745,8 +757,8 @@ def grn(r, **attr):
                     Paragraph(s3_truncate(item.name, 30), style_6_center),
                     "",
                     Paragraph(track_item.item_source_no or NONE, style_7_center),
-                    Paragraph(str(quantity), style_7_center),
                     Paragraph(pack_details, style_7_center),
+                    Paragraph(str(quantity), style_7_center),
                     Paragraph(str(total_weight), style_7_center),
                     "",
                     checkbox,
@@ -1100,10 +1112,11 @@ def waybill(r, **attr):
                    ("SPAN", (9, 7), (10, 7)),
                    ("BACKGROUND", (3, 7), (5, 7), lightgrey),
                    ("BACKGROUND", (12, 7), (12, 7), lightgrey),
-                   ("SPAN", (1, 9), (2, 9)),
-                   ("SPAN", (7, 9), (9, 9)),
-                   ("SPAN", (10, 9), (13, 9)),
-                   ("BACKGROUND", (0, 9), (13, 9), lightgrey),
+                   ("BACKGROUND", (12, 8), (12, 8), lightgrey),
+                   ("SPAN", (1, 10), (2, 10)),
+                   ("SPAN", (7, 10), (9, 10)),
+                   ("SPAN", (10, 10), (13, 10)),
+                   ("BACKGROUND", (0, 10), (13, 10), lightgrey),
                    ]
     #sappend = table_style.append
 
@@ -1262,11 +1275,28 @@ def waybill(r, **attr):
                 "",
                 "",
                 Paragraph(delivery_date, style_8_center),
+                Paragraph(str(B("RAIL")), style_8_center),
+                checked if transport_type == "Rail" else checkbox,
+                ],
+               # Row 8
+               ["",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
                 Paragraph(str(B("HAND")), style_8_center),
                 checked if transport_type == "Hand" else checkbox,
                 ],
-               spacer,
                # Row 9
+               spacer,
+               # Row 10
                [Paragraph("ITEM DESCRIPTION", style_7_center),
                 Paragraph("DONOR", style_7_center),
                 "",
@@ -1299,6 +1329,7 @@ def waybill(r, **attr):
                   0.64 * cm,
                   0.64 * cm,
                   0.64 * cm,
+                  0.64 * cm,
                   0.21 * cm,
                   1.06 * cm,
                   ]
@@ -1313,12 +1344,12 @@ def waybill(r, **attr):
     query = (ttable.send_id == record.id) & \
             (ttable.item_id == itable.id) & \
             (ttable.item_pack_id == ptable.id)
-    left = rtable.on((rtable.id == ritable.req_id) & \
-                     (ritable.id == ttable.req_item_id)
-                     )
+    left = [ritable.on(ritable.id == ttable.req_item_id),
+            rtable.on(rtable.id == ritable.req_id),
+            ]
     items = db(query).select(itable.code,
                              itable.name,
-                             ttable.item_source_no,
+                             ttable.supply_org_id,
                              ttable.quantity,
                              ptable.name,
                              ptable.quantity,
@@ -1329,10 +1360,17 @@ def waybill(r, **attr):
                              left = left,
                              )
 
+    org_represent = s3db.org_OrganisationRepresent(show_link = False,
+                                                   parent = False,
+                                                   acronym = False,
+                                                   )
+    # Lookup in bulk (results cached in Class)
+    org_represent.bulk([row["inv_track_item.supply_org_id"] for row in items])
+
     all_quantity = 0
     all_weight = 0
-    #all_volume = 0
-    rowNo = 10
+    all_volume = 0
+    rowNo = 11
     for row in items:
         item = row["supply_item"]
         pack = row["supply_item_pack"]
@@ -1355,12 +1393,13 @@ def waybill(r, **attr):
         if volume:
             pack_volume = volume * pack.quantity
             total_volume = pack_volume * quantity
-            #all_volume += total_volume
+            all_volume += total_volume
             total_volume = round(total_volume, 2)
         else:
             total_volume = NONE
+        donor = org_represent(track_item.supply_org_id)
         body_row = [Paragraph(s3_truncate(item.name, 30), style_6_center),
-                    Paragraph(track_item.item_source_no or NONE, style_7_center),
+                    Paragraph(donor, style_7_center),
                     "",
                     Paragraph(str(quantity), style_7_center),
                     Paragraph(pack_details, style_7_center),
@@ -1395,13 +1434,13 @@ def waybill(r, **attr):
                    0.42 * cm,
                    ]
 
-    table_style += [("SPAN", (0, rowNo), (2, rowNo)),
-                    ("SPAN", (3, rowNo), (5, rowNo)),
-                    ("SPAN", (6, rowNo), (13, rowNo)),
+    table_style += [("SPAN", (0, rowNo), (3, rowNo)),
+                    ("SPAN", (4, rowNo), (6, rowNo)),
+                    ("SPAN", (7, rowNo), (13, rowNo)),
                     ("BACKGROUND", (0, rowNo), (13, rowNo), lightgrey),
-                    ("SPAN", (0, rowNo + 1), (2, rowNo + 3)),
-                    ("SPAN", (6, rowNo + 1), (13, rowNo + 3)),
-                    ("SPAN", (3, rowNo + 2), (5, rowNo + 3)),
+                    ("SPAN", (0, rowNo + 1), (3, rowNo + 3)),
+                    ("SPAN", (7, rowNo + 1), (13, rowNo + 3)),
+                    ("SPAN", (3, rowNo + 2), (6, rowNo + 3)),
                     ("SPAN", (0, rowNo + 5), (1, rowNo + 5)),
                     ("SPAN", (3, rowNo + 5), (4, rowNo + 5)),
                     ("SPAN", (5, rowNo + 5), (6, rowNo + 5)),
@@ -1442,6 +1481,7 @@ def waybill(r, **attr):
                                         ), style_8_center),
                  "",
                  "",
+                 "",
                  Paragraph(str(B("TOTAL")), style_8_center),
                  "",
                  "",
@@ -1454,15 +1494,14 @@ def waybill(r, **attr):
                  "",
                  "",
                  "",
-                 "",
                  ],
                 [Paragraph(record.comments or "", style_8_center),
                  "",
                  "",
+                 "",
                  Paragraph(str(B(round(all_quantity, 2))), style_8_center),
-                 "",
                  Paragraph(str(B(round(all_weight, 2))), style_8_center),
-                 "",
+                 Paragraph(str(B(round(all_volume, 2))), style_8_center),
                  "",
                  "",
                  "",
