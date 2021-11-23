@@ -1005,7 +1005,7 @@ class IS_ONE_OF_EMPTY(Validator):
 
             filter_opts = self.filter_opts
 
-            if filter_opts:
+            if filter_opts is not None:
                 if None in filter_opts:
                     # Needs special handling (doesn't show up in 'belongs')
                     _query = (table[filterby] == None)
@@ -1136,7 +1136,7 @@ class IS_ONE_OF_EMPTY(Validator):
         filterby = self.filterby
         if filterby and filterby in table:
             filter_opts = self.filter_opts
-            if filter_opts:
+            if filter_opts is not None:
                 if None in filter_opts:
                     # Needs special handling (doesn't show up in 'belongs')
                     filter_opts_q = (table[filterby] == None)

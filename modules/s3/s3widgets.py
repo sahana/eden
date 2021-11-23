@@ -9737,6 +9737,7 @@ class ICON(I):
             "tasks": "fa-tasks",
             "th": "fa-th",
             "time": "fa-time",
+            "train": "fa-train",
             "truck": "fa-truck",
             "twitter": "fa-twitter",
             "undo": "fa-undo",

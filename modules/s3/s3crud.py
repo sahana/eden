@@ -1559,7 +1559,7 @@ class S3CRUD(S3Method):
                                                )
             displayrows = totalrows
 
-            if not dt.data:
+            #if not dt.data:
                 # Empty table - or just no match?
                 #if dt.empty:
                 #    datatable = DIV(self.crud_string(resource.tablename,
@@ -1574,10 +1574,12 @@ class S3CRUD(S3Method):
                 # when Ajax (un-)filtering produces exportable table contents:
                 #s3.no_formats = True
 
-                if r.component and "showadd_btn" in output:
-                    # Hide the list and show the form by default
-                    del output["showadd_btn"]
-                    datatable = ""
+                # Good idea, but has got lost in re-factors (showadd_btn now added later):
+                # s3.cancel also needs adjusting for this case to avoid losing access to the form
+                #if r.component and "showadd_btn" in output:
+                #    # Hide the list and show the form by default
+                #    del output["showadd_btn"]
+                #    datatable = ""
 
             # Always show table, otherwise it can't be Ajax-filtered
             # @todo: need a better algorithm to determine total_rows
@@ -1586,7 +1588,9 @@ class S3CRUD(S3Method):
             #        of EmptyTable)
             dtargs["dt_pagination"] = dt_pagination
             dtargs["dt_pageLength"] = display_length
-            dtargs["dt_base_url"] = r.url(method="", vars={})
+            dtargs["dt_base_url"] = r.url(method = "",
+                                          vars = {},
+                                          )
             dtargs["dt_permalink"] = r.url()
             datatable = dt.html(totalrows,
                                 displayrows,

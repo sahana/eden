@@ -1,5 +1,5 @@
 /**
- * Used by inv_send_rheader for action buttons
+ * Used by inv_send_rheader for action buttons & by inv_Send_Wizard 
  * - handle confirmation
  * - send POST requests not GET
  */

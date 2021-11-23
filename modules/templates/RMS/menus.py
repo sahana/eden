@@ -320,6 +320,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                         M("Reports", link=False)(
                             M("Inventory", f="inv_item", m="summary"),
+                            M("Donor Report", f="inv_item", m="report",
+                              vars = {"rows": "item_id",
+                                      "cols": "supply_org_id",
+                                      "fact": "sum(quantity)",
+                                      },
+                              ),
                             M("Stock Movements", f="inv_item", m="grouped",
                               vars = {"report": "movements"},
                               ),

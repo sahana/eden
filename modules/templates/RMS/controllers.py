@@ -658,6 +658,7 @@ class inv_dashboard(S3CustomController):
         transport_opts = {"Air": ICON("plane"),
                           "Sea": ICON("ship"),
                           "Road": ICON("truck"),
+                          "Rail": ICON("truck"),
                           "Hand": ICON("hand-grab"),
                           }
         transport_opts_get = transport_opts.get

@@ -23,9 +23,12 @@
  <div class='medium-9 large-8 medium-pull-3 large-pull-4 columns'>
  </div>
 </div>
-<div id='table-container' class='small-12 columns'>
+<div class='row'>
+ <div id='table-container' class='small-12 columns'>
  {{=items}}
+ </div>
 </div>
+{{include "dataTables.html"}}
 {{if r.http == "POST" or not hide_listadd:}}
 {{script = '''$('#list-add').show()
 $('#show-add-btn').hide()'''}}
@@ -39,3 +42,8 @@ $('#show-add-btn').hide()'''}}
   </div>
  </div>
 </div>{{pass}}
+<div class='row'>
+ <div class="small-12 columns">
+ {{try:}}{{=controls}}{{except:}}{{pass}}
+ </div>
+</div>

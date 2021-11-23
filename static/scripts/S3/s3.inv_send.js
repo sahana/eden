@@ -78,32 +78,32 @@ $(document).ready(function() {
             switch (transportType) {
                 case 'Air':
                     $('#inv_send_transport_ref__row').show();
-                    $('#inv_send_transport_ref__label').html(i18n.AWB);
+                    $('#inv_send_transport_ref__label').html(i18n.AWB + ':');
                     $('#inv_send_registration_no__row').show();
-                    $('#inv_send_registration_no__label').html(i18n.flight);
+                    $('#inv_send_registration_no__label').html(i18n.flight + ':');
                     break;
                 case 'Sea':
                     $('#inv_send_transport_ref__row').show();
-                    $('#inv_send_transport_ref__label').html(i18n.BL);
+                    $('#inv_send_transport_ref__label').html(i18n.BL + ':');
                     $('#inv_send_registration_no__row').show();
-                    $('#inv_send_registration_no__label').html(i18n.vessel);
+                    $('#inv_send_registration_no__label').html(i18n.vessel + ':');
                     break;
                 case 'Road':
                     $('#inv_send_transport_ref__row').show();
-                    $('#inv_send_transport_ref__label').html(i18n.ref);
+                    $('#inv_send_transport_ref__label').html(i18n.CMR + ':');
                     $('#inv_send_registration_no__row').show();
-                    $('#inv_send_registration_no__label').html(i18n.vehicle);
+                    $('#inv_send_registration_no__label').html(i18n.vehicle + ':');
                     break;
                 case 'Hand':
                     $('#inv_send_transport_ref__row').hide();
                     $('#inv_send_registration_no__row').hide();
                     break;
                 default:
-                    // Not selected
+                    // Not selected or Rail
                     $('#inv_send_transport_ref__row').show();
-                    $('#inv_send_transport_ref__label').html(i18n.ref);
+                    $('#inv_send_transport_ref__label').html(i18n.ref + ':');
                     $('#inv_send_registration_no__row').show();
-                    $('#inv_send_registration_no__label').html(i18n.reg);
+                    $('#inv_send_registration_no__label').html(i18n.reg + ':');
             }
         };
 

@@ -37,7 +37,7 @@ from gluon.tools import redirect
 from .s3crud import crud_button, embed_component
 from .s3forms import S3SQLDefaultForm
 from .s3rest import S3Method
-from .s3utils import s3_redirect_default
+from .s3utils import s3_redirect_default, s3_str
 
 __all__ = ("S3Wizard",
            "S3CrudWizard",
@@ -60,10 +60,49 @@ class S3Wizard(S3Method):
         if not wizard:
             s3_redirect_default(r.url(method = ""))
 
-        page = r.get_vars.get("page")
-        if not page:
+        get_vars = r.get_vars
+        get_vars_get = get_vars.get
+
+        delete = get_vars_get("delete")
+        if delete:
+            component = r.component
+            if component:
+                # Delete a Component record
+                tablename = component.tablename
+                dresource = current.s3db.resource(tablename, id=delete)
+
+                # Deleting in this resource allowed at all?
+                deletable = dresource.get_config("deletable", True)
+                if not deletable:
+                    r.error(403, current.ERROR.NOT_PERMITTED)
+
+                # Permitted to delete this record?
+                authorised = current.auth.s3_has_permission("delete",
+                                                            dresource.table,
+                                                            record_id = delete)
+                if not authorised:
+                    r.unauthorised()
+
+                # Delete it
+                numrows = dresource.delete(format = r.representation)
+                if numrows > 1:
+                    message = "%s %s" % (numrows,
+                                         current.T("records deleted"))
+                elif numrows == 1:
+                    message = self.crud_string(tablename,
+                                               "msg_record_deleted")
+                else:
+                    r.error(404, dresource.error)
+                del get_vars["delete"]
+                current.session.confirmation = message
+                redirect(URL(args = r.args,
+                             vars = get_vars,
+                             ))
+
+        current_page = get_vars_get("page")
+        if not current_page:
             # Use the 1st page
-            r.get_vars["page"] = wizard.pages[0]["page"]
+            get_vars["page"] = current_page = wizard.pages[0]["page"]
 
         # Allow the Wizard class access to the Method methods
         wizard.method = self
@@ -105,46 +144,82 @@ class S3CrudWizard:
         else:
             # Assume HTML
             output = self._select(r, **attr)
-            output["form"] = self._form(r)
+            output["form"] = self._form(r, output)
             output["header"] = self._header(r)
+
+            if "items" in output:
+                # Add Back / Next / Cancel buttons
+                output["controls"] = self._controls(r)
 
         return output
 
     # -------------------------------------------------------------------------
-    def _form(self, r):
+    def _form(self, r, output):
         """
             Produce the correct form for the current page
             - includes a simplified/merged version of S3CRUD.create / S3CRUD.update
         """
 
-        pages = self.pages
-        current_page = r.get_vars.get("page")
-
         method = self.method
         _config = method._config
-        resource = method.resource
         component = r.component
-        s3 = current.response.s3
-
-        sqlform = _config("crud_form", S3SQLDefaultForm())
 
         if component:
             update = r.component_id
         else:
             update = r.id
 
+        if update:
+            # Update form
+            if not _config("editable", True):
+                return None
+            if not method._permitted("update"):
+                r.unauthorised()
+            record_id = method.record_id
+            message = method.crud_string(method.tablename, "msg_record_modified")
+            onvalidation = _config("update_onvalidation") or \
+                           _config("onvalidation")
+            onaccept = _config("update_onaccept") or \
+                       _config("onaccept")
+        else:
+            # Create form
+            if not _config("insertable", True):
+                return None
+            if not method._permitted("create"):
+                r.unauthorised()
+            record_id = None
+            message = method.crud_string(method.tablename, "msg_record_created")
+            onvalidation = _config("create_onvalidation") or \
+                           _config("onvalidation")
+            onaccept = _config("create_onaccept") or \
+                       _config("onaccept")
+
+        pages = self.pages
+        current_page = r.get_vars.get("page")
+
+        resource = method.resource
+        sqlform = _config("crud_form", S3SQLDefaultForm())
+        s3 = current.response.s3
+
         # Component join
         link = None
         if component:
-            # JS Cancel (no redirect with embedded form)
-            s3.cancel = {"hide": "list-add",
-                         "show": "show-add-btn",
-                         }
+            if r.component_id or output.get("showadd_btn") == None:
+                # Go back to List View
+                s3.cancel = r.url(component_id = 0,
+                                  method = "wizard",
+                                  )
+            else:
+                # JS Cancel (no redirect with embedded form)
+                s3.cancel = {"hide": "list-add",
+                             "show": "show-add-btn",
+                             }
 
             record = r.record
+            table = resource.table
+
             if not update:
                 defaults = component.get_defaults(record)
-                table = resource.table
 
             if resource.link is None:
                 if not update:
@@ -186,41 +261,20 @@ class S3CrudWizard:
         else:
             # Back / Next [or Finish] / Cancel buttons for Wizard
             # @ToDo: Also add these to the Component View (underneath Table)
-            s3.cancel = self.cancel or r.url(method = "")          
+            s3.cancel = self.cancel or r.url(method = "",
+                                             vars = None,
+                                             )
             settings = s3.crud
             settings.submit_button = "Back"
             if current_page == pages[-1]["page"]:
-                label = "Finish"
+                NEXT = "Finish"
             else:
-                label = "Next"
+                NEXT = "Next"
             settings.custom_submit = [("next",
-                                       label,
+                                       NEXT,
                                        "small button next",
                                        ),
                                       ]
-
-        if update:
-            # Update form
-            if not _config("editable", True) or \
-               not method._permitted("update"):
-                r.unauthorised()
-            record_id = method.record_id
-            message = method.crud_string(method.tablename, "msg_record_modified")
-            onvalidation = _config("update_onvalidation") or \
-                           _config("onvalidation")
-            onaccept = _config("update_onaccept") or \
-                       _config("onaccept")
-        else:
-            # Create form
-            if not _config("insertable", True) or \
-               not method._permitted("create"):
-                r.unauthorised()
-            record_id = None
-            message = method.crud_string(method.tablename, "msg_record_created")
-            onvalidation = _config("create_onvalidation") or \
-                           _config("onvalidation")
-            onaccept = _config("create_onaccept") or \
-                       _config("onaccept")  
 
         form = sqlform(request = r,
                        resource = resource,
@@ -260,7 +314,8 @@ class S3CrudWizard:
 
         T = current.T
 
-        current_page = r.get_vars.get("page")
+        get_vars = r.get_vars
+        current_page = get_vars.get("page")
         pages = self.pages
 
         steps = []
@@ -289,18 +344,23 @@ class S3CrudWizard:
                        ))
             step += 1
 
-        # Configure Next
         if r.http == "POST":
-            next_vars = dict(r.get_vars)
+            # Configure Next
+            next_vars = dict(get_vars)
             if "next" in r.post_vars:
-                next_vars.update(page = _next)
-                component = pages[this + 1].get("component")
+                next_vars["page"] = _next
+                component = pages[this + 1].get("component", "")
             else:
-                next_vars.update(page = _back)
-                component = pages[this - 1].get("component")
+                if r.component:
+                    component = pages[this].get("component", "")
+                else:
+                    next_vars["page"] = _back
+                    component = pages[this - 1].get("component", "")
             record_id = r.id or self.new_id
             self.method.next = r.url(id = record_id,
                                      component = component,
+                                     component_id = 0,
+                                     method = "wizard",
                                      vars = next_vars,
                                      )
 
@@ -317,7 +377,7 @@ class S3CrudWizard:
             Provide a list of Component Items
         """
 
-        if not r.component:
+        if r.component_id or not r.component:
             # No List View
             return {}
 
@@ -326,20 +386,103 @@ class S3CrudWizard:
         if r.representation == "aadata":
             return output
 
-        method = self.method
-        resource = method.resource
-        if resource.get_config("insertable", True):
-            # Add a hidden add-form and a button to activate it
-            tablename = resource.tablename
-            output["addtitle"] = method.crud_string(tablename, "label_create")
+        resource = self.method.resource
+        if resource.get_config("insertable", True) and "showadd_btn" not in output:
+            # Add a button to activate the add form which gets hidden in the view
             output["showadd_btn"] = crud_button(None,
-                                                tablename = tablename,
+                                                tablename = resource.tablename,
                                                 name = "label_create",
                                                 icon = "add",
                                                 _id = "show-add-btn",
                                                 )
-
+ 
         return output
+
+    # -------------------------------------------------------------------------
+    def _controls(self, r, next_btn=None):
+        """
+            Add Back / Next / Cancel buttons
+            - for _select() & custom pages
+        """
+
+        T = current.T
+
+        get_vars = r.get_vars
+        current_page = get_vars.get("page")
+        pages = self.pages
+ 
+        step = 1
+        _back = None
+        _next = None
+        past = True
+        for page in pages:
+            _page = page["page"]
+            if _page == current_page:
+                past = False
+                this = step - 1
+            elif past:
+                _back = _page # Last past
+            else:
+                if not _next:
+                    _next = _page # 1st future
+                break
+            step += 1
+
+        cancel = self.cancel or r.url(method = "",
+                                      vars = None,
+                                      )
+        record_id = r.id or self.new_id
+                 
+        #if current_page == pages[0]["page"]:
+        if this == 0:
+            # Disable the Back button
+            back_btn = A(T("Back"),
+                         _class = "crud-submit-button button small",
+                         _disabled = True,
+                         )
+        else:
+            back_vars = dict(get_vars)
+            back_vars["page"] = _back
+            back_btn = A(T("Back"),
+                         _href = r.url(id = record_id,
+                                       component = pages[this - 1].get("component", ""),
+                                       component_id = 0,
+                                       method = "wizard",
+                                       vars = back_vars,
+                                       ),
+                         _class = "crud-submit-button button small",
+                         )
+
+        if not next_btn:
+            #if current_page == pages[-1]["page"]:
+            if this == len(pages) - 1:
+                next_btn = A(T("Finish"),
+                             _href = cancel,
+                             _class = "crud-submit-button button small next",
+                             )
+            else:
+                next_vars = dict(get_vars)
+                next_vars["page"] = _next
+                next_btn = A(T("Next"),
+                             _href = r.url(id = record_id,
+                                           component = pages[this + 1].get("component", ""),
+                                           component_id = 0,
+                                           method = "wizard",
+                                           vars = next_vars,
+                                           ),
+                             _class = "crud-submit-button button small next",
+                             )
+
+        controls = DIV(back_btn,
+                       next_btn,
+                       A(T("Cancel"),
+                         _href = cancel,
+                         _class = "cancel-form-btn action-lnk",
+                         ),
+                       _class = "controls",
+                       )
+
+        return controls
 
     # -------------------------------------------------------------------------
     def _datatable(self, r, **attr):
@@ -354,10 +497,10 @@ class S3CrudWizard:
         method = self.method
 
         # Check permission to read in this table
-        if not self.method._permitted():
+        if not method._permitted():
             r.unauthorised()
 
-        resource = self.method.resource
+        resource = method.resource
         get_config = resource.get_config
 
         # Get table-specific parameters
@@ -378,7 +521,7 @@ class S3CrudWizard:
         # Pagination
         get_vars = r.get_vars
         if representation == "aadata":
-            start, limit = self.method._limits(get_vars)
+            start, limit = method._limits(get_vars)
         else:
             # Initial page request always uses defaults (otherwise
             # filtering and pagination would have to be relative to
@@ -443,22 +586,20 @@ class S3CrudWizard:
             if not dt.data:
                 # Empty table - or just no match?
                 #if dt.empty:
-                #    datatable = DIV(self.method.crud_string(resource.tablename,
-                #                                            "msg_list_empty"),
+                #    datatable = DIV(method.crud_string(resource.tablename,
+                #                                       "msg_list_empty"),
                 #                    _class = "empty")
                 #else:
-                #    #datatable = DIV(self.method.crud_string(resource.tablename,
-                #                                             "msg_no_match"),
+                #    #datatable = DIV(method.crud_string(resource.tablename,
+                #                                         "msg_no_match"),
                 #                     _class = "empty")
 
                 # Must include export formats to allow subsequent unhiding
                 # when Ajax (un-)filtering produces exportable table contents:
                 #s3.no_formats = True
 
-                if r.component and "showadd_btn" in output:
-                    # Hide the list and show the form by default
-                    del output["showadd_btn"]
-                    datatable = ""
+                # Hide the list and show the form by default
+                output["showadd_btn"] = None
 
             # Always show table, otherwise it can't be Ajax-filtered
             # @todo: need a better algorithm to determine total_rows
@@ -476,6 +617,27 @@ class S3CrudWizard:
 
             # View + data
             output["items"] = datatable
+
+            # Action Buttons
+            labels = s3.crud_labels
+            delete_vars = dict(get_vars)
+            delete_vars["delete"] = "[id]"
+            request_args = r.args
+            update_args = list(request_args)
+            update_args.insert(-1, "[id]")
+            s3.actions = [{"label": s3_str(labels.UPDATE),
+                           "url": URL(args = update_args,
+                                      vars = get_vars,
+                                      ),
+                           "_class": "action-btn",
+                           },
+                          {"label": s3_str(labels.DELETE),
+                           "url": URL(args = request_args,
+                                      vars = delete_vars,
+                                      ),
+                           "_class": "delete-btn",
+                           },
+                          ]
 
         elif representation == "aadata":
 

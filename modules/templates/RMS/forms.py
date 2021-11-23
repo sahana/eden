@@ -33,7 +33,6 @@ def inv_recv_form(r, **attr):
     if current.auth.root_org_name() == HNRC:
         return grn_hnrc(r, **attr)
     else:
-        #return grn_S3html2pdf(r, **attr)
         return grn(r, **attr)
 
 # Waybill Form
@@ -376,7 +375,7 @@ def grn(r, **attr):
     record = r.record
     recv_ref = record.recv_ref
     date = recv_table.date.represent(record.date)
-    wb = record.send_ref
+    wb = record.send_ref or ""
     transport_type = record.transport_type
     if transport_type == "Air":
         awb = record.transport_ref or ""
@@ -991,6 +990,7 @@ def waybill(r, **attr):
     send_ref = record.send_ref
     date = send_table.date.represent(record.date)
     transport_type = record.transport_type
+    delivery_date = send_table.delivery_date.represent(record.delivery_date)
 
     stable = s3db.org_site
     otable = s3db.org_organisation
@@ -1217,7 +1217,7 @@ def waybill(r, **attr):
                ["",
                 "",
                 "",
-                "",
+                Paragraph(record.transported_by or "", style_center),
                 "",
                 "",
                 "",
@@ -1261,7 +1261,7 @@ def waybill(r, **attr):
                 "",
                 "",
                 "",
-                "",
+                Paragraph(delivery_date, style_8_center),
                 Paragraph(str(B("HAND")), style_8_center),
                 checked if transport_type == "Hand" else checkbox,
                 ],
@@ -1613,368 +1613,6 @@ def waybill(r, **attr):
         response.headers["Content-disposition"] = disposition
 
     return output.getvalue()
-
-# =============================================================================
-def grn_S3html2pdf(r, **attr):
-    """
-        GRN (Goods Received Note) for French Red Cross (& current default)
-
-        Using S3html2pdf to convert gluon.html TABLE
-
-        @param r: the S3Request instance
-        @param attr: controller attributes
-    """
-
-    # Not translated (has both English & French elements within)
-    #T = current.T
-    db = current.db
-    s3db = current.s3db
-
-    # Master record
-    table = s3db.inv_recv
-    record = r.record
-    recv_ref = record.recv_ref
-    from_site_id = record.from_site_id
-    if from_site_id:
-        received_from = table.from_site_id.represent(from_site_id)
-    else:
-        received_from = table.organisation_id.represent(record.organisation_id)
-
-    # Get organisation logo
-    stable = s3db.org_site
-    site = db(stable.site_id == record.site_id).select(stable.organisation_id,
-                                                       limitby = (0, 1),
-                                                       ).first()
-    organisation_id = site.organisation_id
-
-    otable = s3db.org_organisation
-    org = db(otable.id == organisation_id).select(otable.logo,
-                                                  otable.root_organisation,
-                                                  limitby = (0, 1),
-                                                  ).first()
-    logo = org.logo
-    if not logo:
-        root_organisation = org.root_organisation
-        if organisation_id != root_organisation:
-            org = db(otable.id == root_organisation).select(otable.logo,
-                                                            limitby = (0, 1),
-                                                            ).first()
-            logo = org.logo
-
-    if logo:
-        logo = URL(c="default", f="download",
-                   args = logo,
-                   )
-    else:
-        # Use default IFRC
-        logo = "/%s/static/themes/RMS/img/logo_small.png" % r.application
-
-    # Received Items
-    ttable = s3db.inv_track_item
-    itable = s3db.supply_item
-    ptable = s3db.supply_item_pack
-    query = (ttable.recv_id == record.id) & \
-            (ttable.item_id == itable.id) & \
-            (ttable.item_pack_id == ptable.id)
-    items = db(query).select(itable.code,
-                             itable.name,
-                             ttable.item_source_no,
-                             ttable.recv_quantity,
-                             ptable.name,
-                             ptable.quantity,
-                             itable.weight,
-                             )
-
-    body = TABLE()
-    bappend = body.append
-
-    for row in items:
-        item = row["supply_item"]
-        pack = row["supply_item_pack"]
-        track_item = row["inv_track_item"]
-        quantity = track_item.recv_quantity
-        pack_details = pack.name
-        weight = item.weight
-        if weight:
-            pack_weight = weight * pack.quantity
-            pack_details = "%s / %s" % (pack_details,
-                                        round(pack_weight, 2),
-                                        )
-            total_weight = round(pack_weight * quantity, 2)
-        else:
-            total_weight = NONE
-        body_row = TR(TD(item.code or NONE),
-                      TD(item.name),
-                      TD(track_item.item_source_no or NONE),
-                      TD(quantity),
-                      TD(pack_details),
-                      TD(total_weight),
-                      )
-        bappend(body_row)
-
-    #styles = {}
-
-    def pdf_header(r):
-        return DIV(TABLE(TR(TD(IMG(_src = logo,
-                                   _height = 50,
-                                   ),
-                               _colspan = 6,
-                               ),
-                            TH("COUNTRY CODE",
-                               _align = "center",
-                               _valign = "middle",
-                               ),
-                            TH("GRN NUMBER",
-                               _align = "center",
-                               _valign = "middle",
-                               _colspan = 2,
-                               ),
-                            ),
-                         TR(TD(B("GOODS RECEIVED NOTE"),
-                               I(" / %s" % "Accusé de Réception"),
-                               _align = "center",
-                               _colspan = 6,
-                               ),
-                            TD(""), # @ToDo: Country Code?
-                            TD(B(recv_ref),
-                               _align = "center",
-                               _colspan = 2,
-                               ),
-                            ),
-                         TR(TH("%s\n(%s)" % ("DELEGATION/CONSIGNEE",
-                                             "LOCATION",
-                                             ),
-                               _align = "right",
-                               _colspan = 2,
-                               ),
-                            TD("", # @ToDo: Recipient NS
-                               _align = "center",
-                               _colspan = 2,
-                               ),
-                            TH("RECEIVED FROM",
-                               I(" / %s" % "reçu de"),
-                               _align = "center",
-                               _colspan = 3,
-                               ),
-                            TD(received_from,
-                               _align = "center",
-                               _colspan = 2,
-                               ),
-                            ),
-                         TR(TD("",
-                               _colspan = 9,
-                               ),
-                            ),
-                         TR(TH("DATE OF ARRIVAL",
-                               I("\n%s" % "Date de réception"),
-                               _align = "right",
-                               ),
-                            TD(table.date.represent(record.date),
-                               _align = "center",
-                               ),
-                            TH("DOCUMENT WELL RECEIVED",
-                               _align = "center",
-                               _colspan = 2,
-                               ),
-                            TD("", # Leave Blank?
-                               ),
-                            TH("IF NO, PLEASE SPECIFY",
-                               _align = "center",
-                               _colspan = 2,
-                               ),
-                            TD("", # Leave Blank?
-                               _colspan = 2,
-                               ),
-                            ),
-                         TR(TD("",
-                               _colspan = 9,
-                               ),
-                            ),
-                         TR(TH("MEANS OF TRANSPORT",
-                               I("\n%s" % "Moyen de transport"),
-                               _align = "center",
-                               ),
-                            TH("ROAD",
-                               "\n",
-                               "AIR",
-                               "\n",
-                               "SEA",
-                               "\n",
-                               "Handcarried",
-                               _align = "right",
-                               ),
-                            # @ToDo Checkboxes
-                            TD(TABLE(TR(TD("")),
-                                     TR(TD("")),
-                                     TR(TD("")),
-                                     TR(TD("")),
-                                     ),
-                               ),
-                            TD(TABLE(TR(TD("AWB no:")),
-                                     TR(TD("Waybill n°/ CMR n°:")),
-                                     TR(TD("B/L n°:")),
-                                     TR(TD("Waybill No.:")),
-                                     ),
-                               _colspan = 2,
-                               ),
-                            TD(TABLE(TR(TH("FLIGHT N°:"),
-                                        TD(""),
-                                        ),
-                                     TR(TH("REGISTRATION N°:"),
-                                        TD(""),
-                                        ),
-                                     TR(TH("VESSEL:"),
-                                        TD(""),
-                                        ),
-                                     ),
-                               _colspan = 4,
-                               ),
-                            ),
-                         ))
-
-    def pdf_body(r):
-        #TABLE(TR(TH("GOODS RECEIVED",
-                                   #      I("/ %s" % "Marchandises reçues"),
-                                   #      _colpsan = 3,
-                                   #      ),
-                                   #   TH("FOR FOOD INDICATE NET WEIGHT",
-                                   #      _colpsan = 3,
-                                   #      ),
-                                   #   ),
-        body.insert(0, TR(TH("ITEMS CODE",
-                             "\n",
-                             I("Description générale et remarques"),
-                             ),
-                          TH("DESCRIPTION",
-                             "\n",
-                             I("Code article"),
-                             ),
-                          TH("COMMODITY TRACKING N° OR DONOR",
-                             ),
-                          TH("NB. OF UNITS",
-                             "\n",
-                             I("nb. colis"),
-                             ),
-                          TH("UNIT TYPE/WEIGHT",
-                             "\n",
-                             I("type d'unité/poids"),
-                             ),
-                          TH("WEIGHT (kg)",
-                             "\n",
-                             I("Total (kg)"),
-                             ),
-                          TH(B("RECEIVED ACCORDING TO DOCUMENT AND RECEIVED IN GOOD CONDITIONS"),
-                             I("\n%s" % "Reçu selon documents et en bonne condition"),
-                             ),
-                          TH(B("CLAIM"),
-                             I("\n%s" % "Réclamation"),
-                             ),
-                          ),
-                    )
-
-        bappend(TR(TD(B("COMMENTS"),
-                      I(" / %s" % "Observations"),
-                      _colspan = 8,
-                      ),
-                   ))
-        bappend(TR(TD("\n\n\n\n",
-                      _colspan = 8,
-                      ),
-                   ))
-        bappend(TR(TD("",
-                      _colspan = 8,
-                      ),
-                   ))
-
-        return DIV(body)
-
-    def pdf_footer(r):
-        return DIV(TABLE(TR(TH("DELIVERED BY",
-                               _align = "center",
-                               ),
-                            TH("DATE",
-                               _align = "center",
-                               ),
-                            TH("FUNCTION",
-                               _align = "center",
-                               _colspan = 2,
-                               ),
-                            TH("%s (%s)" % ("NAME",
-                                            "IN BLOCK LETTER",
-                                            ),
-                               _align = "center",
-                               _colspan = 3,
-                               ),
-                            TH("SIGNATURE",
-                               _align = "center",
-                               _colspan = 2,
-                               ),
-                            ),
-                         TR(TD(""),
-                            TD(""),
-                            TD("",
-                               _colspan = 2,
-                               ),
-                            TD("",
-                               _colspan = 3,
-                               ),
-                            TD("",
-                               _colspan = 2,
-                               ),
-                            ),
-                         TR(TH("RECEIVED BY",
-                               _align = "center",
-                               ),
-                            TH("DATE",
-                               _align = "center",
-                               ),
-                            TH("FUNCTION",
-                               _align = "center",
-                               _colspan = 2,
-                               ),
-                            TH("%s (%s)" % ("NAME",
-                                            "IN BLOCK LETTER",
-                                            ),
-                               _align = "center",
-                               _colspan = 3,
-                               ),
-                            TH("SIGNATURE / STAMP",
-                               _align = "center",
-                               _colspan = 2,
-                               ),
-                            ),
-                         TR(TD(""),
-                            TD(""),
-                            TD("",
-                               _colspan = 2,
-                               ),
-                            TD("",
-                               _colspan = 3,
-                               ),
-                            TD("",
-                               _colspan = 2,
-                               ),
-                            ),
-                         ))
-
-    exporter = S3Exporter().pdf
-    return exporter(r.resource,
-                    request = r,
-                    pdf_title = current.deployment_settings.get_inv_recv_form_name(),
-                    pdf_filename = recv_ref,
-                    pdf_header = pdf_header,
-                    pdf_header_padding = 12,
-                    #method = "list",
-                    #pdf_componentname = "track_item",
-                    #list_fields = list_fields,
-                    pdf_callback = pdf_body,
-                    pdf_footer = pdf_footer,
-                    pdf_hide_comments = True,
-                    #pdf_html_styles = styles,
-                    pdf_table_autogrow = "B",
-                    pdf_orientation = "Landscape",
-                    **attr
-                    )
 
 # =============================================================================
 def grn_hnrc(r, **attr):

@@ -256,6 +256,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                          "approve",
                          "reject",
                          "deduplicate",
+                         "wizard",
                          )
 
     # Execute the request
@@ -307,10 +308,12 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
             copyable = get_config(tablename, "copyable", False)
 
             # URL to open the resource
-            open_url = s3base.S3CRUD._linkto(r,
-                                             authorised = authorised,
-                                             update = editable,
-                                             native = native)("[id]")
+            from s3 import S3CRUD
+            open_url = S3CRUD._linkto(r,
+                                      authorised = authorised,
+                                      update = editable,
+                                      native = native,
+                                      )("[id]")
 
             # Add action buttons for Open/Delete/Copy as appropriate
             s3_action_buttons(r,
@@ -327,7 +330,6 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
             # the primary key into get_vars for automatic linking
             if native and not listadd and \
                auth.s3_has_permission("create", tablename):
-                from s3 import S3CRUD
                 label = S3CRUD.crud_string(tablename, "label_create")
                 component = r.resource.components[name]
                 fkey = "%s.%s" % (name, component.fkey)

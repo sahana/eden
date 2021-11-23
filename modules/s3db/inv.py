@@ -4862,6 +4862,7 @@ class InventoryTrackingModel(S3Model):
         transport_opts = {"Air": T("Air"),
                           "Sea": T("Sea"),
                           "Road": T("Road"),
+                          "Rail": T("Rail"),
                           "Hand": T("Hand"),
                           }
 
@@ -4955,8 +4956,7 @@ class InventoryTrackingModel(S3Model):
                                          ),
                            ),
                      Field("transport_ref",
-                           #label = "AWB No", Air WayBill
-                           #label = "B/L No", Bill of Lading (Sea)
+                           # Label adjusted based on transport_type in controller
                            label = T("Transport Reference"),
                            represent = string_represent,
                            comment = DIV(_class = "tooltip",
@@ -5006,7 +5006,6 @@ class InventoryTrackingModel(S3Model):
                      s3_datetime("delivery_date",
                                  label = T("Estimated Delivery Date"),
                                  represent = "date",
-                                 writable = False,
                                  ),
                      Field("status", "integer",
                            default = SHIP_STATUS_IN_PROCESS,
@@ -5262,8 +5261,7 @@ class InventoryTrackingModel(S3Model):
                                          ),
                            ),
                      Field("transport_ref",
-                           #label = "AWB No", Air WayBill
-                           #label = "B/L No", Bill of Lading (Sea)
+                           # Label adjusted based on transport_type in controller
                            label = T("Transport Reference"),
                            represent = string_represent,
                            comment = DIV(_class = "tooltip",
@@ -8024,20 +8022,20 @@ def inv_package_labels(r, **attr):
         item = package_items.first()
 
         # Set column Widths
-        sheet.col(0).width = 4172   # 3.19 cm
-        sheet.col(1).width = 1505   # 1.15 cm
-        sheet.col(2).width = 4069   # 3.11 cm
-        sheet.col(3).width = 1752   # 1.34 cm
-        sheet.col(4).width = 4069   # 3.11 cm
-        sheet.col(5).width = 1505   # 1.15 cm
-        sheet.col(6).width = 3256   # 2.49 cm
-        sheet.col(7).width = 2341   # 1.79 cm
-        sheet.col(8).width = 2642   # 2.02 cm
-        sheet.col(9).width = 4682   # 3.58 cm
-        sheet.col(10).width = 2341  # 1.79 cm
-        sheet.col(11).width = 5414  # 4.14 cm
-        sheet.col(12).width = 2341  # 1.79 cm
-        sheet.col(13).width = 2341  # 1.79 cm
+        sheet.col(0).width = 4172   # 3.19 cm A
+        sheet.col(1).width = 1505   # 1.15 cm B
+        sheet.col(2).width = 4069   # 3.11 cm C
+        sheet.col(3).width = 1752   # 1.34 cm D
+        sheet.col(4).width = 4069   # 3.11 cm E
+        sheet.col(5).width = 1505   # 1.15 cm F
+        sheet.col(6).width = 3256   # 2.49 cm G
+        sheet.col(7).width = 2341   # 1.79 cm H
+        sheet.col(8).width = 2642   # 2.05 cm I
+        sheet.col(9).width = 4682   # 3.58 cm J
+        sheet.col(10).width = 2341  # 1.79 cm K
+        sheet.col(11).width = 5414  # 4.14 cm L
+        sheet.col(12).width = 2341  # 1.79 cm M
+        sheet.col(13).width = 2341  # 1.79 cm N
 
         if logo:
             # 1st row: Logo
@@ -8152,9 +8150,10 @@ def inv_package_labels(r, **attr):
         current_row.write(2, length, center_style)
         current_row.write(3, "x", style)
         current_row.write(4, height, center_style)
-        current_row.write(8, package_weight, center_style)
+        current_row.write(5, "m", style)
+        current_row.write(7, package_weight, style)
         current_row.write(9, "Kgs", style)
-        formula = xlwt.Formula("A38*C38*E38")
+        formula = xlwt.Formula("ROUND(A38*C38*E38, 2)")
         current_row.write(11, formula, center_style)
         current_row.write(12, "m3", style)
 
@@ -8671,9 +8670,14 @@ def inv_recv_controller():
 
             elif component_name == "track_item":
 
+                method = r.method
+                if method == "wizard":
+                    page = r.get_vars.get("page")
+                else:
+                    page = None
                 # Security-wise, we are already covered by configure()
                 # Performance-wise, we should optimise for UI-acessible flows
-                #if r.method == "create" or r.method == "delete":
+                #if method == "create" or method == "delete":
                 #    # Can only create or delete track items for a recv record
                 #    # if the status is preparing:
                 #    if status != SHIP_STATUS_IN_PROCESS:
@@ -8714,30 +8718,68 @@ def inv_recv_controller():
                         tracktable.send_inv_item_id.readable = False
                         # Change some labels - NO - use consistent labels
                         #tracktable.quantity.label = T("Quantity Delivered")
-                        crud_form = S3SQLCustomForm("item_id",
-                                                    "item_pack_id",
-                                                    "quantity",
-                                                    "recv_quantity",
-                                                    S3SQLInlineComponent("recv_bin",
-                                                                         label = T("Add to Bins"),
-                                                                         fields = ["layout_id",
-                                                                                   "quantity",
-                                                                                   ],
-                                                                         ),
-                                                    "return_quantity",
-                                                    "pack_value",
-                                                    "currency",
-                                                    "expiry_date",
-                                                    "item_source_no",
-                                                    "supply_org_id",
-                                                    "owner_org_id",
-                                                    "inv_item_status",
-                                                    "status",
-                                                    # readable/writable = False by default
-                                                    # writable set to True later if linked to requests
-                                                    "req_item_id",
-                                                    "comments",
-                                                    )
+                        if page == "items":
+                            # Standard form, but without Bins
+                            crud_form = S3SQLCustomForm("item_id",
+                                                        "item_pack_id",
+                                                        "quantity",
+                                                        "recv_quantity",
+                                                        "return_quantity",
+                                                        "pack_value",
+                                                        "currency",
+                                                        "expiry_date",
+                                                        "item_source_no",
+                                                        "supply_org_id",
+                                                        "owner_org_id",
+                                                        "inv_item_status",
+                                                        "status",
+                                                        # readable/writable = False by default
+                                                        # writable set to True later if linked to requests
+                                                        "req_item_id",
+                                                        "comments",
+                                                        )
+                        elif page == "bins":
+                            # Just Bins
+                            # - currently has more fields, to support JS
+                            crud_form = S3SQLCustomForm("item_id",
+                                                        "item_pack_id",
+                                                        "quantity",
+                                                        "recv_quantity",
+                                                        S3SQLInlineComponent("recv_bin",
+                                                                             label = T("Add to Bins"),
+                                                                             fields = ["layout_id",
+                                                                                       "quantity",
+                                                                                       ],
+                                                                             ),
+                                                        # readable/writable = False by default
+                                                        # writable set to True later if linked to requests
+                                                        "req_item_id",
+                                                        )
+                        else:
+                            crud_form = S3SQLCustomForm("item_id",
+                                                        "item_pack_id",
+                                                        "quantity",
+                                                        "recv_quantity",
+                                                        S3SQLInlineComponent("recv_bin",
+                                                                             label = T("Add to Bins"),
+                                                                             fields = ["layout_id",
+                                                                                       "quantity",
+                                                                                       ],
+                                                                             ),
+                                                        "return_quantity",
+                                                        "pack_value",
+                                                        "currency",
+                                                        "expiry_date",
+                                                        "item_source_no",
+                                                        "supply_org_id",
+                                                        "owner_org_id",
+                                                        "inv_item_status",
+                                                        "status",
+                                                        # readable/writable = False by default
+                                                        # writable set to True later if linked to requests
+                                                        "req_item_id",
+                                                        "comments",
+                                                        )
 
                     elif track_status == TRACK_STATUS_TRANSIT:
                         # Internal Shipment auto-generated from inv_send_process
@@ -8873,11 +8915,14 @@ def inv_recv_controller():
                     # status == SHIP_STATUS_IN_PROCESS
                     deletable = True
                     editable = True
-                    insertable = True
+                    if page == "bins":
+                        insertable = False
+                    else:
+                        insertable = True
                     if r.interactive:
                         s3.crud_strings.inv_recv.title_update = \
                         s3.crud_strings.inv_recv.title_display = T("Process Received Shipment")
-                        if r.method in (None, "update", "wizard"):
+                        if method in (None, "update", "wizard"):
                             # Limit to Bins from this site
                             from .org import org_site_layout_config
                             irbtable = s3db.inv_recv_item_bin
@@ -9005,6 +9050,7 @@ def inv_recv_controller():
             # No Component
             # Configure which fields in inv_recv are readable/writable
             # depending on status
+            method = r.method
             recvtable = s3db.inv_recv
             if record:
                 if status not in (SHIP_STATUS_IN_PROCESS, SHIP_STATUS_SENT):
@@ -9037,12 +9083,12 @@ def inv_recv_controller():
             else:
                 inv_recv_attr(SHIP_STATUS_IN_PROCESS)
                 recvtable.recv_ref.readable = False
-                if r.method and r.method != "read":
+                if method and method != "read":
                     # Don't want to see in Create forms
                     recvtable.status.readable = False
 
-            if r.method in ("create", "wizard") or \
-               (r.method == "update" and record.status == SHIP_STATUS_IN_PROCESS):
+            if method in ("create", "wizard") or \
+               (method == "update" and record.status == SHIP_STATUS_IN_PROCESS):
                 if s3.debug:
                     s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv.js" % r.application)
                 else:
@@ -9051,6 +9097,7 @@ def inv_recv_controller():
                     s3.js_global.append(
 '''i18n.AWB='%s'
 i18n.BL='%s'
+i18n.CMR='%s'
 i18n.ref='%s'
 i18n.flight='%s'
 i18n.vessel='%s'
@@ -9058,6 +9105,7 @@ i18n.vehicle='%s'
 i18n.reg='%s'
 ''' % (T("AWB No"),
        T("B/L No"),
+       T("Waybill/CMR No"),
        T("Transport Reference"),
        T("Flight"),
        T("Vessel"),
@@ -9101,6 +9149,7 @@ i18n.reg='%s'
                     recvtable.transport_ref.label = T("B/L No")
                     recvtable.registration_no.label = T("Vessel")
                 elif transport_type == "Road":
+                    recvtable.transport_ref.label = T("Waybill/CMR No")
                     recvtable.registration_no.label = T("Vehicle Plate Number")
                 elif transport_type == "Hand":
                     recvtable.transport_ref.readable = False
@@ -12950,9 +12999,9 @@ def inv_send_controller():
                     if row.send_package_id == send_package_id:
                         send_package.append(track_item_id)
                     track_items[track_item_id] -= row.quantity
-                track_item_ids = [track_item_id for track_item_id in track_items if (track_item_id not in send_package) and (track_items[track_item_id] <= 0)]
-                spitable.track_item_id.requires.set_filter(not_filterby = "id", # Using not_filter_by as filter_opts = [] means 'no filtering' rather than 'no results'
-                                                           not_filter_opts = track_item_ids,
+                track_item_ids = [track_item_id for track_item_id in track_items if ((track_item_id in send_package) or (track_items[track_item_id] > 0))]
+                spitable.track_item_id.requires.set_filter(filterby = "id",
+                                                           filter_opts = track_item_ids,
                                                            )
                 # Default Quantity
                 if send_package_id:
@@ -13484,6 +13533,7 @@ S3.supply.site_id=%s%s''' % (json.dumps(inv_data, separators=SEPARATORS),
                     s3.js_global.append(
 '''i18n.AWB='%s'
 i18n.BL='%s'
+i18n.CMR='%s'
 i18n.ref='%s'
 i18n.flight='%s'
 i18n.vessel='%s'
@@ -13491,6 +13541,7 @@ i18n.vehicle='%s'
 i18n.reg='%s'
 ''' % (T("AWB No"),
        T("B/L No"),
+       T("Waybill/CMR No"),
        T("Transport Reference"),
        T("Flight"),
        T("Vessel"),
@@ -13530,6 +13581,7 @@ i18n.reg='%s'
                     sendtable.transport_ref.label = T("B/L No")
                     sendtable.registration_no.label = T("Vessel")
                 elif transport_type == "Road":
+                    sendtable.transport_ref.label = T("Waybill/CMR No")
                     sendtable.registration_no.label = T("Vehicle Plate Number")
                 elif transport_type == "Hand":
                     sendtable.transport_ref.readable = False
@@ -16422,17 +16474,18 @@ class inv_Recv_Wizard(S3CrudWizard):
                       {"page": "items",
                        "label": T("Add Items"),
                        "component": "track_item",
+                       "required": True,
                        },
                       {"page": "bins",
                        "label": T("Allocate to Bins"),
                        "component": "track_item",
                        },
-                      {"page": "process",
-                       "label": T("Process"),
-                       },
                       {"page": "document",
                        "label": T("Upload GRN"),
                        "component": "document",
+                       },
+                      {"page": "process",
+                       "label": T("Process"),
                        },
                       ]
 
@@ -16443,32 +16496,27 @@ class inv_Recv_Wizard(S3CrudWizard):
             # Cannot use the Wizard
             redirect(r.url(method = None))
 
-        return super(inv_Recv_Wizard, self).__call__(r, **attr)
-
-    # -------------------------------------------------------------------------
-    def _form(self, r):
-        """
-            Produce the correct form for the current page
-        """
-
         current_page = r.get_vars.get("page")
         if current_page == "process":
             # Return a button to Process the Incoming Shipment
-            # @ToDo: Back/Next/Cancel buttons
-            #        - have this button be the Next? or else add JS
-            return A(current.T("Receive Shipment"),
-                     _href = URL(c = "inv",
-                                 f = "recv",
-                                 args = [r.id,
-                                         "process",
-                                         ],
-                                 ),
-                     _id = "recv-process",
-                     _class = "action-btn",
-                     )
-        else:
-            # Create or Update form
-            return super(inv_Recv_Wizard, self)._form(r)
+            T = current.T
+            current.response.s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_rheader.js" % r.application)
+            next_btn = A(T("Finish"),
+                         _href = URL(c = "inv",
+                                     f = "recv",
+                                     args = [r.id,
+                                             "process",
+                                             ],
+                                     ),
+                         _id = "recv-process",
+                         _class = "crud-submit-button button small next",
+                         )
+            return {"form": P(T("Clicking Finish will add all the Items from the Shipment to the Inventory.")),
+                    "controls": self._controls(r, next_btn=next_btn),
+                    "header": self._header(r),
+                    }
+
+        return super(inv_Recv_Wizard, self).__call__(r, **attr)
 
 # =============================================================================
 class inv_ReqRepresent(S3Represent):
@@ -16782,17 +16830,18 @@ class inv_Send_Wizard(S3CrudWizard):
                       {"page": "items",
                        "label": T("Add Items"),
                        "component": "track_item",
+                       "required": True,
                        },
                       {"page": "packaging",
                        "label": T("Packaging"),
                        "component": "send_package",
                        },
-                      {"page": "process",
-                       "label": T("Process"),
-                       },
                       {"page": "document",
                        "label": T("Upload WB"),
                        "component": "document",
+                       },
+                      {"page": "process",
+                       "label": T("Process"),
                        },
                       ]
 
@@ -16803,32 +16852,27 @@ class inv_Send_Wizard(S3CrudWizard):
             # Cannot use the Wizard
             redirect(r.url(method = None))
 
-        return super(inv_Send_Wizard, self).__call__(r, **attr)
-
-    # -------------------------------------------------------------------------
-    def _form(self, r):
-        """
-            Produce the correct form for the current page
-        """
-
         current_page = r.get_vars.get("page")
         if current_page == "process":
             # Return a button to Process the Outgoing Shipment
-            # @ToDo: Back/Next/Cancel buttons
-            #        - have this button be the Next? or else add JS
-            return A(current.T("Send Shipment"),
-                     _href = URL(c = "inv",
-                                 f = "send",
-                                 args = [r.id,
-                                         "process",
-                                         ],
-                                 ),
-                     _id = "send-process",
-                     _class = "action-btn",
-                     )
-        else:
-            # Create or Update form
-            return super(inv_Send_Wizard, self)._form(r)
+            T = current.T
+            current.response.s3.scripts.append("/%s/static/scripts/S3/s3.inv_send_rheader.js" % r.application)
+            next_btn = A(T("Finish"),
+                         _href = URL(c = "inv",
+                                     f = "send",
+                                     args = [r.id,
+                                             "process",
+                                             ],
+                                     ),
+                         _id = "send-process",
+                         _class = "crud-submit-button button small next",
+                         )
+            return {"form": P(T("Clicking Finish will remove all the Items in the Shipment from the Inventory.")),
+                    "controls": self._controls(r, next_btn=next_btn),
+                    "header": self._header(r),
+                    }
+
+        return super(inv_Send_Wizard, self).__call__(r, **attr)
 
 # =============================================================================
 class inv_TrackItemRepresent(S3Represent):

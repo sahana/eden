@@ -1,5 +1,5 @@
 /**
- * Used by inv_recv_rheader for action buttons
+ * Used by inv_recv_rheader for action buttons & by inv_Recv_Wizard 
  * - handle confirmation
  * - send POST requests not GET
  */

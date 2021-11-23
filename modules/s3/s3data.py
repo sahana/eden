@@ -722,7 +722,11 @@ class S3DataTable:
     # -------------------------------------------------------------------------
     # Helper methods
     # -------------------------------------------------------------------------
-    def table(self, id, flist=None, action_col=0):
+    def table(self,
+              id,
+              flist = None,
+              action_col = 0,
+              ):
         """
             Method to render the data as an html table. This is of use if
             an html table is required without the dataTable goodness. However
@@ -910,14 +914,14 @@ class S3DataList:
 
     # ---------------------------------------------------------------------
     def html(self,
-             start=None,
-             limit=None,
-             pagesize=None,
-             rowsize=None,
-             ajaxurl=None,
-             empty=None,
-             popup_url=None,
-             popup_title=None,
+             start = None,
+             limit = None,
+             pagesize = None,
+             rowsize = None,
+             ajaxurl = None,
+             empty = None,
+             popup_url = None,
+             popup_title = None,
              ):
         """
             Render list data as HTML (nested DIVs)
@@ -967,7 +971,9 @@ class S3DataList:
             if empty is None:
                 empty = resource.crud.crud_string(resource.tablename,
                                                   "msg_no_match")
-            empty = DIV(empty, _class="dl-empty")
+            empty = DIV(empty,
+                        _class = "dl-empty",
+                        )
             if self.total > 0:
                 empty.update(_style="display:none")
             items.append(empty)
@@ -988,7 +994,8 @@ class S3DataList:
                                   item_id,
                                   resource,
                                   rfields,
-                                  record)
+                                  record,
+                                  )
                     if hasattr(item, "add_class"):
                         _class = "dl-item dl-%s-cols dl-col-%s" % (rowsize, col_idx)
                         item.add_class(_class)
@@ -1000,11 +1007,14 @@ class S3DataList:
                     row = render_row(list_id,
                                      resource,
                                      rowsize,
-                                     row)
+                                     row,
+                                     )
                     if hasattr(row, "add_class"):
                         row.add_class(_class)
                 else:
-                    row = DIV(row, _class=_class)
+                    row = DIV(row,
+                              _class = _class,
+                              )
 
                 items.append(row)
                 row_idx += 1
@@ -1097,13 +1107,16 @@ class S3DataListLayout:
         """
 
         # Render the item
-        item = DIV(_id=item_id, _class=self.item_class)
+        item = DIV(_id = item_id,
+                   _class = self.item_class,
+                   )
 
         header = self.render_header(list_id,
                                     item_id,
                                     resource,
                                     rfields,
-                                    record)
+                                    record,
+                                    )
         if header is not None:
             item.append(header)
 
@@ -1111,7 +1124,8 @@ class S3DataListLayout:
                                 item_id,
                                 resource,
                                 rfields,
-                                record)
+                                record,
+                                )
         if body is not None:
             item.append(body)
 
@@ -1164,7 +1178,9 @@ class S3DataListLayout:
                 field_class = "dl-field-%s" % rfield.fname
                 body.append(DIV(column,
                                 _class = "dl-field %s %s" % (table_class,
-                                                             field_class)))
+                                                             field_class,
+                                                             ),
+                                ))
 
         return DIV(body, _class="media")
 
@@ -1210,11 +1226,13 @@ class S3DataListLayout:
 
         label = LABEL("%s:" % rfield.label,
                       _for = value_id,
-                      _class = "dl-field-label")
+                      _class = "dl-field-label",
+                      )
 
         value = SPAN(value,
                      _id = value_id,
-                     _class = "dl-field-value")
+                     _class = "dl-field-value",
+                     )
 
         return TAG[""](label, value)
 

@@ -3964,7 +3964,7 @@ Thank you"""
                                     #"driver_phone",
                                     # Will only appear in Update forms:
                                     "date",
-                                    "delivery_date",
+                                    "delivery_date", # Appears on Create form too
                                     "status",
                                     "filing_status",
                                     "comments",

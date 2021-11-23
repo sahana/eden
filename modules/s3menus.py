@@ -861,12 +861,13 @@ class S3OptionsMenu(object):
                     M("Dead Bodies", f="body")(
                         M("Add", m="create"),
                         M("List unidentified",
-                          vars={"identification.status": "None"}),
+                          vars = {"identification.status": "None"},
+                          ),
                         M("Report by Age/Gender", m="report",
-                          vars={"rows": "age_group",
-                                "cols": "gender",
-                                "fact": "count(pe_label)",
-                                },
+                          vars = {"rows": "age_group",
+                                  "cols": "gender",
+                                  "fact": "count(pe_label)",
+                                  },
                           ),
                     ),
                     M("Missing Persons", f="person")(
