@@ -279,6 +279,9 @@ def grn(r, **attr):
     style_right = deepcopy(style)
     style_right.alignment = TA_RIGHT
 
+    style_5_center = deepcopy(style_center)
+    style_5_center.fontSize = 5
+
     style_6_center = deepcopy(style_center)
     style_6_center.fontSize = 6
 
@@ -519,6 +522,7 @@ def grn(r, **attr):
                    ("SPAN", (0, 13), (3, 13)),
                    ("SPAN", (4, 13), (6, 13)),
                    ("SPAN", (1, 14), (2, 14)),
+                   ("VALIGN", (7, 13), (8, 15), "TOP"),
                    ("SPAN", (7, 13), (7, 15)),
                    ("SPAN", (8, 13), (8, 15)),
                    ("BACKGROUND", (0, 13), (8, 14), lightgrey),
@@ -673,11 +677,11 @@ def grn(r, **attr):
                 "",
                 Paragraph("%s<br/>%s" % (B("RECEIVED ACCORDING TO DOCUMENT AND RECEIVED IN GOOD CONDITIONS"),
                                          I("Reçu selon documents et en bonne condition"),
-                                         ), style_7_center),
+                                         ), style_5_center),
 
                 Paragraph("%s<br/>%s" % (B("CLAIM"),
                                          I("Réclamation"),
-                                         ), style_7_center),
+                                         ), style_5_center),
                 ],
                # Row 14
                [Paragraph("%s<br/>%s" % (B("ITEMS CODE"),
@@ -690,7 +694,7 @@ def grn(r, **attr):
                 Paragraph(str(B("COMMODITY TRACKING N° OR DONOR")), style_7_center),
                 Paragraph("%s<br/>%s" % (B("UNIT TYPE/WEIGHT"),
                                          I("type d'unité/poids"),
-                                         ), style_6_center),
+                                         ), style_5_center),
                 Paragraph("%s<br/>%s" % (B("NB. OF UNITS"),
                                          I("nb. colis"),
                                          ), style_6_center),
@@ -857,7 +861,7 @@ def grn(r, **attr):
                                3.13 * cm, # F
                                2.03 * cm, # G
                                6.25 * cm, # H
-                               1.33 * cm, # I
+                               1.42 * cm, # I 1.33
                                ),
                   rowHeights = rowHeights,
                   style = table_style,
