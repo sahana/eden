@@ -148,9 +148,13 @@ class S3CrudWizard:
             output["form"] = self._form(r, output)
             output["header"] = self._header(r)
 
+            output["wizard_buttons"] = current.response.s3.wizard_buttons or ""
+
             if "items" in output:
                 # Add Back / Next / Cancel buttons
                 output["controls"] = self._controls(r)
+            else:
+                output["controls"] = ""
 
         return output
 
@@ -346,24 +350,26 @@ class S3CrudWizard:
             step += 1
 
         if r.http == "POST":
-            # Configure Next
-            next_vars = dict(get_vars)
-            if "next" in r.post_vars:
-                next_vars["page"] = _next
-                component = pages[this + 1].get("component", "")
-            else:
-                if r.component:
-                    component = pages[this].get("component", "")
+            method = self.method
+            if not method.next:
+                # Configure Next
+                next_vars = dict(get_vars)
+                if "next" in r.post_vars:
+                    next_vars["page"] = _next
+                    component = pages[this + 1].get("component", "")
                 else:
-                    next_vars["page"] = _back
-                    component = pages[this - 1].get("component", "")
-            record_id = r.id or self.new_id
-            self.method.next = r.url(id = record_id,
-                                     component = component,
-                                     component_id = 0,
-                                     method = "wizard",
-                                     vars = next_vars,
-                                     )
+                    if r.component:
+                        component = pages[this].get("component", "")
+                    else:
+                        next_vars["page"] = _back
+                        component = pages[this - 1].get("component", "")
+                record_id = r.id or self.new_id
+                method.next = r.url(id = record_id,
+                                    component = component,
+                                    component_id = 0,
+                                    method = "wizard",
+                                    vars = next_vars,
+                                    )
 
         ul = UL(*steps,
                 _class = "steps",

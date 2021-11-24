@@ -44,6 +44,11 @@ $('#show-add-btn').hide()'''}}
 </div>{{pass}}
 <div class='row'>
  <div class="small-12 columns">
+ {{try:}}{{=wizard_buttons}}{{except:}}{{pass}}
+ </div>
+</div>
+<div class='row'>
+ <div class="small-12 columns">
  {{try:}}{{=controls}}{{except:}}{{pass}}
  </div>
 </div>

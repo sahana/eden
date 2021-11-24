@@ -106,10 +106,12 @@ __all__ = ("WarehouseModel",
            "inv_InvItemRepresent",
            #"inv_PackageRepresent",
            #"inv_RecvRepresent",
+           #"inv_RecvWizard",
            #"inv_ReqCheckMethod",
            "inv_ReqItemRepresent",
            "inv_ReqRefRepresent",
            #"inv_SendRepresent",
+           #"inv_SendWizard",
            #"inv_TrackItemRepresent",
            )
 
@@ -5158,7 +5160,7 @@ class InventoryTrackingModel(S3Model):
                   orderby = "inv_send.date desc",
                   sortby = [[5, "desc"], [1, "asc"]],
                   super_entity = ("doc_entity",),
-                  wizard = inv_Send_Wizard(),
+                  wizard = inv_SendWizard(),
                   )
 
         # ---------------------------------------------------------------------
@@ -5452,7 +5454,7 @@ class InventoryTrackingModel(S3Model):
                   orderby = "inv_recv.date desc",
                   sortby = [[6, "desc"], [1, "asc"]],
                   super_entity = ("doc_entity",),
-                  wizard = inv_Recv_Wizard(),
+                  wizard = inv_RecvWizard(),
                   )
 
         # Components
@@ -8880,6 +8882,7 @@ def inv_recv_controller():
                 track_item_id = r.component_id
                 if track_item_id:
                     track_record = db(tracktable.id == track_item_id).select(tracktable.item_id,
+                                                                             tracktable.quantity,
                                                                              tracktable.status,
                                                                              limitby = (0, 1),
                                                                              ).first()
@@ -8930,6 +8933,25 @@ def inv_recv_controller():
                         # Lock the record so it can't be fiddled with
                         # - other than being able to edit Quantity Received & Bin
                         editable = True
+                        if r.interactive:
+                            s3.crud_strings.inv_recv.title_update = \
+                            s3.crud_strings.inv_recv.title_display = T("Process Received Shipment")
+                            if track_item_id and method in (None, "update", "wizard"):
+                                # Limit to Bins from this site
+                                from .org import org_site_layout_config
+                                irbtable = s3db.inv_recv_item_bin
+                                org_site_layout_config(record.site_id, irbtable.layout_id)
+                                # Manage bin allocations
+                                if s3.debug:
+                                    s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_sent_item.js" % r.application)
+                                else:
+                                    s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_sent_item.min.js" % r.application)
+                                js_global_append = s3.js_global.append
+                                js_global_append('''S3.supply.sendQuantity=%s''' % track_record.quantity)
+                                bins = db(irbtable.track_item_id == track_item_id).select(irbtable.quantity)
+                                if len(bins) > 1:
+                                    js_global_append('''S3.supply.binnedQuantity=%s''' % sum([row.quantity for row in bins]))
+                                
                     else:
                         editable = False
                 else:
@@ -9385,7 +9407,7 @@ def inv_recv_rheader(r):
                                      )
 
             rfooter = TAG[""]()
-            action = DIV()
+            actions = DIV()
             # Find out how many inv_track_items we have for this recv record
             query = (tracktable.recv_id == recv_id) & \
                     (tracktable.deleted == False)
@@ -9397,17 +9419,26 @@ def inv_recv_rheader(r):
                 if current.auth.s3_has_permission("update", "inv_recv",
                                                   record_id = record.id,
                                                   ):
+                    actions.append(A(ICON("wizard"),
+                                     " ",
+                                     T("Wizard"),
+                                     _href = URL(args = [record.id,
+                                                         "wizard",
+                                                         ]
+                                                 ),
+                                     _class = "action-btn",
+                                     )
+                                   )
+
                     if cnt > 0:
-                        action.append(A(T("Receive Shipment"),
-                                        _href = URL(c = "inv",
-                                                    f = "recv",
-                                                    args = [record.id,
-                                                            "process",
-                                                            ],
-                                                    ),
-                                        _id = "recv-process",
-                                        _class = "action-btn",
-                                        ))
+                        actions.append(A(T("Receive Shipment"),
+                                         _href = URL(args = [record.id,
+                                                             "process",
+                                                             ],
+                                                     ),
+                                         _id = "recv-process",
+                                         _class = "action-btn",
+                                         ))
                         s3.js_global.append('''i18n.recv_process_confirm="%s"''' % T("Do you want to receive this shipment?"))
                         if s3.debug:
                             s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_rheader.js" % r.application)
@@ -9422,16 +9453,14 @@ def inv_recv_rheader(r):
             #        if current.auth.s3_has_permission("update", "inv_recv",
             #                                          record_id = record.id,
             #                                          ):
-            #            action.append(A(T("Cancel Shipment"),
-            #                            _href = URL(c = "inv",
-            #                                        f = "recv",
-            #                                        args = [record.id,
-            #                                                "cancel",
-            #                                                ],
-            #                                        ),
-            #                            _id = "recv-cancel",
-            #                            _class = "action-btn",
-            #                            ))
+            #            actions.append(A(T("Cancel Shipment"),
+            #                             _href = URL(args = [record.id,
+            #                                                 "cancel",
+            #                                                 ],
+            #                                         ),
+            #                             _id = "recv-cancel",
+            #                             _class = "action-btn",
+            #                             ))
             #            s3.js_global.append('''i18n.recv_cancel_confirm="%s"''' % T("Do you want to cancel this received shipment? The items will be removed from the Warehouse. This action CANNOT be undone!"))
             #            if s3.debug:
             #                s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_rheader.js" % r.application)
@@ -9442,7 +9471,7 @@ def inv_recv_rheader(r):
                 msg = T("This shipment contains one line item")
             elif cnt > 1:
                 msg = T("This shipment contains %s items") % cnt
-            shipment_details.append(TR(TH(action,
+            shipment_details.append(TR(TH(actions,
                                           _colspan = 2,
                                           ),
                                        TD(msg),
@@ -14557,6 +14586,16 @@ def inv_send_rheader(r):
                         else:
                             s3.scripts.append("/%s/static/scripts/S3/s3.inv_send_rheader.min.js" % r.application)
                         if status == SHIP_STATUS_IN_PROCESS:
+                            actions.insert(0, A(ICON("wizard"),
+                                                " ",
+                                                T("Wizard"),
+                                                _href = URL(args = [record.id,
+                                                                    "wizard",
+                                                                    ]
+                                                            ),
+                                                _class = "action-btn",
+                                                )
+                                           )
                             actions.append(A(ICON("print"),
                                              " ",
                                              T("Picking List"),
@@ -16495,7 +16534,7 @@ class inv_RecvRepresent(S3Represent):
         return v
 
 # =============================================================================
-class inv_Recv_Wizard(S3CrudWizard):
+class inv_RecvWizard(S3CrudWizard):
     """
         Wizard for Receiving a New Shipment
     """
@@ -16504,7 +16543,7 @@ class inv_Recv_Wizard(S3CrudWizard):
 
         T = current.T
 
-        super(inv_Recv_Wizard, self).__init__()
+        super(inv_RecvWizard, self).__init__()
 
         self.pages = [{"page": "recv",
                        "label": T("Incoming Shipment"),
@@ -16532,14 +16571,17 @@ class inv_Recv_Wizard(S3CrudWizard):
     # -------------------------------------------------------------------------
     def __call__(self, r, **attr):
     
-        if r.record and r.record.status != SHIP_STATUS_IN_PROCESS:
+        if r.record and r.record.status not in (SHIP_STATUS_SENT,
+                                                SHIP_STATUS_IN_PROCESS,
+                                                ):
             # Cannot use the Wizard
             redirect(r.url(method = "",
                            component = "",
                            vars = {},
                            ))
 
-        current_page = r.get_vars.get("page")
+        get_vars = r.get_vars
+        current_page = get_vars.get("page")
         if current_page == "process":
             # Return a button to Process the Incoming Shipment
             T = current.T
@@ -16562,7 +16604,32 @@ class inv_Recv_Wizard(S3CrudWizard):
                     "header": self._header(r),
                     }
 
-        return super(inv_Recv_Wizard, self).__call__(r, **attr)
+        elif current_page == "bins":
+            # Check to see if we can streamline as we only have 1 item
+            # @ToDo: Make this a default if insertable = False?
+            record_id = r.id
+            s3db = current.s3db
+            ttable = s3db.inv_track_item
+            items = current.db(ttable.recv_id == record_id).select(ttable.id,
+                                                                   limitby = (0, 2),
+                                                                   )
+            if len(items) == 1:
+                if not r.component_id:
+                    # Open this record rather than list view
+                    redirect(r.url(component_id = items.first().id))
+                else:
+                    current.response.s3.crud.submit_button = "Next"
+                    if r.http == "POST":
+                        next_vars = dict(get_vars)
+                        next_vars["page"] = "document"
+                        self.method.next = r.url(id = record_id,
+                                                 component = "document",
+                                                 component_id = 0,
+                                                 method = "wizard",
+                                                 vars = next_vars,
+                                                 )
+
+        return super(inv_RecvWizard, self).__call__(r, **attr)
 
 # =============================================================================
 class inv_ReqRepresent(S3Represent):
@@ -16859,7 +16926,7 @@ class inv_SendRepresent(S3Represent):
         return v
 
 # =============================================================================
-class inv_Send_Wizard(S3CrudWizard):
+class inv_SendWizard(S3CrudWizard):
     """
         Wizard for Sending a New Shipment
     """
@@ -16868,7 +16935,7 @@ class inv_Send_Wizard(S3CrudWizard):
 
         T = current.T
 
-        super(inv_Send_Wizard, self).__init__()
+        super(inv_SendWizard, self).__init__()
 
         self.pages = [{"page": "send",
                        "label": T("Outgoing Shipment"),
@@ -16926,7 +16993,54 @@ class inv_Send_Wizard(S3CrudWizard):
                     "header": self._header(r),
                     }
 
-        return super(inv_Send_Wizard, self).__call__(r, **attr)
+        elif current_page == "items":
+            # Add a button to print the Picking List
+            current.response.s3.wizard_buttons = DIV(A(ICON("print"),
+                                                       " ",
+                                                       current.T("Picking List"),
+                                                       _href = URL(args = [r.id,
+                                                                           "pick_list.xls",
+                                                                           ]
+                                                                   ),
+                                                       _class = "action-btn",
+                                                       ),
+                                                     _class = "wizard-btns",
+                                                     )
+
+        elif current_page == "packaging":
+            # Add buttons to print the Labels, Packing List and Gift Certificate
+            T = current.T
+            current.response.s3.wizard_buttons = DIV(A(ICON("print"),
+                                                       " ",
+                                                       T("Labels"),
+                                                       _href = URL(args = [r.id,
+                                                                           "labels.xls",
+                                                                           ]
+                                                                   ),
+                                                       _class = "action-btn",
+                                                       ),
+                                                     A(ICON("print"),
+                                                       " ",
+                                                       T("Packing List"),
+                                                       _href = URL(args = [r.id,
+                                                                           "packing_list.xls",
+                                                                           ]
+                                                                   ),
+                                                       _class = "action-btn",
+                                                       ),
+                                                     A(ICON("print"),
+                                                       " ",
+                                                       T("Gift Certificate"),
+                                                       _href = URL(args = [r.id,
+                                                                           "gift_certificate.xls",
+                                                                           ]
+                                                                   ),
+                                                       _class = "action-btn",
+                                                       ),
+                                                     _class = "wizard-btns",
+                                                     )
+
+        return super(inv_SendWizard, self).__call__(r, **attr)
 
 # =============================================================================
 class inv_TrackItemRepresent(S3Represent):

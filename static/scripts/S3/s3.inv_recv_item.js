@@ -1,7 +1,8 @@
 /**
- * Used by the inv/recv controller
+ * Used by the inv/recv controller for SHIP_STATUS_IN_PROCESS
  * - replace filterOptionsS3 to show item packs for Item
  * - set req_item_id based on selected Item
+ * - manage Bin allocations
  */
 
 $(document).ready(function() {
