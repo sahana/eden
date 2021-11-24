@@ -14,6 +14,49 @@
 (function($, undefined) {
 
     "use strict";
+
+    /**
+     * Helper function to convert multi-fact time series into chart data series
+     *
+     * @param Array facts: the facts
+     * @param Array data: the time series
+     */
+    var multiSeries = function(facts, data) {
+
+        // Prepare the data items
+        var items = [],
+            keys = {},
+            key,
+            index = 0,
+            area = facts.length == 1,
+            i,
+            j;
+        for (i=0; i < facts.length; i++) {
+            key = facts[i][0];
+            if (keys.hasOwnProperty(key)) {
+                index = keys[key] + 1;
+            }
+            keys[key] = index;
+            if (index) {
+                key += ' [' + (index + 1) +']';
+            }
+            var series = {key: key, label: facts[i][0], area: area},
+                period,
+                values = [];
+            for (j=0; j < data.length; j++) {
+                period = data[j];
+                values.push({
+                    start: new Date(period.t[0]).getTime(),
+                    value: period.v[i]
+                });
+            }
+            series.values = values;
+            items.push(series);
+        }
+
+        return items;
+    };
+
     var timeplotID = 0;
 
     /**
@@ -51,7 +94,7 @@
             thousandGrouping: '3',
             precision: null,
 
-            defaultChartType: 'linechart',
+            defaultChartType: 'barchart',
             defaultChartAxis: 'totals'
         },
 
@@ -258,7 +301,7 @@
                     case "totals":
                         switch(chartType) {
                             case "barchart":
-                                this._renderBarChart(chart, data.f, data.p);
+                                this._renderMultiBarChart(chart, data.f, data.p);
                                 break;
                             default:
                                 this._renderLineChart(chart, data.f, data.p);
@@ -296,47 +339,32 @@
         },
 
         /**
-         * Simple Bar Chart
+         * Multi Bar Chart
          *
          * @param {jQuery} chart - the chart container
          * @param {Array} facts - array of facts to render (tuples, see
-         *                        S3TimeSeries.as_dict() for details), multiple
-         *                        series not supported yet (=>@todo)
+         *                        S3TimeSeries.as_dict() for details)
          * @param {Array} data - the aggregated period data
          */
-        _renderBarChart: function(chart, facts, data) {
+        _renderMultiBarChart: function(chart, facts, data) {
 
-            // @todo: needed?
-            var defaultColor = 'silver';
-
-            var items = [];
-            for (var i=0; i < data.length; i++) {
-                var period = data[i];
-                items.push({
-                    start: new Date(period.t[0]).getTime(),
-                    value: period.v[0] // @todo: render multiple series
-                });
-            }
-
-            var currentChart = this.currentChart,
+            var items = multiSeries(facts, data),
+                currentChart = this.currentChart,
                 barChart,
                 barChartContainer;
 
             if (currentChart.chart) {
-
                 barChartContainer = currentChart.container;
                 barChart = currentChart.chart;
 
                 // Update the data
-                // @todo: use the fact label as key
-                barChartContainer.datum([{key: "reportChart",
-                                          values: items
-                                          }]).transition().duration(500)
-                                     .call(barChart);
+                barChartContainer.datum(items)
+                                 .transition()
+                                 .duration(50)
+                                 .call(barChart);
             } else {
-
                 // Set the height of the chart container
-                $(chart).closest('.tp-chart-contents').show().css({width: '96%'});
+                $(chart).closest('.tp-chart-contents').show();
                 $(chart).css({height: '360px'});
 
                 // Create SVG
@@ -345,12 +373,11 @@
                                       .attr('class', 'nv');
 
                 // @todo: show tooltips instead of values (needs contentGenerator)
-                barChart = nv.models.discreteBarChart()
+                barChart = nv.models.multiBarChart()
                                     .x(function(d) { return d.start; })
                                     .y(function(d) { return d.value; })
-                                    .color([defaultColor])
                                     .staggerLabels(true)
-                                    .showValues(true)
+                                    .showControls(facts.length > 1)
                                     .forceY([0, 1]);
 
                 barChart.tooltip.enabled(false);
@@ -358,28 +385,23 @@
                 var valueFormat = this.options.numberFormatter;
 
                 // Set value and tick formatters
-                barChart.valueFormat(valueFormat);
                 barChart.yAxis
                         .tickFormat(valueFormat);
                 barChart.xAxis
                         .tickFormat(function(d) {
-                                        return new Date(d).toLocaleDateString();
+                            return new Date(d).toLocaleDateString();
                         });
 
                 nv.addGraph(function() {
-
                     // Render the chart
-                    // @todo: use the fact label as key
-                    barChartContainer.datum([{key: "reportChart",
-                                              values: items
-                                              }])
-                                     .transition().duration(500)
+                    barChartContainer.datum(items)
+                                     .transition()
+                                     .duration(50)
                                      .call(barChart);
 
                     // Re-draw when window gets resized (using jQuery's method
                     // here since NVD3 does not allow selective removal of handler)
-                    $(window).off('resize.tp')
-                             .on('resize.tp', function(e) {
+                    $(window).off('resize.tp').on('resize.tp', function(e) {
                         barChart.update(e);
                     });
 
@@ -390,7 +412,6 @@
                 currentChart.type = "barchart";
                 currentChart.axis = "totals";
             }
-
         },
 
         /**
@@ -398,44 +419,14 @@
          *
          * @param {jQuery} chart - the chart container
          * @param {Array} facts - array of facts to render (tuples, see
-         *                        S3TimeSeries.as_dict() for details), will
+         *                        TimeSeries.as_dict() for details), will
          *                        render multiple series
          * @param {Array} data - the aggregated period data
          */
         _renderLineChart: function(chart, facts, data) {
 
-            // Prepare the data items
-            var items = [],
-                keys = {},
-                key,
-                index = 0,
-                area = facts.length == 1,
-                i,
-                j;
-            for (i=0; i < facts.length; i++) {
-                key = facts[i][0];
-                if (keys.hasOwnProperty(key)) {
-                    index = keys[key] + 1;
-                }
-                keys[key] = index;
-                if (index) {
-                    key += ' [' + (index + 1) +']';
-                }
-                var series = {key: key, label: facts[i][0], area: area},
-                    period,
-                    values = [];
-                for (j=0; j < data.length; j++) {
-                    period = data[j];
-                    values.push({
-                        start: new Date(period.t[0]).getTime(),
-                        value: period.v[i]
-                    });
-                }
-                series.values = values;
-                items.push(series);
-            }
-
-            var currentChart = this.currentChart,
+            var items = multiSeries(facts, data),
+                currentChart = this.currentChart,
                 lineChart,
                 lineChartContainer;
 
@@ -446,12 +437,13 @@
 
                 // Update the data
                 lineChartContainer.datum(items)
-                                  .transition().duration(250)
+                                  .transition()
+                                  .duration(50)
                                   .call(lineChart);
             } else {
 
                 // Set the height of the chart container
-                $(chart).closest('.tp-chart-contents').show().css({width: '96%'});
+                $(chart).closest('.tp-chart-contents').show();
                 $(chart).css({height: '360px'});
 
                 // Create SVG
@@ -465,7 +457,7 @@
                                      .x(function(d) { return d.start; })
                                      .y(function(d) { return d.value; })
                                      .margin({right: 50})
-                                     .duration(250)
+                                     .duration(50)
                                      .showLegend(true)
                                      .useInteractiveGuideline(true)
                                      .forceY([0, 1]);
@@ -473,24 +465,22 @@
                 var valueFormat = this.options.numberFormatter;
 
                 // Set value and tick formatters
-                lineChart.yAxis
-                         .tickFormat(valueFormat);
-                lineChart.xAxis
-                         .tickFormat(function(d) {
-                            return new Date(d).toLocaleDateString();
-                          });
+                lineChart.yAxis.tickFormat(valueFormat);
+                lineChart.xAxis.tickFormat(function(d) {
+                    return new Date(d).toLocaleDateString();
+                });
 
                 nv.addGraph(function() {
 
                     // Render the chart
                     lineChartContainer.datum(items)
-                                      .transition().duration(500)
+                                      .transition()
+                                      .duration(50)
                                       .call(lineChart);
 
                     // Re-draw when window gets resized (using jQuery's method
                     // here since NVD3 does not allow selective removal of handler)
-                    $(window).off('resize.tp')
-                             .on('resize.tp', function(e) {
+                    $(window).off('resize.tp').on('resize.tp', function(e) {
                         lineChart.update(e);
                     });
 
@@ -501,9 +491,7 @@
                 currentChart.type = "linechart";
                 currentChart.axis = "totals";
             }
-
         },
-
 
         /**
          * Ajax-reload the data and refresh all widget elements
@@ -577,28 +565,30 @@
          */
         _getOptions: function() {
 
-            var $el = $(this.element);
-            var widget_id = '#' + $el.attr('id');
-
-            var time = $(widget_id + '-time').val(),
+            var $el = $(this.element),
+                widget_id = '#' + $el.attr('id'),
+                time = $(widget_id + '-time').val(),
                 time_options = null,
                 start = null,
                 end = null,
-                slots = null;
+                slots = $(widget_id + '-slots').val();
 
             if (time != 'custom') {
                 time_options = time.split('|');
                 if (time_options.length == 3) {
                     start = time_options[0];
                     end = time_options[1];
-                    slots = time_options[2];
+                    if (!slots || slots == "auto") {
+                        slots = time_options[2];
+                    }
                 }
             } //else {
                 // @todo
             //}
 
             var options = {
-//                 fact: $(widget_id + '-fact').val(),
+                fact: $(widget_id + '-fact').val(),
+                timestamp: $(widget_id + '-timestamp').val(),
                 start: start,
                 end: end,
                 slots: slots
@@ -799,7 +789,10 @@
             });
 
             // Axis selectors to fire optionChanged-event
-            $(widgetID + '-time').on('change.autosubmit', function() {
+            var axes = ["fact", "timestamp", "time", "slots"].map(function(suffix) {
+                return widgetID + '-' + suffix;
+            }).join(",");
+            $(axes).on('change.autosubmit', function() {
                 $(widgetID + '-tp-form').trigger('optionChanged');
             });
 

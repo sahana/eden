@@ -3796,6 +3796,12 @@ class S3Config(Storage):
         """
         return self.disease.get("treatment", False)
 
+    def get_disease_testing_report_by_demographic(self):
+        """
+            Testing report to be entered broken down by demographic
+        """
+        return self.disease.get("testing_report_by_demographic", False)
+
     # -------------------------------------------------------------------------
     # Doc Options
     #

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" S3 TimePlot Reports Method
+""" S3 TimePlot Report Method and Time Series Toolkit
 
     @copyright: 2013-2021 (c) Sahana Software Foundation
     @license: MIT
@@ -28,11 +28,12 @@
 """
 
 __all__ = ("S3TimePlot",
+           #"S3TimePlotForm",
            "S3TimeSeries",
-           "S3TimeSeriesEvent",
-           "S3TimeSeriesEventFrame",
-           "S3TimeSeriesFact",
-           "S3TimeSeriesPeriod",
+           #"S3TimeSeriesEvent",
+           #"S3TimeSeriesEventFrame",
+           #"S3TimeSeriesFact",
+           #"S3TimeSeriesPeriod",
            )
 
 import datetime
@@ -43,11 +44,12 @@ import sys
 
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import DAILY, HOURLY, MONTHLY, WEEKLY, YEARLY, rrule
+
 from gluon import current
 from gluon.storage import Storage
-from gluon.html import FORM, INPUT, TABLE, TAG, XML
+from gluon.html import DIV, FORM, INPUT, LABEL, SPAN, TAG, XML
 from gluon.validators import IS_IN_SET
-from gluon.sqlhtml import OptionsWidget
+from gluon.sqlhtml import OptionsWidget, SQLFORM
 
 from .s3datetime import s3_decode_iso_datetime, s3_utc
 from .s3rest import S3Method
@@ -55,7 +57,7 @@ from .s3query import FS
 from .s3report import S3Report, S3ReportForm
 from .s3utils import s3_flatlist, s3_represent_value, s3_str, S3MarkupStripper
 
-tp_datetime = lambda *t: datetime.datetime(tzinfo = dateutil.tz.tzutc(), *t)
+tp_datetime = lambda year, *t: datetime.datetime(year, *t, tzinfo=dateutil.tz.tzutc())
 
 tp_tzsafe = lambda dt: dt.replace(tzinfo = dateutil.tz.tzutc()) \
                        if dt and dt.tzinfo is None else dt
@@ -71,7 +73,7 @@ dt_regex = Storage(
     YEAR_MONTH = re.compile(r"\A\s*(\d{4})-([0]*[1-9]|[1][12])\s*\Z"),
     MONTH_YEAR = re.compile(r"\A\s*([0]*[1-9]|[1][12])/(\d{4})\s*\Z"),
     DATE = re.compile(r"\A\s*(\d{4})-([0]?[1-9]|[1][12])-([012]?[1-9]|[3][01])\s*\Z"),
-    DELTA = re.compile(r"\A\s*([+-]?)\s*(\d+)\s*([ymwdh])\w*\s*\Z"),
+    DELTA = re.compile(r"\A\s*([<>]?)([+-]?)\s*(\d+)\s*([ymwdh])\w*\s*\Z"),
 )
 
 FACT = re.compile(r"([a-zA-Z]+)\(([a-zA-Z0-9_.$:\,~]+)\),*(.*)\Z")
@@ -86,8 +88,9 @@ class S3TimePlot(S3Method):
         """
             Page-render entry point for REST interface.
 
-            @param r: the S3Request instance
-            @param attr: controller attributes for the request
+            Args:
+                r: the CRUDRequest instance
+                attr: controller attributes for the request
         """
 
         if r.http == "GET":
@@ -101,11 +104,12 @@ class S3TimePlot(S3Method):
         """
             Widget-render entry point for S3Summary.
 
-            @param r: the S3Request
-            @param method: the widget method
-            @param widget_id: the widget ID
-            @param visible: whether the widget is initially visible
-            @param attr: controller attributes
+            Args:
+                r: the S3Request
+                method: the widget method
+                widget_id: the widget ID
+                visible: whether the widget is initially visible
+                attr: controller attributes
         """
 
         # Get the target resource
@@ -198,8 +202,9 @@ class S3TimePlot(S3Method):
         """
             Time plot report page
 
-            @param r: the S3Request instance
-            @param attr: controller attributes for the request
+            Args:
+                r: the S3Request instance
+                attr: controller attributes for the request
         """
 
         output = {}
@@ -240,9 +245,7 @@ class S3TimePlot(S3Method):
         cols = get_vars_get("cols")
 
         # Parse event frame parameters
-        start = get_vars_get("start")
-        end = get_vars_get("end")
-        slots = get_vars_get("slots")
+        start, end, slots = get_timeframe(get_vars)
 
         # Create time series
         # @todo: should become resource.timeseries()
@@ -270,7 +273,8 @@ class S3TimePlot(S3Method):
         if r.representation in ("html", "iframe"):
             # Page load
 
-            output["title"] = self.crud_string(tablename, "title_report")
+            crud_string = self.crud_string
+            output["title"] = crud_string(tablename, "title_report")
 
             # Filter widgets
             if show_filter_form:
@@ -318,7 +322,7 @@ class S3TimePlot(S3Method):
                                                    widget_id = widget_id,
                                                    )
 
-            output["title"] = self.crud_string(tablename, "title_report")
+            output["title"] = crud_string(tablename, "title_report")
             output["report_type"] = "timeplot"
 
             # Detect and store theme-specific inner layout
@@ -342,7 +346,8 @@ class S3TimePlot(S3Method):
         """
             Identify the target resource
 
-            @param r: the S3Request
+            Args:
+                r: the S3Request
         """
 
         # Fallback
@@ -365,8 +370,9 @@ class S3TimePlot(S3Method):
         """
             Read the relevant GET vars for the timeplot
 
-            @param r: the S3Request
-            @param resource: the target S3Resource
+            Args:
+                r: the S3Request
+                resource: the target S3Resource
         """
 
         # Extract the relevant GET vars
@@ -406,7 +412,8 @@ class S3TimePlot(S3Method):
         """
             Parse timestamp expression
 
-            @param timestamp: the timestamp expression
+            Args:
+                timestamp: the timestamp expression
         """
 
         if timestamp:
@@ -427,10 +434,6 @@ class S3TimePlot(S3Method):
 class S3TimePlotForm(S3ReportForm):
     """ Helper class to render a report form """
 
-    def __init__(self, resource):
-
-        self.resource = resource
-
     # -------------------------------------------------------------------------
     def html(self,
              data,
@@ -445,8 +448,9 @@ class S3TimePlotForm(S3ReportForm):
         """
             Render the form for the report
 
-            @param get_vars: the GET vars if the request (as dict)
-            @param widget_id: the HTML element base ID for the widgets
+            Args:
+                get_vars: the GET vars if the request (as dict)
+                widget_id: the HTML element base ID for the widgets
         """
 
         T = current.T
@@ -463,16 +467,13 @@ class S3TimePlotForm(S3ReportForm):
 
         # Report options
         report_options = self.report_options(get_vars = get_vars,
-                                             widget_id = widget_id)
+                                             widget_id = widget_id,
+                                             )
 
         hidden = {"tp-data": json.dumps(data, separators=SEPARATORS)}
 
-
-        # @todo: report options
         # @todo: chart title
-        # @todo: empty-section
         empty = T("No data available")
-        # @todo: CSS
 
         # Report form submit element
         resource = self.resource
@@ -486,11 +487,10 @@ class S3TimePlotForm(S3ReportForm):
                 _class = "%s %s" % (submit[1], _class)
             else:
                 label = submit
-            submit = TAG[""](
-                        INPUT(_type = "button",
-                              _value = label,
-                              _class = _class,
-                              ))
+            submit = TAG[""](INPUT(_type = "button",
+                                   _value = label,
+                                   _class = _class,
+                                   ))
         else:
             submit = ""
 
@@ -525,11 +525,10 @@ class S3TimePlotForm(S3ReportForm):
 
         # Script to attach the timeplot widget
         settings = current.deployment_settings
-        options = {
-            "ajaxURL": ajaxurl,
-            "autoSubmit": settings.get_ui_report_auto_submit(),
-            "emptyMessage": str(empty),
-        }
+        options = {"ajaxURL": ajaxurl,
+                   "autoSubmit": settings.get_ui_report_auto_submit(),
+                   "emptyMessage": str(empty),
+                   }
         script = """$("#%(widget_id)s").timeplot(%(options)s)""" % \
                     {"widget_id": widget_id,
                      "options": json.dumps(options),
@@ -539,65 +538,241 @@ class S3TimePlotForm(S3ReportForm):
         return output
 
     # -------------------------------------------------------------------------
-    def report_options(self, get_vars=None, widget_id="timeplot"):
+    def report_options(self,
+                       get_vars = None,
+                       widget_id = "timeplot",
+                       ):
         """
             Render the widgets for the report options form
 
-            @param get_vars: the GET vars if the request (as dict)
-            @param widget_id: the HTML element base ID for the widgets
+            Args:
+                get_vars: the GET vars if the request (as dict)
+                widget_id: the HTML element base ID for the widgets
         """
 
         T = current.T
 
         timeplot_options = self.resource.get_config("timeplot_options")
 
+        label = lambda l, **attr: LABEL("%s:" % l, **attr)
         selectors = []
 
-        # @todo: formstyle may not be executable => convert
-        formstyle = current.deployment_settings.get_ui_filter_formstyle()
+        # Fact options
+        selector = self.fact_options(options = timeplot_options,
+                                     get_vars = get_vars,
+                                     widget_id = widget_id,
+                                     )
+        selectors.append(("%s-fact__row" % widget_id,
+                          label(T("Report of"),
+                                _for = selector["_id"],
+                                ),
+                          selector,
+                          None,
+                          ))
 
-        # Report type selector
-        # @todo: implement
-        #fact_selector = self.fact_options(options = timeplot_options,
-                                          #get_vars = get_vars,
-                                          #widget_id = "%s-fact" % widget_id,
-                                          #)
-        #selectors.append(formstyle("%s-fact__row" % widget_id,
-                                   #"Label",
-                                   #fact_selector,
-                                   #None,
-                                   #))
-
-        # Time frame selector
-        time_selector = self.time_options(options = timeplot_options,
+        # Timestamp options
+        selector = self.timestamp_options(options = timeplot_options,
                                           get_vars = get_vars,
-                                          widget_id = "%s-time" % widget_id,
+                                          widget_id = widget_id,
                                           )
-        selectors.append(formstyle("%s-time__row" % widget_id,
-                                   "Time Frame",
-                                   time_selector,
-                                   None,
-                                   ))
+        selectors.append(("%s-timestamp__row" % widget_id,
+                          label(T("Mode"),
+                                _for = selector["_id"]
+                                ),
+                          selector,
+                          None,
+                          ))
 
-        # Render container according to row type
-        if selectors[0].tag == "tr":
-            selectors = TABLE(selectors)
+        # Time frame and slots options
+        tf_selector = self.time_options(options = timeplot_options,
+                                        get_vars = get_vars,
+                                        widget_id = widget_id,
+                                        )
+        ts_selector = self.slot_options(options = timeplot_options,
+                                        get_vars = get_vars,
+                                        widget_id = widget_id,
+                                        )
+        if ts_selector:
+            selector = DIV(tf_selector,
+                           label(T("Intervals"), _for=ts_selector["_id"]),
+                           ts_selector,
+                           _class = "tp-time-options",
+                           )
         else:
-            selectors = TAG[""](selectors)
+            selector = tf_selector
+        selectors.append(("%s-time__row" % widget_id,
+                          label(T("Time Frame"), _for=tf_selector["_id"]),
+                          selector,
+                          None,
+                          ))
 
-        # Render field set
-        fieldset = self._fieldset(T("Report Options"),
-                                  selectors,
-                                  _id = "%s-options" % widget_id,
-                                  )
+        # Build field set
+        formstyle = current.deployment_settings.get_ui_filter_formstyle()
+        if not callable(formstyle):
+            formstyle = SQLFORM.formstyles[formstyle]
 
-        return fieldset
+        selectors = formstyle(FORM(), selectors)
+
+        return self._fieldset(T("Report Options"),
+                              selectors,
+                              _id = "%s-options" % widget_id,
+                              _class = "report-options",
+                              )
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def time_options(options=None, get_vars=None, widget_id=None):
+    def fact_options(self,
+                     options = None,
+                     get_vars = None,
+                     widget_id = None,
+                     ):
         """
-            @todo: docstring
+            Generate a selector for fact options (multiple allowed)
+
+            Args:
+                options: the timeplot options for the target table
+                get_vars: the current GET vars with selected options
+                          or defaults, respectively
+                widget_id: the main widget DOM ID
+
+            Returns:
+                a multi-select widget
+        """
+
+        T = current.T
+        table = self.resource.table
+
+        default = "count(%s)" % (table._id.name)
+
+        # Options
+        if options and "facts" in options:
+            opts = options["facts"]
+        else:
+            from .s3fields import s3_all_meta_field_names
+            meta_fields = s3_all_meta_field_names()
+
+            opts = [(T("Number of Records"), default)]
+            for fn in table.fields:
+                if fn in meta_fields:
+                    continue
+                field = table[fn]
+                if not field.readable:
+                    continue
+                requires = field.requires
+                if field.type == "integer" and not hasattr(requires, "options") or \
+                    field.type == "double":
+                    label = T("%(field)s (total)") % {"field": field.label}
+                    opts.append((label, "sum(%s)" % fn))
+
+        # Currently selected option(s)
+        value = []
+        if get_vars:
+            selected = get_vars.get("fact")
+            if not isinstance(selected, list):
+                selected = [selected]
+            for item in selected:
+                if isinstance(item, (tuple, list)):
+                    value.append(item[-1])
+                elif isinstance(item, str):
+                    value.extend(item.split(","))
+        if not value:
+            value = default
+
+        # Dummy field
+        widget_opts = [(opt, label) for (label, opt) in opts]
+        dummy_field = Storage(name = "timeplot-fact",
+                              requires = IS_IN_SET(widget_opts, zero=None),
+                              )
+
+        # Widget
+        from .s3widgets import S3MultiSelectWidget
+        return S3MultiSelectWidget()(dummy_field,
+                                     value,
+                                     _id = "%s-fact" % widget_id,
+                                     _name = "fact",
+                                     _class = "tp-fact",
+                                     )
+
+    # -------------------------------------------------------------------------
+    def timestamp_options(self,
+                          options = None,
+                          get_vars = None,
+                          widget_id = None,
+                          ):
+        """
+            Generate a selector for timestamp options
+
+            Args:
+                options: the timeplot options for the target table
+                get_vars: the current GET vars with selected options
+                          or defaults, respectively
+                widget_id: the main widget DOM ID
+
+            Returns:
+                an options widget
+        """
+
+        T = current.T
+        table = self.resource.table
+
+        # Options
+        if options and "timestamp" in options:
+            opts = options["timestamp"]
+        else:
+            start, end = S3TimeSeries.default_timestamp(table)
+            if not start:
+                return None
+            separate = (start, end) if end else (start, start)
+            opts = [(T("per interval"), ",".join(separate)),
+                    (T("cumulative"), start),
+                    ]
+
+        if not opts:
+            return SPAN(T("no options available"),
+                        _class = "no-options-available",
+                        )
+
+        # Currently selected option
+        value = get_vars.get("timestamp") if get_vars else None
+        if not value:
+            start, end = S3TimeSeries.default_timestamp(table)
+            if start and end:
+                value = "%s,%s" % (start, end)
+            elif start:
+                value = start
+
+        # Dummy field
+        widget_opts = [(opt, label) for (label, opt) in opts]
+        dummy_field = Storage(name = "timestamp",
+                              requires = IS_IN_SET(widget_opts, zero=None),
+                              )
+
+        # Widget
+        return OptionsWidget.widget(dummy_field,
+                                    value,
+                                    _id = "%s-timestamp" % widget_id,
+                                    _name = "timestamp",
+                                    _class = "tp-timestamp",
+                                    )
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def time_options(cls,
+                     options = None,
+                     get_vars = None,
+                     widget_id = None,
+                     ):
+        """
+            Generate a selector for the report time frame
+
+            Args:
+                options: the timeplot options for the target table
+                get_vars: the current GET vars with selected options
+                          or defaults, respectively
+                widget_id: the main widget DOM ID
+           
+
+            Returns:
+                an options widget
         """
 
         T = current.T
@@ -605,23 +780,33 @@ class S3TimePlotForm(S3ReportForm):
         # Time options:
         if options and "time" in options:
             opts = options["time"]
+                                      
         else:
             # (label, start, end, slots)
-            # If you specify a start, then end is relative to that - without start, end is relative to now
-            opts = (("All up to now", "", "", ""),
-                    ("Last Year", "-1year", "", "months"),
-                    ("Last 6 Months", "-6months", "", "weeks"),
-                    ("Last Quarter", "-3months", "", "weeks"),
-                    ("Last Month", "-1month", "", "days"),
-                    ("Last Week", "-1week", "", "days"),
-                    ("Next Year", "", "+1year", "months"),
-                    ("Next 5 Years", "", "+5years", "years"),
-                    ("All/+1 Month", "", "+1month", ""),
-                    ("All/+2 Month", "", "+2month", ""),
-                    ("-6/+3 Months", "-6months", "+9months", "months"),
-                    ("-3/+1 Months", "-3months", "+4months", "weeks"),
-                    ("-4/+2 Weeks", "-4weeks", "+6weeks", "weeks"),
-                    ("-2/+1 Weeks", "-2weeks", "+3weeks", "days"),
+            # - if start is specified, end is relative to start
+            # - otherwise, end is relative to now
+            # - start "" means the date of the earliest recorded event
+            # - end "" means now
+            opts = ((T("All up to now"), "", "", ""),
+                    (T("Last Year"), "<-1 year", "+1 year", "months"),
+                    (T("This Year"), "<-0 years", "", "months"),
+                    (T("Next Year"), "<-0 years", "+1year", "months"),
+                    (T("Next 5 Years"), "<-0 years", "+5years", "years"),
+                    (T("Last Month"), "<-1 month", "+1 month", "days"),
+                    (T("This Month"), "<-0 months", "", "days"),
+                    (T("Last Week"), "<-1 week", "+1 week", "days"),
+                    (T("This Week"), "<-0 weeks", "", "days"),
+                    #(T("Past 12 Months"), "-12months", "", "months"),
+                    #(T("Past 6 Months"), "-6months", "", "weeks"),
+                    #(T("Past 3 Months"), "-3months", "", "weeks"),
+                    #(T("Past Month"), "-1month", "", "days"),
+                    #(T("Past Week"), "-1week", "", "days"),
+                    #("All/+1 Month", "", "+1month", ""),
+                    #("All/+2 Month", "", "+2month", ""),
+                    #("-6/+3 Months", "-6months", "+9months", "months"),
+                    #("-3/+1 Months", "-3months", "+4months", "weeks"),
+                    #("-4/+2 Weeks", "-4weeks", "+6weeks", "weeks"),
+                    #("-2/+1 Weeks", "-2weeks", "+3weeks", "days"),
                     )
 
         widget_opts = []
@@ -629,30 +814,116 @@ class S3TimePlotForm(S3ReportForm):
             label, start, end, slots = opt
             widget_opts.append(("|".join((start, end, slots)), T(label)))
 
-        # Get current value
+        # Currently selected value
         if get_vars:
-            start = get_vars.get("start", "")
-            end = get_vars.get("end", "")
-            slots = get_vars.get("slots", "")
+            start, end, slots = get_timeframe(get_vars)
         else:
             start = end = slots = ""
         value = "|".join((start, end, slots))
 
         # Dummy field
-        dummy_field = Storage(name="time",
-                              requires=IS_IN_SET(widget_opts, zero=None))
+        dummy_field = Storage(name = "time",
+                              requires = IS_IN_SET(widget_opts, zero=None),
+                              )
 
-        # Construct widget
+        # Widget
         return OptionsWidget.widget(dummy_field,
                                     value,
-                                    _id = widget_id,
+                                    _id = "%s-time" % widget_id,
                                     _name = "time",
                                     _class = "tp-time",
                                     )
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def slot_options(options=None, get_vars=None, widget_id=None):
+        """
+            Generates a selector for the time slots
+
+            Args:
+                options: the timeplot options for the target table
+                get_vars: the current GET vars with selected options
+                          or defaults, respectively
+                widget_id: the main widget DOM ID
+
+            Returns:
+                an options widget, or None if there is only
+                the "auto" option available
+                                  
+        """
+                                               
+        T = current.T
+
+        automatic = (T("Automatic"), "auto")
+
+        if options and "slots" in options:
+            opts = options["slots"]
+                                                                               
+        else:
+            # Do not render by default
+            return None
+            #opts = (automatic,
+                    #(T("Days"), "days"),
+                    #(T("Weeks"), "weeks"),
+                    #(T("2 Weeks"), "2 weeks"),
+                    #(T("Months"), "months"),
+                    #(T("3 Months"), "3 months"),
+                    #)
+
+        if not any(opt[1] == "auto" for opt in opts):
+            explicit = opts
+            opts = [automatic]
+            opts.extend(explicit)
+        if len(opts) == 1:
+            return None
+
+        # Currently selected value
+        value = get_vars.get("slots") if get_vars else None
+        if not value:
+            value = "auto"
+
+        # Dummy field
+        widget_opts = [(opt, label) for (label, opt) in opts]
+        dummy_field = Storage(name = "slots",
+                              requires = IS_IN_SET(widget_opts, zero=None),
+                              )
+        # Widget
+        return OptionsWidget.widget(dummy_field,
+                                    value,
+                                    _id = "%s-slots" % widget_id,
+                                    _name = "slots",
+                                    _class = "tp-slots",
+                                    )
+
+# =============================================================================
+def get_timeframe(get_vars):
+    """
+        Get the report time frame from GET vars; can be encoded either
+        as a query parameter "time" with start|end|slots (i.e. |-separated),
+        or as separate start, end and slots parameters.
+
+        Args:
+            get_vars: the GET vars
+
+        Returns:
+            tuple (start, end, slots)
+    """
+
+    timeframe = get_vars.get("time")
+    if timeframe:
+        if isinstance(timeframe, str):
+            timeframe = timeframe.split("|")
+        start, end, slots = (list(timeframe[-3:]) + ["", "", ""])[:3]
+    else:
+        start = get_vars.get("start", "")
+        end = get_vars.get("end", "")
+        slots = get_vars.get("slots", "")
+                        
+    return start, end, slots
+
 # =============================================================================
 class S3TimeSeries:
-    """ Class representing a time series """
+    """ A series of grouped values, aggregated over a time axis """
 
     def __init__(self,
                  resource,
@@ -668,23 +939,22 @@ class S3TimeSeries:
                  title = None,
                  ):
         """
-            Constructor
+            Args:
+                resource: the resource
+                start: the start of the series (datetime or string expression)
+                end: the end of the time series (datetime or string expression)
+                slots: the slot size (string expression)
 
-            @param resource: the resource
-            @param start: the start of the series (datetime or string expression)
-            @param end: the end of the time series (datetime or string expression)
-            @param slots: the slot size (string expression)
+                event_start: the event start field (field selector)
+                event_end: the event end field (field selector)
 
-            @param event_start: the event start field (field selector)
-            @param event_end: the event end field (field selector)
+                rows: the rows axis for event grouping (field selector)
+                cols: the columns axis for event grouping (field selector)
+                facts: an array of facts (S3TimeSeriesFact)
 
-            @param rows: the rows axis for event grouping (field selector)
-            @param cols: the columns axis for event grouping (field selector)
-            @param facts: an array of facts (S3TimeSeriesFact)
+                baseline: the baseline field (field selector)
 
-            @param baseline: the baseline field (field selector)
-
-            @param title: the time series title
+                title: the time series title
         """
 
         self.resource = resource
@@ -811,8 +1081,9 @@ class S3TimeSeries:
         """
             Represent and sort the values of a pivot axis (rows or cols)
 
-            @param rfield: the axis rfield
-            @param values: iterable of values
+            Args:
+                rfield: the axis rfield
+                values: iterable of values
         """
 
         if rfield.virtual:
@@ -857,7 +1128,8 @@ class S3TimeSeries:
         """
             Get the representation method for a field in the report
 
-            @param field: the field selector
+            Args:
+                field: the field selector
         """
 
         rfields = self.rfields
@@ -899,11 +1171,13 @@ class S3TimeSeries:
         """
             Create an event frame for this report
 
-            @param start: the start date/time (string, date or datetime)
-            @param end: the end date/time (string, date or datetime)
-            @param slots: the slot length (string)
+            Args:
+                start: the start date/time (string, date or datetime)
+                end: the end date/time (string, date or datetime)
+                slots: the slot length (string)
 
-            @return: the event frame
+            Returns:
+                the event frame
         """
 
         resource = self.resource
@@ -1164,30 +1438,50 @@ class S3TimeSeries:
         return data
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def default_timestamp(table, event_end=None):
+        """
+            Get the default timestamp for a table
+
+            Args:
+                table: the Table
+                event_end: event_end, if not default (field selector)
+
+            Returns:
+                tuple (event_start, event_end), field selectors
+        """
+
+        event_start = None
+        fields = table.fields
+        for fname in ("date", "start_date", "created_on"):
+            if fname in fields:
+                event_start = fname
+                break
+        if event_start and not event_end:
+            for fname in ("end_date",):
+                if fname in fields:
+                    event_end = fname
+                    break
+
+        return event_start, event_end
+
+    # -------------------------------------------------------------------------
     def resolve_timestamp(self, event_start, event_end):
         """
             Resolve the event_start and event_end field selectors
 
-            @param event_start: the field selector for the event start field
-            @param event_end: the field selector for the event end field
+            Args:
+                event_start: the field selector for the event start field
+                event_end: the field selector for the event end field
         """
 
         resource = self.resource
         rfields = self.rfields
 
-        # Defaults
+        # Defaults                              
         if not event_start:
             table = resource.table
-            fields = table.fields
-            for fname in ("date", "start_date", "created_on"):
-                if fname in fields:
-                    event_start = fname
-                    break
-            if event_start and not event_end:
-                for fname in ("end_date",):
-                    if fname in fields:
-                        event_end = fname
-                        break
+            event_start, event_end = self.default_timestamp(table)
         if not event_start:
             raise SyntaxError("No time stamps found in %s" % table)
 
@@ -1206,7 +1500,8 @@ class S3TimeSeries:
         """
             Resolve the baseline field selector
 
-            @param baseline: the baseline selector
+            Args:
+                baseline: the baseline selector
         """
 
         resource = self.resource
@@ -1234,8 +1529,9 @@ class S3TimeSeries:
         """
             Resolve the grouping axes field selectors
 
-            @param rows: the rows field selector
-            @param cols: the columns field selector
+            Args:
+                rows: the rows field selector
+                cols: the columns field selector
         """
 
         resource = self.resource
@@ -1266,8 +1562,9 @@ class S3TimeSeries:
         """
             Parse a string for start/end date(time) of an interval
 
-            @param timestr: the time string
-            @param start: the start datetime to relate relative times to
+            Args:
+                timestr: the time string
+                start: the start datetime to relate relative times to
         """
 
         if start is None:
@@ -1284,16 +1581,40 @@ class S3TimeSeries:
                          "m": "months",
                          "w": "weeks",
                          "d": "days",
-                         "h": "hours"}
-            length = intervals.get(groups[2])
+                         "h": "hours",
+                         }
+            length = intervals.get(groups[3])
             if not length:
                 raise SyntaxError("Invalid date/time: %s" % timestr)
-            num = int(groups[1])
-            if not num:
-                return start
-            if groups[0] == "-":
+
+            num = int(groups[2])
+            if groups[1] == "-":
                 num *= -1
-            return start + relativedelta(**{length: num})
+            delta = {length: num}
+
+            end = groups[0]
+            if end == "<":
+                delta.update(minute=0, second=0, microsecond=0)
+                if length != "hours":
+                    delta.update(hour=0)
+                if length == "weeks":
+                    delta.update(weeks=num-1, weekday=0)
+                elif length == "months":
+                    delta.update(day=1)
+                elif length == "years":
+                    delta.update(month=1, day=1)
+            elif end == ">":
+                delta.update(minute=59, second=59, microsecond=999999)
+                if length != "hours":
+                    delta.update(hour=23)
+                if length == "weeks":
+                    delta.update(weekday=6)
+                elif length == "months":
+                    delta.update(day=31)
+                elif length == "years":
+                    delta.update(month=12, day=31)
+
+            return start + relativedelta(**delta)
 
         # Month/Year, e.g. "5/2001"
         match = dt_regex.MONTH_YEAR.match(timestr)
@@ -1338,7 +1659,7 @@ class S3TimeSeries:
 
 # =============================================================================
 class S3TimeSeriesEvent:
-    """ Class representing an event """
+    """ A single event in a time series """
 
     def __init__(self,
                  event_id,
@@ -1349,15 +1670,14 @@ class S3TimeSeriesEvent:
                  col = DEFAULT,
                  ):
         """
-            Constructor
-
-            @param event_id: a unique identifier for the event (e.g. record ID)
-            @param start: start time of the event (datetime.datetime)
-            @param end: end time of the event (datetime.datetime)
-            @param values: a dict of key-value pairs with the attribute
-                           values for the event
-            @param row: the series row for this event
-            @param col: the series column for this event
+            Args:
+                event_id: a unique identifier for the event (e.g. record ID)
+                start: start time of the event (datetime.datetime)
+                end: end time of the event (datetime.datetime)
+                values: a dict of key-value pairs with the attribute
+                        values for the event
+                row: the series row for this event
+                col: the series column for this event
         """
 
         self.event_id = event_id
@@ -1406,7 +1726,8 @@ class S3TimeSeriesEvent:
         """
             Convert a field value into a set of series keys
 
-            @param value: the field value
+            Args:
+                value: the field value
         """
 
         if value is DEFAULT:
@@ -1424,7 +1745,8 @@ class S3TimeSeriesEvent:
         """
             Access attribute values of this event
 
-            @param field: the attribute field name
+            Args:
+                field: the attribute field name
         """
 
         return self.values.get(field, None)
@@ -1434,7 +1756,8 @@ class S3TimeSeriesEvent:
         """
             Comparison method to allow sorting of events
 
-            @param other: the event to compare to
+            Args:
+                other: the event to compare to
         """
 
         this = self.start
@@ -1449,7 +1772,7 @@ class S3TimeSeriesEvent:
 
 # =============================================================================
 class S3TimeSeriesFact:
-    """ Class representing a fact layer """
+    """ A formula for a datum (fact) in a time series """
 
     #: Supported aggregation methods
     METHODS = {"count": "Count",
@@ -1462,12 +1785,11 @@ class S3TimeSeriesFact:
 
     def __init__(self, method, base, slope=None, interval=None, label=None):
         """
-            Constructor
-
-            @param method: the aggregation method
-            @param base: column name of the (base) field
-            @param slope: column name of the slope field (for cumulate method)
-            @param interval: time interval expression for the slope
+            Args:
+                method: the aggregation method
+                base: column name of the (base) field
+                slope: column name of the slope field (for cumulate method)
+                interval: time interval expression for the slope
         """
 
         if method not in self.METHODS:
@@ -1493,8 +1815,9 @@ class S3TimeSeriesFact:
         """
             Aggregate values from events
 
-            @param period: the period
-            @param events: the events
+            Args:
+                period: the period
+                events: the events
         """
 
         values = []
@@ -1581,7 +1904,8 @@ class S3TimeSeriesFact:
         """
             Aggregate a list of values.
 
-            @param values: iterable of values
+            Args:
+                values: iterable of values
         """
 
         if values is None:
@@ -1628,7 +1952,8 @@ class S3TimeSeriesFact:
         """
             Parse fact expression
 
-            @param fact: the fact expression
+            Args:
+                fact: the fact expression
         """
 
         if isinstance(fact, list):
@@ -1691,7 +2016,8 @@ class S3TimeSeriesFact:
         """
             Resolve the base and slope selectors against resource
 
-            @param resource: the resource
+            Args:
+                resource: the resource
         """
 
         self.resource = None
@@ -1763,15 +2089,22 @@ class S3TimeSeriesFact:
 
     # -------------------------------------------------------------------------
     @classmethod
-    def lookup_label(cls, resource, method, base, slope=None, interval=None):
+    def lookup_label(cls,
+                     resource,
+                     method,
+                     base,
+                     slope = None,
+                     interval = None,
+                     ):
         """
             Lookup the fact label from the timeplot options of resource
 
-            @param resource: the resource (S3Resource)
-            @param method: the aggregation method (string)
-            @param base: the base field selector (string)
-            @param slope: the slope field selector (string)
-            @param interval: the interval expression (string)
+            Args:
+                resource: the resource (CRUDResource)
+                method: the aggregation method (string)
+                base: the base field selector (string)
+                slope: the slope field selector (string)
+                interval: the interval expression (string)
         """
 
         fact_opts = None
@@ -1798,8 +2131,8 @@ class S3TimeSeriesFact:
                         match = fact
                         break
                 if match:
-                    if fact.label:
-                        label = fact.label
+                    if match.label:
+                        label = match.label
                     elif len(facts) == 1:
                         label = title
                 if label:
@@ -1813,8 +2146,9 @@ class S3TimeSeriesFact:
         """
             Generate a default fact label
 
-            @param rfield: the S3ResourceField (alternatively the field label)
-            @param method: the aggregation method
+            Args:
+                rfield: the S3ResourceField (alternatively the field label)
+                method: the aggregation method
         """
 
         T = current.T
@@ -1837,18 +2171,170 @@ class S3TimeSeriesFact:
         return "%s (%s)" % (field_label, method_label)
 
 # =============================================================================
+class S3TimeSeriesEventFrame:
+    """ The time frame of a time series """
+
+    def __init__(self, start, end, slots=None):
+        """
+            Args:
+                start: start of the time frame (datetime.datetime)
+                end: end of the time frame (datetime.datetime)
+                slot: length of time slots within the event frame,
+                      format: "{n }[hour|day|week|month|year]{s}",
+                      examples: "1 week", "3 months", "years"
+        """
+
+        # Start time is required
+        if start is None:
+            raise SyntaxError("start time required")
+        self.start = tp_tzsafe(start)
+
+        # End time defaults to now
+        if end is None:
+            end = datetime.datetime.utcnow()
+        self.end = tp_tzsafe(end)
+
+        self.empty = True
+        self.baseline = None
+
+        self.slots = slots
+        self.periods = {}
+
+        self.rule = self.get_rule()
+
+    # -------------------------------------------------------------------------
+    def get_rule(self):
+        """
+            Get the recurrence rule for the periods
+        """
+
+        slots = self.slots
+        if not slots:
+            return None
+
+        return S3TimeSeriesPeriod.get_rule(self.start, self.end, slots)
+
+    # -------------------------------------------------------------------------
+    def extend(self, events):
+        """
+            Extend this time frame with events
+
+            Args:
+                events: iterable of events
+
+            TODO integrate in constructor
+            TODO handle self.rule == None
+        """
+
+        if not events:
+            return
+        empty = self.empty
+
+        # Order events by start datetime
+        events = sorted(events)
+
+        rule = self.rule
+        periods = self.periods
+
+        # No point to loop over periods before the first event:
+        start = events[0].start
+        if start is None or start <= self.start:
+            first = rule[0]
+        else:
+            first = rule.before(start, inc=True)
+
+        current_events = {}
+        previous_events = {}
+        for start in rule.between(first, self.end, inc=True):
+
+            # Compute end of this period
+            end = rule.after(start)
+            if not end:
+                if start < self.end:
+                    end = self.end
+                else:
+                    # Period start is at the end of the event frame
+                    break
+
+            # Find all current events
+            last_index = None
+            for index, event in enumerate(events):
+                last_index = index
+                if event.end and event.end < start:
+                    # Event ended before this period
+                    previous_events[event.event_id] = event
+                elif event.start is None or event.start < end:
+                    # Event starts before or during this period
+                    current_events[event.event_id] = event
+                else:
+                    # Event starts only after this period
+                    break
+
+            # Add current events to current period
+            period = periods.get(start)
+            if period is None:
+                period = periods[start] = S3TimeSeriesPeriod(start, end=end)
+            for event in current_events.values():
+                period.add_current(event)
+            for event in previous_events.values():
+                period.add_previous(event)
+
+            empty = False
+
+            # Remaining events
+            events = events[last_index:] if last_index is not None else None
+            if not events:
+                # No more events
+                break
+
+            # Remove events which end during this period
+            remaining = {}
+            for event_id, event in current_events.items():
+                if not event.end or event.end > end:
+                    remaining[event_id] = event
+                else:
+                    previous_events[event_id] = event
+            current_events = remaining
+
+        self.empty = empty
+        return
+
+    # -------------------------------------------------------------------------
+    def __iter__(self):
+        """
+            Iterate over all periods within this event frame
+        """
+
+        periods = self.periods
+
+        rule = self.rule
+        if rule:
+            for dt in rule:
+                if dt >= self.end:
+                    break
+                if dt in periods:
+                    yield periods[dt]
+                else:
+                    end = rule.after(dt)
+                    if not end:
+                        end = self.end
+                    yield S3TimeSeriesPeriod(dt, end=end)
+        else:
+            # @todo: continuous periods
+            # sort actual periods and iterate over them
+            raise NotImplementedError
+
+        return
+
+# =============================================================================
 class S3TimeSeriesPeriod:
-    """
-        Class representing a single time period (slot) in an event frame,
-        within which events will be grouped and facts aggregated
-    """
+    """ A time period (slot) within an event frame """
 
     def __init__(self, start, end=None):
         """
-            Constructor
-
-            @param start: the start of the time period (datetime)
-            @param end: the end of the time period (datetime)
+            Args:
+                start: the start of the time period (datetime)
+                end: the end of the time period (datetime)
         """
 
         self.start = tp_tzsafe(start)
@@ -1858,7 +2344,14 @@ class S3TimeSeriesPeriod:
         self.pevents = {}
         self.cevents = {}
 
-        self._reset()
+        self._matrix = None
+        self._rows = None
+        self._cols = None
+
+        self.matrix = None
+        self.rows = None
+        self.cols = None
+        self.totals = None
 
     # -------------------------------------------------------------------------
     def _reset(self):
@@ -1867,12 +2360,6 @@ class S3TimeSeriesPeriod:
         self._matrix = None
         self._rows = None
         self._cols = None
-
-        self._reset_aggregates()
-
-    # -------------------------------------------------------------------------
-    def _reset_aggregates(self):
-        """ Reset the aggregated values matrix """
 
         self.matrix = None
         self.rows = None
@@ -1884,7 +2371,8 @@ class S3TimeSeriesPeriod:
         """
             Add a current event to this period
 
-            @param event: the S3TimeSeriesEvent
+            Args:
+                event: the S3TimeSeriesEvent
         """
 
         self.cevents[event.event_id] = event
@@ -1894,19 +2382,25 @@ class S3TimeSeriesPeriod:
         """
             Add a previous event to this period
 
-            @param event: the S3TimeSeriesEvent
+            Args:
+                event: the S3TimeSeriesEvent
         """
 
         self.pevents[event.event_id] = event
 
     # -------------------------------------------------------------------------
-    def as_dict(self, rows=None, cols=None, isoformat=True):
+    def as_dict(self,
+                rows = None,
+                cols = None,
+                isoformat = True,
+                ):
         """
             Convert the aggregated results into a JSON-serializable dict
 
-            @param rows: the row keys for the result
-            @param cols: the column keys for the result
-            @param isoformat: convert datetimes into ISO-formatted strings
+            Args:
+                rows: the row keys for the result
+                cols: the column keys for the result
+                isoformat: convert datetimes into ISO-formatted strings
         """
 
         # Start and end datetime
@@ -1953,7 +2447,8 @@ class S3TimeSeriesPeriod:
         """
             Group events by their row and col axis values
 
-            @param cumulative: include previous events
+            Args:
+                cumulative: include previous events
         """
 
         event_sets = [self.cevents]
@@ -1990,7 +2485,8 @@ class S3TimeSeriesPeriod:
         """
             Group and aggregate the events in this period
 
-            @param facts: list of facts to aggregate
+            Args:
+                facts: list of facts to aggregate
         """
 
         # Reset
@@ -2022,8 +2518,7 @@ class S3TimeSeriesPeriod:
                 events = self.cevents
                 cumulative = False
 
-            fact_aggregate = fact.aggregate
-            aggregate = lambda items: fact_aggregate(self, items)
+            aggregate = fact.aggregate
 
             # Aggregate rows
             for key, event_sets in self._rows.items():
@@ -2032,9 +2527,9 @@ class S3TimeSeriesPeriod:
                     event_ids |= event_sets[1]
                 items = [events[event_id] for event_id in event_ids]
                 if key not in rows:
-                    rows[key] = [aggregate(items)]
+                    rows[key] = [aggregate(self, items)]
                 else:
-                    rows[key].append(aggregate(items))
+                    rows[key].append(aggregate(self, items))
 
             # Aggregate columns
             for key, event_sets in self._cols.items():
@@ -2043,9 +2538,9 @@ class S3TimeSeriesPeriod:
                     event_ids |= event_sets[1]
                 items = [events[event_id] for event_id in event_ids]
                 if key not in cols:
-                    cols[key] = [aggregate(items)]
+                    cols[key] = [aggregate(self, items)]
                 else:
-                    cols[key].append(aggregate(items))
+                    cols[key].append(aggregate(self, items))
 
             # Aggregate matrix
             for key, event_sets in self._matrix.items():
@@ -2054,12 +2549,12 @@ class S3TimeSeriesPeriod:
                     event_ids |= event_sets[1]
                 items = [events[event_id] for event_id in event_ids]
                 if key not in matrix:
-                    matrix[key] = [aggregate(items)]
+                    matrix[key] = [aggregate(self, items)]
                 else:
-                    matrix[key].append(aggregate(items))
+                    matrix[key].append(aggregate(self, items))
 
             # Aggregate total
-            totals.append(aggregate(list(events.values())))
+            totals.append(aggregate(self, list(events.values())))
 
         self.totals = totals
         return totals
@@ -2070,8 +2565,9 @@ class S3TimeSeriesPeriod:
             Compute the total duration of the given event before the end
             of this period, in number of interval
 
-            @param event: the S3TimeSeriesEvent
-            @param interval: the interval expression (string)
+            Args:
+                event: the S3TimeSeriesEvent
+                interval: the interval expression (string)
         """
 
         if event.end is None or event.end > self.end:
@@ -2095,9 +2591,10 @@ class S3TimeSeriesPeriod:
             Convert a time slot string expression into a dateutil rrule
             within the context of a time period
 
-            @param start: the start of the time period (datetime)
-            @param end: the end of the time period (datetime)
-            @param interval: time interval expression, like "days" or "2 weeks"
+            Args:
+                start: the start of the time period (datetime)
+                end: the end of the time period (datetime)
+                interval: time interval expression, like "days" or "2 weeks"
         """
 
         match = re.match(r"\s*(\d*)\s*([hdwmy]{1}).*", interval)
@@ -2117,162 +2614,9 @@ class S3TimeSeriesPeriod:
                 return rrule(deltas[delta],
                              dtstart = start,
                              until = end,
-                             interval = num)
+                             interval = num,
+                             )
         else:
             return None
-
-# =============================================================================
-class S3TimeSeriesEventFrame:
-    """ Class representing the whole time frame of a time plot """
-
-    def __init__(self, start, end, slots=None):
-        """
-            Constructor
-
-            @param start: start of the time frame (datetime.datetime)
-            @param end: end of the time frame (datetime.datetime)
-            @param slot: length of time slots within the event frame,
-                         format: "{n }[hour|day|week|month|year]{s}",
-                         examples: "1 week", "3 months", "years"
-        """
-
-        # Start time is required
-        if start is None:
-            raise SyntaxError("start time required")
-        self.start = tp_tzsafe(start)
-
-        # End time defaults to now
-        if end is None:
-            end = datetime.datetime.utcnow()
-        self.end = tp_tzsafe(end)
-
-        self.empty = True
-        self.baseline = None
-
-        self.slots = slots
-        self.periods = {}
-
-        self.rule = self.get_rule()
-
-    # -------------------------------------------------------------------------
-    def get_rule(self):
-        """
-            Get the recurrence rule for the periods
-        """
-
-        slots = self.slots
-        if not slots:
-            return None
-
-        return S3TimeSeriesPeriod.get_rule(self.start, self.end, slots)
-
-    # -------------------------------------------------------------------------
-    def extend(self, events):
-        """
-            Extend this time frame with events
-
-            @param events: iterable of events
-
-            @todo: integrate in constructor
-            @todo: handle self.rule == None
-        """
-
-        if not events:
-            return
-        empty = self.empty
-
-        # Order events by start datetime
-        events = sorted(events)
-
-        rule = self.rule
-        periods = self.periods
-
-        # No point to loop over periods before the first event:
-        start = events[0].start
-        if start is None or start <= self.start:
-            first = rule[0]
-        else:
-            first = rule.before(start, inc=True)
-
-        current_events = {}
-        previous_events = {}
-        for start in rule.between(first, self.end, inc=True):
-
-            # Compute end of this period
-            end = rule.after(start)
-            if not end:
-                if start < self.end:
-                    end = self.end
-                else:
-                    # Period start is at the end of the event frame
-                    break
-
-            # Find all current events
-            for index, event in enumerate(events):
-                if event.end and event.end < start:
-                    # Event ended before this period
-                    previous_events[event.event_id] = event
-                elif event.start is None or event.start < end:
-                    # Event starts before or during this period
-                    current_events[event.event_id] = event
-                else:
-                    # Event starts only after this period
-                    break
-
-            # Add current events to current period
-            period = periods.get(start)
-            if period is None:
-                period = periods[start] = S3TimeSeriesPeriod(start, end=end)
-            for event in current_events.values():
-                period.add_current(event)
-            for event in previous_events.values():
-                period.add_previous(event)
-
-            empty = False
-
-            # Remaining events
-            events = events[index:]
-            if not events:
-                # No more events
-                break
-
-            # Remove events which end during this period
-            remaining = {}
-            for event_id, event in current_events.items():
-                if not event.end or event.end > end:
-                    remaining[event_id] = event
-                else:
-                    previous_events[event_id] = event
-            current_events = remaining
-
-        self.empty = empty
-        return
-
-    # -------------------------------------------------------------------------
-    def __iter__(self):
-        """
-            Iterate over all periods within this event frame
-        """
-
-        periods = self.periods
-
-        rule = self.rule
-        if rule:
-            for dt in rule:
-                if dt >= self.end:
-                    break
-                if dt in periods:
-                    yield periods[dt]
-                else:
-                    end = rule.after(dt)
-                    if not end:
-                        end = self.end
-                    yield S3TimeSeriesPeriod(dt, end=end)
-        else:
-            # @todo: continuous periods
-            # sort actual periods and iterate over them
-            raise NotImplementedError
-
-        return
 
 # END =========================================================================

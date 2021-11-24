@@ -1318,6 +1318,57 @@ class DtParseTests(unittest.TestCase):
 
         assertRaises(ValueError, ts.dtparse, "invalid")
 
+    # -------------------------------------------------------------------------
+    def testDtParseRelativeEnd(self):
+        """ Test dtparse with relative dates using end expressions """
+
+        assertTrue = self.assertTrue
+        assertRaises = self.assertRaises
+        assertEqual = self.assertEqual
+
+        ts = TimeSeries
+        start = datetime.datetime(2014, 1, 3, 11, 30)
+
+        result = ts.dtparse(">+1 year", start=start)
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2015, 12, 31, 23, 59, 59, 999999))
+
+        result = ts.dtparse("<-2 years", start=start)
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2012, 1, 1, 0, 0, 0))
+
+        result = ts.dtparse("<+1 month", start=start)
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2014, 2, 1, 0, 0, 0, 0))
+
+        result = ts.dtparse(">-3 months", start=start)
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2013, 10, 31, 23, 59, 59, 999999))
+
+        result = ts.dtparse("<-1 week", start=start)
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2013, 12, 23, 0, 0, 0, 0))
+
+        result = ts.dtparse(">+2 weeks", start=start)
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2014, 1, 19, 23, 59, 59, 999999))
+
+        result = ts.dtparse("<-3 days", start=start)
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2013, 12, 31, 0, 0, 0, 0))
+
+        result = ts.dtparse(">+7 days", start=start)
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2014, 1, 10, 23, 59, 59, 999999))
+
+        result = ts.dtparse("<-2 hours", start=start)
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2014, 1, 3, 9, 0, 0, 0))
+
+        result = ts.dtparse(">-2 hours", start=start)
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2014, 1, 3, 9, 59, 59, 999999))
+
 # =============================================================================
 class TimeSeriesTests(unittest.TestCase):
     """ Tests for S3TimeSeries class """

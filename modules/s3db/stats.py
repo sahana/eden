@@ -444,6 +444,7 @@ class StatsDemographicModel(S3Model):
                   # This should be set in Template:
                   #requires_approval = True,
                   super_entity = "stats_data",
+                  # If using dis-aggregated data:
                   timeplot_options = {"defaults": {"event_start": "date",
                                                    "event_end": "end_date",
                                                    "fact": "sum(value)",
