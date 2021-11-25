@@ -11,9 +11,12 @@ from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT#, TA_JUSTIFY
 from reportlab.lib.pagesizes import A4, LETTER, landscape
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import cm, inch
-from reportlab.pdfgen import canvas
-from reportlab.platypus import SimpleDocTemplate, \
+#from reportlab.pdfgen import canvas
+from reportlab.platypus import BaseDocTemplate, \
+                               SimpleDocTemplate, \
+                               Frame, \
                                Image, \
+                               PageTemplate, \
                                Paragraph, \
                                Table
 
@@ -21,6 +24,7 @@ from gluon import *
 from gluon.contenttype import contenttype
 
 from s3 import NONE, S3DateTime, S3GroupedItems, S3GroupedItemsTable, S3Represent, s3_truncate
+from s3.codecs.pdf import S3NumberedCanvas
 from s3.s3export import S3Exporter
 
 from .layouts import OM
@@ -475,57 +479,75 @@ def grn(r, **attr):
     logo.drawHeight = height
     logo.drawWidth = width
 
+    leftMargin = 0.3 * inch
+
     output = BytesIO()
-    doc = SimpleDocTemplate(output,
-                            title = recv_ref,
-                            pagesize = pagesize,
-                            leftMargin = 0.3 * inch,
-                            rightMargin = 0.3 * inch,
-                            topMargin = 0.5 * inch,
-                            bottomMargin = 0.5 * inch,
-                            )
+    doc = RMSDocTemplate(output,
+                         title = recv_ref,
+                         pagesize = pagesize,
+                         leftMargin = leftMargin,
+                         rightMargin = 0.3 * inch,
+                         topMargin = 0.5 * inch,
+                         bottomMargin = 0.5 * inch,
+                         )
+
+    colWidths = (4.17 * cm, # A
+                 2.73 * cm, # B
+                 1.20 * cm, # C
+                 4.06 * cm, # D
+                 2.29 * cm, # E
+                 3.13 * cm, # F
+                 2.03 * cm, # G
+                 6.25 * cm, # H
+                 1.42 * cm, # I 1.33
+                 )
 
     lightgrey = colors.lightgrey
+
+    header_table_style = [("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                          ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                          ("SPAN", (0, 0), (5, 0)),
+                          ("SPAN", (7, 0), (8, 0)),
+                          ("BACKGROUND", (6, 0), (8, 0), lightgrey),
+                          ("SPAN", (0, 1), (5, 1)),
+                          ("SPAN", (7, 1), (8, 1)),
+                          ]
+
     table_style = [("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                    ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-                   ("SPAN", (0, 0), (5, 0)),
-                   ("SPAN", (7, 0), (8, 0)),
-                   ("BACKGROUND", (6, 0), (8, 0), lightgrey),
-                   ("SPAN", (0, 1), (5, 1)),
+                   ("SPAN", (0, 1), (1, 1)),
+                   ("SPAN", (2, 1), (3, 1)),
+                   ("SPAN", (4, 1), (6, 1)),
                    ("SPAN", (7, 1), (8, 1)),
-                   ("SPAN", (0, 3), (1, 3)),
+                   ("BACKGROUND", (0, 1), (0, 1), lightgrey),
+                   ("BACKGROUND", (4, 1), (4, 1), lightgrey),
                    ("SPAN", (2, 3), (3, 3)),
-                   ("SPAN", (4, 3), (6, 3)),
+                   ("SPAN", (5, 3), (6, 3)),
                    ("SPAN", (7, 3), (8, 3)),
                    ("BACKGROUND", (0, 3), (0, 3), lightgrey),
-                   ("BACKGROUND", (4, 3), (4, 3), lightgrey),
-                   ("SPAN", (2, 5), (3, 5)),
+                   ("BACKGROUND", (2, 3), (3, 3), lightgrey),
+                   ("BACKGROUND", (5, 3), (6, 3), lightgrey),
+                   ("SPAN", (0, 5), (0, 9)),
                    ("SPAN", (5, 5), (6, 5)),
-                   ("SPAN", (7, 5), (8, 5)),
-                   ("BACKGROUND", (0, 5), (0, 5), lightgrey),
-                   ("BACKGROUND", (2, 5), (3, 5), lightgrey),
-                   ("BACKGROUND", (5, 5), (6, 5), lightgrey),
-                   ("SPAN", (0, 7), (0, 11)),
+                   ("SPAN", (5, 6), (6, 6)),
                    ("SPAN", (5, 7), (6, 7)),
-                   ("SPAN", (5, 8), (6, 8)),
-                   ("SPAN", (5, 9), (6, 9)),
+                   ("SPAN", (3, 5), (4, 5)),
+                   ("SPAN", (7, 5), (8, 5)),
+                   ("SPAN", (3, 6), (4, 6)),
+                   ("SPAN", (7, 6), (8, 6)),
                    ("SPAN", (3, 7), (4, 7)),
                    ("SPAN", (7, 7), (8, 7)),
+                   ("BACKGROUND", (0, 5), (1, 9), lightgrey),
+                   ("BACKGROUND", (5, 5), (6, 7), lightgrey),
                    ("SPAN", (3, 8), (4, 8)),
-                   ("SPAN", (7, 8), (8, 8)),
                    ("SPAN", (3, 9), (4, 9)),
-                   ("SPAN", (7, 9), (8, 9)),
-                   ("BACKGROUND", (0, 7), (1, 11), lightgrey),
-                   ("BACKGROUND", (5, 7), (6, 9), lightgrey),
-                   ("SPAN", (3, 10), (4, 10)),
-                   ("SPAN", (3, 11), (4, 11)),
-                   ("SPAN", (0, 13), (3, 13)),
-                   ("SPAN", (4, 13), (6, 13)),
-                   ("SPAN", (1, 14), (2, 14)),
-                   ("VALIGN", (7, 13), (8, 15), "TOP"),
-                   ("SPAN", (7, 13), (7, 15)),
-                   ("SPAN", (8, 13), (8, 15)),
-                   ("BACKGROUND", (0, 13), (8, 14), lightgrey),
+                   ("SPAN", (0, 11), (3, 11)),
+                   ("SPAN", (4, 11), (6, 11)),
+                   ("SPAN", (1, 12), (2, 12)),
+                   ("VALIGN", (7, 11), (8, 13), "TOP"),
+                   ("SPAN", (7, 11), (7, 13)),
+                   ("SPAN", (8, 11), (8, 13)),
+                   ("BACKGROUND", (0, 11), (8, 13), lightgrey),
                    ]
     sappend = table_style.append
 
@@ -540,33 +562,35 @@ def grn(r, **attr):
               "",
               ]
 
+    header_content = [# Row 0
+                      [logo,
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       Paragraph(str(B("COUNTRY CODE")), style_center),
+                       Paragraph(str(B("GRN NUMBER")), style_center),
+                       "",
+                       ],
+                      # Row 1
+                      [Paragraph("%s / %s" % (B("GOODS RECEIVED NOTE"),
+                                              I("Accusé de Réception"),
+                                              ), style_18_center),
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       Paragraph(str(B(org.country)), style_12_center),
+                       Paragraph(str(B(recv_ref)), style_12_center),
+                       "",
+                       ],
+                      ]
+
     content = [# Row 0
-               [logo,
-                "",
-                "",
-                "",
-                "",
-                "",
-                Paragraph(str(B("COUNTRY CODE")), style_center),
-                Paragraph(str(B("GRN NUMBER")), style_center),
-                "",
-                ],
-               # Row 1
-               [Paragraph("%s / %s" % (B("GOODS RECEIVED NOTE"),
-                                       I("Accusé de Réception"),
-                                       ), style_18_center),
-                "",
-                "",
-                "",
-                "",
-                "",
-                Paragraph(str(B(org.country)), style_12_center),
-                Paragraph(str(B(recv_ref)), style_12_center),
-                "",
-                ],
-               # Row 2
                spacer,
-               # Row 3
+               # Row 1
                [Paragraph("%s<br/>(%s)" % (B("DELEGATION/CONSIGNEE"),
                                            B("LOCATION"),
                                            ), style_right),
@@ -581,9 +605,9 @@ def grn(r, **attr):
                 Paragraph(received_from, style_center),
                 "",
                 ],
-               # Row 4
+               # Row 2
                spacer,
-               # Row 5
+               # Row 3
                [Paragraph("%s<br/>%s" % (B("DATE OF ARRIVAL"),
                                          I("Date de réception"),
                                          ), style_right),
@@ -596,9 +620,9 @@ def grn(r, **attr):
                 "",
                 "",
                 ],
-               # Row 6
+               # Row 4
                spacer,
-               # Row 7
+               # Row 5
                [Paragraph("%s<br/>%s" % (B("MEANS OF TRANSPORT"),
                                          I("Moyen de transport"),
                                          ), style_center),
@@ -613,7 +637,7 @@ def grn(r, **attr):
                 Paragraph(flight, style_center),
                 "",
                 ],
-               # Row 8
+               # Row 6
                ["",
                 Paragraph(str(B("Road")), style_right),
                 checked if transport_type == "Road" else checkbox,
@@ -626,7 +650,7 @@ def grn(r, **attr):
                 Paragraph(reg, style_center),
                 "",
                 ],
-               # Row 9
+               # Row 7
                ["",
                 Paragraph(str(B("Sea")), style_right),
                 checked if transport_type == "Sea" else checkbox,
@@ -639,7 +663,7 @@ def grn(r, **attr):
                 Paragraph(vessel, style_center),
                 "",
                 ],
-               # Row 10
+               # Row 8
                ["",
                 Paragraph(str(B("Rail")), style_right),
                 checked if transport_type == "Rail" else checkbox,
@@ -652,7 +676,7 @@ def grn(r, **attr):
                 "",
                 "",
                 ],
-               # Row 11
+               # Row 9
                ["",
                 Paragraph("Handcarried by", style_8_right),
                 checked if transport_type == "Hand" else checkbox,
@@ -663,9 +687,9 @@ def grn(r, **attr):
                 "",
                 "",
                 ],
-               # Row 12
+               # Row 10
                spacer,
-               # Row 13
+               # Row 11
                [Paragraph("%s / %s" % (B("GOODS RECEIVED"),
                                        I("Marchandises reçues"),
                                        ), style_7_center),
@@ -683,7 +707,7 @@ def grn(r, **attr):
                                          I("Réclamation"),
                                          ), style_5_center),
                 ],
-               # Row 14
+               # Row 12
                [Paragraph("%s<br/>%s" % (B("ITEMS CODE"),
                                          I("Description générale et remarques"),
                                          ), style_6_center),
@@ -707,9 +731,11 @@ def grn(r, **attr):
                ]
     cappend = content.append
 
-    rowHeights = [1.64 * cm,
-                  1.16 * cm,
-                  0.16 * cm,
+    header_rowHeights = [1.64 * cm,
+                         1.16 * cm,
+                         ]
+
+    rowHeights = [0.16 * cm,
                   0.82 * cm,
                   0.21 * cm,
                   1.06 * cm,
@@ -741,7 +767,7 @@ def grn(r, **attr):
                              itable.weight,
                              )
 
-    rowNo = 15
+    rowNo = 13
     for row in items:
         item = row["supply_item"]
         pack = row["supply_item_pack"]
@@ -852,25 +878,52 @@ def grn(r, **attr):
                 spacer,
                 ]
 
-    table = Table(content,
-                  colWidths = (4.17 * cm, # A
-                               2.73 * cm, # B
-                               1.20 * cm, # C
-                               4.06 * cm, # D
-                               2.29 * cm, # E
-                               3.13 * cm, # F
-                               2.03 * cm, # G
-                               6.25 * cm, # H
-                               1.42 * cm, # I 1.33
-                               ),
-                  rowHeights = rowHeights,
-                  style = table_style,
-                  hAlign = "LEFT",   # defaults to "CENTER"
-                  vAlign = "MIDDLE", # defaults to "MIDDLE", but better to specify
-                  )
+    header = Table(header_content,
+                   colWidths = colWidths,
+                   rowHeights = header_rowHeights,
+                   style = header_table_style,
+                   hAlign = "LEFT",   # defaults to "CENTER"
+                   vAlign = "MIDDLE", # defaults to "MIDDLE", but better to specify
+                   )
 
-    doc.build([table],
-              canvasmaker = canvas.Canvas, # S3NumberedCanvas
+    body = Table(content,
+                 colWidths = colWidths,
+                 rowHeights = rowHeights,
+                 style = table_style,
+                 hAlign = "LEFT",   # defaults to "CENTER"
+                 vAlign = "MIDDLE", # defaults to "MIDDLE", but better to specify
+                 )
+
+    # Calculate the header_height
+    bottomMargin = doc.bottomMargin
+    height = pagesize[1]
+    width = pagesize[0]
+    printable_height = height - \
+                       doc.topMargin - \
+                       bottomMargin
+    printable_width = width - \
+                      leftMargin - \
+                      doc.rightMargin
+    header_height = header.wrap(printable_width,
+                                printable_height)[1]
+
+    # Ensure that the body doesn't overlap the header
+    body_height = printable_height - header_height
+    doc.height = body_height
+
+    # Header goes on every page
+    def draw_header(canvas, doc):
+        top = bottomMargin + printable_height
+        bottom = top - header_height
+        header.drawOn(canvas,
+                      leftMargin, #+ 6, # frame.leftPadding
+                      bottom
+                      )
+
+    doc.build([body],
+              onFirstPage = draw_header,
+              onLaterPages = draw_header,
+              canvasmaker = S3NumberedCanvas,
               )
 
     # Return the generated PDF
@@ -967,7 +1020,7 @@ def stock_card(r, **attr):
                                limitby = (0, 1),
                                ).first()
     if minimum:
-        stock_minimum = minimum.quantity
+        stock_minimum = str(minimum.quantity)
     else:
         stock_minimum = NONE
 
@@ -1023,49 +1076,67 @@ def stock_card(r, **attr):
     logo.drawHeight = height
     logo.drawWidth = width
 
+    leftMargin = 0.3 * inch
+
     output = BytesIO()
-    doc = SimpleDocTemplate(output,
-                            title = stock_card_ref,
-                            pagesize = pagesize,
-                            leftMargin = 0.3 * inch,
-                            rightMargin = 0.3 * inch,
-                            topMargin = 0.5 * inch,
-                            bottomMargin = 0.5 * inch,
-                            )
+    doc = RMSDocTemplate(output,
+                         title = stock_card_ref,
+                         pagesize = pagesize,
+                         leftMargin = leftMargin,
+                         rightMargin = 0.3 * inch,
+                         topMargin = 0.5 * inch,
+                         bottomMargin = 0.5 * inch,
+                         )
+
+    colWidths = (1.88 * cm, # A 1.77
+                 4.61 * cm, # B
+                 2.47 * cm, # C
+                 1.65 * cm, # D 1.56
+                 1.46 * cm, # E
+                 1.35 * cm, # F
+                 2.15 * cm, # G 2.03
+                 2.29 * cm, # H
+                 2.65 * cm, # I 2.61
+                 )
 
     lightgrey = colors.lightgrey
+
+    header_table_style = [("VALIGN", (0, 0), (-1, -1), "TOP"),
+                          ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                          ("SPAN", (7, 0), (8, 1)),
+                          ("SPAN", (0, 2), (8, 2)),
+                          ("SPAN", (0, 3), (8, 3)),
+                          ("SPAN", (7, 4), (8, 4)),
+                          ("BACKGROUND", (0, 5), (8, 6), colors.black),
+                          ("SPAN", (0, 5), (8, 5)),
+                          ("SPAN", (0, 6), (8, 6)),
+                          ("BACKGROUND", (0, 7), (8, 8), lightgrey),
+                          ("SPAN", (0, 7), (2, 7)),
+                          ("SPAN", (3, 7), (5, 7)),
+                          ("SPAN", (6, 7), (8, 7)),
+                          ("SPAN", (0, 8), (2, 8)),
+                          ("SPAN", (3, 8), (5, 8)),
+                          ("SPAN", (6, 8), (8, 8)),
+                          ("SPAN", (0, 9), (2, 9)),
+                          ("SPAN", (3, 9), (5, 9)),
+                          ("SPAN", (6, 9), (8, 9)),
+                          ("BACKGROUND", (0, 10), (8, 11), lightgrey),
+                          ("SPAN", (0, 10), (2, 10)),
+                          ("SPAN", (3, 10), (5, 10)),
+                          ("SPAN", (6, 10), (8, 10)),
+                          ("SPAN", (0, 11), (2, 11)),
+                          ("SPAN", (3, 11), (5, 11)),
+                          ("SPAN", (6, 11), (8, 11)),
+                          ("SPAN", (0, 12), (2, 12)),
+                          ("SPAN", (3, 12), (5, 12)),
+                          ("SPAN", (6, 12), (8, 12)),
+                          ("BACKGROUND", (0, 14), (8, 16), lightgrey),
+                          ("SPAN", (0, 14), (0, 16)),
+                          ("VALIGN", (0, 14), (0, 16), "MIDDLE"),
+                          ]
+                   
     table_style = [("VALIGN", (0, 0), (-1, -1), "TOP"),
                    ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-                   ("SPAN", (7, 0), (8, 1)),
-                   ("SPAN", (0, 2), (8, 2)),
-                   ("SPAN", (0, 3), (8, 3)),
-                   ("SPAN", (7, 4), (8, 4)),
-                   ("BACKGROUND", (0, 5), (8, 6), colors.black),
-                   ("SPAN", (0, 5), (8, 5)),
-                   ("SPAN", (0, 6), (8, 6)),
-                   ("BACKGROUND", (0, 7), (8, 8), lightgrey),
-                   ("SPAN", (0, 7), (2, 7)),
-                   ("SPAN", (3, 7), (5, 7)),
-                   ("SPAN", (6, 7), (8, 7)),
-                   ("SPAN", (0, 8), (2, 8)),
-                   ("SPAN", (3, 8), (5, 8)),
-                   ("SPAN", (6, 8), (8, 8)),
-                   ("SPAN", (0, 9), (2, 9)),
-                   ("SPAN", (3, 9), (5, 9)),
-                   ("SPAN", (6, 9), (8, 9)),
-                   ("BACKGROUND", (0, 10), (8, 11), lightgrey),
-                   ("SPAN", (0, 10), (2, 10)),
-                   ("SPAN", (3, 10), (5, 10)),
-                   ("SPAN", (6, 10), (8, 10)),
-                   ("SPAN", (0, 11), (2, 11)),
-                   ("SPAN", (3, 11), (5, 11)),
-                   ("SPAN", (6, 11), (8, 11)),
-                   ("SPAN", (0, 12), (2, 12)),
-                   ("SPAN", (3, 12), (5, 12)),
-                   ("SPAN", (6, 12), (8, 12)),
-                   ("BACKGROUND", (0, 14), (8, 16), lightgrey),
-                   ("SPAN", (0, 14), (0, 16)),
-                   ("VALIGN", (0, 14), (0, 16), "MIDDLE"),
                    ]
     sappend = table_style.append
 
@@ -1080,196 +1151,200 @@ def stock_card(r, **attr):
               "",
               ]
 
-    content = [# Row 0
-               ["",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                logo,
-                "",
-                ],
-               # Row 1
-               spacer,
-               # Row 2
-               [Paragraph(str(B("STOCK CARD")), style_24_center),
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                ],
-               # Row 3
-               [Paragraph(str(I("Fiche de stock")), style_18_center),
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                ],
-               # Row 4
-               ["",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                Paragraph(stock_card_ref, style_9_center),
-                "",
-                ],
-               # Row 5
-               [Paragraph(str(I("ITEM INFORMATION")), style_11_center_white),
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                ],
-               # Row 6
-               [Paragraph(str(I("Information article")), style_11_center_white),
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                ],
-               # Row 7
-               [Paragraph(str(B("DESCRIPTION")), style_12_center),
-                "",
-                "",
-                Paragraph(str(B("ITEM CODE")), style_12_center),
-                "",
-                "",
-                Paragraph(str(B("MEASURE OF UNIT")), style_12_center),
-                "",
-                "",
-                ],
-               # Row 8
-               [Paragraph(str(I("Description article")), style_11_center),
-                "",
-                "",
-                Paragraph(str(I("Code article")), style_11_center),
-                "",
-                "",
-                Paragraph(str(I("Unité de mesure")), style_11_center),
-                "",
-                "",
-                ],
-               # Row 9
-               [Paragraph(s3_truncate(item.name, 80), style_12_center),
-                "",
-                "",
-                Paragraph(item.code or "", style_12_center),
-                "",
-                "",
-                Paragraph(item_pack.name, style_12_center),
-                "",
-                "",
-                ],
-               # Row 10
-               [Paragraph(str(B("DONOR")), style_12_center),
-                "",
-                "",
-                Paragraph(str(B("EXPIRY DATE")), style_12_center),
-                "",
-                "",
-                Paragraph(str(B("STOCK MINIMUM")), style_12_center),
-                "",
-                "",
-                ],
-               # Row 11
-               [Paragraph(str(I("Financeur")), style_11_center),
-                "",
-                "",
-                Paragraph(str(I("Date d’expiration")), style_11_center),
-                "",
-                "",
-                Paragraph(str(I("Stock minimum")), style_11_center),
-                "",
-                "",
-                ],
-               # Row 12
-               [Paragraph(donor.name, style_12_center),
-                "",
-                "",
-                Paragraph(expiry_date, style_12_center),
-                "",
-                "",
-                Paragraph(stock_minimum, style_12_center),
-                "",
-                "",
-                ],
-               # Row 13
-               spacer,
-               # Row 14
-               [Paragraph(str(B("DATE")), style_11_center),
-                Paragraph(str(B("DOCUMENT REF. N°")), style_10_center),
-                Paragraph(str(B("FROM / TO")), style_10_center),
-                Paragraph(str(B("STORE")), style_10_center),
-                Paragraph(str(B("IN")), style_11_center),
-                Paragraph(str(B("OUT")), style_11_center),
-                Paragraph(str(B("BALANCE")), style_10_center),
-                Paragraph(str(B("REMARKS")), style_10_center),
-                Paragraph(str(B("BIN CARD N°")), style_10_center),
-                ],
-               # Row 15
-               ["",
-                Paragraph(str(I("Référence Du Document")), style_9_center),
-                Paragraph(str(I("Provenance/")), style_9_center),
-                Paragraph(str(B("No.")), style_10_center),
-                Paragraph(str(I("Entrée")), style_9_center),
-                Paragraph(str(I("Sortie")), style_9_center),
-                Paragraph(str(I("Solde")), style_9_center),
-                Paragraph(str(I("Remarques")), style_9_center),
-                Paragraph(str(I("Fiche de pile")), style_9_center),
-                ],
-               # Row 16
-               ["",
-                "",
-                Paragraph(str(I("Destination")), style_9_center),
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                ],
-               ]
+    header_content = [# Row 0
+                      ["",
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       logo,
+                       "",
+                       ],
+                      # Row 1
+                      spacer,
+                      # Row 2
+                      [Paragraph(str(B("STOCK CARD")), style_24_center),
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       ],
+                      # Row 3
+                      [Paragraph(str(I("Fiche de stock")), style_18_center),
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       ],
+                      # Row 4
+                      ["",
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       Paragraph(stock_card_ref, style_9_center),
+                       "",
+                       ],
+                      # Row 5
+                      [Paragraph(str(I("ITEM INFORMATION")), style_11_center_white),
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       ],
+                      # Row 6
+                      [Paragraph(str(I("Information article")), style_11_center_white),
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       ],
+                      # Row 7
+                      [Paragraph(str(B("DESCRIPTION")), style_12_center),
+                       "",
+                       "",
+                       Paragraph(str(B("ITEM CODE")), style_12_center),
+                       "",
+                       "",
+                       Paragraph(str(B("MEASURE OF UNIT")), style_12_center),
+                       "",
+                       "",
+                       ],
+                      # Row 8
+                      [Paragraph(str(I("Description article")), style_11_center),
+                       "",
+                       "",
+                       Paragraph(str(I("Code article")), style_11_center),
+                       "",
+                       "",
+                       Paragraph(str(I("Unité de mesure")), style_11_center),
+                       "",
+                       "",
+                       ],
+                      # Row 9
+                      [Paragraph(s3_truncate(item.name, 80), style_12_center),
+                       "",
+                       "",
+                       Paragraph(item.code or "", style_12_center),
+                       "",
+                       "",
+                       Paragraph(item_pack.name, style_12_center),
+                       "",
+                       "",
+                       ],
+                      # Row 10
+                      [Paragraph(str(B("DONOR")), style_12_center),
+                       "",
+                       "",
+                       Paragraph(str(B("EXPIRY DATE")), style_12_center),
+                       "",
+                       "",
+                       Paragraph(str(B("STOCK MINIMUM")), style_12_center),
+                       "",
+                       "",
+                       ],
+                      # Row 11
+                      [Paragraph(str(I("Financeur")), style_11_center),
+                       "",
+                       "",
+                       Paragraph(str(I("Date d’expiration")), style_11_center),
+                       "",
+                       "",
+                       Paragraph(str(I("Stock minimum")), style_11_center),
+                       "",
+                       "",
+                       ],
+                      # Row 12
+                      [Paragraph(donor.name, style_12_center),
+                       "",
+                       "",
+                       Paragraph(expiry_date, style_12_center),
+                       "",
+                       "",
+                       Paragraph(stock_minimum, style_12_center),
+                       "",
+                       "",
+                       ],
+                      # Row 13
+                      spacer,
+                      # Row 14
+                      [Paragraph(str(B("DATE")), style_11_center),
+                       Paragraph(str(B("DOCUMENT REF. N°")), style_10_center),
+                       Paragraph(str(B("FROM / TO")), style_10_center),
+                       Paragraph(str(B("STORE")), style_10_center),
+                       Paragraph(str(B("IN")), style_11_center),
+                       Paragraph(str(B("OUT")), style_11_center),
+                       Paragraph(str(B("BALANCE")), style_10_center),
+                       Paragraph(str(B("REMARKS")), style_10_center),
+                       Paragraph(str(B("BIN CARD N°")), style_10_center),
+                       ],
+                      # Row 15
+                      ["",
+                       Paragraph(str(I("Référence Du Document")), style_9_center),
+                       Paragraph(str(I("Provenance/")), style_9_center),
+                       Paragraph(str(B("No.")), style_10_center),
+                       Paragraph(str(I("Entrée")), style_9_center),
+                       Paragraph(str(I("Sortie")), style_9_center),
+                       Paragraph(str(I("Solde")), style_9_center),
+                       Paragraph(str(I("Remarques")), style_9_center),
+                       Paragraph(str(I("Fiche de pile")), style_9_center),
+                       ],
+                      # Row 16
+                      ["",
+                       "",
+                       Paragraph(str(I("Destination")), style_9_center),
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       "",
+                       ],
+                      ]
+
+    content = []
     cappend = content.append
 
-    rowHeights = [0.53 * cm, # 0
-                  1.01 * cm, # 1
-                  1.06 * cm, # 2
-                  0.82 * cm, # 3
-                  0.82 * cm, # 4
-                  0.64 * cm, # 5
-                  0.56 * cm, # 6
-                  0.53 * cm, # 7
-                  0.53 * cm, # 8
-                  1.06 * cm, # 9
-                  0.53 * cm, # 10
-                  0.53 * cm, # 11
-                  1.06 * cm, # 12
-                  0.53 * cm, # 13
-                  0.53 * cm, # 14
-                  0.53 * cm, # 15
-                  0.53 * cm, # 16
-                  ]
+    header_rowHeights = [0.53 * cm, # 0
+                         1.01 * cm, # 1
+                         1.06 * cm, # 2
+                         0.82 * cm, # 3
+                         0.82 * cm, # 4
+                         0.64 * cm, # 5
+                         0.56 * cm, # 6
+                         0.53 * cm, # 7
+                         0.53 * cm, # 8
+                         1.06 * cm, # 9
+                         0.53 * cm, # 10
+                         0.53 * cm, # 11
+                         1.06 * cm, # 12
+                         0.53 * cm, # 13
+                         0.53 * cm, # 14
+                         0.53 * cm, # 15
+                         0.53 * cm, # 16
+                         ]
+
+    rowHeights = []
     rappend = rowHeights.append
 
     ltable = s3db.inv_stock_log
@@ -1307,7 +1382,7 @@ def stock_card(r, **attr):
     site_represent = S3Represent(lookup = "org_site")
     site_represent.bulk(list(set([row["inv_send.to_site_id"] for row in log] + [row["inv_recv.from_site_id"] for row in log])))
 
-    rowNo = 17
+    rowNo = 0
     for row in log:
         rappend(0.71 * cm)
         rowNo += 1
@@ -1357,25 +1432,52 @@ def stock_card(r, **attr):
              "",
              ])
 
-    table = Table(content,
-                  colWidths = (1.88 * cm, # A 1.77
-                               4.61 * cm, # B
-                               2.47 * cm, # C
-                               1.65 * cm, # D 1.56
-                               1.46 * cm, # E
-                               1.35 * cm, # F
-                               2.15 * cm, # G 2.03
-                               2.29 * cm, # H
-                               2.65 * cm, # I 2.61
-                               ),
-                  rowHeights = rowHeights,
-                  style = table_style,
-                  hAlign = "LEFT",   # defaults to "CENTER"
-                  vAlign = "TOP", # defaults to "MIDDLE", but better to specify
-                  )
+    header = Table(header_content,
+                   colWidths = colWidths,
+                   rowHeights = header_rowHeights,
+                   style = header_table_style,
+                   hAlign = "LEFT",   # defaults to "CENTER"
+                   vAlign = "TOP", # defaults to "MIDDLE", but better to specify
+                   )
 
-    doc.build([table],
-              canvasmaker = canvas.Canvas, # S3NumberedCanvas
+    body = Table(content,
+                 colWidths = colWidths,
+                 rowHeights = rowHeights,
+                 style = table_style,
+                 hAlign = "LEFT",   # defaults to "CENTER"
+                 vAlign = "TOP", # defaults to "MIDDLE", but better to specify
+                 )
+
+    # Calculate the header_height
+    bottomMargin = doc.bottomMargin
+    height = pagesize[1]
+    width = pagesize[0]
+    printable_height = height - \
+                       doc.topMargin - \
+                       bottomMargin
+    printable_width = width - \
+                      leftMargin - \
+                      doc.rightMargin
+    header_height = header.wrap(printable_width,
+                                printable_height)[1]
+
+    # Ensure that the body doesn't overlap the header
+    body_height = printable_height - header_height
+    doc.height = body_height
+
+    # Header goes on every page
+    def draw_header(canvas, doc):
+        top = bottomMargin + printable_height
+        bottom = top - header_height
+        header.drawOn(canvas,
+                      leftMargin, #+ 6, # frame.leftPadding
+                      bottom
+                      )
+
+    doc.build([body],
+              onFirstPage = draw_header,
+              onLaterPages = draw_header,
+              canvasmaker = S3NumberedCanvas,
               )
 
     # Return the generated PDF
@@ -1577,55 +1679,79 @@ def waybill(r, **attr):
     logo.drawHeight = height
     logo.drawWidth = width
 
+    leftMargin = 0.3 * inch
+
     output = BytesIO()
-    doc = SimpleDocTemplate(output,
-                            title = send_ref,
-                            pagesize = pagesize,
-                            leftMargin = 0.3 * inch,
-                            rightMargin = 0.3 * inch,
-                            topMargin = 0.5 * inch,
-                            bottomMargin = 0.5 * inch,
-                            )
+    doc = RMSDocTemplate(output,
+                         title = send_ref,
+                         pagesize = pagesize,
+                         leftMargin = leftMargin,
+                         rightMargin = 0.3 * inch,
+                         topMargin = 0.5 * inch,
+                         bottomMargin = 0.5 * inch,
+                         )
+
+    colWidths = (4.04 * cm, # A
+                 2.79 * cm, # B
+                 2.16 * cm, # C
+                 2.58 * cm, # D
+                 2.14 * cm, # E
+                 2.03 * cm, # F
+                 2.03 * cm, # G
+                 2.03 * cm, # H
+                 0.39 * cm, # I
+                 1.07 * cm, # J
+                 1.88 * cm, # K
+                 1.56 * cm, # L
+                 1.33 * cm, # M
+                 1.56 * cm, # N
+                 )
 
     lightgrey = colors.lightgrey
+
+    header_table_style = [("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                          ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                          ("SPAN", (0, 0), (3, 0)),
+                          ("SPAN", (5, 0), (7, 0)),
+                          ("SPAN", (11, 0), (13, 0)),
+                          ("BACKGROUND", (4, 0), (7, 0), lightgrey),
+                          ("BACKGROUND", (9, 0), (13, 0), lightgrey),
+                          ("VALIGN", (0, 1), (3, 1), "TOP"),
+                          ("SPAN", (0, 1), (3, 1)),
+                          ("SPAN", (5, 1), (7, 1)),
+                          ("SPAN", (11, 1), (13, 1)),
+                          ("BACKGROUND", (9, 1), (9, 1), lightgrey),
+                          ]
+
     table_style = [("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                    ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-                   ("SPAN", (0, 0), (3, 0)),
-                   ("SPAN", (5, 0), (7, 0)),
+                   ("SPAN", (9, 0), (10, 0)),
                    ("SPAN", (11, 0), (13, 0)),
-                   ("BACKGROUND", (4, 0), (7, 0), lightgrey),
-                   ("BACKGROUND", (9, 0), (13, 0), lightgrey),
-                   ("SPAN", (0, 1), (3, 2)),
-                   ("SPAN", (5, 1), (7, 1)),
-                   ("SPAN", (11, 1), (13, 1)),
-                   ("BACKGROUND", (9, 1), (9, 1), lightgrey),
-                   ("SPAN", (9, 2), (10, 2)),
-                   ("SPAN", (11, 2), (13, 2)),
-                   ("BACKGROUND", (9, 2), (10, 2), lightgrey),
-                   ("SPAN", (0, 3), (2, 3)),
+                   ("BACKGROUND", (9, 0), (10, 0), lightgrey),
+                   ("SPAN", (0, 1), (2, 1)),
+                   ("SPAN", (3, 1), (11, 1)),
+                   ("SPAN", (12, 1), (13, 1)),
+                   ("BACKGROUND", (0, 1), (13, 1), lightgrey),
+                   ("SPAN", (0, 2), (2, 5)),
+                   ("SPAN", (3, 2), (11, 2)),
+                   ("BACKGROUND", (3, 2), (12, 2), lightgrey),
                    ("SPAN", (3, 3), (11, 3)),
-                   ("SPAN", (12, 3), (13, 3)),
-                   ("BACKGROUND", (0, 3), (13, 3), lightgrey),
-                   ("SPAN", (0, 4), (2, 7)),
-                   ("SPAN", (3, 4), (11, 4)),
-                   ("BACKGROUND", (3, 4), (12, 4), lightgrey),
-                   ("SPAN", (3, 5), (11, 5)),
+                   ("BACKGROUND", (12, 3), (12, 3), lightgrey),
+                   ("SPAN", (3, 4), (5, 4)),
+                   ("SPAN", (6, 4), (7, 4)),
+                   ("SPAN", (9, 4), (10, 4)),
+                   ("BACKGROUND", (3, 4), (5, 4), lightgrey),
+                   ("BACKGROUND", (11, 4), (12, 4), lightgrey),
+                   ("SPAN", (3, 5), (5, 5)),
+                   ("SPAN", (6, 5), (7, 5)),
+                   ("SPAN", (9, 5), (10, 5)),
+                   ("BACKGROUND", (3, 5), (5, 5), lightgrey),
                    ("BACKGROUND", (12, 5), (12, 5), lightgrey),
-                   ("SPAN", (3, 6), (5, 6)),
-                   ("SPAN", (6, 6), (7, 6)),
-                   ("SPAN", (9, 6), (10, 6)),
-                   ("BACKGROUND", (3, 6), (5, 6), lightgrey),
-                   ("BACKGROUND", (11, 6), (12, 6), lightgrey),
-                   ("SPAN", (3, 7), (5, 7)),
-                   ("SPAN", (6, 7), (7, 7)),
-                   ("SPAN", (9, 7), (10, 7)),
-                   ("BACKGROUND", (3, 7), (5, 7), lightgrey),
-                   ("BACKGROUND", (12, 7), (12, 7), lightgrey),
-                   ("BACKGROUND", (12, 8), (12, 8), lightgrey),
-                   ("SPAN", (1, 10), (2, 10)),
-                   ("SPAN", (7, 10), (9, 10)),
-                   ("SPAN", (10, 10), (13, 10)),
-                   ("BACKGROUND", (0, 10), (13, 10), lightgrey),
+                   ("BACKGROUND", (12, 6), (12, 6), lightgrey),
+                   ("SPAN", (1, 8), (2, 8)),
+                   ("SPAN", (7, 8), (9, 8)),
+                   ("SPAN", (10, 8), (13, 8)),
+                   ("BACKGROUND", (0, 8), (13, 8), lightgrey),
                    ]
     #sappend = table_style.append
 
@@ -1645,43 +1771,45 @@ def waybill(r, **attr):
               "",
               ]
 
+    header_content = [# Row 0
+                      [logo,
+                       "",
+                       "",
+                       "",
+                       Paragraph(str(B("DATE")), style_8_center),
+                       Paragraph("%s / %s" % (B("WAREHOUSE"),
+                                              I("Entrepôt"),
+                                              ), style_8_center),
+                       "",
+                       "",
+                       "",
+                       Paragraph(str(B("TYPE")), style_7_center),
+                       Paragraph(str(B("COUNTRY")), style_8_center),
+                       Paragraph(str(B("NUMBER")), style_8_center),
+                       "",
+                       "",
+                       ],
+                      # Row 1
+                      [Paragraph("%s / %s" % (B("WAYBILL"),
+                                              B("DELIVERY NOTE"),
+                                              ), style_22_center),
+                       "",
+                       "",
+                       "",
+                       Paragraph(date, style_8_center),
+                       Paragraph(site.name, style_center),
+                       "",
+                       "",
+                       "",
+                       Paragraph(str(B("WB")), style_8_center),
+                       Paragraph(str(B(org.country)), style_center),
+                       Paragraph(str(B(send_ref)), style_center),
+                       "",
+                       "",
+                       ],
+                      ]
+
     content = [# Row 0
-               [logo,
-                "",
-                "",
-                "",
-                Paragraph(str(B("DATE")), style_8_center),
-                Paragraph("%s / %s" % (B("WAREHOUSE"),
-                                       I("Entrepôt"),
-                                       ), style_8_center),
-                "",
-                "",
-                "",
-                Paragraph(str(B("TYPE")), style_7_center),
-                Paragraph(str(B("COUNTRY")), style_8_center),
-                Paragraph(str(B("NUMBER")), style_8_center),
-                "",
-                "",
-                ],
-               # Row 1
-               [Paragraph("%s / %s" % (B("WAYBILL"),
-                                       B("DELIVERY NOTE"),
-                                       ), style_22_center),
-                "",
-                "",
-                "",
-                Paragraph(date, style_8_center),
-                Paragraph(site.name, style_center),
-                "",
-                "",
-                "",
-                Paragraph(str(B("WB")), style_8_center),
-                Paragraph(str(B(org.country)), style_center),
-                Paragraph(str(B(send_ref)), style_center),
-                "",
-                "",
-                ],
-               # Row 2
                ["",
                 "",
                 "",
@@ -1697,7 +1825,7 @@ def waybill(r, **attr):
                 "",
                 "",
                 ],
-               # Row 3
+               # Row 1
                [Paragraph("%s / %s" % (B("DESTINATION AND BENEFICIARY"),
                                        I("Destination et bénéficiaire"),
                                        ), style_center),
@@ -1717,7 +1845,7 @@ def waybill(r, **attr):
                 Paragraph(str(B("MEANS OF TRANSPORT")), style_center),
                 "",
                 ],
-               # Row 4
+               # Row 2
                [Paragraph(str(B(recipient_ns)), style_16_center),
                 "",
                 "",
@@ -1735,7 +1863,7 @@ def waybill(r, **attr):
                 Paragraph(str(B("ROAD")), style_8_center),
                 checked if transport_type == "Road" else checkbox,
                 ],
-               # Row 5
+               # Row 3
                ["",
                 "",
                 "",
@@ -1751,7 +1879,7 @@ def waybill(r, **attr):
                 Paragraph(str(B("AIR")), style_8_center),
                 checked if transport_type == "Air" else checkbox,
                 ],
-               # Row 6
+               # Row 4
                ["",
                 "",
                 "",
@@ -1769,7 +1897,7 @@ def waybill(r, **attr):
                 Paragraph(str(B("SEA")), style_8_center),
                 checked if transport_type == "Sea" else checkbox,
                 ],
-               # Row 7
+               # Row 5
                ["",
                 "",
                 "",
@@ -1787,7 +1915,7 @@ def waybill(r, **attr):
                 Paragraph(str(B("RAIL")), style_8_center),
                 checked if transport_type == "Rail" else checkbox,
                 ],
-               # Row 8
+               # Row 6
                ["",
                 "",
                 "",
@@ -1803,9 +1931,9 @@ def waybill(r, **attr):
                 Paragraph(str(B("HAND")), style_8_center),
                 checked if transport_type == "Hand" else checkbox,
                 ],
-               # Row 9
+               # Row 7
                spacer,
-               # Row 10
+               # Row 8
                [Paragraph("ITEM DESCRIPTION", style_7_center),
                 Paragraph("DONOR", style_7_center),
                 "",
@@ -1830,9 +1958,11 @@ def waybill(r, **attr):
                ]
     cappend = content.append
 
-    rowHeights = [1.30 * cm,
-                  1.03 * cm,
-                  0.87 * cm,
+    header_rowHeights = [1.30 * cm,
+                         1.03 * cm,
+                         ]
+
+    rowHeights = [0.87 * cm,
                   0.87 * cm,
                   0.64 * cm,
                   0.64 * cm,
@@ -1879,7 +2009,7 @@ def waybill(r, **attr):
     all_quantity = 0
     all_weight = 0
     all_volume = 0
-    rowNo = 11
+    rowNo = 9
     for row in items:
         item = row["supply_item"]
         pack = row["supply_item_pack"]
@@ -2119,30 +2249,52 @@ def waybill(r, **attr):
                  ],
                 ]
 
-    table = Table(content,
-                  colWidths = (4.04 * cm, # A
-                               2.79 * cm, # B
-                               2.16 * cm, # C
-                               2.58 * cm, # D
-                               2.14 * cm, # E
-                               2.03 * cm, # F
-                               2.03 * cm, # G
-                               2.03 * cm, # H
-                               0.39 * cm, # I
-                               1.07 * cm, # J
-                               1.88 * cm, # K
-                               1.56 * cm, # L
-                               1.33 * cm, # M
-                               1.56 * cm, # N
-                               ),
-                  rowHeights = rowHeights,
-                  style = table_style,
-                  hAlign = "LEFT",   # defaults to "CENTER"
-                  vAlign = "MIDDLE", # defaults to "MIDDLE", but better to specify
-                  )
+    header = Table(header_content,
+                   colWidths = colWidths,
+                   rowHeights = header_rowHeights,
+                   style = header_table_style,
+                   hAlign = "LEFT",   # defaults to "CENTER"
+                   vAlign = "MIDDLE", # defaults to "MIDDLE", but better to specify
+                   )
 
-    doc.build([table],
-              canvasmaker = canvas.Canvas, # S3NumberedCanvas
+    body = Table(content,
+                 colWidths = colWidths,
+                 rowHeights = rowHeights,
+                 style = table_style,
+                 hAlign = "LEFT",   # defaults to "CENTER"
+                 vAlign = "MIDDLE", # defaults to "MIDDLE", but better to specify
+                 )
+
+    # Calculate the header_height
+    bottomMargin = doc.bottomMargin
+    height = pagesize[1]
+    width = pagesize[0]
+    printable_height = height - \
+                       doc.topMargin - \
+                       bottomMargin
+    printable_width = width - \
+                      leftMargin - \
+                      doc.rightMargin
+    header_height = header.wrap(printable_width,
+                                printable_height)[1]
+
+    # Ensure that the body doesn't overlap the header
+    body_height = printable_height - header_height
+    doc.height = body_height
+
+    # Header goes on every page
+    def draw_header(canvas, doc):
+        top = bottomMargin + printable_height
+        bottom = top - header_height
+        header.drawOn(canvas,
+                      leftMargin, #+ 6, # frame.leftPadding
+                      bottom
+                      )
+
+    doc.build([body],
+              onFirstPage = draw_header,
+              onLaterPages = draw_header,
+              canvasmaker = S3NumberedCanvas,
               )
 
     # Return the generated PDF
@@ -2497,5 +2649,50 @@ def waybill_hnrc_footer(r):
                     ),
                  TR(TD("&nbsp;")),
                  )
+
+
+# =============================================================================
+class RMSDocTemplate(SimpleDocTemplate):
+    """
+        Extend SimpleDocTemplate to handle the header on each page
+    """
+
+    def build(self,
+              flowables,
+              onFirstPage = None,
+              onLaterPages = None,
+              canvasmaker = None,
+              ):
+        """build the document using the flowables.  Annotate the first page using the onFirstPage
+               function and later pages using the onLaterPages function.  The onXXX pages should follow
+               the signature
+
+                  def myOnFirstPage(canvas, document):
+                      # do annotations and modify the document
+                      ...
+
+               The functions can do things like draw logos, page numbers,
+               footers, etcetera. They can use external variables to vary
+               the look (for example providing page numbering or section names).
+        """
+        #self._calc()    #in case we changed margins sizes etc # We don't...disable to allow the doc.height to remain in-effect
+        frameT = Frame(self.leftMargin,
+                       self.bottomMargin,
+                       self.width,
+                       self.height,
+                       leftPadding = 0, # Don't waste any further space (& avoids need to indent the header) 
+                       bottomPadding = 0, 
+                       rightPadding = 0, 
+                       topPadding = 0, # Remove topPadding so that there is no gap between the body & the header
+                       id = "normal",
+                       )
+        self.addPageTemplates([PageTemplate(id="First",frames=frameT, onPage=onFirstPage,pagesize=self.pagesize),
+                               PageTemplate(id="Later",frames=frameT, onPage=onLaterPages,pagesize=self.pagesize),
+                               ])
+        #if onFirstPage is _doNothing and hasattr(self,'onFirstPage'):
+        #    self.pageTemplates[0].beforeDrawPage = self.onFirstPage
+        #if onLaterPages is _doNothing and hasattr(self,'onLaterPages'):
+        #    self.pageTemplates[1].beforeDrawPage = self.onLaterPages
+        BaseDocTemplate.build(self,flowables, canvasmaker=canvasmaker)
 
 # END =========================================================================

@@ -38,7 +38,7 @@ from gluon import current
 from .s3utils import s3_str
 
 # =============================================================================
-class S3Codec(object):
+class S3Codec:
     """
         Base class for converting S3Resources into/from external
         data formats, for use with S3Importer/S3Exporter

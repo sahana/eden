@@ -28,7 +28,13 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3RL_PDF",)
+__all__ = ("S3RL_PDF",
+           #"EdenDocTemplate",
+           #"S3PDFList",
+           #"S3PDFTable",
+           #"S3html2pdf",
+           "S3NumberedCanvas",
+           )
 
 import os
 import unicodedata
