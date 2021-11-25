@@ -20,7 +20,7 @@ from reportlab.platypus import SimpleDocTemplate, \
 from gluon import *
 from gluon.contenttype import contenttype
 
-from s3 import NONE, S3GroupedItems, S3GroupedItemsTable, s3_truncate
+from s3 import NONE, S3DateTime, S3GroupedItems, S3GroupedItemsTable, S3Represent, s3_truncate
 from s3.s3export import S3Exporter
 
 from .layouts import OM
@@ -877,6 +877,511 @@ def grn(r, **attr):
     response = current.response
     if response:
         filename = "%s.pdf" % recv_ref
+        if "uwsgi_scheme" in current.request.env:
+            # Running uwsgi then we can't have unicode filenames
+            # Accent Folding
+            def string_escape(s):
+                import unicodedata
+                return unicodedata.normalize("NFD", s).encode("ascii", "ignore").decode("utf-8")
+            filename = string_escape(filename)
+        disposition = 'attachment; filename="%s"' % filename
+        response.headers["Content-Type"] = contenttype(".pdf")
+        response.headers["Content-disposition"] = disposition
+
+    return output.getvalue()
+
+# =============================================================================
+def stock_card(r, **attr):
+    """
+        Stock Card for French Red Cross (& current default)
+
+        Using ReportLab's PLATYPUS direct
+
+        @param r: the S3Request instance
+        @param attr: controller attributes
+    """
+
+    # Styles
+    styleSheet = getSampleStyleSheet()
+
+    style_center = styleSheet["Normal"]
+    style_center.fontName = "Helvetica"
+    style_center.fontSize = 8
+    style_center.alignment = TA_CENTER
+
+    style_9_center = deepcopy(style_center)
+    style_9_center.fontSize = 9
+
+    style_10_center = deepcopy(style_center)
+    style_10_center.fontSize = 10
+
+    style_11_center = deepcopy(style_center)
+    style_11_center.fontSize = 11
+
+    style_11_center_white = deepcopy(style_11_center)
+    style_11_center_white.textColor = colors.white
+
+    style_12_center = deepcopy(style_center)
+    style_12_center.fontSize = 12
+
+    style_18_center = deepcopy(style_center)
+    style_18_center.fontSize = 18
+
+    style_24_center = deepcopy(style_center)
+    style_24_center.fontSize = 24
+
+    size = current.deployment_settings.get_pdf_size()
+    if size == "Letter":
+        pagesize = landscape(LETTER)
+    elif size == "A4" or not isinstance(size, tuple):
+        pagesize = landscape(A4)
+    else:
+        pagesize = landscape(size)
+
+    db = current.db
+    s3db = current.s3db
+
+    # Master record
+    stable = s3db.inv_stock_card
+    record = r.record
+    stock_card_ref = record.stock_card_ref
+    expiry_date = stable.expiry_date.represent(record.expiry_date)
+    item_id = record.item_id
+    site_id = record.site_id
+
+    itable = s3db.supply_item
+    item = db(itable.id == item_id).select(itable.name,
+                                           itable.code,
+                                           limitby = (0, 1),
+                                           ).first()
+
+    ptable = s3db.supply_item_pack
+    item_pack = db(ptable.id == record.item_pack_id).select(ptable.name,
+                                                            limitby = (0, 1),
+                                                            ).first()
+
+    mtable = s3db.inv_minimum
+    query = (mtable.item_id == item_id) & \
+            (mtable.site_id == site_id)
+    minimum = db(query).select(mtable.quantity,
+                               limitby = (0, 1),
+                               ).first()
+    if minimum:
+        stock_minimum = minimum.quantity
+    else:
+        stock_minimum = NONE
+
+    stable = s3db.org_site
+    otable = s3db.org_organisation
+
+    donor = db(otable.id == record.supply_org_id).select(otable.name,
+                                                         limitby = (0, 1),
+                                                         ).first()
+
+    # Get organisation country & logo
+    site = db(stable.site_id == site_id).select(stable.organisation_id,
+                                                limitby = (0, 1),
+                                                ).first()
+    organisation_id = site.organisation_id
+
+    org = db(otable.id == organisation_id).select(otable.logo,
+                                                  otable.root_organisation,
+                                                  limitby = (0, 1),
+                                                  ).first()
+    logo = org.logo
+    if not logo:
+        root_organisation = org.root_organisation
+        if organisation_id != root_organisation:
+            org = db(otable.id == root_organisation).select(otable.logo,
+                                                            limitby = (0, 1),
+                                                            ).first()
+            logo = org.logo
+
+    if logo:
+        src = os.path.join(r.folder,
+                           "uploads",
+                           logo,
+                           )
+    else:
+        # Use default IFRC
+        src = os.path.join(r.folder,
+                           "static",
+                           "themes",
+                           "RMS",
+                           "img",
+                           "logo_small.png",
+                           )
+
+    logo = Image(src)
+
+    # Assuming 96dpi original resolution
+    resolution = 96
+    iwidth = logo.drawWidth
+    iheight = logo.drawHeight
+    height = 50 * inch / resolution
+    width = iwidth * (height / iheight)
+    logo.drawHeight = height
+    logo.drawWidth = width
+
+    output = BytesIO()
+    doc = SimpleDocTemplate(output,
+                            title = stock_card_ref,
+                            pagesize = pagesize,
+                            leftMargin = 0.3 * inch,
+                            rightMargin = 0.3 * inch,
+                            topMargin = 0.5 * inch,
+                            bottomMargin = 0.5 * inch,
+                            )
+
+    lightgrey = colors.lightgrey
+    table_style = [("VALIGN", (0, 0), (-1, -1), "TOP"),
+                   ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                   ("SPAN", (7, 0), (8, 1)),
+                   ("SPAN", (0, 2), (8, 2)),
+                   ("SPAN", (0, 3), (8, 3)),
+                   ("SPAN", (7, 4), (8, 4)),
+                   ("BACKGROUND", (0, 5), (8, 6), colors.black),
+                   ("SPAN", (0, 5), (8, 5)),
+                   ("SPAN", (0, 6), (8, 6)),
+                   ("BACKGROUND", (0, 7), (8, 8), lightgrey),
+                   ("SPAN", (0, 7), (2, 7)),
+                   ("SPAN", (3, 7), (5, 7)),
+                   ("SPAN", (6, 7), (8, 7)),
+                   ("SPAN", (0, 8), (2, 8)),
+                   ("SPAN", (3, 8), (5, 8)),
+                   ("SPAN", (6, 8), (8, 8)),
+                   ("SPAN", (0, 9), (2, 9)),
+                   ("SPAN", (3, 9), (5, 9)),
+                   ("SPAN", (6, 9), (8, 9)),
+                   ("BACKGROUND", (0, 10), (8, 11), lightgrey),
+                   ("SPAN", (0, 10), (2, 10)),
+                   ("SPAN", (3, 10), (5, 10)),
+                   ("SPAN", (6, 10), (8, 10)),
+                   ("SPAN", (0, 11), (2, 11)),
+                   ("SPAN", (3, 11), (5, 11)),
+                   ("SPAN", (6, 11), (8, 11)),
+                   ("SPAN", (0, 12), (2, 12)),
+                   ("SPAN", (3, 12), (5, 12)),
+                   ("SPAN", (6, 12), (8, 12)),
+                   ("BACKGROUND", (0, 14), (8, 16), lightgrey),
+                   ("SPAN", (0, 14), (0, 16)),
+                   ("VALIGN", (0, 14), (0, 16), "MIDDLE"),
+                   ]
+    sappend = table_style.append
+
+    spacer = ["",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              ]
+
+    content = [# Row 0
+               ["",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                logo,
+                "",
+                ],
+               # Row 1
+               spacer,
+               # Row 2
+               [Paragraph(str(B("STOCK CARD")), style_24_center),
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                ],
+               # Row 3
+               [Paragraph(str(I("Fiche de stock")), style_18_center),
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                ],
+               # Row 4
+               ["",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                Paragraph(stock_card_ref, style_9_center),
+                "",
+                ],
+               # Row 5
+               [Paragraph(str(I("ITEM INFORMATION")), style_11_center_white),
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                ],
+               # Row 6
+               [Paragraph(str(I("Information article")), style_11_center_white),
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                ],
+               # Row 7
+               [Paragraph(str(B("DESCRIPTION")), style_12_center),
+                "",
+                "",
+                Paragraph(str(B("ITEM CODE")), style_12_center),
+                "",
+                "",
+                Paragraph(str(B("MEASURE OF UNIT")), style_12_center),
+                "",
+                "",
+                ],
+               # Row 8
+               [Paragraph(str(I("Description article")), style_11_center),
+                "",
+                "",
+                Paragraph(str(I("Code article")), style_11_center),
+                "",
+                "",
+                Paragraph(str(I("Unité de mesure")), style_11_center),
+                "",
+                "",
+                ],
+               # Row 9
+               [Paragraph(s3_truncate(item.name, 80), style_12_center),
+                "",
+                "",
+                Paragraph(item.code or "", style_12_center),
+                "",
+                "",
+                Paragraph(item_pack.name, style_12_center),
+                "",
+                "",
+                ],
+               # Row 10
+               [Paragraph(str(B("DONOR")), style_12_center),
+                "",
+                "",
+                Paragraph(str(B("EXPIRY DATE")), style_12_center),
+                "",
+                "",
+                Paragraph(str(B("STOCK MINIMUM")), style_12_center),
+                "",
+                "",
+                ],
+               # Row 11
+               [Paragraph(str(I("Financeur")), style_11_center),
+                "",
+                "",
+                Paragraph(str(I("Date d’expiration")), style_11_center),
+                "",
+                "",
+                Paragraph(str(I("Stock minimum")), style_11_center),
+                "",
+                "",
+                ],
+               # Row 12
+               [Paragraph(donor.name, style_12_center),
+                "",
+                "",
+                Paragraph(expiry_date, style_12_center),
+                "",
+                "",
+                Paragraph(stock_minimum, style_12_center),
+                "",
+                "",
+                ],
+               # Row 13
+               spacer,
+               # Row 14
+               [Paragraph(str(B("DATE")), style_11_center),
+                Paragraph(str(B("DOCUMENT REF. N°")), style_10_center),
+                Paragraph(str(B("FROM / TO")), style_10_center),
+                Paragraph(str(B("STORE")), style_10_center),
+                Paragraph(str(B("IN")), style_11_center),
+                Paragraph(str(B("OUT")), style_11_center),
+                Paragraph(str(B("BALANCE")), style_10_center),
+                Paragraph(str(B("REMARKS")), style_10_center),
+                Paragraph(str(B("BIN CARD N°")), style_10_center),
+                ],
+               # Row 15
+               ["",
+                Paragraph(str(I("Référence Du Document")), style_9_center),
+                Paragraph(str(I("Provenance/")), style_9_center),
+                Paragraph(str(B("No.")), style_10_center),
+                Paragraph(str(I("Entrée")), style_9_center),
+                Paragraph(str(I("Sortie")), style_9_center),
+                Paragraph(str(I("Solde")), style_9_center),
+                Paragraph(str(I("Remarques")), style_9_center),
+                Paragraph(str(I("Fiche de pile")), style_9_center),
+                ],
+               # Row 16
+               ["",
+                "",
+                Paragraph(str(I("Destination")), style_9_center),
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                ],
+               ]
+    cappend = content.append
+
+    rowHeights = [0.53 * cm, # 0
+                  1.01 * cm, # 1
+                  1.06 * cm, # 2
+                  0.82 * cm, # 3
+                  0.82 * cm, # 4
+                  0.64 * cm, # 5
+                  0.56 * cm, # 6
+                  0.53 * cm, # 7
+                  0.53 * cm, # 8
+                  1.06 * cm, # 9
+                  0.53 * cm, # 10
+                  0.53 * cm, # 11
+                  1.06 * cm, # 12
+                  0.53 * cm, # 13
+                  0.53 * cm, # 14
+                  0.53 * cm, # 15
+                  0.53 * cm, # 16
+                  ]
+    rappend = rowHeights.append
+
+    ltable = s3db.inv_stock_log
+    stable = s3db.inv_send
+    rtable = s3db.inv_recv
+    atable = s3db.inv_adj
+    left = [stable.on(stable.id == ltable.send_id),
+            rtable.on(rtable.id == ltable.recv_id),
+            ]
+    log = db(ltable.card_id == r.id).select(ltable.date,
+                                            ltable.quantity_in,
+                                            ltable.quantity_out,
+                                            ltable.balance,
+                                            ltable.layout_id,
+                                            ltable.comments,
+                                            ltable.adj_id,
+                                            stable.send_ref,
+                                            stable.to_site_id,
+                                            rtable.recv_ref,
+                                            rtable.from_site_id,
+                                            left = left
+                                            )
+
+    # Bulk lookups (results cached in class)
+    adj_represent = ltable.adj_id.represent
+    adj_represent.bulk([row["inv_stock_log.adj_id"] for row in log])
+    bin_represent = ltable.layout_id.represent
+    bin_represent.bulk([row["inv_stock_log.layout_id"] for row in log])
+    date_format = "%Y-%m-%d"
+    represent = S3DateTime.date_represent
+    date_represent = lambda dt: represent(dt,
+                                          format = date_format,
+                                          utc = True,
+                                          )
+    site_represent = S3Represent(lookup = "org_site")
+    site_represent.bulk(list(set([row["inv_send.to_site_id"] for row in log] + [row["inv_recv.from_site_id"] for row in log])))
+
+    rowNo = 17
+    for row in log:
+        rappend(0.71 * cm)
+        rowNo += 1
+        entry = row.inv_stock_log
+        adj_id = entry.adj_id
+        if entry.adj_id:
+            ref = adj_represent(adj_id)
+            site = ""
+        else:
+            send = row.inv_send
+            send_ref = send.send_ref
+            if send_ref:
+                ref = send_ref
+                site = site_represent(send.to_site_id)
+            else:
+                recv = row.inv_recv
+                recv_ref = recv.recv_ref
+                if recv_ref:
+                    ref = recv_ref
+                    site = site_represent(recv.from_site_id)
+                else:
+                    ref = ""
+                    site = ""
+        cappend([Paragraph(date_represent(entry.date), style_center),
+                 Paragraph(ref, style_center),
+                 Paragraph(site, style_center),
+                 Paragraph(bin_represent(entry.layout_id), style_center),
+                 Paragraph(str(entry.quantity_in), style_center),
+                 Paragraph(str(entry.quantity_out), style_center),
+                 Paragraph(str(entry.balance), style_center),
+                 Paragraph(entry.comments or "", style_center),
+                 "",
+                 ])
+
+    rappend(0.71 * cm)
+    sappend(("SPAN", (0, rowNo), (8, rowNo)))
+    cappend([Paragraph("%s / %s" % ("This record is not to be destroyed",
+                                    I("A ne pas détruire"),
+                                    ), style_10_center),
+             "",
+             "",
+             "",
+             "",
+             "",
+             "",
+             "",
+             "",
+             ])
+
+    table = Table(content,
+                  colWidths = (1.88 * cm, # A 1.77
+                               4.61 * cm, # B
+                               2.47 * cm, # C
+                               1.65 * cm, # D 1.56
+                               1.46 * cm, # E
+                               1.35 * cm, # F
+                               2.15 * cm, # G 2.03
+                               2.29 * cm, # H
+                               2.65 * cm, # I 2.61
+                               ),
+                  rowHeights = rowHeights,
+                  style = table_style,
+                  hAlign = "LEFT",   # defaults to "CENTER"
+                  vAlign = "TOP", # defaults to "MIDDLE", but better to specify
+                  )
+
+    doc.build([table],
+              canvasmaker = canvas.Canvas, # S3NumberedCanvas
+              )
+
+    # Return the generated PDF
+    response = current.response
+    if response:
+        filename = "%s.pdf" % stock_card_ref
         if "uwsgi_scheme" in current.request.env:
             # Running uwsgi then we can't have unicode filenames
             # Accent Folding

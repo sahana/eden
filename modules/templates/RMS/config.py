@@ -6589,6 +6589,30 @@ Thank you"""
                 current.auth.get_realm_entity(table, record)
 
     # -------------------------------------------------------------------------
+    def customise_inv_stock_card_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom postp
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+
+            if r.representation == "pdf":
+                from .forms import stock_card
+                output = stock_card(r, **attr)
+            else:
+                # Call standard postp
+                if callable(standard_postp):
+                    output = standard_postp(r, output)
+
+            return output
+        s3.postp = custom_postp
+
+        return attr
+
+    settings.customise_inv_stock_card_controller = customise_inv_stock_card_controller
+
+    # -------------------------------------------------------------------------
     def customise_inv_req_item_resource(r, tablename):
 
         current.s3db.add_custom_callback(tablename,
