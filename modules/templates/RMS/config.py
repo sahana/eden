@@ -9,7 +9,7 @@ from gluon.storage import Storage
 
 from s3 import S3Method, S3Represent, SEPARATORS#, NONE
 
-from .controllers import deploy_index, inv_dashboard
+from .controllers import deploy_index, inv_Dashboard
 
 # Organisation Type
 RED_CROSS = "Red Cross / Red Crescent"
@@ -815,7 +815,7 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Inventory Management
-    settings.customise_inv_home = inv_dashboard() # Imported from controllers.py
+    settings.customise_inv_home = inv_Dashboard() # Imported from controllers.py
 
     # Hide Staff Management Tabs for Facilities in Inventory Module
     settings.inv.facility_manage_staff = False
@@ -843,6 +843,7 @@ def config(settings):
                                }
     # Calculate Warehouse Free Capacity
     settings.inv.warehouse_free_capacity_calculated = True
+    settings.inv.req_project = True
     # Use structured Bins
     settings.inv.bin_site_layout = True
     settings.inv.recv_ref_writable = True
@@ -856,6 +857,7 @@ def config(settings):
     transport_opts = {"Air": T("Air"),
                       "Sea": T("Sea"),
                       "Road": T("Road"),
+                      "Rail": T("Rail"),
                       "Hand": T("Hand"),
                       }
 
@@ -3412,6 +3414,29 @@ Thank you"""
     #                           )
 
     #settings.customise_inv_adj_resource = customise_inv_adj_resource
+
+    # -------------------------------------------------------------------------
+    def customise_inv_kitting_resource(r, tablename):
+
+        s3db = current.s3db
+
+        def inv_kitting_onaccept(form):
+            # Trigger Stock Limit Alert creation/cancellation
+            site_id = int(form.vars.site_id)
+            wtable = s3db.inv_warehouse
+            warehouse = current.db(wtable.site_id == site_id).select(wtable.id,
+                                                                     wtable.name,
+                                                                     limitby = (0, 1),
+                                                                     ).first()
+            warehouse.site_id = site_id
+            stock_limit_alerts(warehouse)
+
+        s3db.add_custom_callback(tablename,
+                                 "onaccept",
+                                 inv_kitting_onaccept,
+                                 )
+
+    settings.customise_inv_kitting_resource = customise_inv_kitting_resource
 
     # -------------------------------------------------------------------------
     def inv_pdf_header(r, title=None):
@@ -6110,10 +6135,12 @@ Thank you"""
                  (ptable.end_date > r.utcnow)) & \
                 (ptable.deleted == False)
         the_set = current.db(query)
-        s3db.inv_req_project.project_id.requires = IS_ONE_OF(the_set, "project_project.id",
-                                                             project_represent,
-                                                             sort = True,
-                                                             )
+        f = s3db.inv_req_project.project_id
+        f.represent = project_represent
+        f.requires = IS_ONE_OF(the_set, "project_project.id",
+                               project_represent,
+                               sort = True,
+                               )
 
     settings.customise_inv_req_project_resource = customise_inv_req_project_resource
 
@@ -6461,6 +6488,7 @@ Thank you"""
                           ]
 
         list_fields = ["req_ref",
+                       "req_project.project_id",
                        "date",
                        "site_id",
                        (T("Details"), "details"),
@@ -6505,7 +6533,11 @@ Thank you"""
                 if not result:
                     return False
 
-            if r.component_name == "req_item":
+            if not r.id:
+                current.s3db.inv_req_project.project_id.represent = S3Represent(lookup = "project_project",
+                                                                                fields = ["code"],
+                                                                                )
+            elif r.component_name == "req_item":
                 s3db = current.s3db
                 workflow_status = r.record.workflow_status
                 if workflow_status == 2: # Submitted for Approval
@@ -6524,7 +6556,7 @@ Thank you"""
                                                             )
                         if not approved:
                             # Allow User to Match
-                            settings.req.prompt_match = True
+                            settings.inv.req_prompt_match = True
                 elif workflow_status == 3: # Approved
                     show_site_and_po = True
                 else:

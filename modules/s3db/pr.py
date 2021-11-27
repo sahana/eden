@@ -9839,7 +9839,7 @@ def pr_get_ancestors(pe_id):
 
         @param pe_id: the person entity ID
 
-        @return: a list of PE IDs
+        @return: a list of PE IDs (as strings)
     """
 
     s3db = current.s3db

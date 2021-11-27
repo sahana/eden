@@ -9,10 +9,9 @@ $(document).ready(function() {
     var reqField = $('#link_defaultreq'),
         transportTypeField = $('#inv_send_transport_type');
 
-   if (reqField.length) {
+    if (reqField.length) {
 
         var ajaxURL,
-            site,
             fromSites,
             toSites,
             req_id = reqField.val(),
@@ -22,41 +21,22 @@ $(document).ready(function() {
        var lookupSites = function(req_id) {
             ajaxURL = S3.Ap.concat('/inv/req/send_sites.json?req_id=' + req_id);
             $.getJSONS3(ajaxURL, function(data) {
-                // Clear all options
-                fromField.html('');
-                toField.html('');
                 fromSites = data[0];
                 fromSitesLength = fromSites.length;
-                if (fromSitesLength == 0) {
-                    // No Options => No Shipment can be made (either due to permissions, no items requested or all items already fulfilled)
-                    return;
-                }
-                // Add options
-                for (var i = 0; i < fromSitesLength; i++) {
-                    site = fromSites[i];
-                    fromField.append(new Option(site[1], site[0]))
-                }
                 if (fromSitesLength == 1) {
                     // Only a single Site matches, so set to this Site
-                    fromField.val(site[0]);
+                    fromField.val(fromSites[0]);
                 }
                 toSites = data[1];
                 toSitesLength = toSites.length;
-                if (toSitesLength == 0) {
-                    // No Options => No Shipment can be made (e.g. Permissions)
-                    return;
+                if (toSitesLength) {
+                    // Set to 'Internal Shipment'
+                    $('#inv_send_type').val(11);
+                    if (toSitesLength == 1) {
+                        // Only a single Site matches, so set to this Site
+                        toField.val(toSites[0]);
+                    }
                 }
-                // Add options
-                for (var i = 0; i < toSitesLength; i++) {
-                    site = toSites[i];
-                    toField.append(new Option(site[1], site[0]))
-                }
-                if (toSitesLength == 1) {
-                    // Only a single Site matches, so set to this Site
-                    toField.val(site[0]);
-                }
-                // Set to 'Internal Shipment'
-                $('#inv_send_type').val(11);
             });
         };
 

@@ -486,9 +486,9 @@ def grn(r, **attr):
                          title = recv_ref,
                          pagesize = pagesize,
                          leftMargin = leftMargin,
-                         rightMargin = 0.3 * inch,
-                         topMargin = 0.5 * inch,
-                         bottomMargin = 0.5 * inch,
+                         rightMargin = leftMargin,
+                         topMargin = leftMargin,
+                         bottomMargin = leftMargin,
                          )
 
     colWidths = (4.17 * cm, # A
@@ -547,7 +547,7 @@ def grn(r, **attr):
                    ("VALIGN", (7, 11), (8, 13), "TOP"),
                    ("SPAN", (7, 11), (7, 13)),
                    ("SPAN", (8, 11), (8, 13)),
-                   ("BACKGROUND", (0, 11), (8, 13), lightgrey),
+                   ("BACKGROUND", (0, 11), (8, 12), lightgrey),
                    ]
     sappend = table_style.append
 
@@ -1083,9 +1083,9 @@ def stock_card(r, **attr):
                          title = stock_card_ref,
                          pagesize = pagesize,
                          leftMargin = leftMargin,
-                         rightMargin = 0.3 * inch,
-                         topMargin = 0.5 * inch,
-                         bottomMargin = 0.5 * inch,
+                         rightMargin = leftMargin,
+                         topMargin = leftMargin,
+                         bottomMargin = leftMargin,
                          )
 
     colWidths = (1.88 * cm, # A 1.77
@@ -1617,21 +1617,27 @@ def waybill(r, **attr):
 
     stable = s3db.org_site
     otable = s3db.org_organisation
+
     # Lookup recipient
-    site = db(stable.site_id == record.to_site_id).select(stable.organisation_id,
-                                                          limitby = (0, 1),
-                                                          ).first()
-    organisation_id = site.organisation_id
-    org = db(otable.id == organisation_id).select(otable.name,
-                                                  otable.root_organisation,
-                                                  limitby = (0, 1),
-                                                  ).first()
-    root_organisation = org.root_organisation
-    if organisation_id != root_organisation:
-        org = db(otable.id == root_organisation).select(otable.name,
-                                                        limitby = (0, 1),
-                                                        ).first()
-    recipient_ns = org.name
+    to_site_id = record.to_site_id
+    if to_site_id:
+        site = db(stable.site_id == record.to_site_id).select(stable.organisation_id,
+                                                              limitby = (0, 1),
+                                                              ).first()
+        organisation_id = site.organisation_id
+        org = db(otable.id == organisation_id).select(otable.name,
+                                                      otable.root_organisation,
+                                                      limitby = (0, 1),
+                                                      ).first()
+        root_organisation = org.root_organisation
+        if organisation_id != root_organisation:
+            org = db(otable.id == root_organisation).select(otable.name,
+                                                            limitby = (0, 1),
+                                                            ).first()
+        recipient_ns = org.name
+    else:
+        recipient_ns = ""
+
     # Get site name and organisation country/logo
     site = db(stable.site_id == record.site_id).select(stable.name,
                                                        stable.organisation_id,
@@ -1686,9 +1692,9 @@ def waybill(r, **attr):
                          title = send_ref,
                          pagesize = pagesize,
                          leftMargin = leftMargin,
-                         rightMargin = 0.3 * inch,
-                         topMargin = 0.5 * inch,
-                         bottomMargin = 0.5 * inch,
+                         rightMargin = leftMargin,
+                         topMargin = leftMargin,
+                         bottomMargin = leftMargin,
                          )
 
     colWidths = (4.04 * cm, # A
@@ -1725,33 +1731,30 @@ def waybill(r, **attr):
 
     table_style = [("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                    ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-                   ("SPAN", (9, 0), (10, 0)),
-                   ("SPAN", (11, 0), (13, 0)),
-                   ("BACKGROUND", (9, 0), (10, 0), lightgrey),
-                   ("SPAN", (0, 1), (2, 1)),
+                   ("SPAN", (0, 0), (2, 0)),
+                   ("SPAN", (3, 0), (11, 0)),
+                   ("SPAN", (12, 0), (13, 0)),
+                   ("BACKGROUND", (0, 0), (13, 0), lightgrey),
+                   ("SPAN", (0, 1), (2, 4)),
                    ("SPAN", (3, 1), (11, 1)),
-                   ("SPAN", (12, 1), (13, 1)),
-                   ("BACKGROUND", (0, 1), (13, 1), lightgrey),
-                   ("SPAN", (0, 2), (2, 5)),
+                   ("BACKGROUND", (3, 1), (12, 1), lightgrey),
                    ("SPAN", (3, 2), (11, 2)),
-                   ("BACKGROUND", (3, 2), (12, 2), lightgrey),
-                   ("SPAN", (3, 3), (11, 3)),
-                   ("BACKGROUND", (12, 3), (12, 3), lightgrey),
+                   ("BACKGROUND", (12, 2), (12, 2), lightgrey),
+                   ("SPAN", (3, 3), (5, 3)),
+                   ("SPAN", (6, 3), (7, 3)),
+                   ("SPAN", (9, 3), (10, 3)),
+                   ("BACKGROUND", (3, 3), (5, 3), lightgrey),
+                   ("BACKGROUND", (11, 3), (12, 3), lightgrey),
                    ("SPAN", (3, 4), (5, 4)),
                    ("SPAN", (6, 4), (7, 4)),
                    ("SPAN", (9, 4), (10, 4)),
                    ("BACKGROUND", (3, 4), (5, 4), lightgrey),
-                   ("BACKGROUND", (11, 4), (12, 4), lightgrey),
-                   ("SPAN", (3, 5), (5, 5)),
-                   ("SPAN", (6, 5), (7, 5)),
-                   ("SPAN", (9, 5), (10, 5)),
-                   ("BACKGROUND", (3, 5), (5, 5), lightgrey),
+                   ("BACKGROUND", (12, 4), (12, 4), lightgrey),
                    ("BACKGROUND", (12, 5), (12, 5), lightgrey),
-                   ("BACKGROUND", (12, 6), (12, 6), lightgrey),
-                   ("SPAN", (1, 8), (2, 8)),
-                   ("SPAN", (7, 8), (9, 8)),
-                   ("SPAN", (10, 8), (13, 8)),
-                   ("BACKGROUND", (0, 8), (13, 8), lightgrey),
+                   ("SPAN", (1, 7), (2, 7)),
+                   ("SPAN", (7, 7), (9, 7)),
+                   ("SPAN", (10, 7), (13, 7)),
+                   ("BACKGROUND", (0, 7), (13, 7), lightgrey),
                    ]
     #sappend = table_style.append
 
@@ -1810,22 +1813,6 @@ def waybill(r, **attr):
                       ]
 
     content = [# Row 0
-               ["",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                Paragraph(str(B("PL REFERENCE")), style_8_center),
-                "",
-                Paragraph(send_ref, style_8_center),
-                "",
-                "",
-                ],
-               # Row 1
                [Paragraph("%s / %s" % (B("DESTINATION AND BENEFICIARY"),
                                        I("Destination et bénéficiaire"),
                                        ), style_center),
@@ -1845,7 +1832,7 @@ def waybill(r, **attr):
                 Paragraph(str(B("MEANS OF TRANSPORT")), style_center),
                 "",
                 ],
-               # Row 2
+               # Row 1
                [Paragraph(str(B(recipient_ns)), style_16_center),
                 "",
                 "",
@@ -1863,7 +1850,7 @@ def waybill(r, **attr):
                 Paragraph(str(B("ROAD")), style_8_center),
                 checked if transport_type == "Road" else checkbox,
                 ],
-               # Row 3
+               # Row 2
                ["",
                 "",
                 "",
@@ -1879,7 +1866,7 @@ def waybill(r, **attr):
                 Paragraph(str(B("AIR")), style_8_center),
                 checked if transport_type == "Air" else checkbox,
                 ],
-               # Row 4
+               # Row 3
                ["",
                 "",
                 "",
@@ -1897,7 +1884,7 @@ def waybill(r, **attr):
                 Paragraph(str(B("SEA")), style_8_center),
                 checked if transport_type == "Sea" else checkbox,
                 ],
-               # Row 5
+               # Row 4
                ["",
                 "",
                 "",
@@ -1915,7 +1902,7 @@ def waybill(r, **attr):
                 Paragraph(str(B("RAIL")), style_8_center),
                 checked if transport_type == "Rail" else checkbox,
                 ],
-               # Row 6
+               # Row 5
                ["",
                 "",
                 "",
@@ -1931,9 +1918,9 @@ def waybill(r, **attr):
                 Paragraph(str(B("HAND")), style_8_center),
                 checked if transport_type == "Hand" else checkbox,
                 ],
-               # Row 7
+               # Row 6
                spacer,
-               # Row 8
+               # Row 7
                [Paragraph("ITEM DESCRIPTION", style_7_center),
                 Paragraph("DONOR", style_7_center),
                 "",
@@ -1963,7 +1950,6 @@ def waybill(r, **attr):
                          ]
 
     rowHeights = [0.87 * cm,
-                  0.87 * cm,
                   0.64 * cm,
                   0.64 * cm,
                   0.64 * cm,
@@ -2009,7 +1995,7 @@ def waybill(r, **attr):
     all_quantity = 0
     all_weight = 0
     all_volume = 0
-    rowNo = 9
+    rowNo = 8
     for row in items:
         item = row["supply_item"]
         pack = row["supply_item_pack"]

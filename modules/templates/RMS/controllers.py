@@ -394,6 +394,7 @@ def inv_operators_for_sites(site_ids):
                                                   )
 
     use_admin = []
+    from s3db.pr import pr_get_ancestors
 
     for site_id in sites:
 
@@ -401,8 +402,8 @@ def inv_operators_for_sites(site_ids):
         pe_id = site["pe_id"]
 
         # Find the relevant wh_operator/logs_manager
-        entities = s3db.pr_get_ancestors(pe_id)
-        entities.append(pe_id)
+        entities = pr_get_ancestors(pe_id)
+        entities.append(str(pe_id))
 
         query = (gtable.uuid.belongs(("wh_operator",
                                       "logs_manager",
@@ -418,7 +419,7 @@ def inv_operators_for_sites(site_ids):
                                      )
         operators = list(operators)
         for row in wh_operators_default_realm:
-            if row["pr_role.pe_id"] in entities:
+            if str(row["pr_role.pe_id"]) in entities:
                 operators.append(row)
 
         if operators:
@@ -443,7 +444,7 @@ def inv_operators_for_sites(site_ids):
     return sites
 
 # =============================================================================
-class inv_dashboard(S3CustomController):
+class inv_Dashboard(S3CustomController):
     """
         Dashboard for Warehouse Management module
         - used as homepage
@@ -457,7 +458,7 @@ class inv_dashboard(S3CustomController):
         user = current.auth.user
         user_id = user.id
 
-        # Huuricane Season lasts from 1/6 to 30/11
+        # Hurricane Season lasts from 1/6 to 30/11
         now = current.request.utcnow
         if 5 < now.month < 12:
             SEASON = T("this Season")
@@ -658,7 +659,7 @@ class inv_dashboard(S3CustomController):
         transport_opts = {"Air": ICON("plane"),
                           "Sea": ICON("ship"),
                           "Road": ICON("truck"),
-                          "Rail": ICON("truck"),
+                          "Rail": ICON("train"),
                           "Hand": ICON("hand-grab"),
                           }
         transport_opts_get = transport_opts.get
@@ -748,12 +749,10 @@ class inv_dashboard(S3CustomController):
 
         # Alerts
         table = s3db.auth_user_notification
-        query = (table.user_id == user_id) & \
-                (table.deleted == False)
-        rows = db(query).select(table.name,
-                                table.url,
-                                orderby = ~table.created_on,
-                                )
+        rows = db(table.user_id == user_id).select(table.name,
+                                                   table.url,
+                                                   orderby = ~table.created_on,
+                                                   )
         alert_rows = []
         for row in rows:
             alert_rows.append(DIV(A(DIV(ICON("bell-o"),

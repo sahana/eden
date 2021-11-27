@@ -81,7 +81,7 @@ __all__ = ("WarehouseModel",
            #"inv_req_send",
            "inv_req_tabs",
            #"inv_req_update_status",
-           #"inv_rfooter",
+           "inv_rfooter",
            "inv_rheader",
            #"inv_send_add_items_of_shipment_type",
            "inv_send_controller",
@@ -1984,7 +1984,7 @@ class InventoryKittingModel(S3Model):
     """
         A module to manage the Kitting of Inventory Items
 
-        @ToDo: Update to multiple Bins per Inv Item
+        @ToDo: Do the Kitting on 'process' & allow editing of bins before this
     """
 
     names = ("inv_kitting",
@@ -2415,10 +2415,10 @@ class InventoryKittingModel(S3Model):
                         required -= bin_amount
 
                         if not required:
-                            # No more required: move on to the next inv_item_id
+                            # No more required: skip remaining bins
                             break
 
-                    if binned_quantity < inv_quantity:
+                    if required and (binned_quantity < inv_quantity):
                         # We still have some unbinned to take from
                         unbinned_quantity = inv_quantity - binned_quantity
                         unbinned_amount = unbinned_quantity * pack_quantity
@@ -3229,6 +3229,8 @@ class InventoryRequisitionModel(S3Model):
         - stands separate from the Req module
 
         In the future, this may be used for fulfilling Inventory Requisitions raised via req_requisition
+
+        @ToDo: crud_form & list_fields for settings.inv.req_project
     """
 
     names = ("inv_req",
@@ -8671,16 +8673,16 @@ def inv_recv_controller():
                 table.file.required = True
                 table.url.readable = table.url.writable = False
                 table.date.readable = table.date.writable = False
-                if r.method == "wizard":
-                    table.name.comment = A(ICON("print"),
-                                           " ",
-                                           settings.get_inv_recv_shortname(),
-                                           _href = URL(args = [record.id,
-                                                               "form",
-                                                               ]
-                                                       ),
-                                           _class = "action-btn",
-                                           )
+
+                table.name.comment = A(ICON("print"),
+                                       " ",
+                                       settings.get_inv_recv_shortname(),
+                                       _href = URL(args = [record.id,
+                                                           "form",
+                                                           ]
+                                                   ),
+                                       _class = "action-btn",
+                                       )
 
             elif component_name == "track_item":
 
@@ -9168,10 +9170,6 @@ i18n.reg='%s'
                     ritable = s3db.inv_req_item
                     if len(site_ids) > 1:
                         query = (rtable.site_id.belongs(site_ids))
-                        if s3.debug:
-                            s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_multisite.js" % r.application)
-                        else:
-                            s3.scripts.append("/%s/static/scripts/S3/s3.inv_recv_multisite.min.js" % r.application)
                     else:
                        query = (rtable.site_id == site_ids[0])
                     if settings.get_inv_req_workflow():
@@ -9419,16 +9417,17 @@ def inv_recv_rheader(r):
                 if current.auth.s3_has_permission("update", "inv_recv",
                                                   record_id = record.id,
                                                   ):
-                    actions.append(A(ICON("wizard"),
-                                     " ",
-                                     T("Wizard"),
-                                     _href = URL(args = [record.id,
-                                                         "wizard",
-                                                         ]
-                                                 ),
-                                     _class = "action-btn",
-                                     )
-                                   )
+                    if settings.get_inv_wizards():
+                        actions.append(A(ICON("wizard"),
+                                         " ",
+                                         T("Wizard"),
+                                         _href = URL(args = [record.id,
+                                                             "wizard",
+                                                             ]
+                                                     ),
+                                         _class = "action-btn",
+                                         )
+                                       )
 
                     if cnt > 0:
                         actions.append(A(T("Receive Shipment"),
@@ -9656,14 +9655,20 @@ def inv_recv_process(r, **attr):
                 req_item_ids.append(req_item_id)
 
     if req_item_ids:
-        # Lookup req_items
+        # Lookup req_items which are for this Site
+        # - do not update status for Requests for other Sites
+        # - (i.e. assume that we are just an intermediate transit stop for such items)
+        # - @ToDo: We could update the Transit Status for these, in case that hasn't yet been done
         rrtable = s3db.inv_req
         ritable = s3db.inv_req_item
-        req_items = db(ritable.id.belongs(req_item_ids)).select(ritable.id,
-                                                                ritable.item_pack_id,
-                                                                ritable.quantity_fulfil,
-                                                                ritable.req_id,
-                                                                )
+        query = (ritable.id.belongs(req_item_ids)) & \
+                (ritable.req_id == rrtable.id) & \
+                (rrtable.site_id == site_id)
+        req_items = db(query).select(ritable.id,
+                                     ritable.item_pack_id,
+                                     ritable.quantity_fulfil,
+                                     ritable.req_id,
+                                     )
         item_pack_ids += [row.item_pack_id for row in req_items]
         req_ids = [row.req_id for row in req_items]
         req_items = {row.id: row for row in req_items}
@@ -9798,14 +9803,16 @@ def inv_recv_process(r, **attr):
         # If this item is linked to a Requisition, then update the quantity fulfil
         req_item_id = track_item.req_item_id
         if req_item_id:
-            req_item = req_items[req_item_id]
-            req_pack_id = req_item.item_pack_id
-            if req_pack_id == item_pack_id:
-                quantity_fulfil = req_item.quantity_fulfil + recv_quantity
-            else:
-                # Adjust Quantities
-                quantity_fulfil = req_item.quantity_fulfil + (recv_quantity * packs[item_pack_id] / packs[req_pack_id])
-            req_item.update_record(quantity_fulfil = quantity_fulfil)
+            req_item = req_items.get(req_item_id)
+            if req_item:
+                # For this Site: Update status
+                req_pack_id = req_item.item_pack_id
+                if req_pack_id == item_pack_id:
+                    quantity_fulfil = req_item.quantity_fulfil + recv_quantity
+                else:
+                    # Adjust Quantities
+                    quantity_fulfil = req_item.quantity_fulfil + (recv_quantity * packs[item_pack_id] / packs[req_pack_id])
+                req_item.update_record(quantity_fulfil = quantity_fulfil)
 
         # Update the track_item
         data = {"recv_inv_item_id": inv_item_id,
@@ -11772,9 +11779,12 @@ def inv_req_recv_sites(r, **attr):
     request_items = current.db(query).select(ritable.site_id)
     requested_from_sites = set([int(row.site_id) for row in request_items if row.site_id])
     from_sites = []
-    for site in available_from_sites:
-        if site[0] and int(site[0]) in requested_from_sites:
-            from_sites.append(site)
+    for from_site in available_from_sites:
+        site = from_site[0]
+        if site:
+            site = int(site)
+            if site in requested_from_sites:
+                from_sites.append(site)
 
     # To Sites
     available_to_sites = s3db.inv_recv.site_id.requires.options(zero = False)
@@ -11790,8 +11800,9 @@ def inv_req_recv_sites(r, **attr):
                                         )
     requested_to_sites = set([int(row.site_id) for row in requests])
     to_sites = []
-    for site in available_to_sites:
-        if int(site[0]) in requested_to_sites:
+    for to_site in available_to_sites:
+        site = int(to_site[0])
+        if site in requested_to_sites:
             to_sites.append(site)
 
     current.response.headers["Content-Type"] = "application/json"
@@ -11999,9 +12010,25 @@ def inv_req_rheader(r, check_page=False):
                                    ))
 
         if is_template:
+            row0 = ""
             row1 = ""
             row3 = ""
         else:
+            if settings.get_inv_req_project():
+                ltable = s3db.inv_req_project
+                f = ltable.project_id
+                link = db(ltable.req_id == req_id).select(f,
+                                                          limitby = (0, 1),
+                                                          ).first()
+                if link:
+                    row0 = TR(TH("%s: " % f.label),
+                              f.represent(link.project_id),
+                              )
+                else:
+                    row0 = ""
+            else:
+                row0 = ""
+
             if use_workflow and workflow_status in (1, 2, 5): # Draft/Submitted/Cancelled
                 row1_status = (TH("%s: " % table.workflow_status.label),
                                table.workflow_status.represent(workflow_status),
@@ -12027,6 +12054,7 @@ def inv_req_rheader(r, check_page=False):
                       )
 
         rheader = DIV(TABLE(headerTR,
+                            row0,
                             row1,
                             TR(TH("%s: " % table.site_id.label),
                                table.site_id.represent(site_id),
@@ -12334,8 +12362,9 @@ def inv_req_send_sites(r, **attr):
     request_items = current.db(query).select(ritable.site_id)
     requested_from_sites = set([int(row.site_id) for row in request_items if row.site_id])
     from_sites = []
-    for site in available_from_sites:
-        if int(site[0]) in requested_from_sites:
+    for from_site in available_from_sites:
+        site = int(from_site[0])
+        if site in requested_from_sites:
             from_sites.append(site)
 
     # To Sites
@@ -12352,9 +12381,12 @@ def inv_req_send_sites(r, **attr):
                                         )
     requested_to_sites = set([int(row.site_id) for row in requests])
     to_sites = []
-    for site in available_to_sites:
-        if site[0] and int(site[0]) in requested_to_sites:
-            to_sites.append(site)
+    for to_site in available_to_sites:
+        site = to_site[0]
+        if site:
+            site = int(site)
+            if site in requested_to_sites:
+                to_sites.append(site)
 
     current.response.headers["Content-Type"] = "application/json"
     return json.dumps((from_sites, to_sites), separators=SEPARATORS)
@@ -12994,16 +13026,16 @@ def inv_send_controller():
                 table.file.required = True
                 table.url.readable = table.url.writable = False
                 table.date.readable = table.date.writable = False
-                if r.method == "wizard":
-                    table.name.comment = A(ICON("print"),
-                                           " ",
-                                           settings.get_inv_send_shortname(),
-                                           _href = URL(args = [record.id,
-                                                               "form",
-                                                               ]
-                                                       ),
-                                           _class = "action-btn",
-                                           )
+
+                table.name.comment = A(ICON("print"),
+                                       " ",
+                                       settings.get_inv_send_shortname(),
+                                       _href = URL(args = [record.id,
+                                                           "form",
+                                                           ]
+                                                   ),
+                                       _class = "action-btn",
+                                       )
 
             elif cname == "send_package":
 
@@ -13889,6 +13921,7 @@ def inv_send_item_postprocess(form):
                             send_bin["quantity"] = new_quantity
                             db(sbtable.id == send_bin["id"]).update(quantity = new_quantity)
                             to_allocate = 0
+                            break
                         else:
                             # Allocate what we can from this bin
                             new_quantity = inv_quantity / send_pack_quantity
@@ -13907,6 +13940,7 @@ def inv_send_item_postprocess(form):
                                                 "quantity": new_quantity,
                                                 }
                         to_allocate = 0
+                        break
                     else:
                         # Allocate what we can from this bin
                         new_quantity = inv_quantity / send_pack_quantity
@@ -13957,10 +13991,10 @@ def inv_send_item_postprocess(form):
                 new_bin_quantity = ((inv_bin["quantity"] * inv_pack_quantity) - (send_bin["quantity"] * send_pack_quantity)) / inv_pack_quantity
                 db(ibtable.id == inv_bin["id"]).update(quantity = new_bin_quantity)
             elif old_bin and not send_bin:
-                new_bin_quantity = ((inv_bin["quantity"] * inv_pack_quantity) + (old_bin["quantity"] * old_pack_quantity)) / inv_pack_quantity
+                new_bin_quantity = ((inv_bin["quantity"] * inv_pack_quantity) + (old_bin * old_pack_quantity)) / inv_pack_quantity
                 db(ibtable.id == inv_bin["id"]).update(quantity = new_bin_quantity)
             elif send_bin and old_bin:
-                new_bin_quantity = ((inv_bin["quantity"] * inv_pack_quantity) + (old_bin["quantity"] * old_pack_quantity) - (send_bin["quantity"] * send_pack_quantity)) / inv_pack_quantity
+                new_bin_quantity = ((inv_bin["quantity"] * inv_pack_quantity) + (old_bin * old_pack_quantity) - (send_bin["quantity"] * send_pack_quantity)) / inv_pack_quantity
                 db(ibtable.id == inv_bin["id"]).update(quantity = new_bin_quantity)
         else:
             send_bin = send_bins.get(layout_id)
@@ -14586,16 +14620,17 @@ def inv_send_rheader(r):
                         else:
                             s3.scripts.append("/%s/static/scripts/S3/s3.inv_send_rheader.min.js" % r.application)
                         if status == SHIP_STATUS_IN_PROCESS:
-                            actions.insert(0, A(ICON("wizard"),
-                                                " ",
-                                                T("Wizard"),
-                                                _href = URL(args = [record.id,
-                                                                    "wizard",
-                                                                    ]
-                                                            ),
-                                                _class = "action-btn",
-                                                )
-                                           )
+                            if settings.get_inv_wizards():
+                                actions.insert(0, A(ICON("wizard"),
+                                                    " ",
+                                                    T("Wizard"),
+                                                    _href = URL(args = [record.id,
+                                                                        "wizard",
+                                                                        ]
+                                                                ),
+                                                    _class = "action-btn",
+                                                    )
+                                               )
                             actions.append(A(ICON("print"),
                                              " ",
                                              T("Picking List"),
@@ -16986,7 +17021,7 @@ class inv_SendWizard(S3CrudWizard):
                          _id = "send-process",
                          _class = "crud-submit-button button small next",
                          )
-            return {"form": DIV(P(T("Clicking Finish will remove all the Items in the Shipment from the Inventory.")),
+            return {"form": DIV(P(T("Clicking Finish will lock the Sent Shipment, create an Inbound Shipment for the recipient Site, update Stock Cards and update Request Status(es).")),
                                 P(T("This step cannot be reversed.")),
                                 ),
                     "controls": self._controls(r, next_btn=next_btn),

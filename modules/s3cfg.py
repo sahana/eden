@@ -4971,6 +4971,12 @@ class S3Config(Storage):
         """
         return self.inv.get("warehouse_code_unique", False)
 
+    def get_inv_wizards(self):
+        """
+            Whether to use Wizards for inv/send & inv/recv
+        """
+        return self.inv.get("wizards", True)
+
     # -------------------------------------------------------------------------
     # Inventory Requisitions Settings
     def get_inv_req_copyable(self):
@@ -5049,11 +5055,17 @@ class S3Config(Storage):
         """
         return self.inv.get("req_match_tab", True)
 
+    def get_inv_req_project(self):
+        """
+            Whether Requests link to Projects
+        """
+        return self.inv.get("req_project", False)
+
     def get_inv_req_prompt_match(self):
         """
             Whether a Requester is prompted to match each line item in an Inventory Requisitions
         """
-        return self.req.get("req_prompt_match", True)
+        return self.inv.get("req_prompt_match", True)
 
     def get_inv_use_commit(self):
         """

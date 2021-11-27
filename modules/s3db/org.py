@@ -7121,7 +7121,8 @@ def org_rheader(r, tabs=None):
 
         if settings.has_module("inv"):
             # Build footer
-            s3db.inv_rfooter(r, record)
+            from .inv import inv_rfooter
+            inv_rfooter(r, record)
 
     elif tablename == "org_group":
         tabs = [(T("Basic Details"), None),
