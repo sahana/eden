@@ -11918,10 +11918,14 @@ def inv_req_rheader(r, check_page=False):
                     elif workflow_status == 3: # Approved
                         # @ToDo: Check for permission on sites requested_from
                         if auth.s3_has_permission("create", "inv_send"):
+                            if settings.get_inv_wizards():
+                                method = "wizard"
+                            else:
+                                method = "create"
                             fulfil_btn = A(T("Fulfil Request"),
                                            _href = URL(c = "inv",
                                                        f = "send",
-                                                       args = ["create"],
+                                                       args = [method],
                                                        vars = {"req_id": req_id},
                                                        ),
                                            _id = "req-fulfil",
