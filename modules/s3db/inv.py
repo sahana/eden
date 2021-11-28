@@ -7358,7 +7358,7 @@ def inv_item_label(r, **attr):
 
     # Add sheet
     sheet = book.add_sheet(item_code or item_name)
-    sheet.set_print_scaling(90)
+    sheet.fit_num_pages = 1
 
     # Set column Widths
     sheet.col(0).width = 4172   # 3.19 cm A
@@ -8289,7 +8289,7 @@ def inv_package_labels(r, **attr):
 
         # Add sheet
         sheet = book.add_sheet(str(package_number))
-        sheet.set_print_scaling(90)
+        sheet.fit_num_pages = 1
 
         # Weight is Load + Package Weight
         package_weight = str(int(send_package.weight + package.weight))
