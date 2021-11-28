@@ -187,17 +187,18 @@ def household():
 
         if r.component_name == "person":
             # Configure CRUD form and list fields
+            from s3 import S3SQLCustomForm
             s3db.add_components("pr_person",
                                 po_age_group = {"joinby": "person_id",
                                                 "multiple": False,
                                                 },
                                 )
-            crud_form = s3base.S3SQLCustomForm("first_name",
-                                               "middle_name",
-                                               "last_name",
-                                               "gender",
-                                               "age_group.age_group",
-                                               )
+            crud_form = S3SQLCustomForm("first_name",
+                                        "middle_name",
+                                        "last_name",
+                                        "gender",
+                                        "age_group.age_group",
+                                        )
             list_fields = ["first_name",
                            "middle_name",
                            "last_name",

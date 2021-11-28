@@ -706,7 +706,8 @@ def ldata():
     except:
         raise HTTP(400)
 
-    s3base.s3_keep_messages()
+    from s3 import s3_keep_messages
+    s3_keep_messages()
     response.headers["Content-Type"] = "application/json"
 
     if len(req_args) > 1:
@@ -1521,6 +1522,7 @@ def route():
         tabs = [(T("Route Details"), None),
                 (T("WayPoints"), "waypoint"),
                 ]
+        from s3 import s3_rheader_tabs
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         rheader = DIV(TABLE(TR(TH("%s: " % r.table.name.label),
@@ -3018,16 +3020,16 @@ def poi():
                 table.location_id.label = ""
                 table.created_by.readable = True
                 table.created_on.readable = True
-                table.created_on.represent = lambda d: \
-                    s3base.S3DateTime.date_represent(d)
+                from s3 import S3DateTime
+                table.created_on.represent = lambda d: S3DateTime.date_represent(d)
 
             elif r.representation == "plain":
                 # Map Popup
                 table = r.table
                 table.created_by.readable = True
                 table.created_on.readable = True
-                table.created_on.represent = lambda d: \
-                    s3base.S3DateTime.date_represent(d)
+                from s3 import S3DateTime
+                table.created_on.represent = lambda d: S3DateTime.date_represent(d)
                 # @ToDo: Allow multiple PoI layers
                 ftable = s3db.gis_layer_feature
                 layer = db(ftable.name == "PoIs").select(ftable.layer_id,

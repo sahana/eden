@@ -75,15 +75,15 @@ def police_rheader(r, tabs=[]):
         if r.name == "station":
             station = r.record
             if station:
-                tabs = [
-                    (T("Station Details"), None),
-                    #(T("Vehicles"), "vehicle"),
-                    (T("Staff"), "human_resource"),
-                    #(T("Shifts"), "shift"),
-                    #(T("Roster"), "shift_staff"),
-                    #(T("Vehicle Deployments"), "vehicle_report"),
-                    (T("Beats"), "location"),
-                ]
+                tabs = [(T("Station Details"), None),
+                        #(T("Vehicles"), "vehicle"),
+                        (T("Staff"), "human_resource"),
+                        #(T("Shifts"), "shift"),
+                        #(T("Roster"), "shift_staff"),
+                        #(T("Vehicle Deployments"), "vehicle_report"),
+                        (T("Beats"), "location"),
+                        ]
+                from s3 import s3_rheader_tabs
                 rheader_tabs = s3_rheader_tabs(r, tabs)
 
                 rheader = DIV(rheader_tabs)

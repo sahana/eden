@@ -182,13 +182,13 @@ def template_read():
                    deletable = False,
                    )
 
-    r = s3base.s3_request("survey", "template",
-                          args = [template_id],
-                          )
-    output = r(method = "read",
-               rheader = s3db.survey_template_rheader,
-               )
-    return output
+    from s3 import s3_request
+    r = s3_request("survey", "template",
+                   args = [template_id],
+                   )
+    return r(method = "read",
+             rheader = s3db.survey_template_rheader,
+             )
 
 # -----------------------------------------------------------------------------
 def template_summary():

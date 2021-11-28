@@ -74,6 +74,7 @@ def group_rheader(r, tabs = []):
         if duser.authorised:
             tabs.append((T("Membership"), "membership"))
 
+        from s3 import s3_rheader_tabs
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         rheader = DIV(
@@ -155,6 +156,7 @@ def problem_rheader(r, tabs = []):
         if duser.authorised:
             tabs.append((T("Edit"), None))
 
+        from s3 import s3_rheader_tabs
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         rtable = TABLE(TR(TH("%s: " % T("Problem")),
@@ -1092,6 +1094,7 @@ def comment_parse(comment, comments, solution_id=None):
         if row:
             person = row.pr_person
             user = row[utable._tablename]
+            from s3 import s3_fullname
             username = s3_fullname(person)
             email = user.email.strip().lower()
             import hashlib
@@ -1104,24 +1107,32 @@ def comment_parse(comment, comments, solution_id=None):
         solution_id = comment.solution_id
     else:
         header = author
-    thread = LI(DIV(s3base.s3_avatar_represent(comment.created_by),
+    from s3 import s3_avatar_represent
+    thread = LI(DIV(s3_avatar_represent(comment.created_by),
                     DIV(DIV(header,
-                            _class="comment-header"),
+                            _class = "comment-header",
+                            ),
                         DIV(XML(comment.body)),
-                        _class="comment-text"),
+                        _class = "comment-text",
+                        ),
                         DIV(DIV(comment.created_on,
-                                _class="comment-date"),
+                                _class = "comment-date",
+                                ),
                             DIV(A(T("Reply"),
-                                  _class="action-btn"),
-                                _onclick="comment_reply(%i);" % comment.id,
-                                _class="comment-reply"),
-                            _class="fright"),
-                    _id="comment-%i" % comment.id,
-                    _solution_id=solution_id,
-                    _class="comment-box"))
+                                  _class = "action-btn",
+                                  ),
+                                _onclick = "comment_reply(%i);" % comment.id,
+                                _class = "comment-reply",
+                                ),
+                            _class = "fright",
+                            ),
+                    _id = "comment-%i" % comment.id,
+                    _solution_id = solution_id,
+                    _class = "comment-box",
+                    ))
 
     # Add the children of this thread
-    children = UL(_class="children")
+    children = UL(_class = "children")
     id = comment.id
     count = 0
     for comment in comments:

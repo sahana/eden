@@ -194,7 +194,8 @@ def parameter():
         return output
     s3.postp = postp
 
-    r = s3base.s3_request(args = [str(record_id)])
+    from s3 import s3_request
+    r = s3_request(args = [str(record_id)])
     return r()
 
 # =============================================================================

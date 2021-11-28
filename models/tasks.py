@@ -404,7 +404,8 @@ if has_module("msg"):
         if user_id:
             auth.s3_impersonate(user_id)
 
-        result = s3base.S3Notifications().check_subscriptions()
+        from s3 import S3Notifications
+        result = S3Notifications().check_subscriptions()
         db.commit()
         return result
 
@@ -421,7 +422,8 @@ if has_module("msg"):
         if user_id:
             auth.s3_impersonate(user_id)
 
-        notify = s3base.S3Notifications
+        from s3 import S3Notifications
+        notify = S3Notifications
         return notify.notify(resource_id)
 
     tasks["notify_notify"] = notify_notify
@@ -674,7 +676,8 @@ if has_module("sync"):
         repository = db(query).select(limitby = (0, 1)
                                       ).first()
         if repository:
-            sync = s3base.S3Sync()
+            from s3 import S3Sync
+            sync = S3Sync()
             status = sync.get_status()
             if status.running:
                 message = "Synchronization already active - skipping run"
@@ -694,20 +697,21 @@ if has_module("sync"):
             finally:
                 sync.set_status(running=False, manual=False)
         db.commit()
-        return s3base.S3SyncLog.SUCCESS
+        from s3 import S3SyncLog
+        return S3SyncLog.SUCCESS
 
     tasks["sync_synchronize"] = sync_synchronize
 
 # =============================================================================
 # Instantiate Scheduler instance with the list of tasks
 s3.tasks = tasks
-s3task = s3base.S3Task()
-current.s3task = s3task
+from s3 import S3Task
+current.s3task = s3task = S3Task()
 
 # -----------------------------------------------------------------------------
 # Reusable field for scheduler task links
 scheduler_task_id = S3ReusableField("scheduler_task_id",
-                                    "reference %s" % s3base.S3Task.TASK_TABLENAME,
+                                    "reference %s" % S3Task.TASK_TABLENAME,
                                     ondelete = "CASCADE")
 s3.scheduler_task_id = scheduler_task_id
 

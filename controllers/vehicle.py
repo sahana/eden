@@ -44,6 +44,8 @@ def vehicle():
                    deletable = False,
                    )
 
+    from s3 import S3CheckInMethod, S3CheckOutMethod
+
     set_method = s3db.set_method
 
     set_method("asset", "asset",
@@ -53,12 +55,12 @@ def vehicle():
 
     set_method("asset", "asset",
                method = "check-in",
-               action = s3base.S3CheckInMethod(),
+               action = S3CheckInMethod(),
                )
 
     set_method("asset", "asset",
                method = "check-out",
-               action = s3base.S3CheckOutMethod(),
+               action = S3CheckOutMethod(),
                )
 
     # Type is Vehicle

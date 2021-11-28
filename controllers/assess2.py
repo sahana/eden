@@ -2046,7 +2046,8 @@ def rat():
         s3_action_buttons(r, deletable=False)
         # Redirect to update view to open tabs
         if r.representation == "html" and r.method == "create":
-            r.next = r.url(method="", id=s3base.s3_get_last_record_id("assess_rat"))
+            from s3 import s3_get_last_record_id
+            r.next = r.url(method="", id=s3_get_last_record_id("assess_rat"))
         return output
     response.s3.postp = postp
 
@@ -2084,6 +2085,7 @@ def rat_rheader(r, tabs=[]):
             report = r.record
             if report:
                 htable = db.hrm_human_resource
+                from s3 import s3_rheader_tabs
                 rheader_tabs = s3_rheader_tabs(r, tabs, paging=True)
                 location = report.location_id
                 if location:
@@ -2134,6 +2136,7 @@ def assess_rheader(r, tabs=[]):
 
     if r.representation == "html":
 
+        from s3 import s3_rheader_tabs
         rheader_tabs = s3_rheader_tabs(r, tabs)
         assess = r.record
         if assess:

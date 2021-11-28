@@ -3264,7 +3264,6 @@ class InventoryRequisitionModel(S3Model):
         ask_security = settings.get_inv_req_ask_security()
         ask_transport = settings.get_inv_req_ask_transport()
         date_writable = settings.get_inv_req_date_writable()
-        multiple_req_items = settings.get_inv_multiple_req_items()
         recurring = settings.get_inv_req_recurring()
         req_status_writable = settings.get_inv_req_status_writable()
         requester_label = settings.get_inv_requester_label()
@@ -3687,7 +3686,7 @@ class InventoryRequisitionModel(S3Model):
                                       },
                        # Requested Items
                        inv_req_item = {"joinby": "req_id",
-                                       "multiple": multiple_req_items,
+                                       "multiple": settings.get_inv_req_multiple_items(),
                                        },
                        # Commitment
                        inv_commit = "req_id",
@@ -4089,6 +4088,20 @@ class InventoryRequisitionItemModel(S3Model):
                            readable = use_commit,
                            writable = use_commit and quantities_writable,
                            ),
+                     Field("quantity_reserved", "double",
+                           default = 0,
+                           label = T("Quantity Reserved"),
+                           represent = IS_FLOAT_AMOUNT.represent,
+                           requires = IS_FLOAT_AMOUNT(minimum = 0.0),
+                           # Add to crud_form in controller for settings.get_inv_req_reserve_items()
+                           readable = False,
+                           writable = False,
+                           ),
+                     self.org_site_layout_id(label = T("Bin"),
+                                             # Add to crud_form in controller for settings.get_inv_req_reserve_items()
+                                             readable = False,
+                                             writable = False,
+                                             ),
                      Field("quantity_transit", "double",
                            default = 0,
                            # FB: I think this is Qty Shipped not remaining in transit
@@ -4202,7 +4215,7 @@ $.filterOptionsS3({
         self.configure(tablename,
                        create_next = create_next,
                        deduplicate = self.req_item_duplicate,
-                       deletable = settings.get_inv_multiple_req_items(),
+                       deletable = settings.get_inv_req_multiple_items(),
                        extra_fields = ["item_pack_id"],
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
@@ -12113,7 +12126,7 @@ def inv_req_rheader(r, check_page=False):
         workflow_status = record.workflow_status
 
         tabs = [(T("Edit Details"), None)]
-        if settings.get_inv_multiple_req_items():
+        if settings.get_inv_req_multiple_items():
             req_item_tab_label = T("Items")
         else:
             req_item_tab_label = T("Item")

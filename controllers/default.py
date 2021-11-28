@@ -872,6 +872,7 @@ def organisation():
                            represent = True,
                            )
 
+    from s3 import S3DataTable
     dt = S3DataTable(data["rfields"], data["rows"])
 
     if representation == "html":

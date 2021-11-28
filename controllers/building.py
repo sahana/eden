@@ -267,16 +267,16 @@ s3.crud_strings[tablename] = Storage(
     msg_record_deleted = T("Level 1 Assessment deleted"),
     msg_list_empty = T("No Level 1 Assessments currently registered"))
 
-building_nzseel1_search = s3base.S3Search(
-        name="nzseel1_search_simple",
-        label=T("Ticket ID"),
-        comment=T("To search for an assessment, enter any portion of the ticket number of the assessment. You may use % as wildcard. Press 'Search' without input to list all assessments."),
-        field=["ticket_id"])
+#building_nzseel1_search = S3Search(
+#        name="nzseel1_search_simple",
+#        label=T("Ticket ID"),
+#        comment=T("To search for an assessment, enter any portion of the ticket number of the assessment. You may use % as wildcard. Press 'Search' without input to list all assessments."),
+#        field=["ticket_id"])
 
 # Set as default search method
-s3db.configure(tablename,
-               search_method = building_nzseel1_search,
-               )
+#s3db.configure(tablename,
+#               search_method = building_nzseel1_search,
+#               )
 # -------------------------------------------------------------------------
 
 # NZSEE Level 2 (~ATC-20 Rapid Evaluation) Safety Assessment Form
@@ -536,17 +536,16 @@ s3.crud_strings[tablename] = Storage(
     msg_record_deleted = T("Level 2 Assessment deleted"),
     msg_list_empty = T("No Level 2 Assessments currently registered"))
 
-building_nzseel2_search = s3base.S3Search(
-        name="nzseel2_search_simple",
-        label=T("Ticket ID"),
-        comment=T("To search for an assessment, enter any portion the ticket number of the assessment. You may use % as wildcard. Press 'Search' without input to list all assessments."),
-        field=["ticket_id"])
+#building_nzseel2_search = S3Search(
+#        name="nzseel2_search_simple",
+#        label=T("Ticket ID"),
+#        comment=T("To search for an assessment, enter any portion the ticket number of the assessment. You may use % as wildcard. Press 'Search' without input to list all assessments."),
+#        field=["ticket_id"])
 
 # Set as default search method
-s3db.configure(tablename,
-               search_method = building_nzseel2_search,
-               )
-
+#s3db.configure(tablename,
+#               search_method = building_nzseel2_search,
+#               )
 
 # -----------------------------------------------------------------------------
 # Controllers
@@ -601,6 +600,7 @@ def nzseel1_rheader(r, tabs=[]):
             assess = r.record
             if assess:
                 table = r.table
+                from s3 import s3_rheader_tabs
                 rheader_tabs = s3_rheader_tabs(r, tabs)
                 location = assess.location_id
                 if location:
@@ -616,6 +616,7 @@ def nzseel1_rheader(r, tabs=[]):
                                               limitby=(0, 1)).first()
                     if mobile:
                         mobile = mobile.value
+                    from s3 import s3_fullname
                     person = s3_fullname(person)
                 rheader = DIV(TABLE(
                                 TR(
@@ -679,6 +680,7 @@ def nzseel2_rheader(r, tabs=[]):
             assess = r.record
             if assess:
                 table = r.table
+                from s3 import s3_rheader_tabs
                 rheader_tabs = s3_rheader_tabs(r, tabs)
                 location = assess.location_id
                 if location:
@@ -694,6 +696,7 @@ def nzseel2_rheader(r, tabs=[]):
                                               limitby=(0, 1)).first()
                     if mobile:
                         mobile = mobile.value
+                    from s3 import s3_fullname
                     person = s3_fullname(person)
                 rheader = DIV(TABLE(
                                 TR(

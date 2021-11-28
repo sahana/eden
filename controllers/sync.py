@@ -33,9 +33,10 @@ def config():
     s3.postp = postp
 
     # Can't do anything else than update here
-    r = s3base.s3_request(args = [str(record_id), "update"],
-                          extension = "html",
-                          )
+    from s3 import s3_request
+    r = s3_request(args = [str(record_id), "update"],
+                   extension = "html",
+                   )
     return r()
 
 # -----------------------------------------------------------------------------
@@ -104,28 +105,28 @@ def repository():
                         human_readable = None
                         delete_input_files = None
 
-                    crud_form = s3base.S3SQLCustomForm(
-                                    "resource_name",
-                                    components,
-                                    infile_pattern,
-                                    delete_input_files,
-                                    outfile_pattern,
-                                    human_readable,
-                                    "last_pull",
-                                    "last_push",
-                                    "mode",
-                                    "strategy",
-                                    #"update_method",
-                                    "update_policy",
-                                    "conflict_policy",
-                                    s3base.S3SQLInlineComponent(
-                                        "resource_filter",
-                                        label = T("Filters"),
-                                        fields = ["tablename",
-                                                  "filter_string",
-                                                  ],
-                                        ),
-                                    )
+                    from s3 import S3SQLCustomForm, S3SQLInlineComponent
+
+                    crud_form = S3SQLCustomForm("resource_name",
+                                                components,
+                                                infile_pattern,
+                                                delete_input_files,
+                                                outfile_pattern,
+                                                human_readable,
+                                                "last_pull",
+                                                "last_push",
+                                                "mode",
+                                                "strategy",
+                                                #"update_method",
+                                                "update_policy",
+                                                "conflict_policy",
+                                                S3SQLInlineComponent("resource_filter",
+                                                                     label = T("Filters"),
+                                                                     fields = ["tablename",
+                                                                               "filter_string",
+                                                                               ],
+                                                                     ),
+                                                )
 
                     list_fields = ["resource_name",
                                    "mode",
@@ -151,10 +152,11 @@ def repository():
                     )
 
                 elif alias == "log" and r.component_id:
+                    from s3 import s3_strip_markup
                     table = r.component.table
                     table.message.represent = lambda msg: \
-                                                DIV(s3base.s3_strip_markup(msg),
-                                                    _class="message-body",
+                                                DIV(s3_strip_markup(msg),
+                                                    _class = "message-body",
                                                     )
 
                 elif alias == "dataset":
@@ -249,17 +251,16 @@ def dataset():
             # TODO adapt tooltips to context
 
             # Reduced form
-            crud_form = s3base.S3SQLCustomForm(
-                            "resource_name",
-                            "components",
-                            s3base.S3SQLInlineComponent(
-                                "resource_filter",
-                                label = T("Filters"),
-                                fields = ["tablename",
-                                          "filter_string",
-                                          ],
-                                ),
-                            )
+            from s3 import S3SQLCustomForm, S3SQLInlineComponent
+            crud_form = S3SQLCustomForm("resource_name",
+                                        "components",
+                                        S3SQLInlineComponent("resource_filter",
+                                                             label = T("Filters"),
+                                                             fields = ["tablename",
+                                                                       "filter_string",
+                                                                       ],
+                                                             ),
+                                        )
 
             # Reduced list fields
             list_fields = ["resource_name",
@@ -300,14 +301,15 @@ def sync():
 
         # Request
         prefix, name = tablename.split("_", 1)
-        r = s3base.s3_request(prefix = prefix,
-                              name = name,
-                              args = ["sync"],
-                              get_vars = get_vars_new,
-                              )
+        from s3 import s3_request
+        r = s3_request(prefix = prefix,
+                       name = name,
+                       args = ["sync"],
+                       get_vars = get_vars_new,
+                       )
 
         # Response
-        return r(mixed=mixed)
+        return r(mixed = mixed)
 
     raise HTTP(400, body=current.ERROR.BAD_REQUEST)
 
@@ -317,25 +319,34 @@ def log():
 
     if "return" in get_vars:
         c, f = get_vars["return"].split(".", 1)
-        list_btn = URL(c=c, f=f, args="sync_log")
+        list_btn = URL(c=c, f=f,
+                       args = "sync_log",
+                       )
     else:
-        list_btn = URL(c="sync", f="log", vars=get_vars)
+        list_btn = URL(c="sync", f="log",
+                       vars = get_vars,
+                       )
 
-    list_btn = A(T("List all Entries"), _href=list_btn, _class="action-btn")
+    list_btn = A(T("List all Entries"),
+                 _href = list_btn,
+                 _class = "action-btn",
+                 )
 
     def prep(r):
         if r.record:
+            from s3 import s3_strip_markup
             r.table.message.represent = lambda msg: \
-                                            DIV(s3base.s3_strip_markup(msg),
-                                                _class="message-body",
+                                            DIV(s3_strip_markup(msg),
+                                                _class = "message-body",
                                                 )
         return True
     s3.prep = prep
 
+    from s3 import S3SyncLog
     return s3_rest_controller("sync", "log",
-                              subtitle=None,
-                              rheader=s3base.S3SyncLog.rheader,
-                              list_btn=list_btn,
+                              subtitle = None,
+                              rheader = S3SyncLog.rheader,
+                              list_btn = list_btn,
                               )
 
 # -----------------------------------------------------------------------------

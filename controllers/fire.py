@@ -192,6 +192,7 @@ def fire_rheader(r, tabs=[]):
                         (T("Vehicle Deployments"), "vehicle_report"),
                         (T("Assets"), "asset"),
                         ]
+                from s3 import s3_rheader_tabs
                 rheader_tabs = s3_rheader_tabs(r, tabs)
 
                 rheader = DIV(rheader_tabs)

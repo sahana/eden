@@ -35,8 +35,9 @@ def mission():
         #created_on = r.table.created_on
         #created_on.readable = True
         #created_on.label = T("Date Created")
+        #from s3 import S3DateTime
         #created_on.represent = lambda d: \
-        #                       s3base.S3DateTime.date_represent(d, utc=True)
+        #                       S3DateTime.date_represent(d, utc=True)
         if r.id:
             # Mission-specific workflows return to the profile page
             tablename = r.tablename if not r.component else r.component.tablename
@@ -78,11 +79,12 @@ def mission():
                     atable = s3db.deploy_assignment
                     atable.end_date.writable = atable.end_date.readable = False
             if not r.component and r.method == "profile":
+                from s3 import s3_trunk8, S3DateTime
                 represent = lambda d: \
-                            s3base.S3DateTime.datetime_represent(d, utc=True)
+                            S3DateTime.datetime_represent(d, utc=True)
                 s3db.deploy_alert.modified_on.represent = represent
                 s3db.deploy_response.created_on.represent = represent
-                s3base.s3_trunk8(lines=1)
+                s3_trunk8(lines=1)
         else:
             # All other workflows return to the summary page
             s3.cancel = r.url(method="summary", component=None, id=0)
@@ -223,7 +225,7 @@ def group():
                 settings.pr.request_gender = False
 
                 field = ctable.person_id
-                field.widget = s3base.S3AddPersonWidget(controller="deploy")
+                field.widget = S3AddPersonWidget(controller = "deploy")
 
                 # Configure list_fields for this context
                 list_fields = ["person_id",
@@ -307,8 +309,9 @@ def assignment():
 
     def prep(r):
         mission_date = s3db.deploy_mission.created_on
+        from s3 import S3DateTime
         mission_date.represent = lambda d: \
-                                 s3base.S3DateTime.date_represent(d, utc=True)
+                                 S3DateTime.date_represent(d, utc=True)
         if r.record:
             table = r.resource.table
             table.mission_id.writable = False
@@ -531,29 +534,27 @@ def alert():
                 settings.search.filter_manager = False
                 from s3 import S3TextFilter, S3OptionsFilter
                 recipient_filters = [
-                    S3TextFilter([
-                            "human_resource_id$person_id$first_name",
-                            "human_resource_id$person_id$middle_name",
-                            "human_resource_id$person_id$last_name",
-                        ],
-                        label=current.T("Name"),
-                    ),
-                    S3OptionsFilter(
-                        "human_resource_id$organisation_id",
-                        widget="multiselect",
-                        search=True,
-                        header="",
-                        hidden=True,
-                    ),
-                ]
+                    S3TextFilter(["human_resource_id$person_id$first_name",
+                                  "human_resource_id$person_id$middle_name",
+                                  "human_resource_id$person_id$last_name",
+                                  ],
+                                 label = current.T("Name"),
+                                 ),
+                    S3OptionsFilter("human_resource_id$organisation_id",
+                                    widget = "multiselect",
+                                    search = True,
+                                    header = "",
+                                    hidden = True,
+                                    ),
+                    ]
                 if settings.get_org_regions():
+                    from s3 import S3HierarchyFilter
                     recipient_filters.insert(1,
-                        s3base.S3HierarchyFilter(
-                            "human_resource_id$organisation_id$organisation_region.region_id",
-                            lookup="org_region",
-                            hidden=True,
+                        S3HierarchyFilter("human_resource_id$organisation_id$organisation_region.region_id",
+                                          lookup = "org_region",
+                                          hidden = True,
+                                          )
                         )
-                    )
                 s3db.configure(r.component.tablename,
                                filter_widgets = recipient_filters,
                                )
@@ -760,7 +761,8 @@ def email_inbox():
             # Use custom data table method to allow bulk deletion
             r.method = "inbox"
             r.custom_action = s3db.deploy_Inbox()
-            represent = lambda string: s3base.s3_datatable_truncate(decode(string))
+            from s3 import s3_datatable_truncate
+            represent = lambda string: s3_datatable_truncate(decode(string))
         table = r.resource.table
         table.subject.represent = represent
         table.from_address.represent = represent

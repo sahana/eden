@@ -42,6 +42,7 @@ def distribution_rheader(r):
             tabs = [(T("Edit Details"), None),
                     (T("Beneficiaries"), "person"),
                     ]
+            from s3 import s3_rheader_tabs
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             table = r.table

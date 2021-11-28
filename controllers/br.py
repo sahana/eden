@@ -596,6 +596,7 @@ def group_membership():
                     # Single group ID?
                     group_id = tuple(group_ids)[0] if len(group_ids) == 1 else None
                 elif r.http == "POST":
+                    from s3 import s3_fullname
                     name = s3_fullname(record_id)
                     group_id = gtable.insert(name = name,
                                              group_type = 7,

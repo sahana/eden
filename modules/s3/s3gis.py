@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" GIS Module
+""" S3 GIS Module
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
     @requires: U{B{I{shapely}} <http://trac.gispython.org/lab/wiki/Shapely>}
@@ -27,11 +27,9 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
-    @status: partially fixed for Py3, needs more work
 """
 
-__all__ = ("GIS",
+__all__ = ("S3GIS",
            "MAP2",
            "S3Map",
            "S3ExportPOI",
@@ -225,7 +223,7 @@ GPS_SYMBOLS = ("Airport",
                )
 
 # -----------------------------------------------------------------------------
-class GIS:
+class S3GIS:
     """
         GeoSpatial functions
     """
@@ -889,7 +887,7 @@ class GIS:
 
         else:
             # no features
-            config = GIS.get_config()
+            config = S3GIS.get_config()
             if config.lat_min is not None:
                 lat_min = config.lat_min
             else:
@@ -1062,9 +1060,9 @@ class GIS:
                 path = parent.path
             else:
                 # This will return None during prepopulate.
-                path = GIS.update_location_tree({"id": parent.id,
-                                                 "level": parent.level,
-                                                 })
+                path = S3GIS.update_location_tree({"id": parent.id,
+                                                   "level": parent.level,
+                                                   })
             if path:
                 path_list = [int(item) for item in path.split("/")]
                 rows = db(table.id.belongs(path_list)).select(table.level,
@@ -1097,7 +1095,7 @@ class GIS:
             return parent.lat_min, parent.lon_min, parent.lat_max, parent.lon_max, parent.name
 
         # No ancestor bounds available -- use the active gis_config.
-        config = GIS.get_config()
+        config = S3GIS.get_config()
         if config:
             return config.lat_min, config.lon_min, config.lat_max, config.lon_max, None
 
@@ -1188,13 +1186,13 @@ class GIS:
         """
 
         if not feature or "path" not in feature or "parent" not in feature:
-            feature = GIS._lookup_parent_path(feature_id)
+            feature = S3GIS._lookup_parent_path(feature_id)
 
         if feature and (feature.path or feature.parent):
             if feature.path:
                 path = feature.path
             else:
-                path = GIS.update_location_tree(feature)
+                path = S3GIS.update_location_tree(feature)
 
             if path:
                 path_list = [int(item) for item in path.split("/")]
@@ -1629,9 +1627,9 @@ class GIS:
         if not _gis.config:
             # Ask set_config to put the appropriate config in response.
             if current.session.s3.gis_config_id:
-                GIS.set_config(current.session.s3.gis_config_id)
+                S3GIS.set_config(current.session.s3.gis_config_id)
             else:
-                GIS.set_config()
+                S3GIS.set_config()
 
         return _gis.config
 
@@ -1679,7 +1677,7 @@ class GIS:
 
         query = (table.uuid == "SITE_DEFAULT")
         if not location:
-            config = GIS.get_config()
+            config = S3GIS.get_config()
             location = config.region_location_id
         if location:
             # Try the Region, but ensure we have the fallback available in a single query
@@ -1957,7 +1955,7 @@ class GIS:
             @param: key_type: whether to return an id or code
         """
 
-        config = GIS.get_config()
+        config = S3GIS.get_config()
 
         if config.default_location_id:
             return self.get_parent_country(config.default_location_id,
@@ -2394,7 +2392,7 @@ class GIS:
                       ):
         """
             Returns the locations for an XML export
-            - used by GIS.get_location_data() and S3PivotTable.geojson()
+            - used by S3GIS.get_location_data() and S3PivotTable.geojson()
 
             @ToDo: Support multiple locations for a single resource
                    (e.g. a Project working in multiple Communities)
@@ -2451,7 +2449,7 @@ class GIS:
             rows = db(query).select(table.id,
                                     gtable.wkt,
                                     )
-            simplify = GIS.simplify
+            simplify = S3GIS.simplify
             if geojson:
                 # Simplify the polygon to reduce download size
                 if join:
@@ -2551,11 +2549,11 @@ class GIS:
             if len(tablename) > 19 and \
                tablename.startswith("gis_layer_shapefile"):
                 # GIS Shapefile Layer
-                location_data = GIS.get_shapefile_geojson(resource) or {}
+                location_data = S3GIS.get_shapefile_geojson(resource) or {}
                 return location_data
             elif tablename == "gis_theme_data":
                 # GIS Theme Layer
-                location_data = GIS.get_theme_geojson(resource) or {}
+                location_data = S3GIS.get_theme_geojson(resource) or {}
                 return location_data
             else:
                 # e.g. GIS Feature Layer
@@ -2751,14 +2749,14 @@ class GIS:
                 else:
                     # No configuration found so use default marker for all
                     c, f = tablename.split("_", 1)
-                    m = GIS.get_marker(c, f)
+                    m = S3GIS.get_marker(c, f)
 
                 markers[tablename] = m
 
             if individual:
                 # Add a per-feature Style
                 # Optionally restrict to a specific Config?
-                #config = GIS.get_config()
+                #config = S3GIS.get_config()
                 stable = s3db.gis_style
                 query = (stable.deleted == False) & \
                         (stable.layer_id == layer_id) & \
@@ -2783,7 +2781,7 @@ class GIS:
             else:
                 # No configuration found so use default marker for all
                 c, f = tablename.split("_", 1)
-                markers = GIS.get_marker(c, f)
+                markers = S3GIS.get_marker(c, f)
 
             markers[tablename] = markers
 
@@ -2866,10 +2864,10 @@ class GIS:
                     return None
 
             if geojson and not points:
-                geojsons[tablename] = GIS.get_locations(table, query, join, geojson)
+                geojsons[tablename] = S3GIS.get_locations(table, query, join, geojson)
             # @ToDo: Support Polygons in KML, GPX & GeoRSS
             #else:
-            #    wkts[tablename] = GIS.get_locations(table, query, join, geojson)
+            #    wkts[tablename] = S3GIS.get_locations(table, query, join, geojson)
             else:
                 # Points
                 rows = db(query).select(table.id,
@@ -2932,7 +2930,7 @@ class GIS:
             ftable = s3db.gis_layer_feature
             stable = s3db.gis_style
             mtable = s3db.gis_marker
-            config = GIS.get_config()
+            config = S3GIS.get_config()
             query = (ftable.controller == controller) & \
                     (ftable.function == function) & \
                     (ftable.aggregate == False)
@@ -3031,7 +3029,7 @@ class GIS:
             try:
                 os.mkdir(cachepath)
             except OSError as os_error:
-                error = "GIS: JPEG files cannot be saved: %s %s" % \
+                error = "S3GIS: JPEG files cannot be saved: %s %s" % \
                                   (cachepath, os_error)
                 current.log.error(error)
                 current.session.error = error
@@ -3203,7 +3201,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
         else:
             _fields = [table[f] for f in fields]
             rows = db(query).select(*_fields)
-            simplify = GIS.simplify
+            simplify = S3GIS.simplify
             for row in rows:
                 # Simplify the polygon to reduce download size
                 geojson = simplify(row.wkt, tolerance=tolerance,
@@ -3260,7 +3258,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                         gtable.level,
                                         gtable.wkt,
                                         )
-        simplify = GIS.simplify
+        simplify = S3GIS.simplify
         tolerance = {"L0": 0.01,
                      "L1": 0.005,
                      "L2": 0.00125,
@@ -3439,7 +3437,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             spatial = False
             field = table.wkt
             if simplify:
-                _simplify = GIS.simplify
+                _simplify = S3GIS.simplify
             else:
                 from shapely.wkt import loads as wkt_loads
                 from ..geojson import dumps
@@ -4813,7 +4811,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
 
         # During prepopulate, for efficiency, we don't update the location
         # tree, but rather leave that til after prepopulate is complete.
-        if GIS.disable_update_location_tree:
+        if S3GIS.disable_update_location_tree:
             return None
 
         db = current.db
@@ -4821,8 +4819,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             table = db.gis_location
         except:
             table = current.s3db.gis_location
-        update_location_tree = GIS.update_location_tree
-        wkt_centroid = GIS.wkt_centroid
+        update_location_tree = S3GIS.update_location_tree
+        wkt_centroid = S3GIS.wkt_centroid
 
         fields = (table.id,
                   table.name,
@@ -5967,7 +5965,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 form_vars.wkt = "POINT (%(lon)s %(lat)s)" % form_vars
                 radius = form_vars.get("radius", None)
                 if radius:
-                    bbox = GIS.get_bounds_from_radius(lat, lon, radius)
+                    bbox = S3GIS.get_bounds_from_radius(lat, lon, radius)
                     form_vars.lat_min = bbox["lat_min"]
                     form_vars.lon_min = bbox["lon_min"]
                     form_vars.lat_max = bbox["lat_max"]
@@ -6585,7 +6583,7 @@ class MAP(DIV):
         auth = current.auth
 
         # Read configuration
-        config = GIS.get_config()
+        config = S3GIS.get_config()
         if not config:
             # No prepop - Bail
             if auth.s3_has_permission("create", "gis_hierarchy"):
@@ -7437,7 +7435,7 @@ class MAP2(DIV):
         """
 
         # Read Map Config
-        config = GIS.get_config()
+        config = S3GIS.get_config()
         if not config:
             # No prepop => Bail
             return None
@@ -7814,7 +7812,7 @@ def addFeatures(features):
         @todo: obsolete?
     """
 
-    simplify = GIS.simplify
+    simplify = S3GIS.simplify
     _f = []
     append = _f.append
     for feature in features:
@@ -7973,7 +7971,7 @@ def addFeatureResources(feature_resources):
     # Better to do a separate query
     #mtable = s3db.gis_marker
     stable = db.gis_style
-    config = GIS.get_config()
+    config = S3GIS.get_config()
     config_id = config.id
     postgres = current.deployment_settings.get_database_type() == "postgres"
 
@@ -8992,7 +8990,7 @@ class LayerKML(Layer):
             try:
                 os.mkdir(cachepath)
             except OSError as os_error:
-                current.log.error("GIS: KML layers cannot be cached: %s %s" % \
+                current.log.error("S3GIS: KML layers cannot be cached: %s %s" % \
                                   (cachepath, os_error))
                 cacheable = False
             else:
@@ -9480,7 +9478,7 @@ class Marker:
                                                            ).first()
             elif layer_id:
                 # Check if we have a Marker defined for this Layer
-                config = GIS.get_config()
+                config = S3GIS.get_config()
                 stable = s3db.gis_style
                 query = (stable.layer_id == layer_id) & \
                         ((stable.config_id == config.id) | \
@@ -9519,7 +9517,7 @@ class Marker:
         else:
             # Default Marker
             if not config:
-                config = GIS.get_config()
+                config = S3GIS.get_config()
             self.image = config.marker_image
             self.height = config.marker_height
             self.width = config.marker_width
@@ -9593,7 +9591,7 @@ class Projection:
                                                   ).first()
         else:
             # Default projection
-            config = GIS.get_config()
+            config = S3GIS.get_config()
             projection = Storage(epsg = config.epsg)
 
         self.epsg = projection.epsg
@@ -9627,7 +9625,7 @@ class Style:
             limitby = (0, 1)
 
         elif layer_id:
-            config = GIS.get_config()
+            config = S3GIS.get_config()
             # @ToDo: if record_id:
             query = (table.layer_id == layer_id) & \
                     (table.record_id == None) & \
@@ -9641,7 +9639,7 @@ class Style:
         else:
             # Default style for this config
             # - falling back to Default config
-            config = GIS.get_config()
+            config = S3GIS.get_config()
             ctable = db.gis_config
             query = (table.config_id == ctable.id) & \
                     ((ctable.id == config.id) | \
@@ -10241,7 +10239,7 @@ class S3ImportPOI(S3Method):
                         if record.wkt is None:
                             form.errors["location_id"] = T("Location needs to have WKT!")
                             return output
-                    error = GIS.create_poly(record)
+                    error = S3GIS.create_poly(record)
                     if error:
                         current.session.error = error
                         redirect(URL(args=r.id))

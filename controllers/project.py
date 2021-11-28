@@ -1314,6 +1314,7 @@ def comment_parse(comment, comments, task_id=None):
         if row:
             person = row.pr_person
             user = row[utable._tablename]
+            from s3 import s3_fullname
             username = s3_fullname(person)
             email = user.email.strip().lower().encode("utf-8")
             import hashlib
@@ -1327,7 +1328,8 @@ def comment_parse(comment, comments, task_id=None):
         task_id = comment.task_id
     else:
         header = author
-    thread = LI(DIV(s3base.s3_avatar_represent(comment.created_by),
+    from s3 import s3_avatar_represent
+    thread = LI(DIV(s3_avatar_represent(comment.created_by),
                     DIV(DIV(header,
                             _class = "comment-header",
                             ),
@@ -1380,21 +1382,23 @@ def comments():
     field.default = task_id
     field.writable = field.readable = False
 
+    from s3 import s3_request, S3SQLCustomForm
+
     # Create S3Request for S3SQLForm
-    r = s3base.s3_request(prefix = "project",
-                          name = "comment",
-                          # Override task_id
-                          args = [],
-                          vars = None,
-                          # Override .loads
-                          extension = "html",
-                          )
+    r = s3_request(prefix = "project",
+                   name = "comment",
+                   # Override task_id
+                   args = [],
+                   vars = None,
+                   # Override .loads
+                   extension = "html",
+                   )
 
     # Customise resource
     r.customise_resource()
 
     # Form to add a new Comment
-    form = s3base.S3SQLCustomForm("parent", "task_id", "body")(r)
+    form = S3SQLCustomForm("parent", "task_id", "body")(r)
 
     # List of existing Comments
     comments = db(field == task_id).select(table.id,
@@ -1404,7 +1408,7 @@ def comments():
                                            table.created_on,
                                            )
 
-    output = UL(_id="comments")
+    output = UL(_id = "comments")
     for comment in comments:
         if not comment.parent:
             # Show top-level threads at top-level

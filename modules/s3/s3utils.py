@@ -1347,6 +1347,8 @@ def s3_include_underscore():
 def s3_is_mobile_client(request):
     """
         Simple UA Test whether client is a mobile device
+
+        - currently unused
     """
 
     env = request.env
@@ -1416,6 +1418,8 @@ def s3_is_mobile_client(request):
 def s3_populate_browser_compatibility(request):
     """
         Use WURFL for browser compatibility detection
+
+        - currently unused
 
         @ToDo: define a list of features to store
     """

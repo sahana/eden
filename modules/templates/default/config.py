@@ -1039,7 +1039,7 @@ def config(settings):
     #settings.inv.req_status_writable = False
     #settings.inv.req_item_quantities_writable = True
     #settings.inv.req_show_quantity_transit = False
-    #settings.inv.multiple_req_items = False
+    #settings.inv.req_multiple_items = False
     #settings.inv.req_prompt_match = False
     #settings.inv.req_ask_purpose = False
     # Uncomment to disable the Commit step in the workflow & simply move direct to Ship

@@ -8,8 +8,9 @@ if not settings.has_module(c):
 # -----------------------------------------------------------------------------
 def s3_menu_postp():
     # @todo: rewrite this for new framework
+    from s3 import s3_get_last_record_id
     menu_selected = []
-    body_id = s3base.s3_get_last_record_id("dvi_body")
+    body_id = s3_get_last_record_id("dvi_body")
     if body_id:
         body = s3db.dvi_body
         query = (body.id == body_id)
@@ -26,7 +27,7 @@ def s3_menu_postp():
                 ["%s: %s" % (T("Body"), label),
                  False, URL(f="body", args=[record.id])]
             )
-    person_id = s3base.s3_get_last_record_id("pr_person")
+    person_id = s3_get_last_record_id("pr_person")
     if person_id:
         person = s3db.pr_person
         query = (person.id == person_id)
@@ -100,8 +101,11 @@ def morgue():
                    (T("Bodies"), "body"),
                    ]
 
+    from s3 import S3ResourceHeader
     rheader = S3ResourceHeader([[(T("Morgue"), "name")]
-                                ], tabs=morgue_tabs)
+                                ],
+                               tabs = morgue_tabs,
+                               )
 
     # Pre-processor
     def prep(r):
@@ -134,11 +138,13 @@ def body():
                 (T("Identification"), "identification"),
                 ]
 
+    from s3 import S3ResourceHeader
     rheader = S3ResourceHeader([[(T("ID Tag Number"), "pe_label")],
                                 ["gender"],
                                 ["age_group"],
                                 ],
-                                tabs=dvi_tabs)
+                               tabs = dvi_tabs,
+                               )
 
     return s3_rest_controller(rheader=rheader)
 

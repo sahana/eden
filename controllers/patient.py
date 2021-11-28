@@ -76,10 +76,12 @@ def patient_rheader(r, tabs=[]):
 
         table = db.patient_patient
 
+        from s3 import s3_rheader_tabs
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         patient = r.record
         if patient.person_id:
+            from s3 import s3_fullname
             name = s3_fullname(patient.person_id)
         else:
             name = None

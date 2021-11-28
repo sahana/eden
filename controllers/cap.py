@@ -971,7 +971,8 @@ def alert():
                 rows = db(itable.alert_id == lastid).select(itable.id)
 
                 rtable = s3db.cap_resource
-                r_unwanted_fields = set(s3base.s3_all_meta_field_names())
+                from s3 import s3_all_meta_field_names
+                r_unwanted_fields = set(s3_all_meta_field_names())
                 rfields = [rtable[f] for f in rtable.fields
                            if f not in r_unwanted_fields]
                 rows_ = db(rtable.alert_id == alert.template_id).select(*rfields)
@@ -1469,6 +1470,7 @@ def notify_approver():
                                                                     ).first()
             if group_row:
                 user_pe_id = auth.s3_user_pe_id
+                from s3 import s3_fullname
                 full_name = s3_fullname(pe_id=user_pe_id(row.created_by), truncate=False)
                 user_ids = auth.s3_group_members(group_row.id) # List of user_ids
                 pe_ids = [] # List of pe_ids

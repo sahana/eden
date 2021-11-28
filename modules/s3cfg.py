@@ -5027,18 +5027,18 @@ class S3Config(Storage):
         """ Whether Item Quantities should be manually editable """
         return self.inv.get("req_item_quantities_writable", False)
 
+    def get_inv_req_multiple_items(self):
+        """
+            Can an Inventory Requisitions have multiple line items?
+            - e.g. ICS says that each request should be just for items of a single Type
+        """
+        return self.inv.get("req_multiple_items", True)
+
     def get_inv_req_pack_values(self):
         """
             Do we show pack values in Inventory Requisitions?
         """
         return self.inv.get("req_pack_values", True)
-
-    def get_inv_multiple_req_items(self):
-        """
-            Can an Inventory Requisitions have multiple line items?
-            - e.g. ICS says that each request should be just for items of a single Type
-        """
-        return self.inv.get("multiple_req_items", True)
 
     def get_inv_req_show_quantity_transit(self):
         return self.inv.get("req_show_quantity_transit", True)
@@ -5133,6 +5133,13 @@ class S3Config(Storage):
 
     def get_inv_req_order_item(self):
         return self.inv.get("req_order_item", False)
+
+    def get_inv_req_reserve_items(self):
+        """
+            Whether to Reserve Items in Inventory Requisitions
+            - allows a fulfilling warehouse to allocate stock before preparing a shipment
+        """
+        return self.inv.get("req_reserve_items", False)
 
     def get_inv_req_workflow(self):
         """

@@ -247,7 +247,7 @@ class S3PDF(S3Method):
 
         A typical implementation would be as follows:
 
-            exporter = s3base.S3PDF()
+            exporter = S3PDF()
             return exporter(xrequest, **attr)
 
         Currently this class supports two types of reports:

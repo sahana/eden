@@ -23,10 +23,9 @@ def forms():
                 masterkey_uid = request.get_vars.get("mkuid")
                 if masterkey_uid:
                     table = s3db.auth_masterkey
-                    query = (table.uuid == masterkey_uid)
-                    masterkey = db(query).select(table.id,
-                                                 limitby = (0, 1),
-                                                 ).first()
+                    masterkey = db(table.uuid == masterkey_uid).select(table.id,
+                                                                       limitby = (0, 1),
+                                                                       ).first()
                     if masterkey:
                         masterkey_id = masterkey.id
 
@@ -40,7 +39,8 @@ def forms():
                 masterkey_id = None
 
             response.headers["Content-Type"] = "application/json"
-            return s3base.S3MobileFormList(masterkey_id=masterkey_id).json()
+            from s3 import S3MobileFormList
+            return S3MobileFormList(masterkey_id = masterkey_id).json()
 
         else:
             error(415, "Invalid request format")

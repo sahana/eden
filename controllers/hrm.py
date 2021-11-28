@@ -726,6 +726,7 @@ def staff_for_site():
                                 orderby=ptable.first_name)
         result = []
         append = result.append
+        from s3 import s3_fullname
         for row in rows:
             append({"id"   : row.id,
                     "name" : s3_fullname(row)

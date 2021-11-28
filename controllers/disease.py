@@ -124,8 +124,9 @@ def person():
                 r.id = request.id
 
                 # Name fields in name-format order
+                from s3 import StringTemplateParser
                 NAMES = ("first_name", "middle_name", "last_name")
-                keys = s3base.StringTemplateParser.keys(settings.get_pr_name_format())
+                keys = StringTemplateParser.keys(settings.get_pr_name_format())
                 name_fields = [fn for fn in keys if fn in NAMES]
 
                 # Fields in form

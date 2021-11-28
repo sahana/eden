@@ -32,7 +32,10 @@ def shelter():
     tablename = "cr_shelter"
 
     # Filter to just Open shelters (status=2)
-    s3base.s3_set_default_filter("shelter_details.status", [2, None], tablename=tablename)
+    from s3 import s3_set_default_filter
+    s3_set_default_filter("shelter_details.status",
+                          [2, None],
+                          tablename = tablename)
 
     # Pre-processor
     def prep(r):

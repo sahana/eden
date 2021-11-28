@@ -325,7 +325,7 @@ def person():
 
             elif r.component_name == "evaluation":
 
-                from s3 import S3SQLInlineComponent
+                from s3 import S3SQLCustomForm. S3SQLInlineComponent
 
                 crud_fields = [#"person_id",
                                #"case_id",
@@ -366,7 +366,7 @@ def person():
                             )
 
                 cappend("comments")
-                crud_form = s3base.S3SQLCustomForm(*crud_fields)
+                crud_form = S3SQLCustomForm(*crud_fields)
 
                 s3db.configure("dvr_evaluation",
                                crud_form = crud_form,
@@ -581,6 +581,7 @@ def group_membership():
                     # Single group ID?
                     group_id = tuple(group_ids)[0] if len(group_ids) == 1 else None
                 elif r.http == "POST":
+                    from s3 import s3_fullname
                     name = s3_fullname(record_id)
                     group_id = gtable.insert(name = name,
                                              group_type = 7,
@@ -1291,7 +1292,7 @@ def evaluation():
         - unused
     """
 
-    S3SQLInlineComponent = s3base.S3SQLInlineComponent
+    from s3 import S3SQLCustomForm, S3SQLInlineComponent
 
     crud_fields = ["person_id",
                    "case_id",
@@ -1332,7 +1333,7 @@ def evaluation():
                 )
 
     cappend("comments")
-    crud_form = s3base.S3SQLCustomForm(*crud_fields)
+    crud_form = S3SQLCustomForm(*crud_fields)
 
     s3db.configure("dvr_evaluation",
                    crud_form = crud_form,

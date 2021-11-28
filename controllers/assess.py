@@ -127,7 +127,7 @@ def need():
 def needs():
     """ RESTful CRUD controller """
 
-    S3SQLInlineComponent = s3base.S3SQLInlineComponent
+    from s3 import S3SQLCustomForm, S3SQLInlineComponent
 
     crud_fields = ["name",
                    "location_id",
@@ -188,7 +188,7 @@ def needs():
                 )
         label = ""
 
-    crud_form = s3base.S3SQLCustomForm(*crud_fields)
+    crud_form = S3SQLCustomForm(*crud_fields)
 
     s3db.configure("assess_needs",
                    crud_form = crud_form,

@@ -36,6 +36,7 @@ def role():
         if r.representation not in ("html", "aadata", "csv", "json"):
             return False
 
+        from s3 import S3RoleManager
         # Configure REST methods
         methods = ("read",
                    "list",
@@ -48,7 +49,7 @@ def role():
                    "datalist",
                    "import",
                    )
-        r.set_handler(methods, s3base.S3RoleManager)
+        r.set_handler(methods, S3RoleManager)
         return True
     s3.prep = prep
 
@@ -113,7 +114,8 @@ def user():
         lappend("link_user_to")
         table.link_user_to.represent = lambda v: ", ".join([s3_str(link_user_to[opt]) for opt in v]) \
                                                  if v else current.messages["NONE"]
-    date_represent = s3base.S3DateTime.date_represent
+    from s3 import S3DateTime
+    date_represent = S3DateTime.date_represent
     table.created_on.represent = date_represent
     if UNAPPROVED:
         lappend((T("Registration"), "created_on"))
@@ -185,22 +187,27 @@ def user():
         redirect(URL(args=[]))
 
     # Custom Methods
+    from s3 import S3RoleManager
     set_method = s3db.set_method
     set_method("auth", "user",
                method = "roles",
-               action = s3base.S3RoleManager)   # s3roles.py
+               action = S3RoleManager,   # s3roles.py
+               )
 
     set_method("auth", "user",
                method = "disable",
-               action = disable_user)
+               action = disable_user,
+               )
 
     set_method("auth", "user",
                method = "approve",
-               action = approve_user)
+               action = approve_user,
+               )
 
     set_method("auth", "user",
                method = "link",
-               action = link_user)
+               action = link_user,
+               )
 
     if UNAPPROVED:
         title_list = T("Unapproved Users")
@@ -263,6 +270,7 @@ def user():
         tabs = [(T("User Details"), None),
                 (T("Roles"), "roles")
                 ]
+        from s3 import s3_rheader_tabs
         rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader.append(rheader_tabs)
 
@@ -804,9 +812,10 @@ def ticket():
     e = RestrictedError()
     e.load(request, app, ticket)
 
+    from s3 import Traceback
     return {"app": app,
             "ticket": ticket,
-            "traceback": s3base.Traceback(e.traceback),
+            "traceback": Traceback(e.traceback),
             "code": e.code,
             "layer": e.layer,
             }

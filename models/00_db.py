@@ -76,25 +76,23 @@ elif settings.get_base_session_memcache():
 ####################################################################
 
 from gluon.tools import Mail
-mail = Mail()
-current.mail = mail
+current.mail = mail = Mail()
 
 from gluon.storage import Messages
-messages = Messages(T)
-current.messages = messages
+current.messages = messages = Messages(T)
 
-ERROR = Messages(T)
-current.ERROR = ERROR
+current.ERROR = ERROR = Messages(T)
 
-# Import the S3 Framework
-import s3 as s3base
+# Import the S3 Framework & instantiate core classes
+import s3 as s3base # Shortcut for use, primarily, from views
+from s3 import AuthS3, S3Audit, S3Calendar, S3GIS, S3Msg, S3Sync, S3XML
 
 # Set up logger (before any module attempts to use it!)
 import s3log
 s3log.S3Log.setup()
 
 # AAA
-current.auth = auth = s3base.AuthS3()
+current.auth = auth = AuthS3()
 
 # Use session for persistent per-user variables
 # - beware of a user having multiple tabs open!
@@ -112,9 +110,9 @@ auth.define_tables(migrate = migrate,
                    fake_migrate = fake_migrate,
                    )
 
-current.audit = audit = s3base.S3Audit(migrate = migrate,
-                                       fake_migrate = fake_migrate,
-                                       )
+current.audit = audit = S3Audit(migrate = migrate,
+                                fake_migrate = fake_migrate,
+                                )
 
 # Shortcuts for models/controllers/views
 # - removed to reduce per-request overheads & harmonise the environment in
@@ -124,48 +122,35 @@ current.audit = audit = s3base.S3Audit(migrate = migrate,
 #s3_logged_in_person = auth.s3_logged_in_person
 
 # Calendar
-current.calendar = s3base.S3Calendar()
+current.calendar = S3Calendar()
 
 # CRUD
 s3.crud = Storage()
 
-# Frequently used S3 utilities, validators and widgets, imported here
-# into the global namespace in order to access them without the s3base
-# namespace prefix
-s3_str = s3base.s3_str
-s3_action_buttons = s3base.s3_action_buttons
-s3_fullname = s3base.s3_fullname
-s3_redirect_default = s3base.s3_redirect_default
-S3ResourceHeader = s3base.S3ResourceHeader
-from s3.s3navigation import s3_rheader_tabs
+# Frequently used S3 utilities, validators and widgets,
+# imported here into the global namespace for use by controllers
+from s3 import FS, s3_action_buttons, s3_redirect_default, s3_str
 from s3.s3validators import *
 from s3.s3widgets import *
-from s3.s3data import *
 
 # GIS Module
-gis = s3base.GIS()
-current.gis = gis
-
-# Field Selectors
-FS = s3base.FS
+current.gis = gis = S3GIS()
 
 # S3XML
-s3xml = s3base.S3XML()
-current.xml = s3xml
+current.xml = s3xml = S3XML()
 
 # Messaging
-msg = s3base.S3Msg()
-current.msg = msg
+current.msg = msg = S3Msg()
 
 # Sync
-sync = s3base.S3Sync()
-current.sync = sync
+current.sync = sync = S3Sync()
 
 # -----------------------------------------------------------------------------
 def s3_clear_session():
 
     # CRUD last opened records (rcvars)
-    s3base.s3_remove_last_record_id()
+    from s3 import s3_remove_last_record_id
+    s3_remove_last_record_id()
 
     # Session-owned records
     if "owned_records" in session:
