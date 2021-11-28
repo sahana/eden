@@ -1302,7 +1302,7 @@ def asset_controller():
             else:
                 script = "/%s/static/scripts/S3/s3.asset.js" % r.application
                 s3.scripts.append(script)
-            S3CRUD.action_buttons(r, deletable=False)
+            s3_action_buttons(r, deletable=False)
         return output
     s3.postp = postp
 

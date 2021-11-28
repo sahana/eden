@@ -1472,16 +1472,16 @@ def vol_volunteer_controller():
     def postp(r, output):
         if r.interactive and not r.component:
             # Configure action buttons
-            S3CRUD.action_buttons(r, deletable=settings.get_hrm_deletable())
+            s3_action_buttons(r, deletable=settings.get_hrm_deletable())
             if settings.has_module("msg") and \
                settings.get_hrm_compose_button() and \
                current.auth.permission.has_permission("update", c="hrm", f="compose"):
                 # @ToDo: Remove this now that we have it in Events?
-                s3.actions.append({"url": URL(f = "compose",
+                s3.actions.append({"label": str(T("Send Message")),
+                                   "url": URL(f = "compose",
                                               vars = {"human_resource.id": "[id]"},
                                               ),
                                    "_class": "action-btn send",
-                                   "label": str(T("Send Message")),
                                    })
 
         elif r.representation == "plain":

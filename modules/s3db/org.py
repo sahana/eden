@@ -7458,8 +7458,8 @@ def org_organisation_controller():
                 update_url = URL(c=controller, f=function,
                                  args = ["[id]", "update"],
                                  )
-                S3CRUD.action_buttons(r, read_url = read_url,
-                                         update_url = update_url)
+                s3_action_buttons(r, read_url = read_url,
+                                     update_url = update_url)
 
             elif component_name == "branch" and r.record and \
                  isinstance(output, dict) and \
@@ -7714,7 +7714,7 @@ def org_facility_controller():
     def postp(r, output):
         if r.interactive and r.component_name == "shift":
             # Normal Action Buttons
-            S3CRUD.action_buttons(r)
+            s3_action_buttons(r)
             # Custom Action Buttons
             s3.actions += [{"label": s3_str(current.T("Assign")),
                             "url": URL(c = "hrm",
@@ -7919,8 +7919,8 @@ def org_office_controller():
             update_url = URL(c="hrm", f="staff",
                              args = ["[id]", "update"],
                              )
-            S3CRUD.action_buttons(r, read_url = read_url,
-                                     update_url = update_url)
+            s3_action_buttons(r, read_url = read_url,
+                                 update_url = update_url)
         return output
     s3.postp = postp
 
@@ -8881,12 +8881,13 @@ class org_AssignMethod(S3Method):
             dtfilter, orderby, left = resource.datatable_filter(list_fields, get_vars)
             resource.add_filter(dtfilter)
             data = resource.select(list_fields,
-                                   start=0,
-                                   limit=limit,
-                                   orderby=orderby,
-                                   left=left,
-                                   count=True,
-                                   represent=True)
+                                   start = 0,
+                                   limit = limit,
+                                   orderby = orderby,
+                                   left = left,
+                                   count = True,
+                                   represent = True,
+                                   )
             filteredrows = data["numrows"]
             dt = S3DataTable(data["rfields"], data["rows"])
             dt_id = "datatable"
@@ -8900,11 +8901,13 @@ class org_AssignMethod(S3Method):
 
                 profile_url = URL(c = "org",
                                   f = "organisation",
-                                  args = ["[id]", "profile"])
-                S3CRUD.action_buttons(r,
-                                      deletable = False,
-                                      read_url = profile_url,
-                                      update_url = profile_url)
+                                  args = ["[id]", "profile"],
+                                  )
+                s3_action_buttons(r,
+                                  deletable = False,
+                                  read_url = profile_url,
+                                  update_url = profile_url,
+                                  )
                 response.s3.no_formats = True
 
                 # Data table (items)

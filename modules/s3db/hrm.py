@@ -5903,11 +5903,11 @@ class hrm_AssignMethod(S3Method):
                                   f = "human_resource",
                                   args = ["[id]", "profile"],
                                   )
-                S3CRUD.action_buttons(r,
-                                      deletable = False,
-                                      read_url = profile_url,
-                                      update_url = profile_url,
-                                      )
+                s3_action_buttons(r,
+                                  deletable = False,
+                                  read_url = profile_url,
+                                  update_url = profile_url,
+                                  )
 
                 response.s3.no_formats = True
 
@@ -7772,13 +7772,14 @@ def hrm_competency_controller():
     def postp(r, output):
         if r.interactive:
             # Custom action button to add the member to a team
-            S3CRUD.action_buttons(r)
+            s3_action_buttons(r)
 
             args = ["[id]", "group_membership"]
             s3.actions.append({"label": str(T("Add to a Team")),
                                "_class": "action-btn",
                                "url": URL(f = "person",
-                                          args = args),
+                                          args = args,
+                                          ),
                                }
                               )
         return output
@@ -8012,15 +8013,17 @@ def hrm_group_controller():
         if r.interactive:
             if not r.component:
                 update_url = URL(args=["[id]", "group_membership"])
-                S3CRUD.action_buttons(r, update_url=update_url)
+                s3_action_buttons(r, update_url=update_url)
                 if current.deployment_settings.has_module("msg") and \
-                   current.auth.permission.has_permission("update", c="hrm",
-                                                          f="compose"):
-                    s3.actions.append({
-                        "url": URL(f="compose",
-                                   vars = {"group_id": "[id]"}),
-                        "_class": "action-btn send",
-                        "label": s3_str(T("Send Message"))})
+                   current.auth.permission.has_permission("update",
+                                                          c = "hrm",
+                                                          f = "compose",
+                                                          ):
+                    s3.actions.append({"label": s3_str(T("Send Message")),
+                                       "url": URL(f = "compose",
+                                                  vars = {"group_id": "[id]"}),
+                                       "_class": "action-btn send",
+                                       })
 
         return output
     s3.postp = postp
@@ -8512,20 +8515,22 @@ def hrm_human_resource_controller(extra_filter = None):
                     # Standard CRUD buttons
                     read_url = None
                     update_url = None
-                S3CRUD.action_buttons(r,
-                                      deletable = deletable,
-                                      read_url = read_url,
-                                      update_url = update_url)
+                s3_action_buttons(r,
+                                  deletable = deletable,
+                                  read_url = read_url,
+                                  update_url = update_url,
+                                  )
                 if "msg" in settings.modules and \
                    settings.get_hrm_compose_button() and \
                    current.auth.permission.has_permission("update",
-                                                          c="hrm",
-                                                          f="compose"):
-                    s3.actions.append({"url": URL(f="compose",
+                                                          c = "hrm",
+                                                          f = "compose",
+                                                          ):
+                    s3.actions.append({"label": s3_str(T("Send Message")),
+                                       "url": URL(f = "compose",
                                                   vars = {"human_resource.id": "[id]"},
                                                   ),
                                        "_class": "action-btn send",
-                                       "label": s3_str(T("Send Message"))
                                        })
 
         elif r.representation == "plain":

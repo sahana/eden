@@ -656,7 +656,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_pr_subscription_controller(**attr):
 
-        from s3 import S3CRUD
+        from s3 import s3_action_buttons
         s3 = current.response.s3
         s3db = current.s3db
         auth = current.auth
@@ -722,23 +722,25 @@ def config(settings):
                 # Modify Open Button
                 if manage_recipient and role_check:
                     # Admin based subscription
-                    S3CRUD.action_buttons(r,
-                                          update_url=URL(c="default", f="index",
-                                                         args=["subscriptions"],
-                                                         vars={"option": "manage_recipient",
-                                                               "subscription_id": "[id]"}
-                                                         ),
-                                          delete_url=URL(c="pr", f="subscription",
-                                                         args=["[id]", "delete"],
-                                                         vars={"option": "manage_recipient"}
-                                                         )
-                                          )
+                    s3_action_buttons(r,
+                                      update_url = URL(c="default", f="index",
+                                                       args = ["subscriptions"],
+                                                       vars = {"option": "manage_recipient",
+                                                               "subscription_id": "[id]",
+                                                               },
+                                                       ),
+                                      delete_url = URL(c="pr", f="subscription",
+                                                       args = ["[id]", "delete"],
+                                                       vars = {"option": "manage_recipient"},
+                                                       )
+                                      )
                 else:
                     # self subscription
                     url = URL(c="default", f="index",
-                              args=["subscriptions"],
-                              vars={"subscription_id": "[id]"})
-                    S3CRUD.action_buttons(r, update_url=url, read_url=url)
+                              args = ["subscriptions"],
+                              vars = {"subscription_id": "[id]"},
+                              )
+                    s3_action_buttons(r, update_url=url, read_url=url)
 
                 if "form" in output:
                     # Modify Add Button

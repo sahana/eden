@@ -875,9 +875,9 @@ def organisation():
     dt = S3DataTable(data["rfields"], data["rows"])
 
     if representation == "html":
-        from s3 import S3CRUD, s3_request
+        from s3 import s3_request
         r = s3_request("org", "organisation")
-        S3CRUD.action_buttons(r)
+        s3_action_buttons(r)
         s3.no_formats = True
         items = dt.html(totalrows,
                         totalrows,

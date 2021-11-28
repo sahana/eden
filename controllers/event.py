@@ -240,12 +240,13 @@ def incident():
                     #s3_action_buttons(r, update_url=update_url)
                     s3_action_buttons(r)
                     if "msg" in settings.modules:
-                        s3base.S3CRUD.action_button(url = URL(f = "compose",
-                                                              vars = {"hrm_id": "[id]"}
-                                                              ),
-                                                    _class = "action-btn send",
-                                                    label = s3_str(T("Send Notification")),
-                                                    )
+                        from s3 import s3_action_button
+                        s3_action_button(url = URL(f = "compose",
+                                                   vars = {"hrm_id": "[id]"}
+                                                   ),
+                                         _class = "action-btn send",
+                                         label = s3_str(T("Send Notification")),
+                                         )
         return output
     s3.postp = postp
 

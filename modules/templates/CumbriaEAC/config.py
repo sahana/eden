@@ -1974,12 +1974,12 @@ def config(settings):
             if r.component_name == "human_resource_site":
 
                 #from gluon import URL
-                from s3 import s3_str#, S3CRUD
+                from s3 import s3_str, s3_action_buttons
 
                 shelter_id = r.id
 
                 # Normal Action Buttons
-                S3CRUD.action_buttons(r,
+                s3_action_buttons(r,
                                       read_url = URL(c = "cr",
                                                      f = "shelter",
                                                      args = [shelter_id,
@@ -2015,20 +2015,20 @@ def config(settings):
             elif r.component_name == "client":
 
                 #from gluon import URL
-                from s3 import s3_str#, S3CRUD
+                from s3 import s3_str, s3_action_buttons
 
                 # Normal Action Buttons
-                S3CRUD.action_buttons(r,
-                                      read_url = URL(c = "pr",
-                                                     f = "person",
-                                                     args = "[id]",
-                                                     ),
-                                      update_url = URL(c = "pr",
-                                                       f = "person",
-                                                       args = "[id]",
-                                                       ),
-                                      deletable = False,
-                                      )
+                s3_action_buttons(r,
+                                  read_url = URL(c = "pr",
+                                                 f = "person",
+                                                 args = "[id]",
+                                                 ),
+                                  update_url = URL(c = "pr",
+                                                   f = "person",
+                                                   args = "[id]",
+                                                   ),
+                                  deletable = False,
+                                  )
 
                 # Custom Action Buttons
                 s3.actions += [{"label": s3_str(T("Check-Out")),
@@ -3523,20 +3523,20 @@ def config(settings):
                 s3.action_methods = action_methods
 
                 from gluon import URL
-                #from s3 import s3_str#, S3CRUD
+                from s3 import s3_action_buttons#, s3_str
 
                 # Normal Action Buttons
-                S3CRUD.action_buttons(r,
-                                      read_url = URL(c = "pr",
-                                                     f = "person",
-                                                     args = ["[id]"],
-                                                     ),
-                                      update_url = URL(c = "pr",
-                                                       f = "person",
-                                                       args = ["[id]"],
-                                                       ),
-                                      deletable = False,
-                                      )
+                s3_action_buttons(r,
+                                  read_url = URL(c = "pr",
+                                                 f = "person",
+                                                 args = ["[id]"],
+                                                 ),
+                                  update_url = URL(c = "pr",
+                                                   f = "person",
+                                                   args = ["[id]"],
+                                                   ),
+                                  deletable = False,
+                                  )
 
             return output
         s3.postp = postp

@@ -39,7 +39,7 @@ from io import StringIO
 from gluon import current, URL, DIV, SPAN, SQLFORM, INPUT, A, LI, UL
 
 from s3dal import Field
-from .s3crud import S3CRUD, crud_button
+from .s3crud import S3CRUD, crud_button, s3_action_button, s3_action_buttons
 from .s3rest import S3Method
 from .s3query import FS
 from .s3utils import s3_str, s3_mark_required
@@ -281,9 +281,9 @@ class S3RoleManager(S3Method):
         # Standard actions
         s3.actions = None
         s3.crud_labels.UPDATE = T("Edit")
-        S3CRUD.action_buttons(r, editable=True, deletable=False)
+        s3_action_buttons(r, editable=True, deletable=False)
 
-        action_button = S3CRUD.action_button
+        action_button = s3_action_button
 
         # Users
         label = T("Users")

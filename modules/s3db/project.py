@@ -13523,7 +13523,7 @@ def project_task_controller():
             if not r.component and r.method != "import":
                 # Maintain vars: why?
                 update_url = URL(args=["[id]"], vars=get_vars)
-                S3CRUD.action_buttons(r, update_url=update_url)
+                s3_action_buttons(r, update_url=update_url)
         return output
     s3.postp = postp
 

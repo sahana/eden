@@ -924,11 +924,11 @@ def config(settings):
                     #if r.method == "summary":
                     #    # Open the Custom profile page instead of the normal one
                     #    from gluon import URL
-                    #    from s3 import S3CRUD
+                    #    from s3 import s3_action_buttons
                     #    custom_url = URL(args = ["[id]", "custom"])
-                    #    S3CRUD.action_buttons(r,
-                    #                          read_url=custom_url,
-                    #                          update_url=custom_url)
+                    #    s3_action_buttons(r,
+                    #                      read_url=custom_url,
+                    #                      update_url=custom_url)
 
             return output
         s3.postp = custom_postp
@@ -1202,11 +1202,11 @@ def config(settings):
                     #if r.method == "summary":
                     #    # Open the Custom profile page instead of the normal one
                     #    from gluon import URL
-                    #    from s3 import S3CRUD
+                    #    from s3 import s3_action_buttons
                     #    custom_url = URL(args = ["[id]", "custom"])
-                    #    S3CRUD.action_buttons(r,
-                    #                          read_url=custom_url,
-                    #                          update_url=custom_url)
+                    #    s3_action_buttons(r,
+                    #                      read_url=custom_url,
+                    #                      update_url=custom_url)
 
             return output
         s3.postp = custom_postp

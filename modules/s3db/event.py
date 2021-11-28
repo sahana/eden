@@ -5926,11 +5926,11 @@ class event_EventAssignMethod(S3Method):
                                   #args = ["[id]", "profile.popup"])
                                   args = ["[id]", "profile"],
                                   )
-                S3CRUD.action_buttons(r,
-                                      deletable = False,
-                                      read_url = profile_url,
-                                      update_url = profile_url,
-                                      )
+                s3_action_buttons(r,
+                                  deletable = False,
+                                  read_url = profile_url,
+                                  update_url = profile_url,
+                                  )
                 response.s3.no_formats = True
 
                 # Filter form
@@ -6325,11 +6325,13 @@ class event_IncidentAssignMethod(S3Method):
                                   f = "incident",
                                   # @ToDo: Popup (add class="s3_modal"
                                   #args = ["[id]", "profile.popup"])
-                                  args = ["[id]", "profile"])
-                S3CRUD.action_buttons(r,
-                                      deletable = False,
-                                      read_url = profile_url,
-                                      update_url = profile_url)
+                                  args = ["[id]", "profile"],
+                                  )
+                s3_action_buttons(r,
+                                  deletable = False,
+                                  read_url = profile_url,
+                                  update_url = profile_url,
+                                  )
                 response.s3.no_formats = True
 
                 # Filter form

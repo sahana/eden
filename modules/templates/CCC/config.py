@@ -2840,10 +2840,10 @@ $('.copy-link').click(function(e){
                not auth.s3_has_role("ORG_ADMIN"):
 
                 #from gluon import URL
-                from s3 import s3_str, S3CRUD
+                from s3 import s3_str, s3_action_buttons
 
                 # Normal Action Buttons
-                S3CRUD.action_buttons(r, deletable = False)
+                s3_action_buttons(r, deletable = False)
 
                 # Custom Action Buttons
                 table = s3db.hrm_training
@@ -3228,10 +3228,10 @@ $('.copy-link').click(function(e){
             if r.interactive and not r.component:
                 if ADMIN is True:
                     from gluon import URL
-                    from s3 import s3_str, S3CRUD
+                    from s3 import s3_str, s3_action_buttons
 
                     # Normal Action Buttons
-                    S3CRUD.action_buttons(r)
+                    s3_action_buttons(r)
 
                     # Custom Action Buttons
                     s3.actions += [{"label": s3_str(T("Message")),
@@ -3246,10 +3246,10 @@ $('.copy-link').click(function(e){
 
                 elif APPLY is True:
                     from gluon import URL
-                    from s3 import s3_str, S3CRUD
+                    from s3 import s3_str, s3_action_buttons
 
                     # Normal Action Buttons
-                    S3CRUD.action_buttons(r)
+                    s3_action_buttons(r)
 
                     # Custom Action Buttons
                     #otable = s3db.org_organisation
@@ -3594,7 +3594,7 @@ $('.copy-link').click(function(e){
             if r.component_name == "person":
                 # Include get_vars on Action Buttons to configure crud_form/crud_strings appropriately
                 from gluon import URL
-                from s3 import S3CRUD
+                from s3 import s3_action_buttons
 
                 read_url = URL(c="pr", f="person", args=["[id]", "read"],
                                vars = {"groups": 1})
@@ -3602,10 +3602,10 @@ $('.copy-link').click(function(e){
                 update_url = URL(c="pr", f="person", args=["[id]", "update"],
                                  vars = {"groups": 1})
 
-                S3CRUD.action_buttons(r,
-                                      read_url = read_url,
-                                      update_url = update_url,
-                                      )
+                s3_action_buttons(r,
+                                  read_url = read_url,
+                                  update_url = update_url,
+                                  )
 
             return output
         s3.postp = postp
@@ -4612,7 +4612,7 @@ $('.copy-link').click(function(e){
                 if not BR:
                     # Include get_vars on Action Buttons to configure crud_form/crud_strings appropriately
                     from gluon import URL
-                    from s3 import S3CRUD
+                    from s3 import s3_action_buttons
 
                     read_url = URL(c="pr", f="person",
                                    args = ["[id]", "read"],
@@ -4624,10 +4624,10 @@ $('.copy-link').click(function(e){
                                      vars = r.get_vars,
                                      )
 
-                    S3CRUD.action_buttons(r,
-                                          read_url = read_url,
-                                          update_url = update_url,
-                                          )
+                    s3_action_buttons(r,
+                                      read_url = read_url,
+                                      update_url = update_url,
+                                      )
 
             return output
         s3.postp = postp
@@ -6245,10 +6245,10 @@ $('.copy-link').click(function(e){
                not auth.s3_has_role("ORG_ADMIN"):
 
                 from gluon import URL
-                from s3 import s3_str, S3CRUD
+                from s3 import s3_str, s3_action_buttons
 
                 # Normal Action Buttons
-                S3CRUD.action_buttons(r, deletable = False)
+                s3_action_buttons(r, deletable = False)
 
                 # Custom Action Buttons
                 table = s3db.req_need_person
@@ -6562,8 +6562,8 @@ $('.copy-link').click(function(e){
 
             if r.interactive:
                 #if not r.component:
-                from s3 import s3_str, S3CRUD
-                S3CRUD.action_buttons(r)
+                from s3 import s3_str, s3_action_buttons
+                s3_action_buttons(r)
                 s3.actions.append({"url": URL(c="project", f="task",
                                               args = "create",
                                               vars = {"person_item_id": "[id]"},

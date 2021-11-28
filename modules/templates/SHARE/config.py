@@ -1885,12 +1885,12 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             if r.interactive and r.method == "summary":
 
                 from gluon import A, DIV
-                from s3 import s3_str#, S3CRUD
+                from s3 import s3_str#, s3_action_buttons
 
                 auth = current.auth
 
                 # Normal Action Buttons
-                #S3CRUD.action_buttons(r)
+                #s3_action_buttons(r)
                 # Custom Action Buttons
                 deletable = current.db(auth.s3_accessible_query("delete", "need_line")).select(s3db.need_line.id)
                 restrict_d = [str(row.id) for row in deletable]
@@ -2453,9 +2453,9 @@ S3.redraw_fns.push('tagit')''' % (T("Add tags here…"),
             if r.interactive and r.method == "summary":
                 from gluon import A, DIV
                 from s3 import s3_str
-                #from s3 import S3CRUD, s3_str
+                #from s3 import s3_action_buttons, s3_str
                 # Normal Action Buttons
-                #S3CRUD.action_buttons(r)
+                #s3_action_buttons(r)
                 # Custom Action Buttons
                 auth = current.auth
                 deletable = current.db(auth.s3_accessible_query("delete", "need_response_line")).select(table.id)

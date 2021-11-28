@@ -35,6 +35,9 @@
 __all__ = ("S3CRUD",
            "crud_button",
            "embed_component",
+           "s3_action_button",
+           "s3_action_buttons",
+           #"_linkto_vars",
            )
 
 import json
@@ -2587,180 +2590,6 @@ class S3CRUD(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def action_button(label, url, icon=None, **attr):
-        """
-            Add a link to response.s3.actions
-
-            @param label: the link Label
-            @param url: the target URL
-            @param icon: optional Icon string
-            @param attr: attributes for the link (default: {"_class": "action-btn"})
-        """
-
-        link = dict(attr)
-        link["label"] = s3_str(label)
-        link["url"] = url if url else ""
-        if icon and current.deployment_settings.get_ui_use_button_icons():
-            link["icon"] = ICON.css_class(icon)
-        if "_class" not in link:
-            link["_class"] = "action-btn"
-
-        s3 = current.response.s3
-        if s3.actions is None:
-            s3.actions = [link]
-        else:
-            s3.actions.append(link)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def action_buttons(r,
-                       deletable = True,
-                       editable = None,
-                       copyable = False,
-                       read_url = None,
-                       delete_url = None,
-                       update_url = None,
-                       copy_url = None,
-                       ):
-        """
-            Provide the usual action buttons in list views.
-            Allow customizing the urls, since this overwrites anything
-            that would be inserted by CRUD/select via linkto. The resource
-            id should be represented by "[id]".
-
-            @param r: the S3Request
-            @param deletable: records can be deleted
-            @param editable: records can be modified
-            @param copyable: record data can be copied into new record
-            @param read_url: URL to read a record
-            @param delete_url: URL to delete a record
-            @param update_url: URL to update a record
-            @param copy_url: URL to copy record data
-
-            @note: If custom actions are already configured at this point,
-                   they will appear AFTER the standard action buttons
-        """
-
-        s3 = current.response.s3
-        labels = s3.crud_labels
-
-        custom_actions = s3.actions
-        s3.actions = None
-
-        auth = current.auth
-        has_permission = auth.s3_has_permission
-        ownership_required = auth.permission.ownership_required
-
-        if r.component:
-            table = r.component.table
-            args = [r.id, r.component.alias, "[id]"]
-        else:
-            table = r.table
-            args = ["[id]"]
-
-        get_vars = S3CRUD._linkto_vars(r)
-
-        settings = current.deployment_settings
-
-        # If this request is in iframe-format, action URLs should be in
-        # iframe-format as well
-        if r.representation == "iframe":
-            if settings.get_ui_iframe_opens_full():
-                iframe_safe = lambda url: url
-                # This is processed client-side in s3.ui.datatable.js
-                target = {"_target": "_blank"}
-            else:
-                iframe_safe = lambda url: s3_set_extension(url, "iframe")
-                target = {}
-        else:
-            iframe_safe = lambda url: url
-            target = {}
-
-        if editable is None:
-            # Fall back to settings if caller didn't override
-            editable = False if settings.get_ui_open_read_first() else \
-                       "auto" if settings.get_ui_auto_open_update() else True
-
-        # Open-action (Update or Read)
-        authorised = has_permission("update", table)
-        if editable and authorised and not ownership_required("update", table):
-            # User has permission to edit all records, and caller allows edit
-            if not update_url:
-                update_url = iframe_safe(URL(args = args + ["update"], #.popup to use modals
-                                             vars = get_vars,
-                                             ))
-            S3CRUD.action_button(labels.UPDATE, update_url,
-                                 # To use modals
-                                 #_class = "action-btn s3_modal"
-                                 _class = "action-btn edit",
-                                 icon = "edit",
-                                 **target
-                                 )
-        else:
-            # User is not permitted to edit at least some of the records,
-            # or caller doesn't allow edit
-            if not read_url:
-                method = ["read"] if not editable or not authorised else []
-                read_url = iframe_safe(URL(args = args + method, #.popup to use modals
-                                           vars = get_vars,
-                                           ))
-            S3CRUD.action_button(labels.READ, read_url,
-                                 # To use modals
-                                 #_class = "action-btn s3_modal"
-                                 _class = "action-btn read",
-                                 icon = "file",
-                                 **target)
-
-        # Delete-action
-        if deletable and has_permission("delete", table):
-            icon = "delete"
-            if not delete_url:
-                if r.function[:6] == "table/":
-                    # Dynamic Table
-                    delete_url = iframe_safe(URL(args = [r.function[6:]] + args + ["delete"],
-                                                 vars = get_vars))
-                else:
-                    delete_url = iframe_safe(URL(args = args + ["delete"],
-                                                 vars = get_vars))
-            if ownership_required("delete", table):
-                # Check which records can be deleted
-                query = auth.s3_accessible_query("delete", table)
-                rows = current.db(query).select(table._id)
-                restrict = []
-                rappend = restrict.append
-                for row in rows:
-                    row_id = row.get("id", None)
-                    if row_id:
-                        rappend(str(row_id))
-                S3CRUD.action_button(labels.DELETE, delete_url,
-                                     _class = "delete-btn",
-                                     icon = icon,
-                                     restrict = restrict,
-                                     **target
-                                     )
-            else:
-                S3CRUD.action_button(labels.DELETE, delete_url,
-                                     _class = "delete-btn",
-                                     icon = icon,
-                                     **target
-                                     )
-
-        # Copy-action
-        if copyable and has_permission("create", table):
-            if not copy_url:
-                copy_url = iframe_safe(URL(args = args + ["copy"]))
-            S3CRUD.action_button(labels.COPY,
-                                 copy_url,
-                                 icon = "icon-copy",
-                                 **target
-                                 )
-
-        # Append custom actions
-        if custom_actions:
-            s3.actions += custom_actions
-
-    # -------------------------------------------------------------------------
     def _default_cancel_button(self, r):
         """
             Show a default cancel button in standalone create/update forms.
@@ -2988,7 +2817,7 @@ class S3CRUD(S3Method):
                 except TypeError:
                     url = linkto % record_id
             else:
-                get_vars = S3CRUD._linkto_vars(r)
+                get_vars = _linkto_vars(r)
 
                 if r.component:
                     if r.link and not r.actuate_link():
@@ -3033,32 +2862,6 @@ class S3CRUD(S3Method):
             return url
 
         return list_linkto
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _linkto_vars(r):
-        """
-            Retain certain GET vars of the request in action links
-
-            @param r: the S3Request
-
-            @return: Storage with GET vars
-        """
-
-        get_vars = r.get_vars
-        linkto_vars = Storage()
-
-        # Retain "viewing"
-        if not r.component and "viewing" in get_vars:
-            linkto_vars.viewing = get_vars["viewing"]
-
-        keep_vars = current.response.s3.crud.keep_vars
-        if keep_vars:
-            for key in keep_vars:
-                if key in get_vars:
-                    linkto_vars[key] = get_vars[key]
-
-        return linkto_vars
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3427,5 +3230,202 @@ def postprocess_embedded(form, component=None, key=None):
                     callback(onaccept, _form) # , tablename=component (if we ever define callbacks as a dict with tablename)
                 else:
                     form.errors[key] = current.T("Could not create record.")
+
+# =============================================================================
+def s3_action_button(label, url, icon=None, **attr):
+    """
+        Add a link to response.s3.actions
+
+        @param label: the link Label
+        @param url: the target URL
+        @param icon: optional Icon string
+        @param attr: attributes for the link (default: {"_class": "action-btn"})
+    """
+
+    link = dict(attr)
+    link["label"] = s3_str(label)
+    link["url"] = url if url else ""
+    if icon and current.deployment_settings.get_ui_use_button_icons():
+        link["icon"] = ICON.css_class(icon)
+    if "_class" not in link:
+        link["_class"] = "action-btn"
+
+    s3 = current.response.s3
+    if s3.actions is None:
+        s3.actions = [link]
+    else:
+        s3.actions.append(link)
+
+# -----------------------------------------------------------------------------
+def s3_action_buttons(r,
+                      deletable = True,
+                      editable = None,
+                      copyable = False,
+                      read_url = None,
+                      delete_url = None,
+                      update_url = None,
+                      copy_url = None,
+                      ):
+    """
+        Provide the usual action buttons in list views.
+        Allow customizing the urls, since this overwrites anything
+        that would be inserted by CRUD/select via linkto. The resource
+        id should be represented by "[id]".
+
+        @param r: the S3Request
+        @param deletable: records can be deleted
+        @param editable: records can be modified
+        @param copyable: record data can be copied into new record
+        @param read_url: URL to read a record
+        @param delete_url: URL to delete a record
+        @param update_url: URL to update a record
+        @param copy_url: URL to copy record data
+
+        @note: If custom actions are already configured at this point,
+               they will appear AFTER the standard action buttons
+    """
+
+    s3 = current.response.s3
+    labels = s3.crud_labels
+
+    custom_actions = s3.actions
+    s3.actions = None
+
+    auth = current.auth
+    has_permission = auth.s3_has_permission
+    ownership_required = auth.permission.ownership_required
+
+    if r.component:
+        table = r.component.table
+        args = [r.id, r.component.alias, "[id]"]
+    else:
+        table = r.table
+        args = ["[id]"]
+
+    get_vars = _linkto_vars(r)
+
+    settings = current.deployment_settings
+
+    # If this request is in iframe-format, action URLs should be in
+    # iframe-format as well
+    if r.representation == "iframe":
+        if settings.get_ui_iframe_opens_full():
+            iframe_safe = lambda url: url
+            # This is processed client-side in s3.ui.datatable.js
+            target = {"_target": "_blank"}
+        else:
+            iframe_safe = lambda url: s3_set_extension(url, "iframe")
+            target = {}
+    else:
+        iframe_safe = lambda url: url
+        target = {}
+
+    if editable is None:
+        # Fall back to settings if caller didn't override
+        editable = False if settings.get_ui_open_read_first() else \
+                   "auto" if settings.get_ui_auto_open_update() else True
+
+    # Open-action (Update or Read)
+    authorised = has_permission("update", table)
+    if editable and authorised and not ownership_required("update", table):
+        # User has permission to edit all records, and caller allows edit
+        if not update_url:
+            update_url = iframe_safe(URL(args = args + ["update"], #.popup to use modals
+                                         vars = get_vars,
+                                         ))
+        s3_action_button(labels.UPDATE, update_url,
+                         # To use modals
+                         #_class = "action-btn s3_modal"
+                         _class = "action-btn edit",
+                         icon = "edit",
+                         **target
+                         )
+    else:
+        # User is not permitted to edit at least some of the records,
+        # or caller doesn't allow edit
+        if not read_url:
+            method = ["read"] if not editable or not authorised else []
+            read_url = iframe_safe(URL(args = args + method, #.popup to use modals
+                                       vars = get_vars,
+                                       ))
+        s3_action_button(labels.READ, read_url,
+                         # To use modals
+                         #_class = "action-btn s3_modal"
+                         _class = "action-btn read",
+                         icon = "file",
+                         **target)
+
+    # Delete-action
+    if deletable and has_permission("delete", table):
+        icon = "delete"
+        if not delete_url:
+            if r.function[:6] == "table/":
+                # Dynamic Table
+                delete_url = iframe_safe(URL(args = [r.function[6:]] + args + ["delete"],
+                                             vars = get_vars))
+            else:
+                delete_url = iframe_safe(URL(args = args + ["delete"],
+                                             vars = get_vars))
+        if ownership_required("delete", table):
+            # Check which records can be deleted
+            query = auth.s3_accessible_query("delete", table)
+            rows = current.db(query).select(table._id)
+            restrict = []
+            rappend = restrict.append
+            for row in rows:
+                row_id = row.get("id", None)
+                if row_id:
+                    rappend(str(row_id))
+            s3_action_button(labels.DELETE, delete_url,
+                             _class = "delete-btn",
+                             icon = icon,
+                             restrict = restrict,
+                             **target
+                             )
+        else:
+            s3_action_button(labels.DELETE, delete_url,
+                             _class = "delete-btn",
+                             icon = icon,
+                             **target
+                             )
+
+    # Copy-action
+    if copyable and has_permission("create", table):
+        if not copy_url:
+            copy_url = iframe_safe(URL(args = args + ["copy"]))
+        s3_action_button(labels.COPY,
+                         copy_url,
+                         icon = "icon-copy",
+                         **target
+                         )
+
+    # Append custom actions
+    if custom_actions:
+        s3.actions += custom_actions
+
+# =============================================================================
+def _linkto_vars(r):
+    """
+        Retain certain GET vars of the request in action links
+
+        @param r: the S3Request
+
+        @return: Storage with GET vars
+    """
+
+    get_vars = r.get_vars
+    linkto_vars = Storage()
+
+    # Retain "viewing"
+    if not r.component and "viewing" in get_vars:
+        linkto_vars.viewing = get_vars["viewing"]
+
+    keep_vars = current.response.s3.crud.keep_vars
+    if keep_vars:
+        for key in keep_vars:
+            if key in get_vars:
+                linkto_vars[key] = get_vars[key]
+
+    return linkto_vars
 
 # END =========================================================================

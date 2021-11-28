@@ -3818,9 +3818,7 @@ Thank you"""
                                     )
 
         s3db.configure(tablename,
-                       addbtn = True,
                        crud_form = crud_form,
-                       listadd = False,
                        list_fields = ["recv_ref",
                                       (T("Request Number"), "recv_req.req_id"),
                                       "send_ref",
@@ -3883,23 +3881,6 @@ Thank you"""
 
             return result
         s3.prep = custom_prep
-
-        # Custom postp
-        #standard_postp = s3.postp
-        def custom_postp(r, output):
-            # Call standard postp (doesn't exist)
-            #if callable(standard_postp):
-            #    output = standard_postp(r, output)
-
-            if r.method == None and isinstance(output, dict):
-                try:
-                    # Launch Wizard, not Create form
-                    output["buttons"]["add_btn"]["_href"] = URL(args = "wizard")
-                except KeyError:
-                    pass
-
-            return output
-        s3.postp = custom_postp
 
         return attr
 
@@ -4013,9 +3994,7 @@ Thank you"""
                                     )
 
         s3db.configure(tablename,
-                       addbtn = True,
                        crud_form = crud_form,
-                       listadd = False,
                        list_fields = ["send_ref",
                                       #"req_ref",
                                       (T("Request Number"), "send_req.req_id"),
@@ -4090,23 +4069,6 @@ Thank you"""
 
             return result
         s3.prep = custom_prep
-
-        # Custom postp
-        #standard_postp = s3.postp
-        def custom_postp(r, output):
-            # Call standard postp (doesn't exist)
-            #if callable(standard_postp):
-            #    output = standard_postp(r, output)
-
-            if r.method == None and isinstance(output, dict):
-                try:
-                    # Launch Wizard, not Create form
-                    output["buttons"]["add_btn"]["_href"] = URL(args = "wizard")
-                except KeyError:
-                    pass
-
-            return output
-        s3.postp = custom_postp
 
         return attr
 

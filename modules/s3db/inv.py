@@ -50,6 +50,7 @@ __all__ = ("WarehouseModel",
            "inv_adj_rheader",
            "inv_commit_send",
            #"inv_gift_certificate",
+           #"inv_item_label",
            "inv_item_total_weight",
            "inv_item_total_volume",
            #"inv_package_labels",
@@ -5150,6 +5151,8 @@ class InventoryTrackingModel(S3Model):
                        ]
 
         configure(tablename,
+                  addbtn = True,
+                  listadd = False,
                   create_next = send_item_url,
                   update_next = send_item_url,
                   # It shouldn't be possible for the user to delete a shipment
@@ -5430,6 +5433,8 @@ class InventoryTrackingModel(S3Model):
                             )
 
         configure(tablename,
+                  addbtn = True,
+                  listadd = False,
                   create_next = recv_item_url,
                   update_next = recv_item_url,
                   # It shouldn't be possible for the user to delete a shipment
@@ -7208,6 +7213,308 @@ def inv_gift_certificate(r, **attr):
     return output.read()
 
 # =============================================================================
+def inv_item_label(r, **attr):
+    """
+        Generate a Label for a Shipment Item
+        - can be used to label items as they are stored in the warehouse
+        - can be used to label items as they are added to outbound packages
+
+        This is exported in XLS format to be user-editable
+        - we don't have the width x length x height (we don't currently store these for packs)
+    """
+
+    from s3.codecs.xls import S3XLS
+
+    try:
+        import xlwt
+    except ImportError:
+        r.error(503, S3XLS.ERROR.XLWT_ERROR)
+
+    # Extract the Data
+    db = current.db
+    s3db = current.s3db
+
+    # Item Details
+    ttable = s3db.inv_track_item
+    itable = s3db.supply_item
+    ptable = s3db.supply_item_pack
+    query = (ttable.id == r.component_id) & \
+            (ttable.item_id == itable.id) & \
+            (ttable.item_pack_id == ptable.id)
+    item = db(query).select(ttable.expiry_date,
+                            ttable.supply_org_id,
+                            itable.code,
+                            itable.name,
+                            itable.weight,
+                            ptable.name,
+                            ptable.quantity,
+                            limitby = (0, 1),
+                            ).first()
+
+    pack = item["supply_item_pack"]
+    track_item = item["inv_track_item"]
+    supply_item = item["supply_item"]
+    item_code = supply_item.code or ""
+    item_name = supply_item.name[:24]
+    pack_quantity = pack.quantity
+
+    weight = supply_item.weight * pack_quantity
+
+    # Length & Width are unknown as we don't track pack sizes
+    length = ""
+    width = ""
+    height = ""
+
+    # Organisation
+    otable = s3db.org_organisation
+    stable = s3db.org_site
+    query = (stable.site_id == r.record.site_id) & \
+            (stable.organisation_id == otable.id)
+    org = db(query).select(otable.id,
+                           otable.root_organisation,
+                           otable.logo,
+                           limitby = (0, 1)
+                           ).first()
+
+    if org.id != org.root_organisation:
+        # Lookup Root Org
+        org = db(otable.id == org.root_organisation).select(otable.logo,
+                                                            limitby = (0, 1)
+                                                            ).first()
+
+    # Represent the Data
+    T = current.T
+
+    from .org import org_OrganisationRepresent
+    org_represent = org_OrganisationRepresent(acronym = False,
+                                              parent = False,
+                                              )
+
+    # Create the workbook
+    book = xlwt.Workbook(encoding = "utf-8")
+
+    # Define styles
+    POINT_36 = 720 # Twips = Points * 20
+    ROW_HEIGHT = 890 # Realised through trial & error
+
+    style = xlwt.XFStyle()
+    style.font.height = POINT_36
+
+    HORZ_CENTER = style.alignment.HORZ_CENTER
+    VERT_CENTER = style.alignment.VERT_CENTER
+
+    bold_style = xlwt.XFStyle()
+    bold_style.font.bold = True
+    bold_style.font.height = POINT_36
+    bold_style.borders.top = style.borders.THICK
+
+    center_style = xlwt.XFStyle()
+    center_style.alignment.horz = style.alignment.HORZ_CENTER
+    center_style.font.height = POINT_36
+
+    right_style = xlwt.XFStyle()
+    right_style.alignment.horz = style.alignment.HORZ_RIGHT
+    right_style.font.height = POINT_36
+
+    big_box_style = xlwt.XFStyle()
+    big_box_style.font.bold = True
+    big_box_style.font.height = 1120 # 1120 Twips = 56 point
+    big_box_style.alignment.horz = HORZ_CENTER
+    big_box_style.alignment.vert = VERT_CENTER
+
+    box_style = xlwt.XFStyle()
+    box_style.font.height = 960 # 960 Twips = 48 point
+    box_style.alignment.horz = HORZ_CENTER
+    box_style.alignment.vert = VERT_CENTER
+
+    logo = org.logo
+    if logo:
+        # We need to convert to 24-bit BMP
+        try:
+            from PIL import Image
+        except:
+            current.log.error("PIL not installed: Cannot insert logo")
+        else:
+            IMG_WIDTH = 230
+            filename, extension = os.path.splitext(logo)
+            logo_path = os.path.join(r.folder, "uploads", logo)
+            if extension == ".png":
+                # Remove Transparency
+                png = Image.open(logo_path).convert("RGBA")
+                size = png.size
+                background = Image.new("RGBA", size, (255,255,255))
+                img = Image.alpha_composite(background, png)
+            else:
+                img = Image.open(logo_path)
+                size = img.size
+            img_width = size[0]
+            img_height = int(IMG_WIDTH/img_width * size[1])
+            img = img.convert("RGB").resize((IMG_WIDTH, img_height))
+            from io import BytesIO
+            bmpfile = BytesIO()
+            img.save(bmpfile, "BMP")
+            bmpfile.seek(0)
+            bmpdata = bmpfile.read()
+
+    # Add sheet
+    sheet = book.add_sheet(item_code or item_name)
+    sheet.set_print_scaling(90)
+
+    # Set column Widths
+    sheet.col(0).width = 4172   # 3.19 cm A
+    sheet.col(1).width = 1505   # 1.15 cm B
+    sheet.col(2).width = 4069   # 3.11 cm C
+    sheet.col(3).width = 1752   # 1.34 cm D
+    sheet.col(4).width = 4069   # 3.11 cm E
+    sheet.col(5).width = 1505   # 1.15 cm F
+    sheet.col(6).width = 3256   # 2.49 cm G
+    sheet.col(7).width = 2341   # 1.79 cm H
+    sheet.col(8).width = 2642   # 2.05 cm I
+    sheet.col(9).width = 4682   # 3.58 cm J
+    sheet.col(10).width = 2341  # 1.79 cm K
+    sheet.col(11).width = 5414  # 4.14 cm L
+    sheet.col(12).width = 2341  # 1.79 cm M
+    sheet.col(13).width = 2341  # 1.79 cm N
+
+    if logo:
+        # 1st row: Logo
+        sheet.insert_bitmap_data(bmpdata, 0, 11)
+
+    # 7th row: Height
+    current_row = sheet.row(6)
+    current_row.height = ROW_HEIGHT
+
+    # 8th row: Item Name
+    row_index = 7
+    sheet.write_merge(row_index, row_index + 5, 0, 13, item_name, big_box_style)
+
+    # 14th row: Height
+    current_row = sheet.row(13)
+    current_row.height = ROW_HEIGHT
+
+    # 16th row: Divider
+    current_row = sheet.row(15)
+    for col_index in range(14):
+        current_row.write(col_index, "", bold_style)
+
+    # 18th row: Item Name
+    row_index = 16
+    sheet.write_merge(row_index, row_index + 5, 0, 13, item_code, box_style)
+
+    # 25th row: Height
+    current_row = sheet.row(24)
+    current_row.height = ROW_HEIGHT
+
+    # 26th row: UoM
+    current_row = sheet.row(25)
+    current_row.height = ROW_HEIGHT
+    current_row.write(4, "measure of unit :", right_style)
+    if pack_quantity == 1:
+        label = pack.name
+    else:
+        # Lookup the Unit Pack
+        query = (ptable.item_id == supply_item.id) & \
+                (ptable.quantity == 1)
+        unit_pack = db(query).select(ptable.name,
+                                     limitby = (0, 1),
+                                     ).first()
+        label = "%s %s / %s" % (pack_quantity,
+                                unit_pack.name,
+                                pack.name,
+                                )
+    current_row.write(6, label, style)
+
+    # 27th row: Height
+    current_row = sheet.row(26)
+    current_row.height = ROW_HEIGHT
+
+    # 28th row: Expiry Date
+    current_row = sheet.row(27)
+    current_row.height = ROW_HEIGHT
+    current_row.write(4, "expiry date :", right_style)
+    expiry_date = track_item.expiry_date
+    if expiry_date:
+        label = str(expiry_date)
+    else:
+        label = "N/A"
+    current_row.write(6, label, style)
+
+    # 29th row: Height
+    current_row = sheet.row(28)
+    current_row.height = ROW_HEIGHT
+
+    # 30th row: Donor
+    current_row = sheet.row(29)
+    current_row.height = ROW_HEIGHT
+    current_row.write(4, "donor :", right_style)
+    donor = track_item.supply_org_id
+    if donor:
+        label = org_represent(donor)
+    else:
+        label = "N/A"
+    current_row.write(6, label, style)
+
+    # 31st row: Height
+    current_row = sheet.row(30)
+    current_row.height = ROW_HEIGHT
+
+    # 32nd row: Height
+    current_row = sheet.row(31)
+    current_row.height = ROW_HEIGHT
+
+    # 37th row: Size Labels
+    current_row = sheet.row(36)
+    current_row.height = ROW_HEIGHT
+    current_row.write(0, "Dimensions :", bold_style)
+    for col_index in range(1, 8):
+        # Divider
+        current_row.write(col_index, "", bold_style)
+    current_row.write(8, "Weight", bold_style)
+    for col_index in range(9, 11):
+        # Divider
+        current_row.write(col_index, "", bold_style)
+    current_row.write(11, "Volume", bold_style)
+    for col_index in range(12, 14):
+        # Divider
+        current_row.write(col_index, "", bold_style)
+
+    # 38th row: Sizes
+    current_row = sheet.row(37)
+    current_row.height = ROW_HEIGHT
+    current_row.write(0, width, center_style)
+    current_row.write(1, "x", style)
+    current_row.write(2, length, center_style)
+    current_row.write(3, "x", style)
+    current_row.write(4, height, center_style)
+    current_row.write(5, "m", style)
+    current_row.write(7, weight, style)
+    current_row.write(9, "Kgs", style)
+    formula = xlwt.Formula("ROUND(A38*C38*E38, 2)")
+    current_row.write(11, formula, center_style)
+    current_row.write(12, "m3", style)
+
+    # Export to File
+    output = BytesIO()
+    try:
+        book.save(output)
+    except:
+        import sys
+        error = sys.exc_info()[1]
+        current.log.error(error)
+    output.seek(0)
+
+    # Response headers
+    title = s3_str(T("Label for %(item)s")) % {"item": item_code or item_code or item_name}
+    filename = "%s.xls" % title
+    response = current.response
+    from gluon.contenttype import contenttype
+    response.headers["Content-Type"] = contenttype(".xls")
+    disposition = "attachment; filename=\"%s\"" % filename
+    response.headers["Content-disposition"] = disposition
+
+    return output.read()
+
+# =============================================================================
 def inv_item_total_volume(row):
     """
         Compute the total volume of an inventory item (Field.Method)
@@ -7850,10 +8157,7 @@ def inv_package_labels(r, **attr):
         - separate sheet per Package
 
         This is exported in XLS format to be user-editable
-        - we don't have the width x length x height
-
-        @ToDo: Add Number of Packages!
-        @ToDo: Handle multiple Item Types/Package
+        - we can only estimate height for Palettes
     """
 
     from s3.codecs.xls import S3XLS
@@ -7885,25 +8189,7 @@ def inv_package_labels(r, **attr):
                                 ptable.depth,
                                 )
 
-    # Package Items
-    spitable = s3db.inv_send_package_item
-    ttable = s3db.inv_track_item
-    itable = s3db.supply_item
-    ptable = s3db.supply_item_pack
-    query = (spitable.send_package_id.belongs([p["inv_send_package.id"] for p in packages])) & \
-            (spitable.track_item_id == ttable.id) & \
-            (ttable.item_id == itable.id) & \
-            (ttable.item_pack_id == ptable.id)
-    items = db(query).select(spitable.send_package_id,
-                             spitable.quantity,
-                             ttable.expiry_date,
-                             ttable.supply_org_id,
-                             itable.id,
-                             itable.code,
-                             itable.name,
-                             ptable.name,
-                             ptable.quantity,
-                             )
+    total_packages = len(packages)
 
     # Organisation
     otable = s3db.org_organisation
@@ -7925,12 +8211,9 @@ def inv_package_labels(r, **attr):
     # Represent the Data
     T = current.T
 
-    from .org import org_OrganisationRepresent
-    org_represent = org_OrganisationRepresent(acronym = False,
-                                              parent = False,
-                                              )
-    # Cache results in class instance
-    org_represent.bulk([item["inv_track_item.supply_org_id"] for item in items])
+    site_represent = S3Represent(lookup = "org_site")
+    source = site_represent(record.site_id)
+    destination = site_represent(record.to_site_id)
 
     # Create the workbook
     book = xlwt.Workbook(encoding = "utf-8")
@@ -8001,9 +8284,11 @@ def inv_package_labels(r, **attr):
     for row in packages:
         package = row.inv_package
         send_package = row.inv_send_package
+        package_type = package.type
+        package_number = send_package.number
 
         # Add sheet
-        sheet = book.add_sheet(str(send_package.number))
+        sheet = book.add_sheet(str(package_number))
         sheet.set_print_scaling(90)
 
         # Weight is Load + Package Weight
@@ -8011,7 +8296,7 @@ def inv_package_labels(r, **attr):
         # Length & Width are those of the Package
         length = package.length
         width = package.width
-        if package.type == "BOX":
+        if package_type == "BOX":
             height = package.depth
         elif length and width:
             # Pallet
@@ -8022,10 +8307,6 @@ def inv_package_labels(r, **attr):
             height = ""
 
         send_package_id = send_package.id
-        package_items = items.find(lambda row: row["inv_send_package_item.send_package_id"] == send_package_id)
-
-        # @ToDo: Handle Multiple Item Types on a Pallet
-        item = package_items.first()
 
         # Set column Widths
         sheet.col(0).width = 4172   # 3.19 cm A
@@ -8051,10 +8332,19 @@ def inv_package_labels(r, **attr):
         current_row = sheet.row(6)
         current_row.height = ROW_HEIGHT
 
-        # 8th row: Item Name
+        # 8th row: Package Number
         row_index = 7
-        supply_item = item.supply_item
-        sheet.write_merge(row_index, row_index + 5, 0, 13, supply_item.name[:24], big_box_style)
+        
+        if package_type == "BOX":
+            package_name = T("Box %(number)s / %(total)s") % {"number": package_number,
+                                                              "total": total_packages,
+                                                              }
+        else:
+            # Pallet
+            package_name = T("Pallet %(number)s / %(total)s") % {"number": package_number,
+                                                                 "total": total_packages,
+                                                                 }
+        sheet.write_merge(row_index, row_index + 5, 0, 13, s3_str(package_name), big_box_style)
 
         # 14th row: Height
         current_row = sheet.row(13)
@@ -8065,75 +8355,20 @@ def inv_package_labels(r, **attr):
         for col_index in range(14):
             current_row.write(col_index, "", bold_style)
 
-        # 18th row: Item Name
+        # 18th row: From
         row_index = 16
-        sheet.write_merge(row_index, row_index + 5, 0, 13, supply_item.code, box_style)
+        sheet.write_merge(row_index, row_index + 5, 0, 13, "%s: %s" % (T("From"),
+                                                                       source,
+                                                                       ), box_style)
 
-        # 25th row: Height
-        current_row = sheet.row(24)
-        current_row.height = ROW_HEIGHT
+        # 25th row: To
+        row_index = 24
+        sheet.write_merge(row_index, row_index + 5, 0, 13, "%s: %s" % (T("To"),
+                                                                       destination,
+                                                                       ), box_style)
 
-        # 26th row: UoM
-        current_row = sheet.row(25)
-        current_row.height = ROW_HEIGHT
-        current_row.write(4, "measure of unit :", right_style)
-        pack = item.supply_item_pack
-        pack_quantity = pack.quantity
-        if pack_quantity == 1:
-            label = pack.name
-        else:
-            # Lookup the Unit Pack
-            query = (ptable.item_id == supply_item.id) & \
-                    (ptable.quantity == 1)
-            unit_pack = db(query).select(ptable.name,
-                                         limitby = (0, 1),
-                                         ).first()
-            label = "%s %s / %s" % (pack_quantity,
-                                    unit_pack.name,
-                                    pack.name,
-                                    )
-        current_row.write(6, label, style)
-
-        # 27th row: Height
-        current_row = sheet.row(26)
-        current_row.height = ROW_HEIGHT
-
-        # 28th row: Expiry Date
-        current_row = sheet.row(27)
-        current_row.height = ROW_HEIGHT
-        current_row.write(4, "expiry date :", right_style)
-        expiry_date = item["inv_track_item.expiry_date"]
-        if expiry_date:
-            label = str(expiry_date)
-        else:
-            label = "N/A"
-        current_row.write(6, label, style)
-
-        # 29th row: Height
-        current_row = sheet.row(28)
-        current_row.height = ROW_HEIGHT
-
-        # 30th row: Donor
-        current_row = sheet.row(29)
-        current_row.height = ROW_HEIGHT
-        current_row.write(4, "donor :", right_style)
-        donor = item["inv_track_item.supply_org_id"]
-        if donor:
-            label = org_represent(donor)
-        else:
-            label = "N/A"
-        current_row.write(6, label, style)
-
-        # 31st row: Height
-        current_row = sheet.row(30)
-        current_row.height = ROW_HEIGHT
-
-        # 32nd row: Height
+        # 32rd row: Size Labels
         current_row = sheet.row(31)
-        current_row.height = ROW_HEIGHT
-
-        # 37th row: Size Labels
-        current_row = sheet.row(36)
         current_row.height = ROW_HEIGHT
         current_row.write(0, "Dimensions :", bold_style)
         for col_index in range(1, 8):
@@ -8148,8 +8383,8 @@ def inv_package_labels(r, **attr):
             # Divider
             current_row.write(col_index, "", bold_style)
 
-        # 38th row: Sizes
-        current_row = sheet.row(37)
+        # 33rd row: Sizes
+        current_row = sheet.row(32)
         current_row.height = ROW_HEIGHT
         current_row.write(0, width, center_style)
         current_row.write(1, "x", style)
@@ -8159,7 +8394,7 @@ def inv_package_labels(r, **attr):
         current_row.write(5, "m", style)
         current_row.write(7, package_weight, style)
         current_row.write(9, "Kgs", style)
-        formula = xlwt.Formula("ROUND(A38*C38*E38, 2)")
+        formula = xlwt.Formula("ROUND(A33*C33*E33, 2)")
         current_row.write(11, formula, center_style)
         current_row.write(12, "m3", style)
 
@@ -8638,6 +8873,13 @@ def inv_recv_controller():
     set_method("inv", "recv",
                method = "cert",
                action = inv_recv_donation_cert,
+               )
+
+    # Generate Item Labels
+    set_method("inv", "recv",
+               component_name = "track_item",
+               method = "label",
+               action = inv_item_label,
                )
 
     # Process Shipment
@@ -9198,7 +9440,40 @@ i18n.reg='%s'
 
         return True
     s3.prep = prep
-       
+
+    def postp(r, output):
+        if r.interactive:
+            if r.component_name == "track_item" and \
+               not r.component_id:
+                # Add Action Button to Print Item Label
+                if s3.actions == None:
+                    # Normal Action Buttons
+                    s3_action_buttons(r)
+                # Custom Action Buttons
+                s3.actions += [{"icon": ICON.css_class("print"),
+                                "label": s3_str(T("Label")),
+                                "url": URL(args = [r.id,
+                                                   "track_item",
+                                                   "[id]",
+                                                   "label",
+                                                   ],
+                                           ),
+                                "_class": "action-btn",
+                                },
+                               ]
+
+            elif r.method == None and \
+                 settings.get_inv_wizards() and \
+                isinstance(output, dict):
+                try:
+                    # Launch Wizard, not Create form
+                    output["buttons"]["add_btn"]["_href"] = URL(args = "wizard")
+                except KeyError:
+                    pass
+
+        return output
+    s3.postp = postp
+
     return current.rest_controller("inv", "recv",
                                    rheader = inv_recv_rheader,
                                    )
@@ -10678,9 +10953,9 @@ $.filterOptionsS3({
             if r.method is None:
                 # Customise Action Buttons
                 if r.component:
-                    S3CRUD.action_buttons(r,
-                                          deletable = s3db.get_config(r.component.tablename, "deletable"),
-                                          )
+                    s3_action_buttons(r,
+                                      deletable = s3db.get_config(r.component.tablename, "deletable"),
+                                      )
                     if r.component_name == "req_item" and \
                        settings.get_inv_req_prompt_match():
                         table = r.component.table
@@ -10768,7 +11043,7 @@ $.filterOptionsS3({
                             # Stock: Open Tab for Items
                             r.next = URL(args = [form_vars.id, "req_item"])
                     else:
-                        S3CRUD.action_buttons(r, deletable =False)
+                        s3_action_buttons(r, deletable=False)
                         # @ToDo: Switch Action buttons which change data to POST
                         if not template and settings.get_inv_use_commit():
                             # This is appropriate to both Items and People
@@ -12917,6 +13192,7 @@ def inv_send_controller():
     T = current.T
     db = current.db
     s3db = current.s3db
+    settings = current.deployment_settings
 
     sendtable = s3db.inv_send
 
@@ -12941,6 +13217,13 @@ def inv_send_controller():
     set_method("inv", "send",
                method = "gift_certificate",
                action = inv_gift_certificate,
+               )
+
+    # Generate Item Labels
+    set_method("inv", "send",
+               component_name = "track_item",
+               method = "label",
+               action = inv_item_label,
                )
 
     # Generate Package Labels
@@ -12992,7 +13275,6 @@ def inv_send_controller():
                )
 
     def prep(r):
-        settings = current.deployment_settings
         send_req = settings.get_inv_send_req()
 
         export_formats = settings.ui.export_formats
@@ -13688,6 +13970,39 @@ i18n.reg='%s'
 
         return True
     s3.prep = prep
+
+    def postp(r, output):
+        if r.interactive:
+            if r.component_name == "track_item" and \
+               not r.component_id:
+                # Add Action Button to Print Item Label
+                if s3.actions == None:
+                    # Normal Action Buttons
+                    s3_action_buttons(r)
+                # Custom Action Buttons
+                s3.actions += [{"icon": ICON.css_class("print"),
+                                "label": s3_str(T("Label")),
+                                "url": URL(args = [r.id,
+                                                   "track_item",
+                                                   "[id]",
+                                                   "label",
+                                                   ],
+                                           ),
+                                "_class": "action-btn",
+                                },
+                               ]
+
+            elif r.method == None and \
+                 settings.get_inv_wizards() and \
+                isinstance(output, dict):
+                try:
+                    # Launch Wizard, not Create form
+                    output["buttons"]["add_btn"]["_href"] = URL(args = "wizard")
+                except KeyError:
+                    pass
+
+        return output
+    s3.postp = postp
 
     return current.rest_controller("inv", "send",
                                    rheader = inv_send_rheader,
@@ -15785,10 +16100,10 @@ def inv_warehouse_controller():
                 update_url = URL(f = "warehouse",
                                  args = ["[id]", "inv_item"],
                                  )
-                S3CRUD.action_buttons(r,
-                                      read_url = read_url,
-                                      update_url = update_url,
-                                      )
+                s3_action_buttons(r,
+                                  read_url = read_url,
+                                  update_url = update_url,
+                                  )
         else:
             cname = r.component_name
             if cname == "human_resource":
@@ -15799,11 +16114,11 @@ def inv_warehouse_controller():
                 update_url = URL(c="hrm", f="staff",
                                  args = ["[id]", "update"],
                                  )
-                S3CRUD.action_buttons(r,
-                                      read_url = read_url,
-                                      #delete_url = delete_url,
-                                      update_url = update_url,
-                                      )
+                s3_action_buttons(r,
+                                  read_url = read_url,
+                                  #delete_url = delete_url,
+                                  update_url = update_url,
+                                  )
         return output
     s3.postp = postp
 
