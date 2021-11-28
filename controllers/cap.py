@@ -548,7 +548,8 @@ def alert():
                                   "bbox": bbox,
                                   }
 
-                    widget = s3db.cap_AlertProfileWidget
+                    from s3db.cap import cap_AlertProfileWidget
+                    widget = cap_AlertProfileWidget
                     component = widget.component
 
                     @widget(None)
@@ -756,6 +757,7 @@ def alert():
 
             elif r.component_name == "info":
                 # Filter the language options
+                from s3 import IS_ISO639_2_LANGUAGE_CODE
                 itable.language.requires = IS_ISO639_2_LANGUAGE_CODE(zero = None,
                                                                      translate = True,
                                                                      select = settings.get_cap_languages(),

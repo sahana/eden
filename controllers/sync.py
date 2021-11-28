@@ -174,8 +174,9 @@ def repository():
                     )
 
                     # Allow the same data set code only once per repository
-                    field = table.code
-                    field.requires = s3db.sync_dataset_code_requires + \
+                    from s3 import IS_NOT_ONE_OF
+                    from s3db.sync import sync_dataset_code_requires
+                    table.code.requires = sync_dataset_code_requires + \
                                      [IS_NOT_ONE_OF(db(table.repository_id == r.id),
                                         "sync_dataset.code",
                                         error_message = "Code already registered for this repository",
@@ -228,8 +229,9 @@ def dataset():
 
             if r.interactive:
                 # Require code to be unique among exposed data sets
-                field = table.code
-                field.requires = s3db.sync_dataset_code_requires + \
+                from s3 import IS_NOT_ONE_OF
+                from s3db.sync import sync_dataset_code_requires
+                table.code.requires = sync_dataset_code_requires + \
                                  [IS_NOT_ONE_OF(db(table.repository_id == None),
                                     "sync_dataset.code",
                                     error_message = "Code already in use",
@@ -237,16 +239,14 @@ def dataset():
                                   ]
 
             # Name is required for locally hosted data sets
-            field = table.name
-            field.requires = IS_NOT_EMPTY()
+            table.name.requires = IS_NOT_EMPTY()
 
         if r.record and r.component_name == "task":
 
             table = r.component.table
 
             # Default sync mode PULL
-            field = table.mode
-            field.default = 1
+            table.mode.default = 1
 
             # TODO adapt tooltips to context
 

@@ -1146,10 +1146,10 @@ def person():
                 table.age_group.readable = False
                 table.age_group.writable = False
                 # Assume volunteers only between 12-81
-                dob = table.date_of_birth
-                dob.widget = S3CalendarWidget(past_months = 972,
-                                              future_months = -144,
-                                              )
+                from s3 import S3CalendarWidget
+                table.date_of_birth.widget = S3CalendarWidget(past_months = 972,
+                                                              future_months = -144,
+                                                              )
             return True
         else:
             # Disable non-interactive & import

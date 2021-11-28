@@ -5695,7 +5695,7 @@ def clone(r, record=None, **attr):
     return
 
 # -----------------------------------------------------------------------------
-class cap_AlertProfileWidget(object):
+class cap_AlertProfileWidget:
     """ Custom profile widget builder """
 
     def __init__(self, title, label=None, value=None):
@@ -5807,8 +5807,12 @@ class cap_AlertProfileWidget(object):
             elif headline:
                 value_class = "%s cap-headline" % value_class
 
-            output = DIV(SPAN("%s :: " % current.T(label), _class=label_class),
-                         SPAN(nvalue, _class=value_class),
+            output = DIV(SPAN("%s :: " % current.T(label),
+                              _class = label_class,
+                              ),
+                         SPAN(nvalue,
+                              _class = value_class,
+                              ),
                          )
 
             return output

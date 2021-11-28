@@ -48,6 +48,7 @@ def series():
             _roles_permitted.readable = _roles_permitted.writable = False
             _roles_permitted.default = r.record.roles_permitted
             if r.record.richtext:
+                from s3 import s3_richtext_widget
                 table.body.represent = lambda body: XML(body)
                 table.body.widget = s3_richtext_widget
             else:
@@ -174,6 +175,7 @@ def post():
                     table.date.readable = table.date.writable = False
                     table.expired.readable = table.expired.writable = False
                     # We always want the Rich Text widget here
+                    from s3 import s3_richtext_widget
                     table.body.widget = s3_richtext_widget
                     resource = get_vars.get("resource", None)
                     if resource in ("about", "contact", "help", "index"):
@@ -247,15 +249,15 @@ def post():
                         if module in ("appadmin", "errors", "ocr"):
                             continue
                         modules[module] = _modules[module].get("name_nice")
+                    from s3 import IS_IN_SET_LAZY
                     s3db.cms_post_module.field.requires = \
                         IS_IN_SET_LAZY(lambda: sort_dict_by_values(modules))
 
         return True
     s3.prep = prep
 
-    output = s3_rest_controller(rheader = s3db.cms_rheader,
-                                )
-    return output
+    from s3db.cms import cms_rheader
+    return s3_rest_controller(rheader = cms_rheader)
 
 # -----------------------------------------------------------------------------
 def page():
@@ -552,13 +554,13 @@ def newsfeed():
                 pass
                 # @ToDo: deployment_setting
                 #if not auth.s3_has_role("ADMIN"):
+                #    from s3 import IS_ONE_OF, S3Represent
                 #    represent = S3Represent(lookup = "cms_series",
                 #                            translate = settings.get_L10n_translate_cms_series(),
                 #                            )
-                #    field.requires = IS_ONE_OF(db,
-                #                               "cms_series.id",
+                #    field.requires = IS_ONE_OF(db, "cms_series.id",
                 #                               represent,
-                #                               not_filterby="name",
+                #                               not_filterby = "name",
                 #                               not_filter_opts = ("Alert",),
                 #                               )
 
@@ -576,7 +578,7 @@ def newsfeed():
             field = table.body
             field.label = T("Description")
             # Plain text not Rich
-            from s3.s3widgets import s3_comments_widget
+            from s3 import s3_comments_widget
             field.widget = s3_comments_widget
             #table.comments.readable = table.comments.writable = False
 

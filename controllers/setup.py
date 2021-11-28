@@ -292,6 +292,7 @@ def deployment():
                                        )
 
                 elif cname == "setting":
+                    from s3 import IS_ONE_OF
                     f = s3db.setup_setting.instance_id
                     f.requires = IS_ONE_OF(db, "setup_instance.id",
                                            f.represent,
@@ -301,6 +302,7 @@ def deployment():
                                            )
 
                 elif cname == "monitor_task":
+                    from s3 import IS_ONE_OF
                     f = s3db.setup_monitor_task.server_id
                     f.requires = IS_ONE_OF(db, "setup_server.id",
                                            f.represent,
@@ -567,10 +569,10 @@ def server():
             from s3 import S3SQLCustomForm
             f = s3db.setup_server.host_ip
             f.requires = f.requires.other # IP is required
-            f.comment = DIV(_class="tooltip",
-                            _title="%s|%s" % (T("IP Address"),
-                                              T("Set to 127.0.0.1 for the localhost or set to the IP address of the remote server.")
-                                              )
+            f.comment = DIV(_class = "tooltip",
+                            _title = "%s|%s" % (T("IP Address"),
+                                                T("Set to 127.0.0.1 for the localhost or set to the IP address of the remote server.")
+                                                )
                             )
             crud_form = S3SQLCustomForm(#"deployment_id",
                                         "name",

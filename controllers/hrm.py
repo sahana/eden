@@ -151,10 +151,11 @@ def staff():
                     table.status.writable = table.status.readable = False
 
                     # Assume staff only between 16-81
-                    dob = s3db.pr_person.date_of_birth
-                    dob.widget = S3CalendarWidget(past_months = 972,
-                                                  future_months = -192,
-                                                  )
+                    from s3 import S3CalendarWidget
+                    s3db.pr_person.date_of_birth.widget = \
+                        S3CalendarWidget(past_months = 972,
+                                         future_months = -192,
+                                         )
 
         return True
     s3.prep = prep
@@ -277,10 +278,10 @@ def profile():
                 table.missing.readable = table.missing.writable = False
                 table.age_group.readable = table.age_group.writable = False
                 # Assume volunteers only between 12-81
-                dob = table.date_of_birth
-                dob.widget = S3CalendarWidget(past_months = 972,
-                                              future_months = -144,
-                                              )
+                from s3 import S3CalendarWidget
+                table.date_of_birth.widget = S3CalendarWidget(past_months = 972,
+                                                              future_months = -144,
+                                                              )
                 return True
         else:
             # Disable non-interactive & import
@@ -656,8 +657,9 @@ def competency():
 
     s3.filter = FS("person_id$human_resource.type") == 1
 
-    field = s3db.hrm_competency.person_id
-    field.widget = S3PersonAutocompleteWidget(ajax_filter = "~.human_resource.type=1")
+    from s3 import S3PersonAutocompleteWidget
+    s3db.hrm_competency.person_id.widget = \
+        S3PersonAutocompleteWidget(ajax_filter = "~.human_resource.type=1")
 
     from s3db.hrm import hrm_competency_controller
     return hrm_competency_controller()

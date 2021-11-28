@@ -20,7 +20,6 @@ def index():
     output = {"module_name": module_name}
 
     # Extract summary information
-    from s3 import FS
     define_resource = s3db.resource
 
     # => Number of households
@@ -56,16 +55,18 @@ def index():
     #        follow_ups_pending += 1
     filter = (FS("completed") == False)
     follow_ups_pending = define_resource("po_household_followup",
-                                         filter=filter).count()
+                                         filter = filter,
+                                         ).count()
     filter = (FS("completed") == True)
     follow_ups_completed = define_resource("po_household_followup",
-                                           filter=filter).count()
+                                           filter = filter,
+                                           ).count()
     total_follow_ups = follow_ups_pending + follow_ups_completed
 
     # => Number of attempted visits
     # @ToDo: Support sum() in S3Resource
-    areas = define_resource("po_area").select(fields=["attempted_visits"],
-                                              as_rows=True)
+    areas = define_resource("po_area").select(fields = ["attempted_visits"],
+                                              as_rows = True)
     total_attempted_visits = 0
     for row in areas:
         attempted_visits = row.attempted_visits
@@ -75,11 +76,11 @@ def index():
     # Summary
     output["summary"] = DIV(DIV(LABEL("%s: " % T("Total Households Visited")),
                                 SPAN(total_households),
-                                _class="po-summary-info",
+                                _class = "po-summary-info",
                                 ),
                             DIV(LABEL("%s: " % T("Attempted Visits")),
                                 SPAN(total_attempted_visits),
-                                _class="po-summary-info",
+                                _class = "po-summary-info",
                                 ),
                             DIV(LABEL("%s: " % T("Follow-ups")),
                                 SPAN(total_follow_ups),
@@ -89,24 +90,26 @@ def index():
                                                          T("pending"),
                                                          )
                                      ),
-                                _class="po-summary-info",
+                                _class = "po-summary-info",
                                 ),
                             DIV(LABEL("%s: " % T("Total Referrals Made")),
                                 SPAN(total_referrals),
-                                _class="po-summary-info",
+                                _class = "po-summary-info",
                                 ),
                             DIV(LABEL("%s: " % T("Agencies Involved")),
                                 SPAN(total_agencies),
-                                _class="po-summary-info",
+                                _class = "po-summary-info",
                                 ),
-                            _class="po-summary",
+                            _class = "po-summary",
                             )
 
     # Map of areas covered
     ftable = s3db.gis_layer_feature
     query = (ftable.controller == "po") & \
             (ftable.function == "area")
-    layer = db(query).select(ftable.layer_id, limitby=(0, 1)).first()
+    layer = db(query).select(ftable.layer_id,
+                             limitby = (0, 1),
+                             ).first()
 
     if layer:
         # We can take advantage of per-feature styling
@@ -147,7 +150,7 @@ def area():
             if area_location:
                 gtable = s3db.gis_location
                 record = db(gtable.id == area_location).select(gtable.parent,
-                                                               limitby=(0, 1)
+                                                               limitby = (0, 1),
                                                                ).first()
                 if record:
                     s3db.po_household.location_id.default = record.parent
@@ -164,6 +167,7 @@ def area():
                     atable.on((atable.organisation_id == otable.id) & \
                               (atable.deleted != True)),
                     ]
+            from s3 import IS_ONE_OF
             atable.organisation_id.requires = IS_ONE_OF(
                                     db(query),
                                     "org_organisation.id",
@@ -231,12 +235,13 @@ def household():
                               (atable.deleted != True)),
                     ]
 
+            from s3 import IS_ONE_OF
             table.organisation_id.requires = IS_ONE_OF(
                                     db(query),
                                     "org_organisation.id",
                                     atable.organisation_id.represent,
-                                    left=left,
-                                    error_message=T("Agency is required")
+                                    left = left,
+                                    error_message = T("Agency is required")
                                     )
 
         return True
@@ -338,8 +343,8 @@ def organisation():
                 area_ids = [row.area_id for row in rows]
                 area_ids.append(None)
                 table = r.component.table
-                table.household_id.requires.set_filter(filterby="area_id",
-                                                       filter_opts=area_ids,
+                table.household_id.requires.set_filter(filterby = "area_id",
+                                                       filter_opts = area_ids,
                                                        )
         elif not r.component:
             list_fields = ["name",
@@ -372,7 +377,8 @@ def organisation():
     s3.prep = prep
 
     return s3_rest_controller("org", "organisation",
-                              rheader = s3db.po_rheader)
+                              rheader = s3db.po_rheader,
+                              )
 
 # -----------------------------------------------------------------------------
 def organisation_area():

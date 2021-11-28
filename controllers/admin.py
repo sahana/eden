@@ -713,6 +713,8 @@ def acl():
         for testing purposes, not for production use!
     """
 
+    from s3 import IS_ACL, IS_ONE_OF, S3ACLWidget
+
     table = auth.permission.table
     tablename = table._tablename
     table.group_id.requires = IS_ONE_OF(db, "auth_group.id", "%(role)s")

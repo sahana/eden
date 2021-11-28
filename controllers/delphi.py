@@ -1185,11 +1185,12 @@ def comments():
         sfield.writable = sfield.readable = False
     else:
         sfield.label = T("Related to Solution (optional)")
+        from s3 import IS_ONE_OF
         sfield.requires = IS_EMPTY_OR(
                             IS_ONE_OF(db, "delphi_solution.id",
                                       s3.delphi_solution_represent,
-                                      filterby="problem_id",
-                                      filter_opts=(problem_id,)
+                                      filterby = "problem_id",
+                                      filter_opts = (problem_id,)
                                       ))
 
     # Form to add a new Comment
@@ -1202,14 +1203,16 @@ def comments():
                                                     table.parent,
                                                     table.body,
                                                     table.created_by,
-                                                    table.created_on)
+                                                    table.created_on,
+                                                    )
     else:
         comments = db(field == problem_id).select(table.id,
                                                   table.parent,
                                                   table.solution_id,
                                                   table.body,
                                                   table.created_by,
-                                                  table.created_on)
+                                                  table.created_on,
+                                                  )
 
     output = UL(_id="comments")
     for comment in comments:

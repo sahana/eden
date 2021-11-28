@@ -637,6 +637,7 @@ def location():
             # @ToDo: Don't allow users to add locked Lx levels unless they are MAP_ADMIN
             # @ToDo: Dynamic filtering based on selected level (taking into account strict or not)
             level_keys.pop()
+            from s3 import IS_ONE_OF
             table.parent.requires = IS_ONE_OF(db, "gis_location.id",
                                               s3db.gis_location_represent,
                                               filterby = "level",
@@ -657,13 +658,16 @@ def location():
         # We've been called from the Location Selector widget
         table.addr_street.readable = table.addr_street.writable = False
 
+    from s3 import IS_IN_SET_LAZY
     country = S3ReusableField("country", "string", length=2,
                               label = COUNTRY,
                               requires = IS_EMPTY_OR(IS_IN_SET_LAZY(
                                     lambda: gis.get_countries(key_type="code"),
-                                    zero = SELECT_LOCATION)),
+                                    zero = SELECT_LOCATION,
+                                    )),
                               represent = lambda code: \
-                                    gis.get_country(code, key_type="code") or UNKNOWN_OPT)
+                                    gis.get_country(code, key_type="code") or UNKNOWN_OPT,
+                              )
 
     from s3db.gis import gis_rheader
     output = s3_rest_controller(# CSV column headers, so no T()
@@ -1494,7 +1498,7 @@ def projection():
 def style():
     """ RESTful CRUD controller """
 
-    from s3 import S3Represent
+    from s3 import IS_ONE_OF, S3Represent
 
     field = s3db.gis_style.layer_id
     field.readable = field.writable = True

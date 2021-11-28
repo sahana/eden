@@ -42,18 +42,21 @@ def human_resource():
                     action = s3db.vol_service_record,
                     )
 
-    return s3db.hrm_human_resource_controller()
+    from s3db.hrm import hrm_human_resource_controller
+    return hrm_human_resource_controller()
 
 # -----------------------------------------------------------------------------
 def person():
 
-    return s3db.vol_person_controller()
+    from s3db.vol import vol_person_controller
+    return vol_person_controller()
 
 
 # -----------------------------------------------------------------------------
 def volunteer():
 
-    return s3db.vol_volunteer_controller()
+    from s3db.vol import vol_volunteer_controller
+    return vol_volunteer_controller()
 
 # -----------------------------------------------------------------------------
 def hr_search():
@@ -268,16 +271,18 @@ def training():
     # Filter to just Volunteers
     s3.filter = FS("human_resource.type") == 2
 
-    return s3db.hrm_training_controller()
+    from s3db.hrm import hrm_training_controller
+    return hrm_training_controller()
 
 # -----------------------------------------------------------------------------
 def training_event():
     """ Training Events Controller """
 
-    table = s3db.hrm_training
-    table.person_id.widget = S3PersonAutocompleteWidget(controller="vol")
+    from s3 import S3PersonAutocompleteWidget
+    s3db.hrm_training.person_id.widget = S3PersonAutocompleteWidget(controller = "vol")
 
-    return s3db.hrm_training_event_controller()
+    from s3db.hrm import hrm_training_event_controller
+    return hrm_training_event_controller()
 
 # -----------------------------------------------------------------------------
 def competency():
@@ -286,10 +291,12 @@ def competency():
     # Filter to just Volunteers
     s3.filter = FS("person_id$human_resource.type") == 2
 
-    field = s3db.hrm_competency.person_id
-    field.widget = S3PersonAutocompleteWidget(ajax_filter = "~.human_resource.type=2")
+    from s3 import S3PersonAutocompleteWidget
+    s3db.hrm_competency.person_id.widget = \
+        S3PersonAutocompleteWidget(ajax_filter = "~.human_resource.type=2")
 
-    return s3db.hrm_competency_controller()
+    from s3db.hrm import hrm_competency_controller
+    return hrm_competency_controller()
 
 # -----------------------------------------------------------------------------
 def credential():
@@ -298,7 +305,8 @@ def credential():
     # Filter to just Volunteers
     s3.filter = FS("person_id$human_resource.type") == 2
 
-    return s3db.hrm_credential_controller()
+    from s3db.hrm import hrm_credential_controller
+    return hrm_credential_controller()
 
 # -----------------------------------------------------------------------------
 def experience():
@@ -307,7 +315,8 @@ def experience():
     # Filter to just Volunteers
     s3.filter = FS("person_id$human_resource.type") == 2
 
-    return s3db.hrm_experience_controller()
+    from s3db.hrm import hrm_experience_controller
+    return hrm_experience_controller()
 
 # =============================================================================
 def skill_competencies():
@@ -367,14 +376,14 @@ def activity():
             rows = db(query).select(ltable.activity_type_id)
             activity_types = [row.activity_type_id for row in rows]
 
+            from s3 import IS_ONE_OF
             field = s3db.vol_activity_hours_activity_type.activity_type_id
-            field.requires = \
-               IS_EMPTY_OR(IS_ONE_OF(db,
-                                     "vol_activity_type.id",
-                                     field.represent,
-                                     filterby = "id",
-                                     filter_opts = activity_types,
-                                     ))
+            field.requires = IS_EMPTY_OR(
+                                IS_ONE_OF(db, "vol_activity_type.id",
+                                          field.represent,
+                                          filterby = "id",
+                                          filter_opts = activity_types,
+                                          ))
 
             # Limit the Dates to the same as the Activity
             record = r.record
@@ -386,16 +395,16 @@ def activity():
                 field.readable = field.writable = False
             else:
                 # @ToDo: Check widget options (currently this branch is never taken)
-                s3db.vol_activity_hours.date.requires = IS_UTC_DATE(
-                                                            calendar = "Gregorian",
-                                                            minimum = start_date,
-                                                            maximum = end_date,
-                                                            )
+                from s3 import IS_UTC_DATE
+                s3db.vol_activity_hours.date.requires = IS_UTC_DATE(calendar = "Gregorian",
+                                                                    minimum = start_date,
+                                                                    maximum = end_date,
+                                                                    )
         return True
     s3.prep = prep
 
-    return s3_rest_controller(rheader = s3db.hrm_rheader,
-                              )
+    from s3db.hrm import hrm_rheader
+    return s3_rest_controller(rheader = hrm_rheader)
 
 # -----------------------------------------------------------------------------
 def activity_hours():
@@ -440,10 +449,11 @@ def programme():
         return True
     s3.prep = prep
 
+    from s3db.hrm import hrm_rheader
     return s3_rest_controller("hrm",
                               csv_stylesheet = ("hrm", "programme.xsl"),
                               csv_template = ("hrm", "programme"),
-                              rheader = s3db.hrm_rheader,
+                              rheader = hrm_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -512,7 +522,8 @@ def volunteer_cluster():
 def task():
     """ Tasks controller """
 
-    return s3db.project_task_controller()
+    from s3db.project import project_task_controller
+    return project_task_controller()
 
 # =============================================================================
 def delegation():
@@ -549,6 +560,7 @@ def delegation():
 def compose():
     """ Send message to people/teams """
 
-    return s3db.hrm_compose()
+    from s3db.hrm import hrm_compose
+    return hrm_compose()
 
 # END =========================================================================

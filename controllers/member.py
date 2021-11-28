@@ -57,6 +57,7 @@ def membership():
                 redirect(URL(f="person", vars=vars))
 
             # Assume members under 120
+            from s3 import S3CalendarWidget
             s3db.pr_person.date_of_birth.widget = \
                                         S3CalendarWidget(past_months=1440)
 
@@ -170,6 +171,7 @@ def person():
             if r.method not in ("import", "search_ac", "validate"):
                 if not r.component:
                     # Assume members under 120
+                    from s3 import S3CalendarWidget
                     s3db.pr_person.date_of_birth.widget = \
                                         S3CalendarWidget(past_months=1440)
                 resource = r.resource

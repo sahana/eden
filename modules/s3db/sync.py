@@ -34,9 +34,10 @@ __all__ = ("SyncConfigModel",
            "SyncLogModel",
            "SyncRepositoryModel",
            "SyncDatasetModel",
-           "sync_rheader",
+           "sync_dataset_code_requires",
+           "sync_job_reset",
            "sync_now",
-           "sync_job_reset"
+           "sync_rheader",
            )
 
 from gluon import *
@@ -45,6 +46,16 @@ from gluon.storage import Storage
 from s3dal import Row
 from ..s3 import *
 from s3layouts import S3PopupLink
+
+# ---------------------------------------------------------------------
+# Common requirements for data set codes
+#
+sync_dataset_code_requires = [IS_NOT_EMPTY(),
+                              IS_LENGTH(64),
+                              IS_MATCH(r"^[A-Za-z][A-Za-z0-9_\-\.]*$",
+                                       error_message = "Code must start with a letter, and only contain ASCII letters, digits, . (dot), _ (underscore), or - (dash).",
+                                       ),
+                              ]
 
 # =============================================================================
 class SyncConfigModel(S3Model):
@@ -582,16 +593,6 @@ class SyncDatasetModel(S3Model):
         configure = self.configure
 
         # ---------------------------------------------------------------------
-        # Common requirements for data set codes
-        #
-        code_requires = [IS_NOT_EMPTY(),
-                         IS_LENGTH(64),
-                         IS_MATCH(r"^[A-Za-z][A-Za-z0-9_\-\.]*$",
-                                  error_message = "Code must start with a letter, and only contain ASCII letters, digits, . (dot), _ (underscore), or - (dash).",
-                                  ),
-                         ]
-
-        # ---------------------------------------------------------------------
         # Public Data Set (=a collection of sync_tasks)
         #
         tablename = "sync_dataset"
@@ -603,7 +604,7 @@ class SyncDatasetModel(S3Model):
                                              ),
                      Field("code", length=64,
                            label = T("Code"),
-                           requires = code_requires,
+                           requires = sync_dataset_code_requires,
                            ),
                      Field("name",
                            label = T("Name"),
@@ -728,7 +729,6 @@ class SyncDatasetModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {"sync_dataset_id": dataset_id,
-                "sync_dataset_code_requires": code_requires,
                 }
 
     # -------------------------------------------------------------------------

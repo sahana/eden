@@ -38,7 +38,7 @@ def group():
 
             table = s3db.pr_group_membership
             f = table.person_id
-            f.widget = S3AddPersonWidget(controller="stdm")
+            f.widget = S3AddPersonWidget(controller = "stdm")
 
             if auth.s3_has_role("INFORMAL_SETTLMENT"):
                 f = table.role_id

@@ -195,6 +195,7 @@ def person():
 
                 # Limit selectable need types to the case root org
                 if org_specific_needs and root_org:
+                    from s3 import IS_ONE_OF
                     field = atable.need_id
                     field.requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "br_need.id",
@@ -210,6 +211,7 @@ def person():
                     if settings.get_br_assistance_themes() and root_org:
                         # Limit selectable themes to the case root org
                         field = mtable.theme_ids
+                        from s3 import IS_ONE_OF
                         from s3db.br import br_org_assistance_themes
                         dbset = br_org_assistance_themes(root_org)
                         field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "br_assistance_theme.id",
@@ -254,6 +256,7 @@ def person():
                 if not root_org:
                     root_org = auth.root_org()
                 if root_org:
+                    from s3 import IS_ONE_OF
                     from s3db.br import br_org_assistance_themes
                     dbset = br_org_assistance_themes(root_org)
                     field = mtable.theme_ids
@@ -316,6 +319,7 @@ def person():
                 # Make gender mandatory, remove "unknown"
                 options = dict(gender_opts)
                 del options[1] # Remove "unknown"
+                from s3 import IS_PERSON_GENDER
                 field.requires = IS_PERSON_GENDER(options, sort=True)
 
             # Configure case.organisation_id
@@ -612,8 +616,8 @@ def group_membership():
                 group_ids = set()
 
             # Add-Person widget to use BR controller and expose pe_label
+            from s3 import IS_ONE_OF, S3AddPersonWidget
             from s3db.pr import pr_PersonRepresent
-            from s3 import S3AddPersonWidget
             field = table.person_id
             field.represent = pr_PersonRepresent(show_link = True)
             field.widget = S3AddPersonWidget(controller = "br",
@@ -858,6 +862,7 @@ def document():
         else:
             # Multiple doc_ids => default to case, make selectable
             field.readable = field.writable = True
+            from s3 import IS_ONE_OF
             field.requires = IS_ONE_OF(db, "doc_entity.doc_id",
                                        field.represent,
                                        filterby = "doc_id",
@@ -1176,7 +1181,7 @@ def activities():
                                                                   ),
                                                       ))
 
-            resource.configure(filter_widgets=filter_widgets)
+            resource.configure(filter_widgets = filter_widgets)
 
         # Make read-only
         resource.configure(insertable = False,
@@ -1309,6 +1314,7 @@ def assistance_measure():
                 if not root_org:
                     root_org = auth.root_org()
                 if root_org:
+                    from s3 import IS_ONE_OF
                     dbset = s3db.br_org_assistance_themes(root_org)
                     field = table.theme_ids
                     field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "br_assistance_theme.id",

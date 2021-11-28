@@ -143,6 +143,7 @@ def item():
     # Limit the Categories to just those with vehicles in
     # - make category mandatory so that filter works
     field = s3db.supply_item.item_category_id
+    from s3 import IS_ONE_OF
     field.requires = IS_ONE_OF(db, "supply_item_category.id",
                                s3db.supply_item_category_represent,
                                sort = True,

@@ -206,7 +206,7 @@ def incident():
                     f.default = r.record.event_id
                     f.readable = f.writable = False
                     # DateTime
-                    from s3 import S3DateTime
+                    from s3 import IS_UTC_DATETIME, S3DateTime, S3CalendarWidget
                     datetime_represent = S3DateTime.datetime_represent
                     for f in (ltable.start_date, ltable.end_date):
                         f.requires = IS_EMPTY_OR(IS_UTC_DATETIME())

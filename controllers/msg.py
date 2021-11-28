@@ -1868,7 +1868,7 @@ def parser():
             import inspect
             import sys
 
-            from s3 import S3Represent
+            from s3 import IS_ONE_OF, S3Represent
 
             template = settings.get_msg_parser()
             module_name = "applications.%s.modules.templates.%s.parser" % \

@@ -224,8 +224,8 @@ def group():
                 settings.pr.request_dob = False
                 settings.pr.request_gender = False
 
-                field = ctable.person_id
-                field.widget = S3AddPersonWidget(controller = "deploy")
+                from s3 import S3AddPersonWidget
+                ctable.person_id.widget = S3AddPersonWidget(controller = "deploy")
 
                 # Configure list_fields for this context
                 list_fields = ["person_id",

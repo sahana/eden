@@ -98,6 +98,7 @@ def shelter():
                 if component_name == "shelter_registration":
                     if settings.get_cr_shelter_housing_unit_management():
                         # Filter housing units to units of this shelter
+                        from s3 import IS_ONE_OF
                         field = s3db.cr_shelter_registration.shelter_unit_id
                         dbset = db(s3db.cr_shelter_unit.site_id == r.record.site_id)
                         field.requires = IS_EMPTY_OR(IS_ONE_OF(dbset, "cr_shelter_unit.id",

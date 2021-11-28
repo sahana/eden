@@ -127,11 +127,8 @@ current.calendar = S3Calendar()
 # CRUD
 s3.crud = Storage()
 
-# Frequently used S3 utilities, validators and widgets,
-# imported here into the global namespace for use by controllers
+# Frequently used S3 utilities imported into the global namespace for use by controllers
 from s3 import FS, s3_action_buttons, s3_redirect_default, s3_str
-from s3.s3validators import *
-from s3.s3widgets import *
 
 # GIS Module
 current.gis = gis = S3GIS()
