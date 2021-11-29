@@ -844,6 +844,7 @@ def config(settings):
     # Calculate Warehouse Free Capacity
     settings.inv.warehouse_free_capacity_calculated = True
     settings.inv.req_project = True
+    settings.inv.req_reserve_items = True
     # Use structured Bins
     settings.inv.bin_site_layout = True
     settings.inv.recv_ref_writable = True
@@ -6572,13 +6573,15 @@ Thank you"""
         if form.record:
             # Update form
             form_vars_get = form.vars.get
-            if form_vars_get("site_id") != form.record.site_id:
+            site_id = form_vars_get("site_id")
+            if site_id and site_id != form.record.site_id:
                 # Item has been Requested from a specific site so this needs to be affiliated to the realm
                 db = current.db
                 table = db.inv_req
                 record = db(table.id == form_vars_get("req_id")).select(table.id,
                                                                         table.site_id,
-                                                                        )
+                                                                        limitby = (0, 1),
+                                                                        ).first()
                 # Update affiliations
                 current.auth.get_realm_entity(table, record)
 

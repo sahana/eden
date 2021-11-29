@@ -11,6 +11,7 @@ $(document).ready(function() {
         error,
         inlineComponent = $('#sub-defaultbin'),
         editBinBtnOK = $('#rdy-defaultbin-0'),
+        message,
         newBinQuantityField = $('#sub_defaultbin_defaultbin_i_quantity_edit_none'),
         oldBinQuantityField = $('#sub_defaultbin_defaultbin_i_quantity_edit_0'),
         totalQuantityField = $('#inv_adj_item_new_quantity'),

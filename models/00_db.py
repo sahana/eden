@@ -83,13 +83,14 @@ current.messages = messages = Messages(T)
 
 current.ERROR = ERROR = Messages(T)
 
-# Import the S3 Framework & instantiate core classes
+# Import the S3 Framework
 import s3 as s3base # Shortcut for use, primarily, from views
-from s3 import AuthS3, S3Audit, S3Calendar, S3GIS, S3Msg, S3Sync, S3XML
 
 # Set up logger (before any module attempts to use it!)
 import s3log
 s3log.S3Log.setup()
+
+from s3 import AuthS3, S3Audit, S3Calendar, S3GIS, S3Msg, S3Sync, S3XML
 
 # AAA
 current.auth = auth = AuthS3()
@@ -127,9 +128,6 @@ current.calendar = S3Calendar()
 # CRUD
 s3.crud = Storage()
 
-# Frequently used S3 utilities imported into the global namespace for use by controllers
-from s3 import FS, s3_action_buttons, s3_redirect_default, s3_str
-
 # GIS Module
 current.gis = gis = S3GIS()
 
@@ -141,6 +139,9 @@ current.msg = msg = S3Msg()
 
 # Sync
 current.sync = sync = S3Sync()
+
+# Frequently used S3 utilities imported into the global namespace for use by controllers
+from s3 import FS, s3_action_buttons, s3_redirect_default, s3_str
 
 # -----------------------------------------------------------------------------
 def s3_clear_session():
@@ -155,7 +156,10 @@ def s3_clear_session():
 
     if "s3" in session:
         s3 = session.s3
-        opts = ["hrm", "report_options", "deduplicate"]
+        opts = ("hrm",
+                "report_options",
+                "deduplicate",
+                )
         for o in opts:
             if o in s3:
                 del s3[o]

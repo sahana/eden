@@ -5015,6 +5015,13 @@ class S3Config(Storage):
         """
         return self.inv.get("requester_to_site", False)
 
+    def get_inv_req_filter_by_item_category(self):
+        """
+            Provide a Filter Widget to allow Requisitions to be filtered by Item Category
+            - which means maintaining a lookup list in the inv_req_item_category table
+        """
+        return self.inv.get("req_filter_by_item_category", False)
+
     def get_inv_req_date_writable(self):
         """ Whether Inventory Requisition Date should be manually editable """
         return self.inv.get("req_date_writable", True)

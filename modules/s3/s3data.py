@@ -421,7 +421,7 @@ class S3DataTable:
             append_icon = icons.append
             for fmt in export_formats:
 
-                # CSS classes and on-hover title
+                # CSS classes and 
                 title = None
                 if isinstance(fmt, tuple):
                     if len(fmt) >= 3:
@@ -430,16 +430,6 @@ class S3DataTable:
                 else:
                     css = ""
 
-                class_ = "dt-export export_%s" % fmt
-                if css:
-                    class_ = "%s %s" % (class_, css)
-
-                if title is None:
-                    if fmt == "map":
-                        title = T("Show on Map")
-                    else:
-                        title = EXPORT % {"format": fmt.upper()}
-
                 # Export format URL
                 if fmt in default_formats:
                     url = formats.get(fmt, default_url)
@@ -447,6 +437,17 @@ class S3DataTable:
                     url = formats.get(fmt)
                 if not url:
                     continue
+
+                class_ = "dt-export export_%s" % fmt
+                if css:
+                    class_ = "%s %s" % (class_, css)
+
+                # on-hover title
+                if title is None:
+                    if fmt == "map":
+                        title = T("Show on Map")
+                    else:
+                        title = EXPORT % {"format": fmt.upper()}
 
                 append_icon(DIV(_class = class_,
                                 _title = title,

@@ -40,6 +40,8 @@ __all__ = ("WarehouseModel",
            "InventoryRequisitionModel",
            "InventoryRequisitionApproverModel",
            "InventoryRequisitionItemModel",
+           "InventoryRequisitionItemInventoryModel",
+           "InventoryRequisitionItemCategoryModel",
            "InventoryRequisitionProjectModel",
            "InventoryRequisitionRecurringModel",
            "InventoryRequisitionShipmentModel",
@@ -76,6 +78,7 @@ __all__ = ("WarehouseModel",
            #"inv_req_is_approver",
            "inv_req_item_inv_item",
            "inv_req_item_order",
+           #"inv_req_item_postprocess",
            #"inv_req_marker_fn",
            "inv_req_match",
            "inv_req_rheader",
@@ -2193,7 +2196,7 @@ class InventoryKittingModel(S3Model):
         query = (iitable.site_id == site_id) & \
                 (iitable.item_id.belongs(item_ids)) & \
                 (iitable.quantity > 0) & \
-                ((ii_expiry_field >= current.request.now) | ((ii_expiry_field == None))) & \
+                ((ii_expiry_field >= current.request.utcnow) | ((ii_expiry_field == None))) & \
                 (iitable.status == 0)
 
         wh_items = db(query).select(iitable.item_id,
@@ -2296,7 +2299,7 @@ class InventoryKittingModel(S3Model):
         query = (iitable.site_id == site_id) & \
                 (iitable.item_id.belongs(item_ids)) & \
                 (iitable.quantity > 0) & \
-                ((ii_expiry_field >= current.request.now) | ((ii_expiry_field == None))) & \
+                ((ii_expiry_field >= current.request.utcnow) | ((ii_expiry_field == None))) & \
                 (iitable.status == 0)
 
         wh_items = db(query).select(ii_id_field,
@@ -3585,11 +3588,12 @@ class InventoryRequisitionModel(S3Model):
                                                   options = req_status_opts,
                                                   cols = 3,
                                                   ))
-        filter_widgets.insert(position + 2,
-                              S3OptionsFilter("req_item.item_id$item_category_id",
-                                              label = T("Item Category"),
-                                              hidden = True,
-                                              ))
+        if settings.get_inv_req_filter_by_item_category():
+            filter_widgets.insert(position + 2,
+                                  S3OptionsFilter("req_item.item_id$item_category_id",
+                                                  label = T("Item Category"),
+                                                  hidden = True,
+                                                  ))
         if use_commit:
             filter_widgets.insert(position,
                                   S3OptionsFilter("commit_status",
@@ -4037,7 +4041,6 @@ class InventoryRequisitionItemModel(S3Model):
     names = ("inv_req_item",
              "inv_req_item_id",
              "inv_req_item_represent",
-             "inv_req_item_category",
              )
 
     def model(self):
@@ -4051,86 +4054,80 @@ class InventoryRequisitionItemModel(S3Model):
         show_qty_transit = settings.get_inv_req_show_quantity_transit()
         track_pack_values = settings.get_inv_req_pack_values()
 
-        define_table = self.define_table
-        req_id = self.inv_req_id
+        float_represent = IS_FLOAT_AMOUNT.represent
 
         # -----------------------------------------------------------------
         # Request Items
         #
         tablename = "inv_req_item"
-        define_table(tablename,
-                     req_id(empty = False),
-                     self.supply_item_entity_id(),
-                     self.supply_item_id(),
-                     self.supply_item_pack_id(),
-                     Field("quantity", "double", notnull=True,
-                           label = T("Quantity"),
-                           represent = lambda v: \
-                                IS_FLOAT_AMOUNT.represent(v, precision = 2),
-                           requires = IS_FLOAT_AMOUNT(minimum = 1.0),
-                           ),
-                     Field("pack_value", "double",
-                           label = T("Estimated Value per Pack"),
-                           readable = track_pack_values,
-                           writable = track_pack_values,
-                           ),
-                     # @ToDo: Move this into a Currency Widget for the pack_value field
-                     s3_currency(readable = track_pack_values,
-                                 writable = track_pack_values,
-                                 ),
-                     # Requested from:
-                     self.org_site_id(),
-                     Field("quantity_commit", "double",
-                           default = 0,
-                           label = T("Quantity Committed"),
-                           represent = self.req_qnty_commit_represent,
-                           requires = IS_FLOAT_AMOUNT(minimum = 0.0),
-                           readable = use_commit,
-                           writable = use_commit and quantities_writable,
-                           ),
-                     Field("quantity_reserved", "double",
-                           default = 0,
-                           label = T("Quantity Reserved"),
-                           represent = IS_FLOAT_AMOUNT.represent,
-                           requires = IS_FLOAT_AMOUNT(minimum = 0.0),
-                           # Add to crud_form in controller for settings.get_inv_req_reserve_items()
-                           readable = False,
-                           writable = False,
-                           ),
-                     self.org_site_layout_id(label = T("Bin"),
-                                             # Add to crud_form in controller for settings.get_inv_req_reserve_items()
-                                             readable = False,
-                                             writable = False,
-                                             ),
-                     Field("quantity_transit", "double",
-                           default = 0,
-                           # FB: I think this is Qty Shipped not remaining in transit
-                           # @ToDo: Distinguish between:
-                           #        items lost in transit (shipped but not recvd and unlikely to ever be, so still required)
-                           #        items still in transit (shipped but not yet recvd but still expected, so no longer need sending)
-                           #label = T("Quantity Shipped"),
-                           label = T("Quantity in Transit"),
-                           represent = self.req_qnty_transit_represent,
-                           requires = IS_FLOAT_AMOUNT(minimum = 0.0),
-                           readable = show_qty_transit,
-                           writable = show_qty_transit and quantities_writable,
-                           ),
-                     Field("quantity_fulfil", "double",
-                           label = T("Quantity Fulfilled"),
-                           represent = self.req_qnty_fulfil_represent,
-                           default = 0,
-                           requires = IS_FLOAT_AMOUNT(minimum = 0.0),
-                           writable = quantities_writable,
-                           ),
-                     Field.Method("pack_quantity",
-                                  SupplyItemPackQuantity(tablename)
-                                  ),
-                     s3_comments(),
-                     *s3_meta_fields(),
-                     on_define = lambda table: \
-                        [table.site_id.set_attributes(label = T("Requested From")),
-                         ]
-                     )
+        self.define_table(tablename,
+                          self.inv_req_id(empty = False),
+                          self.supply_item_entity_id(),
+                          self.supply_item_id(),
+                          self.supply_item_pack_id(),
+                          Field("quantity", "double", notnull=True,
+                                label = T("Quantity"),
+                                represent = lambda v: \
+                                    float_represent(v, precision = 2),
+                                requires = IS_FLOAT_AMOUNT(minimum = 1.0),
+                                ),
+                          Field("pack_value", "double",
+                                label = T("Estimated Value per Pack"),
+                                readable = track_pack_values,
+                                writable = track_pack_values,
+                                ),
+                          # @ToDo: Move this into a Currency Widget for the pack_value field
+                          s3_currency(readable = track_pack_values,
+                                      writable = track_pack_values,
+                                      ),
+                          # Requested from:
+                          self.org_site_id(),
+                          Field("quantity_commit", "double",
+                                default = 0,
+                                label = T("Quantity Committed"),
+                                represent = self.req_qnty_commit_represent,
+                                requires = IS_FLOAT_AMOUNT(minimum = 0.0),
+                                readable = use_commit,
+                                writable = use_commit and quantities_writable,
+                                ),
+                          Field("quantity_reserved", "double",
+                                default = 0,
+                                label = T("Quantity Reserved"),
+                                represent = float_represent,
+                                requires = IS_FLOAT_AMOUNT(minimum = 0.0),
+                                # Gets enabled in the controller when settings.get_inv_req_reserve_items() and the Item has been Requested From
+                                readable = False,
+                                writable = False,
+                                ),
+                          Field("quantity_transit", "double",
+                                default = 0,
+                                # FB: I think this is Qty Shipped not remaining in transit
+                                # @ToDo: Distinguish between:
+                                #        items lost in transit (shipped but not recvd and unlikely to ever be, so still required)
+                                #        items still in transit (shipped but not yet recvd but still expected, so no longer need sending)
+                                #label = T("Quantity Shipped"),
+                                label = T("Quantity in Transit"),
+                                represent = self.req_qnty_transit_represent,
+                                requires = IS_FLOAT_AMOUNT(minimum = 0.0),
+                                readable = show_qty_transit,
+                                writable = show_qty_transit and quantities_writable,
+                                ),
+                          Field("quantity_fulfil", "double",
+                                label = T("Quantity Fulfilled"),
+                                represent = self.req_qnty_fulfil_represent,
+                                default = 0,
+                                requires = IS_FLOAT_AMOUNT(minimum = 0.0),
+                                writable = quantities_writable,
+                                ),
+                          Field.Method("pack_quantity",
+                                       SupplyItemPackQuantity(tablename)
+                                       ),
+                          s3_comments(),
+                          *s3_meta_fields(),
+                          on_define = lambda table: \
+                            [table.site_id.set_attributes(label = T("Requested From")),
+                             ]
+                          )
 
         # CRUD strings
         current.response.s3.crud_strings[tablename] = Storage(
@@ -4212,6 +4209,11 @@ $.filterOptionsS3({
                              ),
             ]
 
+        if settings.get_inv_req_filter_by_item_category():
+            ondelete = self.req_item_ondelete
+        else:
+            ondelete = None
+
         self.configure(tablename,
                        create_next = create_next,
                        deduplicate = self.req_item_duplicate,
@@ -4220,7 +4222,7 @@ $.filterOptionsS3({
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        onaccept = self.req_item_onaccept,
-                       ondelete = self.req_item_ondelete,
+                       ondelete = ondelete,
                        # @ToDo: default realm to that of the req_id
                        #realm_entity = self.req_item_realm_entity,
                        super_entity = "supply_item_entity",
@@ -4228,19 +4230,8 @@ $.filterOptionsS3({
 
         self.add_components(tablename,
                             inv_order_item = "req_item_id",
+                            inv_req_item_inv = "req_item_id",
                             )
-
-        # ---------------------------------------------------------------------
-        # Req <> Item Category link table
-        #
-        # - used to provide a search filter
-        # - populated onaccept/ondelete of req_item
-        #
-        tablename = "inv_req_item_category"
-        define_table(tablename,
-                     req_id(empty = False),
-                     self.supply_item_category_id(),
-                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -4291,23 +4282,24 @@ $.filterOptionsS3({
         # Update Request Status
         inv_req_update_status(req_id)
 
-        # Update req_item_category link table
-        item_id = form_vars.get("item_id")
-        citable = db.supply_catalog_item
-        cats = db(citable.item_id == item_id).select(citable.item_category_id)
-        rictable = db.inv_req_item_category
-        for cat in cats:
-            item_category_id = cat.item_category_id
-            query = (rictable.deleted == False) & \
-                    (rictable.req_id == req_id) & \
-                    (rictable.item_category_id == item_category_id)
-            exists = db(query).select(rictable.id,
-                                      limitby = (0, 1),
-                                      )
-            if not exists:
-                rictable.insert(req_id = req_id,
-                                item_category_id = item_category_id,
-                                )
+        if current.deployment_settings.get_inv_req_filter_by_item_category():
+            # Update inv_req_item_category link table
+            item_id = form_vars.get("item_id")
+            citable = db.supply_catalog_item
+            cats = db(citable.item_id == item_id).select(citable.item_category_id)
+            rictable = current.s3db.inv_req_item_category
+            for cat in cats:
+                item_category_id = cat.item_category_id
+                query = (rictable.deleted == False) & \
+                        (rictable.req_id == req_id) & \
+                        (rictable.item_category_id == item_category_id)
+                exists = db(query).select(rictable.id,
+                                          limitby = (0, 1),
+                                          )
+                if not exists:
+                    rictable.insert(req_id = req_id,
+                                    item_category_id = item_category_id,
+                                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4317,7 +4309,7 @@ $.filterOptionsS3({
                 - delete item category links from the requisition when the last
                   item of a category is removed from the requisition
 
-            FIXME shouldn't this also update the committed/in-transit/fulfilled
+            TODO: also update the committed/in-transit/fulfilled
                   status of the requisition?
         """
 
@@ -4457,6 +4449,75 @@ $.filterOptionsS3({
         if duplicate:
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
+
+# =============================================================================
+class InventoryRequisitionItemInventoryModel(S3Model):
+    """
+        Make Inventory Reservations for Request Items
+        - used when settings.get_inv_req_reserve_items() == True
+    """
+
+    names = ("inv_req_item_inv",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        inv_item_represent = inv_InvItemRepresent(show_bin = False)
+
+        # -----------------------------------------------------------------
+        # Request Items <> Inventory for Reserved Items
+        #
+        tablename = "inv_req_item_inv"
+        self.define_table(tablename,
+                          self.inv_req_item_id(empty = False),
+                          self.inv_item_id(empty = False,
+                                           represent = inv_item_represent,
+                                           requires = IS_ONE_OF(db, "inv_inv_item.id",
+                                                                inv_item_represent,
+                                                                orderby = "inv_inv_item.id",
+                                                                sort = True,
+                                                                ),
+                                           ),
+                          self.org_site_layout_id(label = T("Bin"),
+                                                  ),
+                          Field("quantity", "double",
+                                default = 0,
+                                label = T("Quantity"),
+                                represent = IS_FLOAT_AMOUNT.represent,
+                                requires = IS_FLOAT_AMOUNT(minimum = 0.0),
+                                ),
+                          *s3_meta_fields())
+
+        return {}
+
+# =============================================================================
+class InventoryRequisitionItemCategoryModel(S3Model):
+    """
+        Link Inventory Requisitions to Item Categories to be able to Filter Requisitions
+        - used when settings.get_inv_req_filter_by_item_category() == True
+    """
+
+    names = ("inv_req_item_category",
+             )
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Req <> Item Category link table
+        #
+        # - used to provide a search filter
+        # - populated onaccept/ondelete of req_item
+        #
+        tablename = "inv_req_item_category"
+        self.define_table(tablename,
+                          self.inv_req_id(empty = False),
+                          self.supply_item_category_id(),
+                          *s3_meta_fields())
+
+        return {}
 
 # =============================================================================
 class InventoryRequisitionProjectModel(S3Model):
@@ -10397,7 +10458,7 @@ def inv_req_copy_all(r, **attr):
     s3db = current.s3db
     table = s3db.inv_req
     settings = current.deployment_settings
-    now = current.request.now
+    now = current.request.utcnow
 
     record = r.record
     req_id = record.id
@@ -10552,7 +10613,8 @@ def inv_req_controller(template = False):
     db = current.db
     s3db = current.s3db
     auth = current.auth
-    s3 = current.response.s3
+    response = current.response
+    s3 = response.s3
     settings = current.deployment_settings
 
     if not template:
@@ -10616,16 +10678,11 @@ def inv_req_controller(template = False):
                    )
 
     def prep(r):
-
         table = r.table
-
         record = r.record
-        use_workflow = settings.get_inv_req_workflow()
-        workflow_status = record.workflow_status if record else None
 
         if r.interactive:
             get_vars = r.get_vars
-
             if "req.site_id" in get_vars:
                 # Called from 'Make new request' button on [siteinstance]/req page
                 table.site_id.default = get_vars.get("req.site_id")
@@ -10667,6 +10724,7 @@ def inv_req_controller(template = False):
                     if r.method != "from":
                         ctable = r.component.table
                         ctable.site_id.writable = ctable.site_id.readable = False
+
                         if not settings.get_inv_req_item_quantities_writable():
                             ctable.quantity_commit.readable = \
                             ctable.quantity_commit.writable = False
@@ -10674,13 +10732,194 @@ def inv_req_controller(template = False):
                             ctable.quantity_transit.writable = False
                             ctable.quantity_fulfil.readable = \
                             ctable.quantity_fulfil.writable = False
-                        if use_workflow and workflow_status in (3, 4, 5): # Approved, Completed, Cancelled
+
+                        if settings.get_inv_req_workflow() and \
+                           record.workflow_status in (3, 4, 5): # Approved, Completed, Cancelled
                             # Lock all fields
                             s3db.configure("inv_req_item",
                                            deletable = False,
                                            editable = False,
                                            insertable = False,
                                            )
+
+                        if settings.get_inv_req_reserve_items():
+                            req_item_id = r.component_id
+                            if req_item_id:
+                                req_item = db(ctable.id == req_item_id).select(ctable.site_id,
+                                                                               ctable.quantity,
+                                                                               ctable.item_id,
+                                                                               ctable.item_pack_id,
+                                                                               limitby = (0, 1),
+                                                                               ).first()
+                                site_id = req_item.site_id
+                                if site_id:
+                                    # Item has been allocated to come from a Site
+                                    # Don't allow basic fields to be edited
+                                    ctable.item_id.writable = False
+                                    ctable.item_id.comment = None
+                                    ctable.item_pack_id.writable = False
+                                    ctable.item_pack_id.comment = None
+                                    ctable.quantity.writable = False
+
+                                    # Limit to Bins from this site with Inventory
+                                    iitable = s3db.inv_inv_item
+                                    ibtable = s3db.inv_inv_item_bin
+                                    query = (iitable.site_id == site_id) & \
+                                            (iitable.item_id == req_item.item_id) & \
+                                            (iitable.quantity > 0) & \
+                                            ((iitable.expiry_date >= r.utcnow) | ((iitable.expiry_date == None))) & \
+                                            (iitable.status == 0)
+                                    left = ibtable.on(ibtable.inv_item_id == iitable.id)
+                                    inv_rows = db(query).select(iitable.id,
+                                                                iitable.quantity,
+                                                                iitable.item_pack_id,
+                                                                ibtable.layout_id,
+                                                                ibtable.quantity,
+                                                                left = left,
+                                                                )
+                                    if inv_rows:
+                                        # Allow Items to be Reserved
+                                        ctable.quantity_reserved.readable = \
+                                        ctable.quantity_reserved.writable = True
+
+                                        layout_ids = []
+                                        req_pack_id = req_item.item_pack_id
+                                        pack_ids = [req_pack_id]
+                                        # Sort by inv_item_id
+                                        inv_items = {}
+                                        for row in inv_rows:
+                                            inv_item = row.inv_inv_item
+                                            inv_item_id = inv_item.id
+                                            if inv_item_id not in inv_items:
+                                                pack_id = inv_item.item_pack_id
+                                                if pack_id not in pack_ids:
+                                                    pack_ids.append(pack_id)
+                                                inv_items[inv_item_id] = {"q": inv_item.quantity,
+                                                                          "p": pack_id,
+                                                                          "b": [],
+                                                                          }
+                                            item_bin = row.inv_inv_item_bin
+                                            layout_id = item_bin.layout_id
+                                            if layout_id:
+                                                inv_items[inv_item_id]["b"].append({"l": layout_id,
+                                                                                    "q": item_bin.quantity,
+                                                                                    })
+                                                                          
+                                        stock_quantity = 0
+
+                                        # Lookup Packs
+                                        ptable = s3db.supply_item_pack
+                                        len_pack_ids = len(pack_ids)
+                                        if len_pack_ids == 1:
+                                            query = (ptable.id == pack_ids[0])
+                                            fields = [ptable.name]
+                                        else:
+                                            query = (ptable.id.belongs(pack_ids))
+                                            fields = [ptable.id,
+                                                      ptable.name,
+                                                      ptable.quantity,
+                                                      ]
+                                        packs = db(query).select(*fields,
+                                                                 limitby = (0, len_pack_ids),
+                                                                 )
+                                        if len_pack_ids == 1:
+                                            # No need to adjust Inventory Quantity to match Req Quantity
+                                            pack_name = packs.first().name
+                                            for inv_item_id in inv_items:
+                                                inv_item = inv_items[inv_item_id]
+                                                stock_quantity += inv_item["q"]
+                                        else:
+                                            # Adjust Inventory Quantity to match Req Quantity
+                                            packs = {p.id: {n: p.name,
+                                                            q: p.quantity,
+                                                            } for p in packs}
+                                            req_pack = packs[req_pack_id]
+                                            pack_name = req_pack["n"]
+                                            req_pack_quantity = req_pack["q"]
+                                            for inv_item_id in inv_items:
+                                                inv_item = inv_items[inv_item_id]
+                                                inv_pack_id = inv_item["p"]
+                                                if inv_pack_id == req_pack_id:
+                                                    stock_quantity += inv_item["q"]
+                                                else:
+                                                    inv_pack_quantity = packs[inv_pack_id]["q"]
+                                                    inv_quantity = inv_item["q"]
+                                                    inv_quantity = inv_quantity * inv_pack_quantity / req_pack_quantity
+                                                    inv_item["q"] = inv_quantity
+                                                    stock_quantity += inv_quantity
+                                                    for inv_bin in inv_item["b"]:
+                                                        bin_quantity = inv_bin["q"]
+                                                        bin_quantity = bin_quantity * inv_pack_quantity / req_pack_quantity
+                                                        inv_bin["q"] = bin_quantity
+
+                                        rbtable = s3db.inv_req_item_inv
+                                        req_bins = db(rbtable.req_item_id == req_item_id).select(rbtable.inv_item_id,
+                                                                                                 rbtable.layout_id,
+                                                                                                 rbtable.quantity,
+                                                                                                 )
+                                        binned_quantity = sum([row.quantity for row in req_bins])
+
+                                        inv_fields = ["inv_item_id",
+                                                      "quantity",
+                                                      ]
+
+                                        layout_ids = set([row["inv_inv_item_bin.layout_id"] for row in inv_rows] + [row.layout_id for row in req_bins])
+                                        layout_ids_len = len(layout_ids)
+                                        if layout_ids_len:
+                                            # Add/Filter Bin field
+                                            inv_fields.insert(1, "layout_id")
+
+                                            field = rbtable.layout_id
+                                            requires = field.requires
+                                            if hasattr(requires, "other"):
+                                                requires.other.set_filter(filterby = "id",
+                                                                          filter_opts = layout_ids,
+                                                                          )
+                                            else:
+                                                requires.set_filter(filterby = "id",
+                                                                    filter_opts = layout_ids,
+                                                                    )
+                                            if layout_ids_len == 1:
+                                                field.widget.filter = (s3db.org_site_layout.id == list(layout_ids)[0])
+                                            else:
+                                                field.widget.filter = (s3db.org_site_layout.id.belongs(layout_ids))
+
+                                        rbtable.inv_item_id.requires.set_filter(filterby = "id",
+                                                                                filter_opts = inv_items,
+                                                                                )
+
+                                        crud_form = S3SQLCustomForm("item_id",
+                                                                    "item_pack_id",
+                                                                    "quantity",
+                                                                    "quantity_reserved",
+                                                                    "site_id",
+                                                                    S3SQLInlineComponent("req_item_inv",
+                                                                                         label = T("Assign from Inventory"),
+                                                                                         fields = inv_fields,
+                                                                                         ),
+                                                                    "comments",
+                                                                    # Remove Reserved Items from Stock
+                                                                    postprocess = inv_req_item_postprocess,
+                                                                    )
+                                        s3db.configure("inv_req_item",
+                                                       crud_form = crud_form,
+                                                       )
+
+                                        # @ToDo:
+                                        # Add to list_fields
+
+                                        # Pass data to s3.inv_req_item.js
+                                        # - show stock quantity
+                                        # - set inv_item_id ***
+                                        req_data = {"rq": req_item.quantity,
+                                                    "sq": stock_quantity,
+                                                    "pn": pack_name,
+                                                    }
+                                        if binned_quantity:
+                                            req_data["bq"] = binned_quantity
+                                        s3.js_global.append('''S3.supply.reqData=%s''' % json.dumps(req_data, separators=SEPARATORS))
+                                    else:
+                                        response.error = T("The Site Requested From has no Inventory available of this Item")
 
                 elif r.component.alias == "job":
                     current.s3task.configure_tasktable_crud(
@@ -10756,24 +10995,25 @@ def inv_req_controller(template = False):
                     if settings.get_inv_req_inline_forms():
                         # Use inline form
                         inv_req_inline_form(method)
-                    if use_workflow and workflow_status in (1, 2, 5): # Draft, Submitted, Cancelled
-                        # Hide individual statuses
-                        table = db.inv_req
-                        table.commit_status.readable = table.commit_status.writable = False
-                        table.transit_status.readable = table.transit_status.writable = False
-                        table.fulfil_status.readable = table.fulfil_status.writable = False
-                    if method != "read":
-                        s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % r.application)
-                        if use_workflow and workflow_status in (3, 4, 5): # Approved, Completed, Cancelled
+
+                    if settings.get_inv_req_workflow():
+                        workflow_status = record.workflow_status if record else None
+                        if workflow_status in (1, 2, 5): # Draft, Submitted, Cancelled
+                            # Hide individual statuses
+                            table = db.inv_req
+                            table.commit_status.readable = table.commit_status.writable = False
+                            table.transit_status.readable = table.transit_status.writable = False
+                            table.fulfil_status.readable = table.fulfil_status.writable = False
+                        else:
+                            # Block Delete
+                            s3db.configure("inv_req",
+                                           deletable = False,
+                                           )
+                        if workflow_status in (3, 4, 5): # Approved, Completed, Cancelled
                             # Lock all fields
                             s3db.configure("inv_req",
                                            editable = False,
                                            )
-                    if use_workflow and workflow_status not in (1, 2, 5, None): # Draft, Submitted, Cancelled or Legacy
-                        # Block Delete
-                        s3db.configure("inv_req",
-                                       deletable = False,
-                                       )
 
                 elif method == "map":
                     # Tell the client to request per-feature markers
@@ -11882,6 +12122,349 @@ def inv_req_item_order(r, **attr):
                        }, separators=SEPARATORS)
 
 # =============================================================================
+def inv_req_item_postprocess(form):
+    """
+        Called when using settings.inv.req_reserve_items
+        - remove reserved items from stock
+
+        If the stock to take from hasn't been selected then we auto-allocate.
+        We optimise to use the stock which expires soonest
+
+        If the bin to take from hasn't been selected then we auto-allocate.
+        We optimise to minimise the number of Bins remaining for an Item
+        (An alternative would be to optimise this Pick)
+
+        Stock cards, Request Status and Warehouse Free Capacity not updated until
+        Shipment actually Sent (inv_send_process)
+    """
+
+    record = form.record
+    req_item_id = form.vars.id
+
+    db = current.db
+    s3db = current.s3db
+
+    table = s3db.inv_req_item
+    rbtable = s3db.inv_req_item_inv
+    iitable = s3db.inv_inv_item
+    ibtable = s3db.inv_inv_item_bin
+    iptable = s3db.supply_item_pack
+
+    # Read the Request Item, including Stock Reservations
+    query = (table.id == req_item_id) & \
+            (table.item_pack_id == iptable.id)
+    left = rbtable.on(rbtable.req_item_id == table.id)
+    rows = db(query).select(table.site_id,
+                            table.item_id,
+                            table.quantity_reserved,
+                            iptable.quantity,
+                            rbtable.id,
+                            rbtable.inv_item_id,
+                            rbtable.layout_id,
+                            rbtable.quantity,
+                            left = left,
+                            )
+
+    # Sort by Inv Item ID
+    row = rows.first()
+    req_item_row = row["inv_req_item"]
+    quantity_reserved = req_item_row.quantity_reserved
+    pack_row = row["supply_item_pack"]
+    req_pack_quantity = pack_row.quantity
+    inv_reservations = {}
+    reserved_quantity = 0
+    binned_quantity = 0
+    for row in rows:
+        inv_row = row["inv_req_item_inv"]
+        inv_quantity = inv_row.quantity
+        if inv_quantity:
+            inv_item_id = inv_row.inv_item_id
+            if inv_item_id not in inv_reservations:
+                inv_reservations[inv_item_id] = {"bins": {},
+                                                 "quantity": 0,
+                                                 "binned_quantity": 0,
+                                                 }
+            inv_reservations[inv_item_id]["quantity"] += inv_quantity
+            reserved_quantity += inv_quantity
+            layout_id = inv_row.layout_id
+            if layout_id:
+                binned_quantity += inv_quantity
+                inv_reservations[inv_item_id]["binned_quantity"] += inv_quantity
+            inv_reservations[inv_item_id]["bins"][layout_id] = {"id": inv_row.id,
+                                                                "layout_id": layout_id,
+                                                                "quantity": inv_quantity,
+                                                                }
+
+    # Read the Inv Items, including Bins
+    if reserved_quantity == quantity_reserved:
+        # Reservation has been completely allocated to stock items
+        if len(inv_reservations) == 1:
+            query = (iitable.id == list(inv_reservations)[0])
+        else:
+            query = (iitable.id.belongs(inv_reservations))
+    else:
+        # We need to auto-allocate some of the stock
+        query = (iitable.site_id == req_item_row.site_id) & \
+                (iitable.item_id == req_item_row.item_id) & \
+                (iitable.quantity > 0) & \
+                ((iitable.expiry_date >= current.request.utcnow) | ((iitable.expiry_date == None))) & \
+                (iitable.status == 0)
+
+    query &= (iitable.item_pack_id == iptable.id)
+    left = ibtable.on(ibtable.inv_item_id == iitable.id)
+    rows = db(query).select(iitable.id,
+                            iitable.quantity,
+                            iitable.expiry_date,
+                            iptable.quantity,
+                            ibtable.id,
+                            ibtable.layout_id,
+                            ibtable.quantity,
+                            left = left,
+                            )
+
+    # Sort by Inv Item ID
+    inv_items_dict = {}
+    for row in rows:
+        inv_row = row["inv_inv_item"]
+        inv_item_id = inv_row.id
+        if inv_item_id not in inv_items_dict:
+            inv_items_dict[inv_item_id] = {"id": inv_item_id,
+                                           "expiry_date": inv_row.expiry_date,
+                                           "quantity": inv_row.quantity,
+                                           "pack_quantity": row["supply_item_pack.quantity"],
+                                           "bins": [],
+                                           }
+        bin_row = row["inv_inv_item_bin"]
+        bin_quantity = bin_row.quantity
+        if bin_quantity:
+            inv_items_dict[inv_item_id]["bins"].append({"id": bin_row.id,
+                                                        "layout_id": bin_row.layout_id,
+                                                        "quantity": bin_quantity,
+                                                        })
+
+    # Convert to list to sort by Expiry Date
+    inv_items = []
+    iiappend = inv_items.append
+    for inv_item_id in inv_items_dict:
+        iiappend(inv_items_dict[inv_item_id])
+
+    #if record: # will always be an update form
+    # Read the old Reservations Data
+    old_inv = {}
+    old_inv_data = record.sub_defaultreq_item_inv
+    if old_inv_data:
+        old_inv_data = json.loads(old_inv_data) or {}
+        old_inv_data = old_inv_data.get("data", [])
+        for row in old_inv_data:
+            inv_quantity = row["quantity"]["value"]
+            if inv_quantity:
+                inv_quantity = float(inv_quantity)
+                inv_item_id = row["inv_item_id"]["value"]
+                if inv_item_id not in old_inv:
+                    old_inv[inv_item_id] = {"bins": {},
+                                            "quantity": 0,
+                                            }
+                old_inv[inv_item_id]["quantity"] += inv_quantity
+                layout_id = row["layout_id"]["value"]
+                if layout_id:
+                    old_inv[inv_item_id]["bins"][layout_id] = inv_quantity
+
+    from operator import itemgetter
+    if quantity_reserved > reserved_quantity:
+        # Auto-allocate Stock
+        # - optimise to use stock with higher Expiry Date first
+        inv_items.sort(key = itemgetter("expiry_date"),
+                       reverse = True,
+                       )
+        to_allocate = (quantity_reserved - reserved_quantity) * req_pack_quantity
+        while (to_allocate > 0):
+            for inv_item in inv_items:
+                inv_item_id = inv_item["id"]
+                inv_pack_quantity = inv_item["pack_quantity"]
+                inv_quantity = inv_item["quantity"] * inv_pack_quantity
+                #if record# Always an Update form                
+                # Add previously allocated inventory
+                old_inv_row = old_inv.get(inv_item_id)
+                if old_inv_row:
+                    old_quantity = old_inv_row["quantity"]
+                    if old_quantity:
+                        inv_quantity += (old_quantity * inv_pack_quantity)
+                if inv_item_id in inv_reservations:
+                    req_inv = inv_reservations[inv_item_id]
+                    reservation_quantity = req_inv["quantity"] * req_pack_quantity
+                    if inv_quantity > reservation_quantity:
+                        # Allocate more of this stock
+                        if inv_quantity >= (to_allocate + reservation_quantity):
+                            # Allocate all from this stock
+                            new_quantity = (to_allocate + reservation_quantity) / req_pack_quantity
+                            req_inv["quantity"] = new_quantity
+                            to_allocate = 0
+                            break
+                        else:
+                            # Allocate what we can from this stock
+                            new_quantity = inv_quantity / req_pack_quantity
+                            req_inv["quantity"] = new_quantity
+                            to_allocate -= (inv_quantity - reservation_quantity)
+                else:
+                    if inv_quantity >= to_allocate:
+                        # Allocate all from this stock
+                        new_quantity = to_allocate / req_pack_quantity
+                        inv_reservations[inv_item_id] = {"bins": {},
+                                                         "quantity": new_quantity,
+                                                         "binned_quantity": 0,
+                                                         }
+                        to_allocate = 0
+                        break
+                    else:
+                        # Allocate what we can from this stock
+                        new_quantity = inv_quantity / req_pack_quantity
+                        inv_reservations[inv_item_id] = {"bins": {},
+                                                         "quantity": new_quantity,
+                                                         "binned_quantity": 0,
+                                                         }
+                        to_allocate -= inv_quantity
+
+    if quantity_reserved > binned_quantity:
+        # Auto-allocate Bins
+        # - optimise to use bins with lower quantity first
+        to_allocate = (quantity_reserved - binned_quantity) * req_pack_quantity
+        while (to_allocate > 0):
+            for inv_item_id in inv_reservations:
+                req_inv = inv_reservations[inv_item_id]
+                reservation_quantity = req_inv["quantity"]
+                binned_quantity = req_inv["binned_quantity"]
+                unbinned_quantity = reservation_quantity - binned_quantity
+                if not unbinned_quantity:
+                    # This Item is fully allocated from bins
+                    continue
+                #if record# Always an Update form                
+                # Add previously allocated inventory
+                old_inv_row = old_inv.get(inv_item_id)
+                if old_inv_row:
+                    old_quantity = old_inv_row["quantity"]
+                    if old_quantity:
+                        old_bins = old_inv_row["bins"]
+                    else:
+                        old_bins = {}
+                else:
+                    old_bins = {}
+                req_bins = req_inv["bins"]
+                inv_item = inv_items_dict[inv_item_id]
+                inv_pack_quantity = inv_item["pack_quantity"]
+                inv_bins = inv_item["bins"]
+                inv_bins.sort(key = itemgetter("quantity"))
+                while (unbinned_quantity > 0):
+                    for inv_bin in inv_bins:
+                        layout_id = inv_bin["layout_id"]
+                        inv_quantity = inv_bin["quantity"] * inv_pack_quantity
+                        old_quantity = old_bins.get(layout_id)
+                        if old_quantity:
+                            inv_quantity += (old_quantity * inv_pack_quantity)
+                        if layout_id in req_bins:
+                            req_bin = req_bins[layout_id]
+                            reservation_quantity = req_bin["quantity"] * req_pack_quantity
+                            if inv_quantity > reservation_quantity:
+                                # Allocate more from this bin
+                                if inv_quantity >= (unbinned_quantity + reservation_quantity):
+                                    # Allocate all from this bin
+                                    new_quantity = (unbinned_quantity + reservation_quantity) / req_pack_quantity
+                                    req_bin["quantity"] = new_quantity
+                                    db(rbtable.id == req_bin["id"]).update(quantity = new_quantity)
+                                    to_allocate -= unbinned_quantity
+                                    unbinned_quantity = 0
+                                    break
+                                else:
+                                    # Allocate what we can from this bin
+                                    new_quantity = inv_quantity / req_pack_quantity
+                                    req_bin["quantity"] = new_quantity
+                                    db(rbtable.id == req_bin["id"]).update(quantity = new_quantity)
+                                    to_allocate -= (inv_quantity - reservation_quantity)
+                                    unbinned_quantity -= (inv_quantity - reservation_quantity)
+                        else:
+                            if inv_quantity >= unbinned_quantity:
+                                # Allocate all from this bin
+                                new_quantity = unbinned_quantity / req_pack_quantity
+                                bin_id = rbtable.insert(req_item_id = req_item_id,
+                                                        inv_item_id = inv_item_id,
+                                                        layout_id = layout_id,
+                                                        quantity = new_quantity,
+                                                        )
+                                req_bins[layout_id] = {"id": bin_id,
+                                                       "quantity": new_quantity,
+                                                       }
+                                to_allocate -= unbinned_quantity
+                                unbinned_quantity = 0
+                                break
+                            else:
+                                # Allocate what we can from this bin
+                                new_quantity = inv_quantity / req_pack_quantity
+                                bin_id = rbtable.insert(req_item_id = req_item_id,
+                                                        inv_item_id = inv_item_id,
+                                                        layout_id = layout_id,
+                                                        quantity = new_quantity,
+                                                        )
+                                req_bins[layout_id] = {"id": bin_id,
+                                                       "quantity": new_quantity,
+                                                       }
+                                to_allocate -= inv_quantity
+                                unbinned_quantity -= inv_quantity
+                    req_inv["bins"] = req_bins
+                    if unbinned_quantity > 0:
+                        # Allocate from unbinned Stock
+                        if None in req_bins:
+                            # Allocate more from unbinned
+                            req_bin = req_bins[None]
+                            reservation_quantity = req_bin["quantity"] * req_pack_quantity
+                            new_quantity = (unbinned_quantity + reservation_quantity) / req_pack_quantity
+                            req_bin["quantity"] = new_quantity
+                            db(rbtable.id == req_bin["id"]).update(quantity = new_quantity)
+                        else:
+                            # Allocate some from unbinned
+                            new_quantity = unbinned_quantity / req_pack_quantity
+                            bin_id = rbtable.insert(req_item_id = req_item_id,
+                                                    inv_item_id = inv_item_id,
+                                                    layout_id = None,
+                                                    quantity = new_quantity,
+                                                    )
+                            req_bins[None] = {"id": bin_id,
+                                              "quantity": new_quantity,
+                                              }
+                        to_allocate -= unbinned_quantity
+
+    # Update Stock levels
+    # @ToDo: Complete
+    for inv_item_id in inv_reservations:
+        inv_item = inv_items_dict[inv_item_id]
+        inv_pack_quantity = inv_item["pack_quantity"]
+        inv_total_quantity = inv_item["quantity"]
+        req_inv = inv_reservations[inv_item_id]
+        reservation_quantity = req_inv["quantity"]
+        new_inv_quantity = ((inv_total_quantity * inv_pack_quantity)  + (record.quantity_reserved * req_pack_quantity) - (reservation_quantity * req_pack_quantity)) / inv_pack_quantity
+        db(iitable.id == inv_item_id).update(quantity = new_inv_quantity)
+
+        # Update Bins
+        req_bins = req_inv["bins"]
+        inv_bins = inv_item["bins"]
+        old_inv_row = old_inv.get(inv_item_id)
+        if old_inv_row:
+            old_bins = old_inv_row.get("bins")
+        else:
+            old_bins = {}
+        for inv_bin in inv_bins:
+            layout_id = inv_bin["layout_id"]
+            old_bin = old_bins.get(layout_id)
+            req_bin = req_bins.get(layout_id)
+            if req_bin and not old_bin:
+                new_bin_quantity = ((inv_bin["quantity"] * inv_pack_quantity) - (req_bin["quantity"] * req_pack_quantity)) / inv_pack_quantity
+                db(ibtable.id == inv_bin["id"]).update(quantity = new_bin_quantity)
+            elif old_bin and not req_bin:
+                new_bin_quantity = ((inv_bin["quantity"] * inv_pack_quantity) + (old_bin * req_pack_quantity)) / inv_pack_quantity
+                db(ibtable.id == inv_bin["id"]).update(quantity = new_bin_quantity)
+            elif req_bin and old_bin:
+                new_bin_quantity = ((inv_bin["quantity"] * inv_pack_quantity) + (old_bin * req_pack_quantity) - (req_bin["quantity"] * req_pack_quantity)) / inv_pack_quantity
+                db(ibtable.id == inv_bin["id"]).update(quantity = new_bin_quantity)
+
+# =============================================================================
 def inv_req_marker_fn(record):
     """
         Function to decide which Marker to use for Inventory Requisitions Map
@@ -12210,7 +12793,7 @@ def inv_req_rheader(r, check_page=False):
                                 method = "wizard"
                             else:
                                 method = "create"
-                            fulfil_btn = A(T("Fulfil Request"),
+                            fulfil_btn = A(T("Prepare Shipment"),
                                            _href = URL(c = "inv",
                                                        f = "send",
                                                        args = [method],
@@ -14162,6 +14745,9 @@ def inv_send_item_postprocess(form):
         If the bin to take from hasn't been selected then we auto-allocate.
         We optimise to minimise the number of Bins remaining for an Item
         (An alternative would be to optimise this Pick)
+
+        Stock cards, Request Status and Warehouse Free Capacity not updated until
+        Shipment actually Sent (inv_send_process)
     """
 
     record = form.record
@@ -14233,6 +14819,17 @@ def inv_send_item_postprocess(form):
                              "quantity": bin_quantity,
                              })
 
+    if record:
+        # Update form: Read the old Bin Data
+        old_bin_data = record.sub_defaultsend_bin
+        old_bin_data = json.loads(old_bin_data) or {}
+        old_bin_data = old_bin_data.get("data", [])
+        old_bins = {}
+        for row in old_bin_data:
+            bin_quantity = row["quantity"]["value"]
+            if bin_quantity:
+                old_bins[row["layout_id"]["value"]] = float(bin_quantity)
+
     if send_quantity > binned_quantity:
         # Auto-allocate
         from operator import itemgetter
@@ -14242,14 +14839,20 @@ def inv_send_item_postprocess(form):
             for inv_bin in inv_bins:
                 layout_id = inv_bin["layout_id"]
                 inv_quantity = inv_bin["quantity"] * inv_pack_quantity
+                if record:
+                    # Update form
+                    # - add previously allocated inventory
+                    old_quantity = old_bins.get(layout_id)
+                    if old_quantity:
+                        inv_quantity += (old_quantity * inv_pack_quantity)
                 if layout_id in send_bins:
                     send_bin = send_bins[layout_id]
-                    send_quantity = send_bin["quantity"] * send_pack_quantity
-                    if inv_quantity > send_quantity:
+                    send_bin_quantity = send_bin["quantity"] * send_pack_quantity
+                    if inv_quantity > send_bin_quantity:
                         # Allocate more from this bin
-                        if inv_quantity > (to_allocate + send_quantity):
+                        if inv_quantity >= (to_allocate + send_bin_quantity):
                             # Allocate all from this bin
-                            new_quantity = (to_allocate + send_quantity) / send_pack_quantity
+                            new_quantity = (to_allocate + send_bin_quantity) / send_pack_quantity
                             send_bin["quantity"] = new_quantity
                             db(sbtable.id == send_bin["id"]).update(quantity = new_quantity)
                             to_allocate = 0
@@ -14259,9 +14862,9 @@ def inv_send_item_postprocess(form):
                             new_quantity = inv_quantity / send_pack_quantity
                             send_bin["quantity"] = new_quantity
                             db(sbtable.id == send_bin["id"]).update(quantity = new_quantity)
-                            to_allocate -= (inv_quantity - send_quantity)
+                            to_allocate -= (inv_quantity - send_bin_quantity)
                 else:
-                    if inv_quantity > to_allocate:
+                    if inv_quantity >= to_allocate:
                         # Allocate all from this bin
                         new_quantity = to_allocate / send_pack_quantity
                         bin_id = sbtable.insert(track_item_id = track_item_id,
@@ -14304,16 +14907,6 @@ def inv_send_item_postprocess(form):
     db(iitable.id == inv_item_id).update(quantity = new_inv_quantity)
 
     # Update Bins
-    if record:
-        old_bin_data = record.sub_defaultsend_bin
-        if old_bin_data:
-            old_bin_data = json.loads(old_bin_data) or {}
-            old_bin_data = old_bin_data.get("data", [])
-            old_bins = {}
-            for row in old_bin_data:
-                bin_quantity = row["quantity"]["value"]
-                if bin_quantity:
-                    old_bins[row["layout_id"]["value"]] = float(bin_quantity)
     for inv_bin in inv_bins:
         layout_id = inv_bin["layout_id"]
         if record:
@@ -16424,7 +17017,7 @@ def inv_expiry_date_represent(date):
 
     dtstr = S3DateTime.date_represent(date, utc=True)
 
-    if date and datetime.datetime(date.year, date.month, date.day) < current.request.now:
+    if date and datetime.datetime(date.year, date.month, date.day) < current.request.utcnow:
         return SPAN(dtstr,
                     _class = "expired",
                     )
@@ -16671,7 +17264,11 @@ class inv_InvItemRepresent(S3Represent):
         Represent an Inventory Item
     """
 
-    def __init__(self):
+    def __init__(self,
+                 show_bin = True,
+                 ):
+
+        self.show_bin = show_bin
 
         super(inv_InvItemRepresent, self).__init__(lookup = "inv_inv_item")
 
@@ -16685,27 +17282,34 @@ class inv_InvItemRepresent(S3Represent):
             @param fields: never used for custom fns (retained for API compatibility)
         """
 
+        show_bin = self.show_bin
+
         s3db = current.s3db
 
         itable = s3db.inv_inv_item
-        ibtable = s3db.inv_inv_item_bin
         stable = s3db.supply_item
 
+        fields = [itable.id,
+                  itable.expiry_date,
+                  itable.item_source_no,
+                  itable.owner_org_id,
+                  stable.name,
+                  #stable.um,
+                  ]
+
         left = [stable.on(stable.id == itable.item_id),
-                ibtable.on(ibtable.inv_item_id == itable.id),
                 ]
+
+        if show_bin:
+            ibtable = s3db.inv_inv_item_bin
+            fields.append(ibtable.layout_id)
+            left.append(ibtable.on(ibtable.inv_item_id == itable.id))
 
         if len(values) == 1:
             query = (key == values[0])
         else:
             query = key.belongs(values)
-        rows = current.db(query).select(itable.id,
-                                        stable.name,
-                                        stable.um,
-                                        itable.item_source_no,
-                                        ibtable.layout_id,
-                                        itable.expiry_date,
-                                        itable.owner_org_id,
+        rows = current.db(query).select(*fields,
                                         left = left
                                         )
 
@@ -16718,12 +17322,13 @@ class inv_InvItemRepresent(S3Represent):
             # Results cached in the represent class
             itable.owner_org_id.represent.bulk(organisation_ids)
 
-        # Bulk-represent Bins
-        layout_id = str(ibtable.layout_id)
-        layout_ids = [row[layout_id] for row in rows]
-        if layout_ids:
-            # Results cached in the represent class
-            ibtable.layout_id.represent.bulk(layout_ids)
+        if show_bin:
+            # Bulk-represent Bins
+            layout_id = str(ibtable.layout_id)
+            layout_ids = [row[layout_id] for row in rows]
+            if layout_ids:
+                # Results cached in the represent class
+                ibtable.layout_id.represent.bulk(layout_ids)
 
         return rows
 
@@ -16737,18 +17342,17 @@ class inv_InvItemRepresent(S3Represent):
 
         s3db = current.s3db
 
-        itable = s3db.inv_inv_item
-        ibtable = s3db.inv_inv_item_bin
-
         iitem = row.inv_inv_item
-        bitem = row.inv_inv_item_bin
-        sitem = row.supply_item
 
         stringify = lambda string: string if string else ""
 
         ctn = stringify(iitem.item_source_no)
-        org = itable.owner_org_id.represent(iitem.owner_org_id)
-        item_bin = ibtable.layout_id.represent(bitem.layout_id)
+        org = s3db.inv_inv_item.owner_org_id.represent(iitem.owner_org_id)
+
+        if self.show_bin:
+            item_bin = s3db.inv_inv_item_bin.layout_id.represent(row.inv_inv_item_bin.layout_id)
+        else:
+            item_bin = None
 
         expires = iitem.expiry_date
         if expires:
@@ -16759,7 +17363,7 @@ class inv_InvItemRepresent(S3Represent):
 
         items = []
         append = items.append
-        for string in [sitem.name, expires, ctn, org, item_bin]:
+        for string in [row.supply_item.name, expires, ctn, org, item_bin]:
             if string and string != NONE:
                 append(string)
                 append(" - ")

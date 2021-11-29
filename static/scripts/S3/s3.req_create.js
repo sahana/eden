@@ -3,16 +3,6 @@
 */
 
 $(document).ready(function() {
-    // Read current value
-    var site_id = $('#req_req_site_id').val();
-    if (site_id) {
-        var url = $('#staff_add').attr('href');
-        // Add to URL
-        url = url + '&site_id=' + site_id;
-        $('#staff_add').attr('href', url);
-    }
-    // onChange happens in S3.js S3OptionsFilter
-
     $('#req_req_is_template').change(function() {
         if ($('#req_req_is_template').is(':checked')) {
             $('#req_req_date__row1').hide();

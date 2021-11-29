@@ -837,8 +837,9 @@ def commit():
                                           _target = "_blank",
                                           _href = URL(c = "default",
                                                       f = "user",
-                                                      args = ["profile"]
-                                                      ))
+                                                      args = ["profile"],
+                                                      ),
+                                          )
 
                 jappend = s3.jquery_ready.append
                 jappend('''
@@ -951,7 +952,7 @@ def commit_rheader(r):
                             _href = URL(f = "commit",
                                         args = [record.id,
                                                 "send",
-                                                ]
+                                                ],
                                         ),
                             _id = "commit-send",
                             _class = "action-btn"
@@ -1070,7 +1071,8 @@ def facility():
     # Open record in this controller after creation
     s3db.configure("org_facility",
                    create_next = URL(c="inv", f="facility",
-                                     args = ["[id]", "read"]),
+                                     args = ["[id]", "read"],
+                                     ),
                    )
 
     from s3db.org import org_facility_controller
@@ -1153,7 +1155,8 @@ def donor():
     # Open record in this controller after creation
     s3db.configure("org_organisation",
                    create_next = URL(c="inv", f="donor",
-                                     args = ["[id]", "read"]),
+                                     args = ["[id]", "read"],
+                                     ),
                    )
 
     # NB Type gets defaulted in the Custom CRUD form
@@ -1190,7 +1193,8 @@ def supplier():
     # Open record in this controller after creation
     s3db.configure("org_organisation",
                    create_next = URL(c="inv", f="supplier",
-                                     args = ["[id]", "read"]),
+                                     args = ["[id]", "read"],
+                                     ),
                    )
 
     # NB Type gets defaulted in the Custom CRUD form
