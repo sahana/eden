@@ -10818,15 +10818,13 @@ def inv_req_controller(template = False):
                                                     pack_ids.append(pack_id)
                                                 inv_items[inv_item_id] = {"q": inv_item.quantity,
                                                                           "p": pack_id,
-                                                                          "b": [],
+                                                                          "b": {},
                                                                           }
                                             item_bin = row.inv_inv_item_bin
                                             layout_id = item_bin.layout_id
                                             if layout_id:
-                                                inv_items[inv_item_id]["b"].append({"l": layout_id,
-                                                                                    "q": item_bin.quantity,
-                                                                                    })
-                                                                          
+                                                inv_items[inv_item_id]["b"][layout_id] = item_bin.quantity
+
                                         stock_quantity = 0
 
                                         # Lookup Packs
@@ -10869,10 +10867,12 @@ def inv_req_controller(template = False):
                                                     inv_quantity = inv_quantity * inv_pack_quantity / req_pack_quantity
                                                     inv_item["q"] = inv_quantity
                                                     stock_quantity += inv_quantity
-                                                    for inv_bin in inv_item["b"]:
-                                                        bin_quantity = inv_bin["q"]
+                                                    inv_bins = inv_item["b"]
+                                                    for layout_id in inv_bins:
+                                                        bin_quantity = inv_bins[layout_id]
                                                         bin_quantity = bin_quantity * inv_pack_quantity / req_pack_quantity
-                                                        inv_bin["q"] = bin_quantity
+                                                        inv_bins[layout_id] = bin_quantity
+                                                del inv_item["p"]
 
                                         rbtable = s3db.inv_req_item_inv
                                         req_bins = db(rbtable.req_item_id == req_item_id).select(rbtable.inv_item_id,
@@ -10932,13 +10932,15 @@ def inv_req_controller(template = False):
 
                                         # Pass data to s3.inv_req_item.js
                                         # - show stock quantity
-                                        # - set inv_item_id ***
-                                        req_data = {"rq": req_item.quantity,
-                                                    "sq": stock_quantity,
-                                                    "pn": pack_name,
+                                        # - manage bins
+                                        req_data = {"q": stock_quantity,
+                                                    "r": req_item.quantity,
+                                                    "p": pack_name,
+                                                    "s": site_id,
+                                                    "i": inv_items,
                                                     }
                                         if binned_quantity:
-                                            req_data["bq"] = binned_quantity
+                                            req_data["b"] = binned_quantity
                                         s3.js_global.append('''S3.supply.reqData=%s''' % json.dumps(req_data, separators=SEPARATORS))
                                     else:
                                         response.error = T("The Site Requested From has no Inventory available of this Item")
@@ -14658,14 +14660,10 @@ def inv_send_controller():
                                     this_data = inv_data[inv_item_id]
                                     bins = this_data.get("b")
                                     if not bins:
-                                        this_data["b"] = [{"l": layout_id,
-                                                           "q": bin_row.quantity,
-                                                           },
-                                                          ]
+                                        this_data["b"] = {layout_id: bin_row.quantity,
+                                                          }
                                     else:
-                                        this_data["b"].append({"l": layout_id,
-                                                               "q": bin_row.quantity,
-                                                               })
+                                        this_data["b"][layout_id] = bin_row.quantity
 
                                 dbset = db(query & ii_query)
                                 if dbset.select(iitable.id,
@@ -14706,18 +14704,14 @@ def inv_send_controller():
                                 if inv_item_id in inv_data:
                                     layout_id = bin_row.layout_id
                                     if layout_id:
-                                        inv_data[inv_item_id]["b"].append({"l": layout_id,
-                                                                           "q": bin_row.quantity,
-                                                                           })
+                                        inv_data[inv_item_id]["b"][layout_id] = bin_row.quantity
                                 else:
                                     layout_id = bin_row.layout_id
                                     if layout_id:
-                                        b = [{"l": layout_id,
-                                              "q": bin_row.quantity,
-                                              },
-                                             ]
+                                        b = {layout_id: bin_row.quantity,
+                                             }
                                     else:
-                                        b = []
+                                        b = {}
                                     inv_data[inv_item_id] = {"q": inv_row.quantity,
                                                              "b": b,
                                                              }

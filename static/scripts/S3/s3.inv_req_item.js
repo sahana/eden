@@ -10,18 +10,32 @@ $(document).ready(function() {
 
     if (totalQuantityField.length) {
 
-        var availableQuantity,
+        var availableQuantity, // Total unallocated from Stock
+            binAvailableQuantity, // Quantity of this Stock (& Bin if-binned)
             binQuantity,
-            binnedQuantity,
+            bins,
+            binsByID,
+            binsLength,
+            editBinBtnOK = $('#rdy-defaultreq_item_inv-0'),
             error,
             inlineComponent = $('#sub-defaultreq_item_inv'),
-            editBinBtnOK = $('#rdy-defaultreq_item_inv-0'),
+            invItemID,
+            layoutID,
             message,
-            newBinQuantityField = $('#sub_defaultreq_item_inv_defaultreq_item_inv_i_quantity_edit_none'),
-            oldBinQuantityField = $('#sub_defaultreq_item_inv_defaultreq_item_inv_i_quantity_edit_0'),
+            newRowInvField = $('#sub_defaultreq_item_inv_defaultreq_item_inv_i_inv_item_id_edit_none'),
+            newRowBinField = $('#sub_defaultreq_item_inv_defaultreq_item_inv_i_layout_id_edit_none'),
+            newRowQuantityField = $('#sub_defaultreq_item_inv_defaultreq_item_inv_i_quantity_edit_none'),
+            newTree = $('#sub_defaultreq_item_inv_defaultreq_item_inv_i_layout_id_edit_none-hierarchy'),
+            oldRowInvField = $('#sub_defaultreq_item_inv_defaultreq_item_inv_i_inv_item_id_edit_0'),
+            oldRowBinField = $('#sub_defaultreq_item_inv_defaultreq_item_inv_i_layout_id_edit_0'),
+            oldRowQuantityField = $('#sub_defaultreq_item_inv_defaultreq_item_inv_i_quantity_edit_0'),
+            oldTree = $('#sub_defaultreq_item_inv_defaultreq_item_inv_i_layout_id_edit_0-hierarchy'),
             reqData = S3.supply.reqData || {},
-            reqQuantity,
-            totalQuantity = totalQuantityField.val();
+            binnedQuantity = reqData.b || 0, // Total Quantity Reserved allocated from Stock
+            invItems = reqData.i || {},
+            reqQuantity = reqData.r,
+            siteID = reqData.s,
+            totalQuantity = totalQuantityField.val();  // Total Quantity Reserved
 
         if (totalQuantity) {
             totalQuantity = parseFloat(totalQuantity);
@@ -29,18 +43,13 @@ $(document).ready(function() {
             totalQuantity = 0;
         }
 
-        // Parse reqData
-        binnedQuantity = reqData.bq || 0;
-        reqQuantity = reqData.rq;
-        stockQuantity = reqData.sq;
-
-        // Display Available Stock Quantity
-        var TotalQuantity = '<span id="TotalQuantity"> / ' + stockQuantity.toFixed(2) + ' ' + reqData.pn + ' (' + i18n.in_inv + ')</span>';
-        totalQuantityField.after(TotalQuantity);
+        // Display Total Available Stock Quantity
+        var stockInfo = '<span> / ' + reqData.q.toFixed(2) + ' ' + reqData.p + ' (' + i18n.in_inv + ')</span>';
+        totalQuantityField.after(stockInfo);
 
         // Attach to the top-level element to catch newly-created readRows
         inlineComponent.on('click.s3', '.inline-edt', function() {
-            binQuantity = oldBinQuantityField.val();
+            binQuantity = oldRowQuantityField.val();
             if (binQuantity) {
                 binQuantity = parseFloat(binQuantity);
             } else {
@@ -51,7 +60,7 @@ $(document).ready(function() {
         });
 
         editBinBtnOK.click(function() {
-            binQuantity = oldBinQuantityField.val();
+            binQuantity = oldRowQuantityField.val();
             if (binQuantity) {
                 binQuantity = parseFloat(binQuantity);
             } else {
@@ -60,7 +69,7 @@ $(document).ready(function() {
             // Make this Bin's Quantity unavailable
             binnedQuantity = binnedQuantity + binQuantity;
             // Validate the new bin again
-            newBinQuantityField.change();
+            newRowQuantityField.change();
         });
 
         totalQuantityField.change(function() {
@@ -93,47 +102,207 @@ $(document).ready(function() {
                 });
             }
             // Validate the new bin again
-            newBinQuantityField.change();
+            //newRowQuantityField.change();
         });
 
-        newBinQuantityField.change(function() {
-            binQuantity = newBinQuantityField.val();
-            if (binQuantity) {
-                binQuantity = parseFloat(binQuantity);
-            } else {
-                binQuantity = 0;
+        newRowQuantityField.change(function() {
+            binQuantity = newRowQuantityField.val();
+            if (!binQuantity) {
+                return;
             }
             availableQuantity = totalQuantity - binnedQuantity;
-            if (binQuantity > availableQuantity) {
-                // @ToDo: i18n
-                message = 'Bin Quantity reduced to Quantity Reserved';
+            binQuantity = parseFloat(binQuantity);
+            message = null;
+            invItemID = newRowInvField.val();
+            if (invItemID) {
+                layoutID = newRowBinField.val();
+                if (layoutID) {
+                    binAvailableQuantity = invItems[invItemID].b[layoutID];
+                    // Validate against lower of availableQuantity and binAvailableQuantity
+                    if (availableQuantity >= binAvailableQuantity) {
+                        if (binQuantity > binAvailableQuantity) {
+                            // @ToDo: i18n
+                            message = 'Bin Quantity reduced to Quantity in Bin';
+                        }
+                    } else {
+                        if (binQuantity > availableQuantity) {
+                            // @ToDo: i18n
+                            message = 'Bin Quantity reduced to Quantity Reserved';
+                        }
+                    }
+                } else {
+                    // No Bins
+                    binAvailableQuantity = invItems[invItemID].q;
+                    // Validate against lower of availableQuantity and binAvailableQuantity
+                    if (availableQuantity >= binAvailableQuantity) {
+                        if (binQuantity > binAvailableQuantity) {
+                            // @ToDo: i18n
+                            message = 'Bin Quantity reduced to Quantity of Stock Item';
+                        }
+                    } else {
+                        if (binQuantity > availableQuantity) {
+                            // @ToDo: i18n
+                            message = 'Bin Quantity reduced to Quantity Reserved';
+                        }
+                    }
+                }
+            } else {
+                // Can only validate against Total Quantity at this stage
+                if (binQuantity > availableQuantity) {
+                    // @ToDo: i18n
+                    message = 'Bin Quantity reduced to Quantity Reserved';
+                }
+            }
+            if (message) {
                 error = $('<div id="sub_defaultreq_item_inv_defaultreq_item_inv_i_quantity_edit_none-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
-                newBinQuantityField.val(availableQuantity)
+                newRowQuantityField.val(availableQuantity)
                                    .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
                     $(this).fadeOut('slow').remove();
                     return false;
                 });
             }
         });
-
-        oldBinQuantityField.change(function() {
-            binQuantity = oldBinQuantityField.val();
-            if (binQuantity) {
-                binQuantity = parseFloat(binQuantity);
+        newRowInvField.change(function() {
+            invItemID = newRowInvField.val();
+            if (!invItemID) {
+                return;
+            }
+            // Filter the Bins
+            binsByID = invItems[invItemID].b;
+            bins = [];
+            for (layoutID in binsByID) {
+                bins.push(layoutID);
+            }
+            binsLength = bins.length;
+            if (binsLength == 1) {
+                // Default the Bin & make field read-only
+                layoutID = bins[0];
+                newTree.hierarchicalopts('set', [layoutID]);
+                $('.s3-hierarchy-button').attr('disabled','disabled');
+                binQuantity = newRowQuantityField.val();
+                if (binQuantity) {
+                    // Validate the Quantity
+                    newRowQuantityField.change();
+                } else {
+                    // Default the Quantity
+                    availableQuantity = totalQuantity - binnedQuantity;
+                    binAvailableQuantity = invItems[invItemID].b[layoutID];
+                    newRowQuantityField.val(Math.min(availableQuantity, binAvailableQuantity));
+                }
             } else {
-                binQuantity = 0;
+                // Enable the Bins
+                $('.s3-hierarchy-button').removeAttr('disabled');
+                // Filter the Bins
+                // - can be done client-side without any AJAX, as we have all the layout_ids
+                // @ToDo: If we run this onUpdate then we need to use onTreeReady like inv_send_item.js
+                newTree.hierarchicalopts('show', bins, true);
+                // Validate the Quantity
+                newRowQuantityField.change();
+            }
+        });
+        newRowBinField.change(function() {
+            // Validate the Quantity
+            newRowQuantityField.change();
+        });
+
+        oldRowQuantityField.change(function() {
+            binQuantity = oldRowQuantityField.val();
+            if (!binQuantity) {
+                return;
             }
             availableQuantity = totalQuantity - binnedQuantity;
-            if (binQuantity > availableQuantity) {
-                // @ToDo: i18n
-                message = 'Bin Quantity reduced to Quantity Reserved';
+            binQuantity = parseFloat(binQuantity);
+            message = null;
+            invItemID = oldRowInvField.val();
+            if (invItemID) {
+                layoutID = oldRowBinField.val();
+                if (layoutID) {
+                    binAvailableQuantity = invItems[invItemID].b[layoutID];
+                    // Validate against lower of availableQuantity and binAvailableQuantity
+                    if (availableQuantity >= binAvailableQuantity) {
+                        if (binQuantity > binAvailableQuantity) {
+                            // @ToDo: i18n
+                            message = 'Bin Quantity reduced to Quantity in Bin';
+                        }
+                    } else {
+                        if (binQuantity > availableQuantity) {
+                            // @ToDo: i18n
+                            message = 'Bin Quantity reduced to Quantity Reserved';
+                        }
+                    }
+                } else {
+                    // No Bins
+                    binAvailableQuantity = invItems[invItemID].q;
+                    // Validate against lower of availableQuantity and binAvailableQuantity
+                    if (availableQuantity >= binAvailableQuantity) {
+                        if (binQuantity > binAvailableQuantity) {
+                            // @ToDo: i18n
+                            message = 'Bin Quantity reduced to Quantity of Stock Item';
+                        }
+                    } else {
+                        if (binQuantity > availableQuantity) {
+                            // @ToDo: i18n
+                            message = 'Bin Quantity reduced to Quantity Reserved';
+                        }
+                    }
+                }
+            } else {
+                // Can only validate against Total Quantity at this stage
+                availableQuantity = totalQuantity - binnedQuantity;
+                if (binQuantity > availableQuantity) {
+                    // @ToDo: i18n
+                    message = 'Bin Quantity reduced to Quantity Reserved';
+                }
+            }
+            if (message) {
                 error = $('<div id="sub_defaultreq_item_inv_defaultreq_item_inv_i_quantity_edit_0-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
-                oldBinQuantityField.val(availableQuantity)
+                oldRowQuantityField.val(availableQuantity)
                                    .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
                     $(this).fadeOut('slow').remove();
                     return false;
                 });
             }
+        });
+        oldRowInvField.change(function() {
+            invItemID = oldRowInvField.val();
+            if (!invItemID) {
+                return;
+            }
+            // Filter the Bins
+            binsByID = invItems[invItemID].b;
+            bins = [];
+            for (layoutID in binsByID) {
+                bins.push(layoutID);
+            }
+            binsLength = bins.length;
+            if (binsLength == 1) {
+                // Default the Bin & make field read-only
+                layoutID = bins[0];
+                oldTree.hierarchicalopts('set', [layoutID]);
+                $('.s3-hierarchy-button').attr('disabled','disabled');
+                binQuantity = oldRowQuantityField.val();
+                if (binQuantity) {
+                    // Validate the Quantity
+                    oldRowQuantityField.change();
+                } else {
+                    // Default the Quantity
+                    availableQuantity = totalQuantity - binnedQuantity;
+                    binAvailableQuantity = invItems[invItemID].b[layoutID];
+                    oldRowQuantityField.val(Math.min(availableQuantity, binAvailableQuantity));
+                }
+            } else {
+                // Enable the Bins
+                $('.s3-hierarchy-button').removeAttr('disabled');
+                // Filter the Bins
+                // - can be done client-side without any AJAX, as we have all the layout_ids
+                oldTree.hierarchicalopts('show', bins);
+                // Validate the Quantity
+                oldRowQuantityField.change();
+            }
+        });
+        oldRowBinField.change(function() {
+            // Validate the Quantity
+            oldRowQuantityField.change();
         });
 
         inlineComponent.on('rowAdded', function(event, row) {
@@ -149,6 +318,7 @@ $(document).ready(function() {
         });
     }
 
+   /* Support req_item_quantity_represent */
    $(document).on('click', '.quantity.ajax_more', function(e) {
 
 		e.preventDefault();

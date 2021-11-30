@@ -657,7 +657,8 @@
         },
 
         /**
-         * Check particular nodes (used by setCurrentFilters and s3.inv_send_item.js)
+         * Check particular nodes
+         * - used by setCurrentFilters, s3.inv_req_item.js and s3.inv_send_item.js
          *
          * @param {Array} values - the record IDs of the nodes to select
          */
@@ -697,6 +698,52 @@
             }
             this._isBulk = false;
             this._updateSelectedNodes();
+        },
+
+        /**
+         * Show just particular nodes
+         * - used by s3.inv_req_item.js
+         *
+         * @param {Array} values - the record IDs of the nodes to select
+         * @param {Boolean} uncheck - whether to uncheck all nodes
+         */
+        show: function(values, uncheck) {
+
+            var inst = jQuery.jstree.reference($(this.tree)),
+                node,
+                treeID = this.treeID;
+
+            this._isBulk = true;
+            if (uncheck) {
+                inst.uncheck_all();
+            }
+            inst.hide_all();
+            if (values) {
+                var showAncestors = function(nodeID, callback) {
+                    var parent = inst.get_parent(nodeID);
+                    if (parent != '#') {
+                        showAncestors(parent, callback);
+                        inst.show_node(parent);
+                    } else if (callback) {
+                        callback();
+                    }
+                };
+                values.forEach(function(index) {
+                    var node = inst.get_node(treeID + '-' + index);
+                    if (node) {
+                        // must show all ancestors to make sure
+                        // there is a DOM node for show_node (otherwise
+                        // nothing gets shown)
+                        showAncestors(node, function() {
+                            inst.show_node(node);
+                        });
+                    }
+                });
+            }
+            this._isBulk = false;
+            if (uncheck) {
+                this._updateSelectedNodes();
+            }
         },
 
         /**
