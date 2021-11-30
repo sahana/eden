@@ -81,6 +81,7 @@ __all__ = ("WarehouseModel",
            #"inv_req_item_postprocess",
            #"inv_req_marker_fn",
            "inv_req_match",
+           #"inv_req_pick_list",
            "inv_req_rheader",
            #"inv_req_send",
            "inv_req_tabs",
@@ -10641,6 +10642,12 @@ def inv_req_controller(template = False):
                    action = inv_req_from,
                    )
 
+        # Print Picking List (for settings.inv_req_reserve_items)
+        set_method("inv", "req",
+                   method = "pick_list",
+                   action = inv_req_pick_list,
+                   )
+
         # Submit Request for Approval
         set_method("inv", "req",
                    method = "submit",
@@ -12622,6 +12629,288 @@ def inv_req_match(rheader = None):
                                    )
 
 # =============================================================================
+def inv_req_pick_list(r, **attr):
+    """
+        Generate a Picking List for an Inventory Requisition
+        - for settings.inv_req_reserve_items
+
+        In order to order this list for optimal picking, we assume that the Bins are
+        strctured as Aisle/Site/Shelf with the Aisle being the gap between Racks as per Figure 2 in:
+        http://www.appriseconsulting.co.uk/warehouse-layout-and-pick-sequence/
+        We assume that Racks are numbered to match Figure 2, so we can do a simple sort on the Bin
+
+        Currently this is exported in XLS format
+
+        @ToDo: Provide an on-screen version
+        @ToDo: Optimise Picking Route (as per Figure 3 in the above link)
+    """
+
+    req_id = r.id
+    record = r.record
+
+    from s3.codecs.xls import S3XLS
+
+    try:
+        import xlwt
+    except ImportError:
+        r.error(503, S3XLS.ERROR.XLWT_ERROR)
+
+    # Extract the Data
+    req_ref = record.req_ref
+    site_id = record.site_id
+
+    s3db = current.s3db
+
+    table = s3db.inv_req_item
+    itable = s3db.supply_item
+    ptable = s3db.supply_item_pack
+    rbtable = s3db.inv_req_item_inv
+
+    query = (table.req_id == req_id) & \
+            (table.item_id == itable.id) & \
+            (table.item_pack_id == ptable.id)
+    left = rbtable.on(rbtable.req_item_id == table.id)
+    items = current.db(query).select(table.site_id,
+                                     itable.code,
+                                     itable.name,
+                                     itable.volume,
+                                     itable.weight,
+                                     ptable.name,
+                                     ptable.quantity,
+                                     #rbtable.inv_item_id,
+                                     rbtable.layout_id,
+                                     rbtable.quantity,
+                                     left = left,
+                                     )
+
+    # Bulk Represent the Bins
+    # - values stored in class instance
+    bin_represent = rbtable.layout_id.represent
+    bins = bin_represent.bulk([row["inv_req_item_inv.layout_id"] for row in items])
+
+    # Bulk Represent the Sites
+    # - values stored in class instance
+    site_represent = S3Represent(lookup = "org_site")
+    sites = site_represent.bulk([row["inv_req_item.site_id"] for row in items] + [record.site_id])
+    destination = site_represent(site_id)
+
+    # Sort the data by Fulfilling Warehouse
+    items_by_site = {}
+    for row in items:
+        site = site_represent(row["inv_req_item.site_id"])
+        if site in items_by_site:
+            items_by_site[site].append(row)
+        else:
+            items_by_site[site] = [row]
+
+    translate = current.deployment_settings.get_L10n_translate_supply_item()
+
+    T = current.T
+
+    title = s3_str(T("Picking List"))
+
+    labels = [s3_str(T("Location")),
+              s3_str(T("Code")),
+              s3_str(T("Item Name")),
+              s3_str(T("UoM")),
+              s3_str(T("Qty to Pick")),
+              s3_str(T("Picked Qty")),
+              s3_str(T("Unit")),
+              s3_str(T("Total")),
+              s3_str(T("Unit")),
+              s3_str(T("Total")),
+              ]
+
+    # Create the workbook
+    book = xlwt.Workbook(encoding = "utf-8")
+
+    # Set column Widths
+    COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
+    col_index = 0
+    label_widths = []
+    for label in labels:
+        width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
+        width = min(width, 65535) # USHRT_MAX
+        label_widths.append(width)
+        col_index += 1
+
+    # Define styles
+    style = xlwt.XFStyle()
+
+    THIN = style.borders.THIN
+    HORZ_CENTER = style.alignment.HORZ_CENTER
+    HORZ_RIGHT = style.alignment.HORZ_RIGHT
+
+    style.borders.top = THIN
+    style.borders.left = THIN
+    style.borders.right = THIN
+    style.borders.bottom = THIN
+
+    right_style = xlwt.XFStyle()
+    right_style.alignment.horz = HORZ_RIGHT
+    right_style.borders.top = THIN
+    right_style.borders.left = THIN
+    right_style.borders.right = THIN
+    right_style.borders.bottom = THIN
+
+    center_style = xlwt.XFStyle()
+    center_style.alignment.horz = HORZ_CENTER
+    center_style.borders.top = THIN
+    center_style.borders.left = THIN
+    center_style.borders.right = THIN
+    center_style.borders.bottom = THIN
+
+    large_header_style = xlwt.XFStyle()
+    large_header_style.font.bold = True
+    large_header_style.font.height = 400
+
+    header_style = xlwt.XFStyle()
+    header_style.font.bold = True
+    header_style.alignment.horz = HORZ_CENTER
+    header_style.borders.top = THIN
+    header_style.borders.left = THIN
+    header_style.borders.right = THIN
+    header_style.borders.bottom = THIN
+    header_style.pattern.pattern = xlwt.Style.pattern_map["fine_dots"]
+    header_style.pattern.pattern_fore_colour = xlwt.Style.colour_map["gray25"]
+
+    for site in items_by_site:
+        # Add sheet
+        sheet = book.add_sheet(site)
+        sheet.set_portrait(0) # Landscape
+        sheet.set_print_scaling(90)
+
+        column_widths = list(label_widths)
+
+        # 1st row => Report Title & Requisition Number
+        current_row = sheet.row(0)
+        current_row.height = 500
+        #current_row.write(0, title, large_header_style)
+        sheet.write_merge(0, 0, 0, 1, title, large_header_style)
+        current_row.write(2, req_ref, large_header_style)
+
+        # 2nd row => Destination
+        current_row = sheet.row(1)
+        current_row.height = 500
+        #current_row.write(0, "%s:" % s3_str(T("Destination")), large_header_style)
+        sheet.write_merge(1, 1, 0, 1, "%s:" % s3_str(T("Destination")), large_header_style)
+        current_row.write(2, destination, large_header_style)
+        sheet.write_merge(1, 1, 6, 7, s3_str(T("Weight (kg)")), header_style)
+        sheet.write_merge(1, 1, 8, 9, s3_str(T("Volume (m3)")), header_style)
+
+        # 3rd row => Column Headers
+        current_row = sheet.row(2)
+        col_index = 0
+        for label in labels:
+            # Set column Width
+            sheet.col(col_index).width = column_widths[col_index]
+            current_row.write(col_index, label, header_style)
+            col_index += 1
+
+        # Data rows
+        items = items_by_site[site]
+
+        # Sort each Fulfilling Warehouse by Bin
+        def sort_function(row):
+            return bin_represent(row["inv_req_item_inv.layout_id"])
+        items.sort(key = sort_function)
+
+        row_index = 3
+        for row in items:
+            current_row = sheet.row(row_index)
+            item_row = row["supply_item"]
+            pack_row = row["supply_item_pack"]
+            bin_row = row["inv_req_item_inv"]
+            layout_id = bin_row.layout_id
+            if layout_id:
+                bin = bin_represent(layout_id)
+            else:
+                bin = ""
+            quantity = bin_row.quantity
+            item_name = item_row.name or ""
+            if translate and item_name:
+                item_name = s3_str(T(item_name))
+            pack_name = pack_row.name
+            if translate:
+                pack_name = s3_str(T(pack_name))
+            item_weight = item_row.weight
+            if item_weight:
+                total_weight = "{:.2f}".format(round(quantity * pack_row.quantity * item_weight, 2))
+            else:
+                total_weight = ""
+            item_volume = item_row.volume
+            if item_volume:
+                total_volume = "{:.2f}".format(round(quantity * pack_row.quantity * item_volume, 2))
+            else:
+                total_volume = ""
+            values = [bin,
+                      item_row.code or "",
+                      item_name,
+                      pack_name,
+                      str(int(quantity)),
+                      "", # Included for styling
+                      "{:.2f}".format(item_weight),
+                      total_weight,
+                      "{:.2f}".format(item_volume),
+                      total_volume,
+                      ]
+            col_index = 0
+            for value in values:
+                if col_index in (0, 1, 2, 3):
+                    current_row.write(col_index, value, style)
+                elif col_index == 4:
+                    # Qty to Pick
+                    current_row.write(col_index, value, center_style)
+                else:
+                    current_row.write(col_index, value, right_style)
+                if col_index == 1:
+                    # Code
+                    width = round(len(value) * COL_WIDTH_MULTIPLIER * 1.1)
+                    if width > column_widths[col_index]:
+                        column_widths[col_index] = width
+                        sheet.col(col_index).width = width
+                elif col_index == 2:
+                    # Item Name
+                    width = round(len(value) * COL_WIDTH_MULTIPLIER * 0.9)
+                    if width > column_widths[col_index]:
+                        column_widths[col_index] = width
+                        sheet.col(col_index).width = width
+                col_index += 1
+            row_index += 1
+
+        # Footer
+        current_row = sheet.row(row_index)
+        current_row.height = 400
+        sheet.write_merge(row_index, row_index, 0, 4, "%s:" % s3_str(T("Picked By")), right_style)
+        sheet.write_merge(row_index, row_index, 5, 9, "", style) # Styling
+        row_index += 1
+        current_row = sheet.row(row_index)
+        current_row.height = 400
+        sheet.write_merge(row_index, row_index, 0, 4, "%s:" % s3_str(T("Signature")), right_style)
+        sheet.write_merge(row_index, row_index, 5, 9, "", style) # Styling
+
+    # Export to File
+    output = BytesIO()
+    try:
+        book.save(output)
+    except:
+        import sys
+        error = sys.exc_info()[1]
+        current.log.error(error)
+    output.seek(0)
+
+    # Response headers
+    title = s3_str(T("Picking List for %(request)s")) % {"request": req_ref}
+    filename = "%s.xls" % title
+    response = current.response
+    from gluon.contenttype import contenttype
+    response.headers["Content-Type"] = contenttype(".xls")
+    disposition = "attachment; filename=\"%s\"" % filename
+    response.headers["Content-disposition"] = disposition
+
+    return output.read()
+
+# =============================================================================
 def inv_req_recv_sites(r, **attr):
     """
         Lookup to limit
@@ -12739,9 +13028,7 @@ def inv_req_rheader(r, check_page=False):
                                                   record_id = req_id,
                                                   ):
                             submit_btn = A(T("Submit for Approval"),
-                                           _href = URL(c = "inv",
-                                                       f = "req",
-                                                       args = [req_id,
+                                           _href = URL(args = [req_id,
                                                                "submit",
                                                                ]
                                                        ),
@@ -12757,6 +13044,7 @@ def inv_req_rheader(r, check_page=False):
                             s3.js_global.append('''i18n.req_submit_confirm="%s"''' \
                                     % T("Are you sure you want to submit this request?"))
                             s3.rfooter = TAG[""](submit_btn)
+
                     elif workflow_status == 2: # Submitted
                         if inv_req_is_approver(site_id):
                             # Have they already approved?
@@ -12768,9 +13056,7 @@ def inv_req_rheader(r, check_page=False):
                                                         )
                             if not approved:
                                 approve_btn = A(T("Approve"),
-                                               _href = URL(c = "inv",
-                                                           f = "req",
-                                                           args = [req_id,
+                                               _href = URL(args = [req_id,
                                                                    "approve_req",
                                                                    ]
                                                            ),
@@ -12786,6 +13072,7 @@ def inv_req_rheader(r, check_page=False):
                                 s3.js_global.append('''i18n.req_approve_confirm="%s"''' \
                                         % T("Are you sure you want to approve this request?"))
                                 s3.rfooter = TAG[""](approve_btn)
+
                     elif workflow_status == 3: # Approved
                         # @ToDo: Check for permission on sites requested_from
                         if auth.s3_has_permission("create", "inv_send"):
@@ -12804,6 +13091,21 @@ def inv_req_rheader(r, check_page=False):
                                            )
                             # Not converted to POST as directs to a create form
                             s3.rfooter = TAG[""](fulfil_btn)
+
+                        if settings.get_inv_req_reserve_items():
+                            pl_btn = A(ICON("print"),
+                                       " ",
+                                       T("Picking List"),
+                                       _href = URL(args = [req_id,
+                                                           "pick_list.xls",
+                                                           ],
+                                                   ),
+                                       _class = "action-btn",
+                                       )
+                            if s3.rfooter:
+                                s3.rfooter.append(pl_btn)
+                            else:
+                                s3.rfooter = TAG[""](pl_btn)
 
         if not check_page:
             rheader_tabs = s3_rheader_tabs(r, tabs)
