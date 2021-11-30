@@ -15281,6 +15281,7 @@ def inv_send_onaccept(form):
         iitable = s3db.inv_inv_item
         query = (ltable.send_id == send_id) & \
                 (ltable.req_id == ritable.req_id) & \
+                (ritable.site_id == record.site_id) & \
                 (ritable.id == rbtable.req_item_id) & \
                 (rbtable.inv_item_id == iitable.id)
         items = db(query).select(ritable.id,
@@ -17388,7 +17389,7 @@ class inv_ReqCheckMethod(S3Method):
                                                    args = [r.id, "send"],
                                                    vars = {"site_id": site_id},
                                                    ),
-                                       _class = "action-btn"
+                                       _class = "action-btn",
                                        )
                         s3.rfooter = TAG[""](commit_btn)
 
