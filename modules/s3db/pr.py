@@ -9412,7 +9412,7 @@ def pr_add_affiliation(master, affiliate, role=None, role_type=OU):
 # =============================================================================
 def pr_is_affiliated(master, affiliate, role=None):
     """
-        Add a new affiliation record
+        Debugging tool to show affiliations
 
         @param master: the master entity, either as PE ID or as tuple
                        (instance_type, instance_id)

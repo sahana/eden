@@ -157,8 +157,7 @@ def config(settings):
                 record_id = row["id"]
                 realm_name = "REQ_%s" % record_id
                 ritable = s3db.inv_req_item
-                query = (ritable.req_id == record_id) & \
-                        (ritable.deleted == False)
+                query = (ritable.req_id == record_id)
                 request_items = db(query).select(ritable.site_id)
                 site_ids = set([ri.site_id for ri in request_items] + [row["site_id"]])
             elif tablename == "inv_track_item":
@@ -176,7 +175,7 @@ def config(settings):
                                                            stable.to_site_id,
                                                            limitby = (0, 1),
                                                            ).first()
-                    site_ids = (send,site_id,
+                    site_ids = (send.site_id,
                                 send.to_site_id,
                                 )
                 elif send_id:
@@ -267,7 +266,7 @@ def config(settings):
                     entities.remove(pe_id)
 
             # Add new affiliations
-            for e in entities:
+            for pe_id in entities:
                 pr_add_affiliation(pe_id, realm_entity, role="Parent", role_type=OU)
 
             return realm_entity
@@ -296,7 +295,7 @@ def config(settings):
                     (htable.person_id == table.person_id) & \
                     (htable.deleted != True)
             rows = db(query).select(htable.realm_entity,
-                                    limitby = (0, 2)
+                                    limitby = (0, 2),
                                     )
             if len(rows) == 1:
                 realm_entity = rows.first().realm_entity
@@ -6577,14 +6576,18 @@ Thank you"""
             site_id = form_vars_get("site_id")
             if site_id and site_id != form.record.site_id:
                 # Item has been Requested from a specific site so this needs to be affiliated to the realm
+                req_id = form_vars_get("req_id")
                 db = current.db
                 table = db.inv_req
-                record = db(table.id == form_vars_get("req_id")).select(table.id,
-                                                                        table.site_id,
-                                                                        limitby = (0, 1),
-                                                                        ).first()
+                record = db(table.id == req_id).select(table.id,
+                                                       table.site_id,
+                                                       limitby = (0, 1),
+                                                       ).first()
                 # Update affiliations
-                current.auth.get_realm_entity(table, record)
+                realm_entity = current.auth.get_realm_entity(table, record)
+                db(table.id == req_id).update(realm_entity = realm_entity)
+                # Update Request Items
+                db(current.s3db.inv_req_item.req_id == req_id).update(realm_entity = realm_entity)
 
     # -------------------------------------------------------------------------
     def customise_inv_stock_card_controller(**attr):

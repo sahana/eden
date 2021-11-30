@@ -4259,6 +4259,8 @@ $.filterOptionsS3({
                   when an item is added or quantity changed
                 - add item category links for the request when adding an item
                   of a new item category
+
+            NB Calling update_realm_entity of the parent Req based on changed site_id is left to templates to do in custom onaccept (e.g. see RMS)
         """
 
         db = current.db
@@ -4286,21 +4288,22 @@ $.filterOptionsS3({
         if current.deployment_settings.get_inv_req_filter_by_item_category():
             # Update inv_req_item_category link table
             item_id = form_vars.get("item_id")
-            citable = db.supply_catalog_item
-            cats = db(citable.item_id == item_id).select(citable.item_category_id)
-            rictable = current.s3db.inv_req_item_category
-            for cat in cats:
-                item_category_id = cat.item_category_id
-                query = (rictable.deleted == False) & \
-                        (rictable.req_id == req_id) & \
-                        (rictable.item_category_id == item_category_id)
-                exists = db(query).select(rictable.id,
-                                          limitby = (0, 1),
-                                          )
-                if not exists:
-                    rictable.insert(req_id = req_id,
-                                    item_category_id = item_category_id,
-                                    )
+            if item_id: # Field not present when coming from inv_req_from
+                citable = db.supply_catalog_item
+                cats = db(citable.item_id == item_id).select(citable.item_category_id)
+                rictable = current.s3db.inv_req_item_category
+                for cat in cats:
+                    item_category_id = cat.item_category_id
+                    query = (rictable.deleted == False) & \
+                            (rictable.req_id == req_id) & \
+                            (rictable.item_category_id == item_category_id)
+                    exists = db(query).select(rictable.id,
+                                              limitby = (0, 1),
+                                              )
+                    if not exists:
+                        rictable.insert(req_id = req_id,
+                                        item_category_id = item_category_id,
+                                        )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -10761,7 +10764,17 @@ def inv_req_controller(template = False):
                                                                                limitby = (0, 1),
                                                                                ).first()
                                 site_id = req_item.site_id
-                                if site_id:
+                                if not site_id:
+                                    # Replace the NONE with a button
+                                    ctable.site_id.represent = lambda v: A(T("Request from Facility"),
+                                                                           _href = URL(f = "req_item",
+                                                                                       args = [req_item_id,
+                                                                                               "inv_item",
+                                                                                               ],
+                                                                                       ),
+                                                                           _class = "action-btn",
+                                                                           )
+                                else:
                                     # Item has been allocated to come from a Site
                                     # Don't allow basic fields to be edited
                                     ctable.item_id.writable = False
@@ -11728,11 +11741,12 @@ def inv_req_from(r, **attr):
     db(s3db.inv_req_item.id == req_item_id).update(site_id = site_id)
     onaccepts = s3db.get_config("inv_req_item", "onaccept")
     if onaccepts:
-        record = Storage(id = req_item_id,
-                         req_id = req_id,
-                         site_id = site_id,
-                         )
-        form = Storage(vars = record)
+        form = Storage(vars = Storage(id = req_item_id,
+                                      req_id = req_id,
+                                      site_id = site_id, # For custom onaccepts (e.g. to set realm_entity)
+                                      ),
+                       record = Storage(site_id = None),
+                       )
         if not isinstance(onaccepts, (list, tuple)):
             onaccepts = [onaccepts]
         [onaccept(form) for onaccept in onaccepts]
@@ -12065,8 +12079,7 @@ def inv_req_item_inv_item(r, **attr):
 
     if settings.get_inv_req_order_item():
         output["order_btn"] = A(T("Order Item"),
-                                _href = URL(c="inv", f="req_item",
-                                            args = [req_item_id,
+                                _href = URL(args = [req_item_id,
                                                     "order",
                                                     ]
                                             ),
@@ -12078,8 +12091,7 @@ def inv_req_item_inv_item(r, **attr):
 
     s3.action_methods = ("inv_item",)
     s3.actions = [{"label": s3_str(T("Request From")),
-                   "url": URL(c = "inv",
-                              f = "req",
+                   "url": URL(f = "req",
                               args = [req_id,
                                       "req_item",
                                       req_item_id,
