@@ -8991,6 +8991,8 @@ def inv_recv_controller():
                 table.url.readable = table.url.writable = False
                 table.date.readable = table.date.writable = False
 
+                # Add button to print the GRN
+                # - needed for Wizard, but generalised for consistency
                 table.name.comment = A(ICON("print"),
                                        " ",
                                        settings.get_inv_recv_shortname(),
@@ -14182,11 +14184,11 @@ def inv_send_controller():
             export_formats.remove("pdf")
             settings.ui.export_formats = export_formats
 
+        method = r.method
         record = r.record
         if record:
             status = record.status
-        elif r.method == "create" or \
-             (r.method == "wizard" and r.get_vars.get("page") == "send"):
+        elif method in ("create", "wizard"):
             req_id = r.get_vars.get("req_id")
             if req_id:
                 rtable = s3db.inv_req
@@ -14211,6 +14213,8 @@ def inv_send_controller():
                 table.url.readable = table.url.writable = False
                 table.date.readable = table.date.writable = False
 
+                # Add button to print the WB
+                # - needed for Wizard, but generalised for consistency
                 table.name.comment = A(ICON("print"),
                                        " ",
                                        settings.get_inv_send_shortname(),
@@ -14224,7 +14228,7 @@ def inv_send_controller():
             elif cname == "send_package":
 
                 # Uncommon workflow, so no need to optimise for this:
-                #if r.method == "read":
+                #if method == "read":
                 #    return True
 
                 if status != SHIP_STATUS_IN_PROCESS:
@@ -14300,13 +14304,12 @@ def inv_send_controller():
 
                 # Security-wise, we are already covered by configure()
                 # Performance-wise, we should optimise for UI-acessible flows
-                #method = r.method
                 #if method in ("create", "delete"):
                 #    # Can only create or delete track items for a send record
                 #    # if the status is preparing
                 #    if status != SHIP_STATUS_IN_PROCESS:
                 #        return False
-                if r.method == "delete":
+                if method == "delete":
                     return inv_track_item_deleting(r.component_id)
 
                 tracktable = s3db.inv_track_item
@@ -14528,7 +14531,7 @@ def inv_send_controller():
                     crud_strings.title_update = \
                     crud_strings.title_display = T("Process Shipment to Send")
 
-                    if r.method in (None, "update", "wizard"):
+                    if method in (None, "update", "wizard"):
                         # Limit to Bins from this site
                         from .org import org_site_layout_config
                         isbtable = s3db.inv_send_item_bin
@@ -14647,10 +14650,19 @@ def inv_send_controller():
                                                                "q": bin_row.quantity,
                                                                })
 
-                                # Set the dropdown options
-                                f = tracktable.send_inv_item_id
-                                f.requires = f.requires.other
-                                f.requires.dbset = db(query & ii_query)
+                                dbset = db(query & ii_query)
+                                if dbset.select(iitable.id,
+                                                limitby = (0, 1),
+                                                ):
+                                    # Set the dropdown options
+                                    f = tracktable.send_inv_item_id
+                                    f.requires = f.requires.other
+                                    f.requires.dbset = dbset
+                                else:
+                                    # No more items can be added
+                                    s3db.configure("inv_track_item",
+                                                   insertable = False,
+                                                   )
 
                         if not reqs:
                             # Restrict to valid items from this site only
@@ -14802,8 +14814,8 @@ S3.supply.site_id=%s%s''' % (json.dumps(inv_data, separators=SEPARATORS),
                 set_send_attr(SHIP_STATUS_IN_PROCESS)
                 sendtable.send_ref.readable = False
 
-            if (r.method in ("create", "wizard") or \
-                (r.method == "update" and record.status == SHIP_STATUS_IN_PROCESS)):
+            if (method in ("create", "wizard") or \
+               (method == "update" and record.status == SHIP_STATUS_IN_PROCESS)):
                 if s3.debug:
                     s3.scripts.append("/%s/static/scripts/S3/s3.inv_send.js" % r.application)
                 else:
@@ -15235,18 +15247,16 @@ def inv_send_onaccept(form):
        When a inv send record is created
        - create the send_ref if not provided
        - add all inv items with the status of the shipment type
+       - add all reserved items for linked Inventory Requisitions
     """
+
+    db = current.db
+    settings = current.deployment_settings
 
     form_vars = form.vars
     send_id = form_vars.id
 
-    if current.deployment_settings.get_inv_send_add_items_of_shipment_type():
-        shipment_type = form_vars.type
-        if shipment_type:
-            inv_send_add_items_of_shipment_type(send_id, form_vars.site_id, int(shipment_type))
-
     # If the send_ref is None then set it up
-    db = current.db
     stable = db.inv_send
     record = db(stable.id == send_id).select(stable.id,
                                              stable.send_ref,
@@ -15255,11 +15265,96 @@ def inv_send_onaccept(form):
                                              ).first()
     if not record.send_ref:
         from .supply import supply_get_shipping_code as get_shipping_code
-        code = get_shipping_code(current.deployment_settings.get_inv_send_shortname(),
+        code = get_shipping_code(settings.get_inv_send_shortname(),
                                  record.site_id,
                                  stable.send_ref,
                                  )
         record.update_record(send_ref = code)
+
+    # Add all Reserved Items for linked Inventory Requisitions
+    # @ToDo: Allow Update forms? (Be careful if keeping track in the req as we could delete the send...)
+    if not form.record and settings.get_inv_req_reserve_items():
+        s3db = current.s3db
+        ltable = s3db.inv_send_req
+        ritable = s3db.inv_req_item
+        rbtable = s3db.inv_req_item_inv
+        iitable = s3db.inv_inv_item
+        query = (ltable.send_id == send_id) & \
+                (ltable.req_id == ritable.req_id) & \
+                (ritable.id == rbtable.req_item_id) & \
+                (rbtable.inv_item_id == iitable.id)
+        items = db(query).select(ritable.id,
+                                 ritable.item_id,
+                                 ritable.item_pack_id,
+                                 rbtable.inv_item_id,
+                                 rbtable.layout_id,
+                                 rbtable.quantity,
+                                 iitable.pack_value,
+                                 iitable.currency,
+                                 iitable.expiry_date,
+                                 iitable.item_source_no,
+                                 iitable.supply_org_id,
+                                 iitable.owner_org_id,
+                                 )
+        if items:
+            # Sort by inv_item_id
+            inv_items = {}
+            for row in items:
+                req_inv_row = row.inv_req_item_inv
+                inv_item_id = req_inv_row.inv_item_id
+                if inv_item_id not in inv_items:
+                    req_row = row.inv_req_item
+                    inv_row = row.inv_inv_item
+                    inv_items[inv_item_id] = {"req_item_id": req_row.id,
+                                              "item_id": req_row.item_id,
+                                              "item_pack_id": req_row.item_pack_id,
+                                              "pack_value": inv_row.pack_value,
+                                              "currency": inv_row.currency,
+                                              "expiry_date": inv_row.expiry_date,
+                                              "item_source_no": inv_row.item_source_no,
+                                              "supply_org_id": inv_row.supply_org_id,
+                                              "owner_org_id": inv_row.owner_org_id,
+                                              "bins": [],
+                                              "quantity": 0,
+                                              }
+                bin_quantity = req_inv_row.quantity
+                if bin_quantity:
+                    inv_items[inv_item_id]["quantity"] += bin_quantity
+                    layout_id = req_inv_row.layout_id
+                    if layout_id:
+                        inv_items[inv_item_id]["bins"].append({"layout_id": layout_id,
+                                                               "quantity": bin_quantity,
+                                                               })
+
+            ttable = s3db.inv_track_item
+            sbtable = s3db.inv_send_item_bin
+            for inv_item_id in inv_items:
+                item = inv_items[inv_item_id]
+                track_item_id = ttable.insert(send_id = send_id,
+                                              item_id = item["item_id"],
+                                              item_pack_id = item["item_pack_id"],
+                                              quantity = item["quantity"],
+                                              pack_value = item["pack_value"],
+                                              currency = item["currency"],
+                                              expiry_date = item["expiry_date"],
+                                              item_source_no = item["item_source_no"],
+                                              supply_org_id = item["supply_org_id"],
+                                              owner_org_id = item["owner_org_id"],
+                                              req_item_id = item["req_item_id"],
+                                              send_inv_item_id = inv_item_id,
+                                              status = TRACK_STATUS_TRANSIT, # Record locked (can't edit, no duplication of stock removal)
+                                              )
+                for req_bin in item["bins"]:
+                    sbtable.insert(track_item_id = track_item_id,
+                                   layout_id = req_bin["layout_id"],
+                                   quantity = req_bin["quantity"],
+                                   )
+
+    # Add all Items matching Shipment Type
+    if settings.get_inv_send_add_items_of_shipment_type():
+        shipment_type = form_vars.type
+        if shipment_type:
+            inv_send_add_items_of_shipment_type(send_id, form_vars.site_id, int(shipment_type))
 
 # =============================================================================
 def inv_send_package_update(send_package_id):
