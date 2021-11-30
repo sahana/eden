@@ -12032,10 +12032,13 @@ def inv_req_item_inv_item(r, **attr):
 
     s3.no_sspag = True # pagination won't work with 2 datatables on one page @todo: test
 
-    itable = s3db.inv_inv_item
+    iitable = s3db.inv_inv_item
     # Get list of matching inventory items
-    s3.filter = (itable.item_id == item_id) & \
-                (itable.site_id != site_id)
+    s3.filter = (iitable.item_id == item_id) & \
+                (iitable.site_id != site_id) & \
+                (iitable.quantity > 0) & \
+                ((iitable.expiry_date >= r.utcnow) | ((iitable.expiry_date == None))) & \
+                (iitable.status == 0)
     # Tweak CRUD String for this context
     s3.crud_strings["inv_inv_item"].msg_list_empty = T("No Inventories currently have this item in stock")
 
@@ -12052,7 +12055,7 @@ def inv_req_item_inv_item(r, **attr):
         alt_item_ids = [alt_item_row.alt_item_id for alt_item_row in alt_item_rows]
 
         if alt_item_ids:
-            s3.filter = (itable.item_id.belongs(alt_item_ids))
+            s3.filter = (iitable.item_id.belongs(alt_item_ids))
             inv_items_alt = current.rest_controller("inv", "inv_item")
             output["items_alt"] = inv_items_alt["items"]
         else:
@@ -12063,7 +12066,9 @@ def inv_req_item_inv_item(r, **attr):
     if settings.get_inv_req_order_item():
         output["order_btn"] = A(T("Order Item"),
                                 _href = URL(c="inv", f="req_item",
-                                            args = [req_item_id, "order"]
+                                            args = [req_item_id,
+                                                    "order",
+                                                    ]
                                             ),
                                 _id = "req-order",
                                 _class = "action-btn",

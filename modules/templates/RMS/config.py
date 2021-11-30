@@ -6115,12 +6115,13 @@ Thank you"""
             - Can hardcode the component handling
         """
 
-        if form.record:
+        record = form.record
+        if record:
             # Update form
             req_id = form.vars.id
             db = current.db
             table  = db.inv_req
-            if site_id not in record:
+            if "site_id" not in record:
                 record = db(table.id == req_id).select(table.id,
                                                        table.site_id,
                                                        limitby = (0, 1),
