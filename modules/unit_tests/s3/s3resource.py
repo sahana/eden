@@ -64,19 +64,18 @@ class ComponentJoinConstructionTests(unittest.TestCase):
         self.assertEqual(str(join), str(expected))
 
     # -------------------------------------------------------------------------
-    @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
     def testGetJoinLinkTableComponent(self):
         """ Join for a link-table component """
 
-        resource = current.s3db.resource("project_project")
-        component = resource.components["task"]
+        resource = current.s3db.resource("org_facility")
+        component = resource.components["service"]
 
-        project_project = resource.table
-        project_task_project = component.link.table
-        project_task = component.table
-        expected = (((project_project.id == project_task_project.project_id) & \
-                   (project_task_project.deleted == False)) & \
-                   (project_task_project.task_id == project_task.id))
+        org_facility = resource.table
+        org_service_site = component.link.table
+        org_service = component.table
+        expected = (((org_facility.site_id == org_service_site.site_id) &
+                     (org_service_site.deleted == False)) &
+                    (org_service_site.service_id == org_service.id))
 
         join = component.get_join()
 
@@ -132,20 +131,19 @@ class ComponentLeftJoinConstructionTests(unittest.TestCase):
         assertEqual(str(ljoin[0]), str(expected))
 
     # -------------------------------------------------------------------------
-    @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
     def testGetLeftJoinLinkTableComponent(self):
         """ Left Join for a link-table component """
 
-        resource = current.s3db.resource("project_project")
-        component = resource.components["task"]
+        resource = current.s3db.resource("org_facility")
+        component = resource.components["service"]
 
         rtable = resource.table
         ltable = component.link.table
         ctable = component.table
 
-        expected_l = ltable.on((rtable.id == ltable.project_id) & \
+        expected_l = ltable.on((rtable.site_id == ltable.site_id) &
                                (ltable.deleted == False))
-        expected_r = ctable.on(ltable.task_id == ctable.id)
+        expected_r = ctable.on(ltable.service_id == ctable.id)
 
         ljoin = component.get_left_join()
 
