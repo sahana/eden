@@ -202,10 +202,10 @@ $(document).ready(function() {
                     var onTreeReady = function() {
                         newTree.hierarchicalopts('set', [bins[0]]);
                         // Make read-only
-                        newBinQuantityField.attr('disabled', 'disabled');
+                        newBinQuantityField.attr('disabled', true);
                         $('#add-row-defaultsend_bin > .subform-action').hide();
                         newTree.next('.s3_inline_add_resource_link').hide();
-                        $('.s3-hierarchy-button').attr('disabled','disabled');
+                        $('.s3-hierarchy-button').attr('disabled', true);
                     };
                     if (newTree.is(":data('s3-hierarchicalopts')")) {
                         // Tree is already ready
@@ -436,20 +436,19 @@ $(document).ready(function() {
             if (totalQuantity) {
                 totalQuantity = parseFloat(totalQuantity);
                 // Cleanup any old error message
-                $('#inv_track_item_quantity-error').remove();
+                $('#inv_track_item_quantity-warning').remove();
             } else {
                 totalQuantity = 0;
             }
+            message = null;
             if (totalQuantity > stockQuantity) {
                 // @ToDo: i18n
-                message = 'Total Quantity reduced to Quantity in Stock';
-                error = $('<div id="inv_track_item_quantity-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
-                QuantityField.val(stockQuantity)
-                             .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
-                    $(this).fadeOut('slow').remove();
-                    return false;
-                });
                 totalQuantity = stockQuantity;
+                message = 'Total Quantity reduced to Quantity in Stock';
+            } else if (totalQuantity < 0) {
+                // @ToDo: i18n
+                totalQuantity = 0;
+                message = 'Total Quantity cannot be negative';
             }
             if (binsLength == 1) {
                 // Update the Bin Quantity field
@@ -458,16 +457,19 @@ $(document).ready(function() {
                 binnedQuantityPacked = binnedQuantity * InvPackQuantity / PackQuantity;
                 if (totalQuantity < binnedQuantityPacked) {
                     // @ToDo: i18n
+                    totalQuantity = binnedQuantityPacked;
                     message = 'Total Quantity increased to Quantity in Bins';
-                    error = $('<div id="inv_track_item_quantity-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
-                    QuantityField.val(binnedQuantityPacked)
-                                 .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
-                        $(this).fadeOut('slow').remove();
-                        return false;
-                    });
                 }
                 // Validate the new bin again
                 newBinQuantityField.change();
+            }
+            if (message) {
+                error = $('<div id="inv_track_item_quantity-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
+                QuantityField.val(totalQuantity)
+                             .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                    $(this).fadeOut('slow').remove();
+                    return false;
+                });
             }
         });
 
@@ -482,14 +484,14 @@ $(document).ready(function() {
                         binStockQuantityPacked = binStockQuantity * InvPackQuantity / PackQuantity;
                         if (binQuantity > binStockQuantityPacked) {
                             // @ToDo: i18n
+                            binQuantity = binStockQuantityPacked;
                             message = 'Bin Quantity reduced to Quantity of Stock in Bin';
                             error = $('<div id="sub_defaultsend_bin_defaultsend_bin_i_quantity_edit_none-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
-                            newBinQuantityField.val(binStockQuantityPacked)
+                            newBinQuantityField.val(binQuantity)
                                                .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
                                 $(this).fadeOut('slow').remove();
                                 return false;
                             });
-                            binQuantity = binStockQuantityPacked;
                         }
                     }
                     binnedQuantityPacked = binnedQuantity * InvPackQuantity / PackQuantity;
@@ -519,14 +521,14 @@ $(document).ready(function() {
                         binStockQuantityPacked = binStockQuantity * InvPackQuantity / PackQuantity;
                         if (binQuantity > binStockQuantityPacked) {
                             // @ToDo: i18n
+                            binQuantity = binStockQuantityPacked;
                             message = 'Bin Quantity reduced to Quantity of Stock in Bin';
                             error = $('<div id="sub_defaultsend_bin_defaultsend_bin_i_quantity_edit_0-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
-                            oldBinQuantityField.val(binStockQuantityPacked)
+                            oldBinQuantityField.val(binQuantity)
                                                .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
                                 $(this).fadeOut('slow').remove();
                                 return false;
                             });
-                            binQuantity = binStockQuantityPacked;
                         }
                     }
                     binnedQuantityPacked = binnedQuantity * InvPackQuantity / PackQuantity;

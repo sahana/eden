@@ -6552,6 +6552,7 @@ Thank you"""
                                    "site_id",
                                    (order_label, "order_item.id"),
                                    "quantity",
+                                   "quantity_reserved",
                                    "quantity_transit",
                                    "quantity_fulfil",
                                    ]
@@ -6590,6 +6591,16 @@ Thank you"""
                 db(current.s3db.inv_req_item.req_id == req_id).update(realm_entity = realm_entity)
 
     # -------------------------------------------------------------------------
+    def customise_inv_req_item_resource(r, tablename):
+
+        current.s3db.add_custom_callback(tablename,
+                                         "onaccept",
+                                         inv_req_item_onaccept,
+                                         )
+
+    settings.customise_inv_req_item_resource = customise_inv_req_item_resource
+
+    # -------------------------------------------------------------------------
     def customise_inv_stock_card_controller(**attr):
 
         s3 = current.response.s3
@@ -6612,16 +6623,6 @@ Thank you"""
         return attr
 
     settings.customise_inv_stock_card_controller = customise_inv_stock_card_controller
-
-    # -------------------------------------------------------------------------
-    def customise_inv_req_item_resource(r, tablename):
-
-        current.s3db.add_custom_callback(tablename,
-                                         "onaccept",
-                                         inv_req_item_onaccept,
-                                         )
-
-    settings.customise_inv_req_item_resource = customise_inv_req_item_resource
 
     # -------------------------------------------------------------------------
     def customise_supply_item_category_resource(r, tablename):

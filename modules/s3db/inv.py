@@ -10745,7 +10745,8 @@ def inv_req_controller(template = False):
                             ctable.quantity_fulfil.readable = \
                             ctable.quantity_fulfil.writable = False
 
-                        if settings.get_inv_req_workflow() and \
+                        use_workflow = settings.get_inv_req_workflow()
+                        if use_workflow and \
                            record.workflow_status in (3, 4, 5): # Approved, Completed, Cancelled
                             # Lock all fields
                             s3db.configure("inv_req_item",
@@ -10756,7 +10757,19 @@ def inv_req_controller(template = False):
 
                         if settings.get_inv_req_reserve_items():
                             req_item_id = r.component_id
-                            if req_item_id:
+                            if not req_item_id:
+                                if use_workflow:
+                                    if record.workflow_status in (2, 3): # Submitted for Approval, Approved
+                                        assignable = True
+                                    else:
+                                        assignable = False
+                                else:
+                                    assignable = True
+                                if assignable:
+                                    # Add to List Fields
+                                    list_fields = r.component.get_config("list_fields")
+                                    list_fields.insert(-3, "quantity_reserved")
+                            else:
                                 req_item = db(ctable.id == req_item_id).select(ctable.site_id,
                                                                                ctable.quantity,
                                                                                ctable.item_id,
