@@ -196,6 +196,8 @@ $(document).ready(function() {
                     $('#add-row-defaultsend_bin').hide();
                     // Hide the Buttons on the readRow
                     $('#read-row-defaultsend_bin-0 > .subform-action').hide();
+                    // Prevent Editing
+                    inlineComponent.off('click.inlinecomponent', '.read-row');
                 } else {
                     // Populate the Bin fields
                     updateBinQuantity();

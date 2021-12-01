@@ -217,6 +217,8 @@ $(document).ready(function() {
                     $('#add-row-defaultreq_item_inv').hide();
                     // Hide the Buttons on the readRow
                     $('#read-row-defaultreq_item_inv-0 > .subform-action').hide();
+                    // Prevent Editing
+                    inlineComponent.off('click.inlinecomponent', '.read-row');
                     onTreeReady = function() {}; // Nothing needed as not editable
                 } else {
                     // Default the Bin & make field read-only
@@ -398,6 +400,7 @@ $(document).ready(function() {
             // Make Quantity available
             binnedQuantity = binnedQuantity - parseFloat(row.quantity.value);
         });
+
     }
 
    /* Support req_item_quantity_represent */
