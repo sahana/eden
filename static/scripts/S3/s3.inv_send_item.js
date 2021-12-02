@@ -28,11 +28,11 @@ $(document).ready(function() {
             bins,
             binsByID,
             binsLength,
-            editBinBtnOK = $('#rdy-defaultbin-0'),
             error,
             errorField = $('#quantity__error'),
             i,
             inlineComponent = $('#sub-defaultsend_bin'),
+            inlineComponentInput = $('#inv_track_item_sub_defaultsend_bin'),
             invItemID,
             invItems = S3.supply.inv_items,
             InvQuantity, // Available Stock. Needs to be multiplied by InvPackQuantity for comparisons
@@ -561,7 +561,9 @@ $(document).ready(function() {
             }
         });
 
-        editBinBtnOK.click(function() {
+        $('#rdy-defaultbin-0').click(function() {
+            // read-only row has been opened for editing
+            // - Tick clicked to save changes
             if (binsLength > 1) {
                 binQuantity = oldBinQuantityField.val();
                 if (binQuantity) {
@@ -572,6 +574,14 @@ $(document).ready(function() {
                 // Validate the new bin again
                 newBinQuantityField.change();
             }
+        });
+
+        inlineComponent.on('editCancelled', function(event, rowindex) {
+            // read-only row has been opened for editing
+            // - X clicked to cancel changes
+            // Make Quantity unavailable
+            binQuantity = parseFloat(inlineComponentInput.data('data').data[rowindex].quantity.value);
+            binnedQuantity = binnedQuantity + binQuantity;
         });
 
         inlineComponent.on('rowAdded', function(event, row) {

@@ -1082,6 +1082,9 @@
             // Enable the add-row
             this._enableAddRow();
             this._showHeaders();
+
+            // Fire Event for external scripts to listen to
+            $(this.element).trigger('editCancelled', rowindex);
         },
 
         /**

@@ -18,10 +18,10 @@ $(document).ready(function() {
             binQuantity,
             binnedQuantity = S3.supply.binnedQuantity || 0, // Needs to be multiplied by InvPackQuantity for comparisons
             binnedQuantityPacked, // Quantity binned of current Pack
-            editBinBtnOK = $('#rdy-defaultbin-0'),
             error,
             first,
             inlineComponent = $('#sub-defaultrecv_bin'),
+            inlineComponentInput = $('#inv_track_item_sub_defaultrecv_bin'),
             itemID = ItemField.val(),
             ItemPackField = $('#inv_track_item_item_pack_id'),
             itemPackID,
@@ -222,27 +222,6 @@ $(document).ready(function() {
             oldPackQuantity = PackQuantity;
         });
 
-        // Attach to the top-level element to catch newly-created readRows
-        inlineComponent.on('click.s3', '.inline-edt', function() {
-            binQuantity = oldBinQuantityField.val();
-            if (binQuantity) {
-                binQuantity = parseFloat(binQuantity);
-                // Make this Bin's Quantity available
-                binnedQuantity -= (binQuantity * PackQuantity / startingPackQuantity);
-            }
-        });
-
-        editBinBtnOK.click(function() {
-            binQuantity = oldBinQuantityField.val();
-            if (binQuantity) {
-                binQuantity = parseFloat(binQuantity);
-                // Make this Bin's Quantity unavailable
-                binnedQuantity += (binQuantity * PackQuantity / startingPackQuantity);
-            }
-            // Validate the new bin again
-            //newBinQuantityField.change();
-        });
-
         QuantityField.change(function() {
             sendQuantity = QuantityField.val();
             if (sendQuantity) {
@@ -325,6 +304,37 @@ $(document).ready(function() {
                     });
                 }
             }
+        });
+
+        // Attach to the top-level element to catch newly-created readRows
+        inlineComponent.on('click.s3', '.inline-edt', function() {
+            binQuantity = oldBinQuantityField.val();
+            if (binQuantity) {
+                binQuantity = parseFloat(binQuantity);
+                // Make this Bin's Quantity available
+                binnedQuantity -= (binQuantity * PackQuantity / startingPackQuantity);
+            }
+        });
+
+        $('#rdy-defaultbin-0').click(function() {
+            // read-only row has been opened for editing
+            // - Tick clicked to save changes
+            binQuantity = oldBinQuantityField.val();
+            if (binQuantity) {
+                binQuantity = parseFloat(binQuantity);
+                // Make this Bin's Quantity unavailable
+                binnedQuantity += (binQuantity * PackQuantity / startingPackQuantity);
+            }
+            // Validate the new bin again
+            //newBinQuantityField.change();
+        });
+
+        inlineComponent.on('editCancelled', function(event, rowindex) {
+            // read-only row has been opened for editing
+            // - X clicked to cancel changes
+            // Make Quantity unavailable
+            binQuantity = parseFloat(inlineComponentInput.data('data').data[rowindex].quantity.value);
+            binnedQuantity = binnedQuantity + binQuantity;
         });
 
         inlineComponent.on('rowAdded', function(event, row) {

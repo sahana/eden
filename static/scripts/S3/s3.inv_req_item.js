@@ -16,9 +16,9 @@ $(document).ready(function() {
             bins,
             binsByID,
             binsLength,
-            editBinBtnOK = $('#rdy-defaultreq_item_inv-0'),
             error,
             inlineComponent = $('#sub-defaultreq_item_inv'),
+            inlineComponentInput = $('#inv_req_item_sub_defaultreq_item_inv'),
             invItemID,
             layoutID,
             message,
@@ -52,31 +52,6 @@ $(document).ready(function() {
         // Display Total Available Stock Quantity
         var stockInfo = '<span> / ' + reqData.q.toFixed(2) + ' ' + reqData.p + ' (' + i18n.in_inv + ')</span>';
         totalQuantityField.after(stockInfo);
-
-        // Attach to the top-level element to catch newly-created readRows
-        inlineComponent.on('click.s3', '.inline-edt', function() {
-            binQuantity = oldRowQuantityField.val();
-            if (binQuantity) {
-                binQuantity = parseFloat(binQuantity);
-            } else {
-                binQuantity = 0;
-            }
-            // Make this Bin's Quantity available
-            binnedQuantity = binnedQuantity - binQuantity;
-        });
-
-        editBinBtnOK.click(function() {
-            binQuantity = oldRowQuantityField.val();
-            if (binQuantity) {
-                binQuantity = parseFloat(binQuantity);
-            } else {
-                binQuantity = 0;
-            }
-            // Make this Bin's Quantity unavailable
-            binnedQuantity = binnedQuantity + binQuantity;
-            // Validate the new bin again
-            newRowQuantityField.change();
-        });
 
         totalQuantityField.change(function() {
             totalQuantity = totalQuantityField.val();
@@ -387,6 +362,41 @@ $(document).ready(function() {
         oldRowBinField.change(function() {
             // Validate the Quantity
             oldRowQuantityField.change();
+        });
+
+        // Attach to the top-level element to catch newly-created readRows
+        inlineComponent.on('click.s3', '.inline-edt', function() {
+            binQuantity = oldRowQuantityField.val();
+            if (binQuantity) {
+                binQuantity = parseFloat(binQuantity);
+            } else {
+                binQuantity = 0;
+            }
+            // Make this Bin's Quantity available
+            binnedQuantity = binnedQuantity - binQuantity;
+        });
+
+        $('#rdy-defaultbin-0').click(function() {
+            // read-only row has been opened for editing
+            // - Tick clicked to save changes
+            binQuantity = oldRowQuantityField.val();
+            if (binQuantity) {
+                binQuantity = parseFloat(binQuantity);
+            } else {
+                binQuantity = 0;
+            }
+            // Make this Bin's Quantity unavailable
+            binnedQuantity = binnedQuantity + binQuantity;
+            // Validate the new bin again
+            newRowQuantityField.change();
+        });
+
+        inlineComponent.on('editCancelled', function(event, rowindex) {
+            // read-only row has been opened for editing
+            // - X clicked to cancel changes
+            // Make Quantity unavailable
+            binQuantity = parseFloat(inlineComponentInput.data('data').data[rowindex].quantity.value);
+            binnedQuantity = binnedQuantity + binQuantity;
         });
 
         inlineComponent.on('rowAdded', function(event, row) {
