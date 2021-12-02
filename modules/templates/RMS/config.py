@@ -3968,6 +3968,7 @@ Thank you"""
         if hasattr(requires, "other"):
             f.requires = requires.other
 
+        from s3db.inv import inv_send_postprocess
         crud_form = S3SQLCustomForm(S3SQLInlineLink("req",
                                                     field = "req_id",
                                                     label = T("Request Number"),
@@ -3982,6 +3983,7 @@ Thank you"""
                                     "transport_type",
                                     "transported_by",
                                     "transport_ref",
+                                    "vehicle",
                                     "registration_no",
                                     #"driver_name",
                                     #"driver_phone",
@@ -3991,6 +3993,7 @@ Thank you"""
                                     "status",
                                     "filing_status",
                                     "comments",
+                                    postprocess = inv_send_postprocess,
                                     )
 
         s3db.configure(tablename,
@@ -6341,6 +6344,7 @@ Thank you"""
             db = current.db
 
             # Link to Projects
+            # NB Whilst the requester can only select valid Project Codes for their NS, we do NOT use this as a filter for destination.
             ptable = s3db.project_project
             project_represent = S3Represent(lookup = "project_project",
                                             fields = ["code"],

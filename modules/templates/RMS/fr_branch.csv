@@ -1,4 +1,4 @@
-Organisation,Branch,Type,Region,Country
-French Red Cross,Guadeloupe,Red Cross / Red Crescent,Latin Caribbean,GP
-French Red Cross,Martinique,Red Cross / Red Crescent,Latin Caribbean,MQ
-French Red Cross,PIRAC,Red Cross / Red Crescent,Latin Caribbean,
+Organisation,Branch,Type,Region,Country,KV:country
+French Red Cross,Guadeloupe,Red Cross / Red Crescent,Latin Caribbean,GP,
+French Red Cross,Martinique,Red Cross / Red Crescent,Latin Caribbean,MQ,
+French Red Cross,PIRAC,Red Cross / Red Crescent,Latin Caribbean,,PF2

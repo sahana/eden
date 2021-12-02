@@ -435,6 +435,15 @@ def grn(r, **attr):
                                                        ).first()
     organisation_id = site.organisation_id
 
+    ottable = s3db.org_organisation_tag
+    query = (ottable.organisation_id == organisation_id) & \
+            (ottable.tag == "country")
+    country = db(query).select(ottable.value,
+                               limitby = (0, 1),
+                               ).first()
+    if country:
+        country = country.value
+
     from s3db.org import org_root_organisation_name
     recipient_ns = org_root_organisation_name(organisation_id)
 
@@ -452,6 +461,9 @@ def grn(r, **attr):
                                                             limitby = (0, 1),
                                                             ).first()
             logo = org.logo
+
+    if not country:
+        country = org.country
 
     if logo:
         src = os.path.join(r.folder,
@@ -582,7 +594,7 @@ def grn(r, **attr):
                        "",
                        "",
                        "",
-                       Paragraph(str(B(org.country)), style_12_center),
+                       Paragraph(str(B(country)), style_12_center),
                        Paragraph(str(B(recv_ref)), style_12_center),
                        "",
                        ],
@@ -1644,6 +1656,16 @@ def waybill(r, **attr):
                                                        limitby = (0, 1),
                                                        ).first()
     organisation_id = site.organisation_id
+
+    ottable = s3db.org_organisation_tag
+    query = (ottable.organisation_id == organisation_id) & \
+            (ottable.tag == "country")
+    country = db(query).select(ottable.value,
+                               limitby = (0, 1),
+                               ).first()
+    if country:
+        country = country.value
+
     org = db(otable.id == organisation_id).select(otable.country,
                                                   otable.logo,
                                                   otable.root_organisation,
@@ -1658,6 +1680,9 @@ def waybill(r, **attr):
                                                             limitby = (0, 1),
                                                             ).first()
             logo = org.logo
+
+    if not country:
+        country = org.country
 
     if logo:
         src = os.path.join(r.folder,
@@ -1710,7 +1735,7 @@ def waybill(r, **attr):
                  1.88 * cm, # K
                  1.56 * cm, # L
                  1.33 * cm, # M
-                 1.56 * cm, # N
+                 1.7 * cm, # N 1.56
                  )
 
     lightgrey = colors.lightgrey
@@ -1805,7 +1830,7 @@ def waybill(r, **attr):
                        "",
                        "",
                        Paragraph(str(B("WB")), style_8_center),
-                       Paragraph(str(B(org.country)), style_center),
+                       Paragraph(str(B(country)), style_center),
                        Paragraph(str(B(send_ref)), style_center),
                        "",
                        "",
@@ -1875,7 +1900,7 @@ def waybill(r, **attr):
                                        ), style_center),
                 "",
                 "",
-                "",
+                Paragraph(record.vehicle or "", style_center),
                 "",
                 "",
                 "",
