@@ -881,6 +881,8 @@ def config(settings):
     settings.inv.req_recurring = False
     # Use Order Items
     settings.inv.req_order_item = True
+    # Requester doesn't need Update rights for the Site
+    settings.inv.requester_site_updateable = False
     # Use Workflow
     settings.inv.req_workflow = True
 
@@ -1317,6 +1319,7 @@ def config(settings):
         if role in ("hn_user",
                     "rms_user",
                     "rc_logs_user",
+                    "rc_user",
                     "logs_manager_national",
                     "wh_operator_national",
                     ):
@@ -1341,6 +1344,13 @@ def config(settings):
             # Default ADMIN in prepop: bail
             return
 
+        # Lookup the RC Org Group
+        ogtable = s3db.org_group
+        org_group = db(ogtable.name == "RC").select(ogtable.pe_id,
+                                                    limitby = (0, 1),
+                                                    ).first()
+        rc_group_pe_id = org_group.pe_id
+
         # Lookup the root entity
         root_org = org.root_organisation
         if root_org == org.id:
@@ -1360,6 +1370,7 @@ def config(settings):
         else:
             user_role = "rms_user"
         roles = [user_role,
+                 "rc_user",
                  ]
 
         # Add to additional roles for Logs Users
@@ -1384,14 +1395,12 @@ def config(settings):
                                   gtable.uuid,
                                   )
         for group in groups:
-            if group.uuid == "rc_logs_user":
-                ogtable = s3db.org_group
-                org_group = db(ogtable.name == "RC").select(ogtable.pe_id,
-                                                            limitby = (0, 1),
-                                                            ).first()
+            if group.uuid in ("rc_logs_user",
+                              "rc_user",
+                              ):
                 add_membership(group_id = group.id,
                                user_id = user_id,
-                               entity = org_group.pe_id,
+                               entity = rc_group_pe_id,
                                )
             else:
                 add_membership(group_id = group.id,
@@ -3944,13 +3953,14 @@ Thank you"""
 
         if req_ids_to_delete:
             auth = current.auth
+            override_default = auth.override
             auth.override = True
             ntable = s3db.auth_user_notification
             query = (ntable.type == "req_fulfil") & \
                     (ntable.record_id.belongs(req_ids_to_delete))
             resource = s3db.resource("auth_user_notification", filter = query)
             resource.delete()
-            auth.override = False
+            auth.override = override_default
 
     # -------------------------------------------------------------------------
     def customise_inv_send_resource(r, tablename):
@@ -4141,12 +4151,13 @@ Thank you"""
             else:
                 # Remove any Minimum Alerts for this Item/Warehouse
                 auth = current.auth
+                override_default = auth.override
                 auth.override = True
                 resource = s3db.resource("auth_user_notification",
                                          filter = query,
                                          )
                 resource.delete()
-                auth.override = False
+                auth.override = override_default
 
         if alerts:
             # Generate Alerts
@@ -4324,12 +4335,13 @@ Thank you"""
         else:
             # Remove any Capacity Alerts
             auth = current.auth
+            override_default = auth.override
             auth.override = True
             resource = s3db.resource("auth_user_notification",
                                      filter = query,
                                      )
             resource.delete()
-            auth.override = False
+            auth.override = override_default
 
         # Trigger Stock Limit Alert creation/cancellation
         stock_limit_alerts(warehouse)
@@ -6156,10 +6168,11 @@ Thank you"""
                 (ntable.record_id == req_id)
 
         auth = current.auth
+        override_default = auth.override
         auth.override = True
         resource = s3db.resource("auth_user_notification", filter = query)
         resource.delete()
-        auth.override = False
+        auth.override = override_default
 
     # -------------------------------------------------------------------------
     def on_req_approved(req_id, record, site_ids):
@@ -6323,6 +6336,11 @@ Thank you"""
         s3db = current.s3db
 
         table = s3db.inv_req
+
+        # Use Custom Represent for Sites
+        from .controllers import org_SiteRepresent
+        table.site_id.requires.label = org_SiteRepresent()
+
         f = table.req_ref
         f.represent = inv_ReqRefRepresent(show_link = True,
                                           pdf = True,

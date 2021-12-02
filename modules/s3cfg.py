@@ -5015,6 +5015,12 @@ class S3Config(Storage):
         """
         return self.inv.get("requester_to_site", False)
 
+    def get_inv_requester_site_updateable(self):
+        """
+            Whether the Requester has to have Update rights for the site making the Inventory Requisitions
+        """
+        return self.inv.get("requester_site_updateable", True)
+
     def get_inv_req_filter_by_item_category(self):
         """
             Provide a Filter Widget to allow Requisitions to be filtered by Item Category

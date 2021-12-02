@@ -605,7 +605,9 @@ logs_manager_national,Logistics Manager National Rights,For e.g. PIRAC where the
 rms_user,RMS User,All NS bar HN applied at NS level,inv,inv_item,,,READ,,TRUE,
 rms_user,RMS User,All NS bar HN applied at NS level,,,inv_inv_item,,READ,,TRUE,
 rms_user,RMS User,All NS bar HN applied at NS level,inv,req,,,READ|CREATE,READ|CREATE|UPDATE|DELETE,TRUE,
+rms_user,RMS User,All NS bar HN applied at NS level,inv,req,,any,,READ|CREATE|UPDATE|DELETE,TRUE,
 rms_user,RMS User,All NS bar HN applied at NS level,,,inv_req,,READ|CREATE,READ|CREATE|UPDATE|DELETE,TRUE,
+rms_user,RMS User,All NS bar HN applied at NS level,,,inv_req,any,,READ|CREATE|UPDATE|DELETE,TRUE,
 rms_user,RMS User,All NS bar HN applied at NS level,,,org_facility,,READ,,TRUE,
 rms_user,RMS User,All NS bar HN applied at NS level,,,org_office,,READ,,TRUE,
 rms_user,RMS User,All NS bar HN applied at NS level,,,project_project,,READ,,TRUE,
@@ -622,12 +624,14 @@ hn_user,Honduras User,All HN users applied at NS level,,,org_facility,,READ,,TRU
 hn_user,Honduras User,All HN users applied at NS level,,,org_office,,READ,,TRUE,
 hn_user,Honduras User,All HN users applied at NS level,pr,,,,READ|CREATE,READ|UPDATE|DELETE,TRUE,
 hn_user,Honduras User,All HN users applied at NS level,,,pr_person,,READ|CREATE,READ|UPDATE|DELETE,TRUE,
+rc_user,RC User,All RC staff applied at RC Org Group level,inv,,,,READ,,TRUE,Allow access to other RC orgs as Item Donors/Owners and other RC warehouses for reqeusts & shipments
+rc_user,RC User,All RC staff applied at RC Org Group level,inv,facility,,,NONE,,TRUE,
+rc_user,RC User,All RC staff applied at RC Org Group level,inv,kitting,,,NONE,,TRUE,
+rc_user,RC User,All RC staff applied at RC Org Group level,inv,donor,,,NONE,,TRUE,
+rc_user,RC User,All RC staff applied at RC Org Group level,inv,inv_item,,,NONE,,TRUE,
+rc_user,RC User,All RC staff applied at RC Org Group level,inv,supplier,,,NONE,,TRUE,
+rc_user,RC User,All RC staff applied at RC Org Group level,inv,warehouse,,,NONE,,TRUE,
+rc_user,RC User,All RC staff applied at RC Org Group level,,,inv_warehouse,,READ,,TRUE,Allow requests & shipments for other RC warehouses
+rc_user,RC User,All RC staff applied at RC Org Group level,,,org_organisation,,READ,,TRUE,
 rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,inv,,,,READ,,TRUE,Allow access to other RC orgs as Item Donors/Owners and other RC warehouses for shipments
-rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,inv,facility,,,NONE,,TRUE,
-rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,inv,kitting,,,NONE,,TRUE,
-rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,inv,donor,,,NONE,,TRUE,
 rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,inv,package,,,READ,,TRUE,
-rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,inv,supplier,,,NONE,,TRUE,
-rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,inv,warehouse,,,NONE,,TRUE,
-rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,,,inv_warehouse,,READ,,TRUE,Allow shipments to/from other RC warehouses
-rc_logs_user,RC Logistics User,All RC Logistics staff applied at RC Org Group level,,,org_organisation,,READ,,TRUE,

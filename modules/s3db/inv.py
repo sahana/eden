@@ -3363,7 +3363,7 @@ class InventoryRequisitionModel(S3Model):
                                      label = T("Requested For Facility"),
                                      readable = True,
                                      represent = self.org_site_represent,
-                                     updateable = True,
+                                     updateable = settings.get_inv_requester_site_updateable(),
                                      widget = site_widget,
                                      writable = True,
                                      ),
@@ -10975,6 +10975,9 @@ def inv_req_controller(template = False):
                 if r.id:
                     table.is_template.readable = table.is_template.writable = False
 
+                if not table.requester_id.writable:
+                    table.requester_id.comment = None
+
                 keyvalue = settings.get_ui_auto_keyvalue()
                 if keyvalue:
                     # What Keys do we have?
@@ -11596,7 +11599,7 @@ def inv_req_form(r, **attr):
 def inv_req_submit(r, **attr):
     """
         Submit a Request for Approval
-        - called via POST from inv_send_rheader
+        - called via POST from inv_req_rfooter
         - called via JSON method to reduce request overheads
     """
 
@@ -11658,8 +11661,11 @@ def inv_req_submit(r, **attr):
                                  utable.language,
                                  )
     if not approvers:
-        current.session.error = current.T("No Request Approver defined")
-        redirect(URL(args = req_id))
+        error = T("No Request Approver defined")
+        current.session.error = error
+        r.error(409, error,
+                tree = '"%s"' % URL(args = [req_id]),
+                )
 
     T = current.T
     on_req_submit = s3db.get_config("inv_req", "on_req_submit")
@@ -11723,8 +11729,7 @@ def inv_req_submit(r, **attr):
 def inv_req_from(r, **attr):
     """
         Request From Inventory
-        - called from inv_req_item_inv_item
-        - called via POST from inv_send_rheader
+        - called via POST from inv_req_item_inv_item
         - called via JSON method to reduce request overheads
     """
 
@@ -12136,7 +12141,7 @@ def inv_req_item_inv_item(r, **attr):
 def inv_req_item_order(r, **attr):
     """
         Create an inv_order_item from a inv_req_item
-        - called via POST from inv_send_rheader
+        - called via POST from inv_req_item_inv_item
         - called via JSON method to reduce request overheads
     """
 
@@ -13308,7 +13313,7 @@ def inv_req_send(r, **attr):
         Currently not exposed to UI
         - deemed better to force users through Check process
 
-        - called via POST from inv_send_rheader
+        - called via POST from inv_req_rfooter
         - called via JSON method to reduce request overheads
 
         @ToDo: Update for inv_inv_item_bin and inv_send_item_bin
