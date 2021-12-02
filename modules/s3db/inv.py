@@ -6287,7 +6287,7 @@ def inv_adj_close(r, **attr):
         error = T("This adjustment has already been closed.")
         current.session.error = error
         r.error(409, error,
-                tree = URL(args = [adj_id]),
+                tree = '"%s"' % URL(args = [adj_id]),
                 )
 
     db = current.db
@@ -6572,7 +6572,7 @@ def inv_commit_all(r, **attr):
         error = T("Some items have already been committed")
         current.session.error = error
         r.error(409, error,
-                tree = URL(args = [req_id, "commit"]),
+                tree = '"%s"' % URL(args = [req_id, "commit"]),
                 )
 
     # Create the commitment
@@ -8523,10 +8523,10 @@ def inv_pick_list(r, **attr):
 
     if record.status != SHIP_STATUS_IN_PROCESS:
         r.error(405, T("Picking List can only be generated for Shipments being prepared"),
-                next = URL(c = "inv",
-                           f = "send",
-                           args = [send_id],
-                           ),
+                next = '"%s"' % URL(c = "inv",
+                                    f = "send",
+                                    args = [send_id],
+                                    ),
                 )
 
     from s3.codecs.xls import S3XLS
@@ -8843,7 +8843,7 @@ def inv_recv_cancel(r, **attr):
 
     if record.status != SHIP_STATUS_RECEIVED:
         r.error(409, T("This shipment has not been received - it has NOT been canceled because it can still be edited."),
-                tree = URL(args = [send_id]),
+                tree = '"%s"' % URL(args = [send_id]),
                 )
 
     db = current.db
@@ -9912,12 +9912,12 @@ def inv_recv_process(r, **attr):
     status = record.status
     if status == SHIP_STATUS_RECEIVED:
         r.error(405, T("This shipment has already been received."),
-                tree = URL(args = [recv_id]),
+                tree = '"%s"' % URL(args = [recv_id]),
                 )
 
     elif status == SHIP_STATUS_CANCEL:
         r.error(405, T("This shipment has already been received & subsequently canceled."),
-                tree = URL(args = [recv_id]),
+                tree = '"%s"' % URL(args = [recv_id]),
                 )
 
     db = current.db
@@ -10314,7 +10314,7 @@ def inv_req_add_from_template(req_id):
 def inv_req_approve(r, **attr):
     """
         Approve a Request
-        - called via POST from inv_send_rheader
+        - called via POST from inv_req_rfooter
         - called via JSON method to reduce request overheads
     """
 
@@ -10344,7 +10344,7 @@ def inv_req_approve(r, **attr):
         error = T("Can only Approve Submitted Requests")
         current.session.error = error
         r.error(409, error,
-                tree = URL(args = [req_id]),
+                tree = '"%s"' % URL(args = [req_id]),
                 )
 
     approvers = inv_req_approvers(record.site_id)
@@ -10364,7 +10364,7 @@ def inv_req_approve(r, **attr):
         error = T("You have already Approved this Request")
         current.session.warning = error
         r.error(409, error,
-                tree = URL(args = [req_id]),
+                tree = '"%s"' % URL(args = [req_id]),
                 )
 
     ritable = s3db.inv_req_item
@@ -10388,7 +10388,7 @@ def inv_req_approve(r, **attr):
                 error = T("You need to Match Items in this Request")
                 current.session.warning = error
                 r.error(409, error,
-                        tree = URL(args = [req_id, "req_item"]),
+                        tree = '"%s"' % URL(args = [req_id, "req_item"]),
                         )
 
     # Add record to show that we have approved request
@@ -11626,7 +11626,7 @@ def inv_req_submit(r, **attr):
         error = T("Can only Submit Draft Requests")
         current.session.error = error
         r.error(409, error,
-                tree = URL(args = [req_id]),
+                tree = '"%s"' % URL(args = [req_id]),
                 )
 
     db = current.db
@@ -13337,7 +13337,7 @@ def inv_req_send(r, **attr):
         error = "Site not provided!"
         current.session.error = error
         r.error(405, error,
-                tree = URL(args = [req_id]),
+                tree = '"%s"' % URL(args = [req_id]),
                 )
 
     db = current.db
@@ -13380,7 +13380,7 @@ def inv_req_send(r, **attr):
         error = T("This request has no items outstanding!")
         current.session.warning = error
         r.error(409, error,
-                tree = URL(args = [req_id, "req_item"]),
+                tree = '"%s"' % URL(args = [req_id, "req_item"]),
                 )
 
     record = r.record
@@ -14987,7 +14987,7 @@ def inv_send_cancel(r, **attr):
 
     if record.status != SHIP_STATUS_SENT:
         r.error(409, T("This shipment has not been sent - it has NOT been canceled because it can still be edited."),
-                tree = URL(args = [send_id]),
+                tree = '"%s"' % URL(args = [send_id]),
                 )
 
     db = current.db
@@ -15481,7 +15481,7 @@ def inv_send_process(r, **attr):
         error = T("No items have been selected for shipping.")
         current.session.error = error
         r.error(409, error,
-                tree = URL(args = [send_id]),
+                tree = '"%s"' % URL(args = [send_id]),
                 )
 
     db = current.db
@@ -15502,7 +15502,7 @@ def inv_send_process(r, **attr):
         error = T("No items have been selected for shipping.")
         current.session.error = error
         r.error(409, error,
-                tree = URL(args = [send_id]),
+                tree = '"%s"' % URL(args = [send_id]),
                 )
 
     # Update Send record & lock for editing
@@ -15720,7 +15720,7 @@ def inv_send_return_complete(r, **attr):
 
     if record.status != SHIP_STATUS_RETURNING:
         r.error(409, T("This shipment has not been returned."),
-                tree = URL(args = [send_id]),
+                tree = '"%s"' % URL(args = [send_id]),
                 )
 
     db = current.db
@@ -15807,7 +15807,7 @@ def inv_send_return(r, **attr):
 
     if r.record.status == SHIP_STATUS_IN_PROCESS:
         r.error(409, T("This shipment has not been sent - it cannot be returned because it can still be edited."),
-                tree = URL(args = [send_id]),
+                tree = '"%s"' % URL(args = [send_id]),
                 )
 
     db = current.db

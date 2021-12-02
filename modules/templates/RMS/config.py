@@ -3943,11 +3943,14 @@ Thank you"""
                     req_ids_to_delete.append(req_id)
 
         if req_ids_to_delete:
+            auth = current.auth
+            auth.override = True
             ntable = s3db.auth_user_notification
             query = (ntable.type == "req_fulfil") & \
                     (ntable.record_id.belongs(req_ids_to_delete))
             resource = s3db.resource("auth_user_notification", filter = query)
             resource.delete()
+            auth.override = False
 
     # -------------------------------------------------------------------------
     def customise_inv_send_resource(r, tablename):
@@ -4137,10 +4140,13 @@ Thank you"""
                     alerts.append((item_id, stock, minimum_id))
             else:
                 # Remove any Minimum Alerts for this Item/Warehouse
+                auth = current.auth
+                auth.override = True
                 resource = s3db.resource("auth_user_notification",
                                          filter = query,
                                          )
                 resource.delete()
+                auth.override = False
 
         if alerts:
             # Generate Alerts
@@ -4317,10 +4323,13 @@ Thank you"""
                 T.force(ui_language)
         else:
             # Remove any Capacity Alerts
+            auth = current.auth
+            auth.override = True
             resource = s3db.resource("auth_user_notification",
                                      filter = query,
                                      )
             resource.delete()
+            auth.override = False
 
         # Trigger Stock Limit Alert creation/cancellation
         stock_limit_alerts(warehouse)
@@ -6146,8 +6155,11 @@ Thank you"""
                 (ntable.type == "req_approve") & \
                 (ntable.record_id == req_id)
 
+        auth = current.auth
+        auth.override = True
         resource = s3db.resource("auth_user_notification", filter = query)
         resource.delete()
+        auth.override = False
 
     # -------------------------------------------------------------------------
     def on_req_approved(req_id, record, site_ids):
