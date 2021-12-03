@@ -296,8 +296,12 @@ def config(settings):
                 entities += [i.pe_id for i in instances]
 
             if realm_id:
+                # New realm doesn't need old affiliations removing
                 from s3db.pr import OU, \
                                     pr_add_affiliation
+            elif realm_name.startswith("2SITES"):
+                # Existing 2 Sites Realm doesn't need affiliations modifying
+                return realm_entity
             else:
                 # Get all current affiliations
                 rtable = s3db.pr_role
