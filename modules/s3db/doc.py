@@ -27,7 +27,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("DocumentLibrary",
+__all__ = ("DocumentEntityModel",
+           "DocumentLibrary",
            "DocumentTagModel",
            "CKEditorModel",
            "DataCardModel",
@@ -47,10 +48,37 @@ from gluon.storage import Storage
 from ..s3 import *
 
 # =============================================================================
-class DocumentLibrary(S3Model):
+class DocumentEntityModel(S3Model):
 
     names = ("doc_entity",
-             "doc_document",
+             )
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Document-referencing entities
+        #
+        instance_types = {} # This can be an empty list as doc_entity is never exposed to end-users
+
+        tablename = "doc_entity"
+        self.super_entity(tablename, "doc_id", instance_types)
+
+        # Components
+        doc_id = "doc_id"
+        self.add_components(tablename,
+                            doc_document = doc_id,
+                            doc_image = doc_id,
+                            )
+
+        # ---------------------------------------------------------------------
+        # Pass model-global names to response.s3
+        #
+        return {}
+
+# =============================================================================
+class DocumentLibrary(S3Model):
+
+    names = ("doc_document",
              "doc_document_id",
              "doc_image",
              )
@@ -69,7 +97,6 @@ class DocumentLibrary(S3Model):
         organisation_id = self.org_organisation_id
 
         # Shortcuts
-        add_components = self.add_components
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -77,29 +104,14 @@ class DocumentLibrary(S3Model):
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
-        # Document-referencing entities
-        #
-        instance_types = {} # This can be an empty list as doc_entity is never exposed to end-users
-
-        tablename = "doc_entity"
-        self.super_entity(tablename, "doc_id", instance_types)
-
-        # Components
-        doc_id = "doc_id"
-        add_components(tablename,
-                       doc_document = doc_id,
-                       doc_image = doc_id,
-                       )
-
-        # ---------------------------------------------------------------------
         # Documents
         #
         tablename = "doc_document"
         define_table(tablename,
                      # Instance
-                     self.stats_source_superlink(),
+                     super_link("source_id", "stats_source"),
                      # Component not instance
-                     super_link(doc_id, "doc_entity"),
+                     super_link("doc_id", "doc_entity"),
                      # @ToDo: Remove since Site Instances are doc entities?
                      super_link("site_id", "org_site"),
                      Field("file", "upload",
@@ -217,10 +229,10 @@ class DocumentLibrary(S3Model):
                                                            ),
                                       )
 
-        add_components(tablename,
-                       doc_document_tag = document_id,
-                       msg_attachment = document_id,
-                       )
+        self.add_components(tablename,
+                            doc_document_tag = document_id,
+                            msg_attachment = document_id,
+                            )
 
         # ---------------------------------------------------------------------
         # Images
@@ -238,7 +250,7 @@ class DocumentLibrary(S3Model):
         tablename = "doc_image"
         define_table(tablename,
                      # Component not instance
-                     super_link(doc_id, "doc_entity"),
+                     super_link("doc_id", "doc_entity"),
                      super_link("pe_id", "pr_pentity"), # @ToDo: Remove & make Persons doc entities instead?
                      super_link("site_id", "org_site"), # @ToDo: Remove since Site Instances are doc entities?
                      Field("file", "upload",
