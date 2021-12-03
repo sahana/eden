@@ -334,7 +334,7 @@ $(document).ready(function() {
             // - X clicked to cancel changes
             // Make Quantity unavailable
             binQuantity = parseFloat(inlineComponentInput.data('data').data[rowindex].quantity.value);
-            binnedQuantity = binnedQuantity + binQuantity;
+            binnedQuantity += (binQuantity * PackQuantity / startingPackQuantity);
         });
 
         inlineComponent.on('rowAdded', function(event, row) {

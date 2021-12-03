@@ -373,7 +373,7 @@ $(document).ready(function() {
                 binQuantity = 0;
             }
             // Make this Bin's Quantity available
-            binnedQuantity = binnedQuantity - binQuantity;
+            binnedQuantity -= binQuantity;
         });
 
         $('#rdy-defaultbin-0').click(function() {
@@ -386,7 +386,7 @@ $(document).ready(function() {
                 binQuantity = 0;
             }
             // Make this Bin's Quantity unavailable
-            binnedQuantity = binnedQuantity + binQuantity;
+            binnedQuantity += binQuantity;
             // Validate the new bin again
             newRowQuantityField.change();
         });
@@ -396,19 +396,19 @@ $(document).ready(function() {
             // - X clicked to cancel changes
             // Make Quantity unavailable
             binQuantity = parseFloat(inlineComponentInput.data('data').data[rowindex].quantity.value);
-            binnedQuantity = binnedQuantity + binQuantity;
+            binnedQuantity += binQuantity;
         });
 
         inlineComponent.on('rowAdded', function(event, row) {
             // Make Quantity unavailable
-            binnedQuantity = binnedQuantity + parseFloat(row.quantity.value);
+            binnedQuantity += parseFloat(row.quantity.value);
             // Cleanup any old warning message
             $('#sub_defaultreq_item_inv_defaultreq_item_inv_i_quantity_edit_none-warning').remove();
         });
 
         inlineComponent.on('rowRemoved', function(event, row) {
             // Make Quantity available
-            binnedQuantity = binnedQuantity - parseFloat(row.quantity.value);
+            binnedQuantity -= parseFloat(row.quantity.value);
         });
 
     }

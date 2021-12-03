@@ -569,7 +569,7 @@ $(document).ready(function() {
                 if (binQuantity) {
                     binQuantity = parseFloat(binQuantity);
                     // Make this Bin's Quantity unavailable
-                    binnedQuantity = binnedQuantity + (binQuantity * PackQuantity / InvPackQuantity);
+                    binnedQuantity += (binQuantity * PackQuantity / InvPackQuantity);
                 }
                 // Validate the new bin again
                 newBinQuantityField.change();
@@ -581,7 +581,7 @@ $(document).ready(function() {
             // - X clicked to cancel changes
             // Make Quantity unavailable
             binQuantity = parseFloat(inlineComponentInput.data('data').data[rowindex].quantity.value);
-            binnedQuantity = binnedQuantity + binQuantity;
+            binnedQuantity += (binQuantity * PackQuantity / InvPackQuantity);
         });
 
         inlineComponent.on('rowAdded', function(event, row) {
