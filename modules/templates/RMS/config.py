@@ -148,18 +148,63 @@ def config(settings):
         use_user_root_organisation = False
 
         if tablename in ("inv_req",
+                         "inv_req_item",
                          "inv_track_item",
                          #"inv_send", # Only need to have site_id, to_site_id will manage via Recv, if-necessary
                          #"inv_recv", # Only need to have site_id, from_site_id will manage via Send, if-necessary
                          ):
             if tablename == "inv_req":
-                # Need a pr_realm with multiple inheritance
-                record_id = row["id"]
-                realm_name = "REQ_%s" % record_id
+                req_id = row["id"]
+                req_site_id = row["site_id"]
                 ritable = s3db.inv_req_item
-                query = (ritable.req_id == record_id)
-                request_items = db(query).select(ritable.site_id)
-                site_ids = set([ri.site_id for ri in request_items] + [row["site_id"]])
+                req_items = db(ritable.req_id == req_id).select(ritable.site_id)
+                site_ids = set([ri.site_id for ri in req_items if ri.site_id != None] + [req_site_id])
+                if len(site_ids) == 1:
+                    # Can just use the Site's realm
+                    from s3db.pr import pr_get_pe_id
+                    return pr_get_pe_id("org_site", req_site_id)
+                elif len(site_ids) == 2:
+                    # Need a pr_realm with dual inheritance
+                    # - this can be shared with all other records shared between these 2 sites
+                    for site_id in site_ids:
+                        if site_id != req_site_id:
+                            ri_site_id = site_id
+                            break
+                    if req_site_id < ri_site_id:
+                        realm_name = "2SITES_%s_%s" % (req_site_id, ri_site_id)
+                    else:
+                        realm_name = "2SITES_%s_%s" % (ri_site_id, req_site_id)
+                else:
+                    # Need a unique pr_realm with multiple inheritance
+                    realm_name = "REQ_%s" % req_id
+
+            elif tablename == "inv_req_item":
+                req_id = row.get("req_id")
+                if not req_id:
+                    ritable = s3db.inv_req_item
+                    req_item = db(ritable.id == row["id"]).select(ritable.req_id,
+                                                                  limitby = (0, 1),
+                                                                  ).first()
+                    req_id = req_item.req_id
+                rtable = s3db.inv_req
+                req = db(rtable.id == req_id).select(rtable.site_id,
+                                                     limitby = (0, 1),
+                                                     ).first()
+                req_site_id = req.site_id
+                ri_site_id = row["site_id"]
+                if not ri_site_id or (ri_site_id == req_site_id):
+                    # Use the realm of the Req's site
+                    from s3db.pr import pr_get_pe_id
+                    return pr_get_pe_id("org_site", req_site_id)
+
+                # Need a pr_realm with dual inheritance
+                # - this can be shared with all other records shared between these 2 sites
+                site_ids = (req_site_id, ri_site_id)
+                if req_site_id < ri_site_id:
+                    realm_name = "2SITES_%s_%s" % (req_site_id, ri_site_id)
+                else:
+                    realm_name = "2SITES_%s_%s" % (ri_site_id, req_site_id)
+
             elif tablename == "inv_track_item":
                 # Inherit from inv_send &/or inv_recv
                 record = db(table.id == row["id"]).select(table.send_id,
@@ -170,14 +215,19 @@ def config(settings):
                 recv_id = record.recv_id
                 if send_id and recv_id:
                     # Need a pr_realm with dual inheritance
+                    # - this can be shared with all other records shared between these 2 sites
                     realm_name = "WB_%s" % send_id
                     send = db(stable.id == send_id).select(stable.site_id,
                                                            stable.to_site_id,
                                                            limitby = (0, 1),
                                                            ).first()
-                    site_ids = (send.site_id,
-                                send.to_site_id,
-                                )
+                    site_id = send.site_id
+                    to_site_id = send.to_site_id
+                    site_ids = (site_id, to_site_id)
+                    if site_id < to_site_id:
+                        realm_name = "2SITES_%s_%s" % (site_id, to_site_id)
+                    else:
+                        realm_name = "2SITES_%s_%s" % (to_site_id, site_id)
                 elif send_id:
                     # Inherit from the Send
                     stable = s3db.inv_send
@@ -192,6 +242,7 @@ def config(settings):
                                                            limitby = (0, 1),
                                                            ).first()
                     return recv.realm_entity
+
             #elif tablename == "inv_send":
             #    record_id = row["id"]
             #    realm_name = "WB_%s" % record_id
@@ -220,6 +271,8 @@ def config(settings):
                 realm_id = rtable.insert(name = realm_name)
                 realm = Storage(id = realm_id)
                 s3db.update_super(rtable, realm)
+            else:
+                realm_id = None
 
             realm_entity = realm.pe_id
 
@@ -242,28 +295,32 @@ def config(settings):
                 instances = db(itable.site_id.belongs(instance_types[instance_type])).select(itable.pe_id)
                 entities += [i.pe_id for i in instances]
 
-            # Get all current affiliations
-            rtable = s3db.pr_role
-            atable = s3db.pr_affiliation
-            query = (atable.deleted == False) & \
-                    (atable.pe_id.belongs(entities)) & \
-                    (rtable.deleted == False) & \
-                    (rtable.id == atable.role_id)
-            affiliations = db(query).select(rtable.pe_id,
-                                            rtable.role,
-                                            )
+            if realm_id:
+                from s3db.pr import OU, \
+                                    pr_add_affiliation
+            else:
+                # Get all current affiliations
+                rtable = s3db.pr_role
+                atable = s3db.pr_affiliation
+                query = (atable.deleted == False) & \
+                        (atable.pe_id.belongs(entities)) & \
+                        (rtable.deleted == False) & \
+                        (rtable.id == atable.role_id)
+                affiliations = db(query).select(rtable.pe_id,
+                                                rtable.role,
+                                                )
 
-            # Remove affiliations which are no longer needed
-            from s3db.pr import OU, \
-                                pr_add_affiliation, \
-                                pr_remove_affiliation
-            for a in affiliations:
-                pe_id = a.pe_id
-                role = a.role
-                if pe_id not in entities:
-                    pr_remove_affiliation(pe_id, realm_entity, role=role)
-                else:
-                    entities.remove(pe_id)
+                # Remove affiliations which are no longer needed
+                from s3db.pr import OU, \
+                                    pr_add_affiliation, \
+                                    pr_remove_affiliation
+                for a in affiliations:
+                    pe_id = a.pe_id
+                    role = a.role
+                    if pe_id not in entities:
+                        pr_remove_affiliation(pe_id, realm_entity, role=role)
+                    else:
+                        entities.remove(pe_id)
 
             # Add new affiliations
             for pe_id in entities:
@@ -344,7 +401,7 @@ def config(settings):
                                 "inv_send": SID,
                                 #"inv_track_item": "track_org_id",
                                 #"inv_req": "site_id",
-                                "inv_req_item": "req_id",
+                                #"inv_req_item": "req_id",
                                 #"po_household": "area_id",
                                 #"po_organisation_area": "area_id",
                                 }
@@ -6141,19 +6198,55 @@ Thank you"""
         record = form.record
         if record:
             # Update form
-            req_id = form.vars.id
+            form_vars = form.vars
+            req_id = form_vars.id
             db = current.db
-            table  = db.inv_req
-            if "site_id" not in record:
-                record = db(table.id == req_id).select(table.id,
-                                                       table.site_id,
-                                                       limitby = (0, 1),
-                                                       ).first()
-            if record.site_id != form.record.site_id:
-                realm_entity = current.auth.get_realm_entity(table, record)
-                db(table.id == req_id).update(realm_entity = realm_entity)
+            table = db.inv_req
+            site_id = form_vars.get("site_id")
+            if not site_id:
+                req = db(table.id == req_id).select(table.site_id,
+                                                    limitby = (0, 1),
+                                                    ).first()
+                site_id = req.site_id
+            if site_id != record.site_id:
+                get_realm_entity = current.auth.get_realm_entity
+                req_realm_entity = get_realm_entity(table, record)
+                db(table.id == req_id).update(realm_entity = req_realm_entity)
                 # Update Request Items
-                db(current.s3db.inv_req_item.req_id == req_id).update(realm_entity = realm_entity)
+                ritable = current.s3db.inv_req_item
+                req_items = db(ritable.req_id == req_id).select(ritable.id,
+                                                                ritable.site_id,
+                                                                )
+                site_ids = {}
+                for row in req_items:
+                    site_id = row.site_id
+                    if site_id in site_ids:
+                        site_ids[site_id].append(row.id)
+                    else:
+                        site_ids[site_id] = [row.id]
+                req_site_id = record.site_id
+                same_as_req = site_ids.get(None, []) + site_ids.get(req_site_id, [])
+                same_as_req_len = len(same_as_req)
+                if same_as_req_len:
+                    if same_as_req_len == 1:
+                        db(ritable.id == same_as_req[0]).update(realm_entity = req_realm_entity)
+                    else:
+                        db(ritable.id.belongs(same_as_req)).update(realm_entity = req_realm_entity)
+                    if None in site_ids:
+                        del site_ids[None]
+                    if req_site_id in site_ids:
+                        del site_ids[req_site_id]
+                for site_id in site_ids:
+                    req_item_ids = site_ids[site_id]
+                    req_item_id = req_item_ids[0]
+                    realm_entity = get_realm_entity(ritable, {"id": req_item_id,
+                                                              "site_id": site_id,
+                                                              "req_id": record.id,
+                                                              })
+                    if len(req_item_ids) == 1:
+                        db(ritable.id == req_item_id).update(realm_entity = realm_entity)
+                    else:
+                        db(ritable.id.belongs(req_item_ids)).update(realm_entity = realm_entity)
 
     # -------------------------------------------------------------------------
     def on_req_approve(req_id):
@@ -6605,24 +6698,35 @@ Thank you"""
             Update realm's affiliations if site_id changes
         """
 
-        if form.record:
+        record = form.record
+        if record:
             # Update form
             form_vars_get = form.vars.get
             site_id = form_vars_get("site_id")
-            if site_id and site_id != form.record.site_id:
-                # Item has been Requested from a specific site so this needs to be affiliated to the realm
+            if site_id and site_id != record.site_id:
+                # Item has been Requested from a specific site
+                # Update the Request's Realm
                 req_id = form_vars_get("req_id")
                 db = current.db
                 table = db.inv_req
-                record = db(table.id == req_id).select(table.id,
-                                                       table.site_id,
-                                                       limitby = (0, 1),
-                                                       ).first()
-                # Update affiliations
-                realm_entity = current.auth.get_realm_entity(table, record)
-                db(table.id == req_id).update(realm_entity = realm_entity)
-                # Update Request Items
-                db(current.s3db.inv_req_item.req_id == req_id).update(realm_entity = realm_entity)
+                req = db(table.id == req_id).select(table.id,
+                                                    table.site_id,
+                                                    limitby = (0, 1),
+                                                    ).first()
+                get_realm_entity = current.auth.get_realm_entity
+                req_realm_entity = get_realm_entity(table, record)
+                db(table.id == req_id).update(realm_entity = req_realm_entity)
+                # Update Realm of the Request Item
+                if site_id == req.site_id:
+                    db(current.s3db.inv_req_item.id == form_vars_get("id")).update(realm_entity = req_realm_entity)
+                else:
+                    req_item_id = form_vars_get("id")
+                    ritable = current.s3db.inv_req_item
+                    realm_entity = get_realm_entity(ritable, {"id": req_item_id,
+                                                              "site_id": site_id,
+                                                              "req_id": req_id,
+                                                              })
+                    db(ritable.id == req_item_id).update(realm_entity = realm_entity)
 
     # -------------------------------------------------------------------------
     def customise_inv_req_item_resource(r, tablename):
