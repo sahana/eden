@@ -55,12 +55,12 @@ class S3Merge(S3Method):
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
-            Apply Merge methods
+            Args:
+                r: the S3Request
+                attr: dictionary of parameters for the method handler
 
-            @param r: the S3Request
-            @param attr: dictionary of parameters for the method handler
-
-            @return: output object to send to the view
+            Returns:
+                output object to send to the view
         """
 
         output = {}
@@ -105,8 +105,9 @@ class S3Merge(S3Method):
         """
             Bookmark the current record for de-duplication
 
-            @param r: the S3Request
-            @param attr: the controller parameters for the request
+            Args:
+                r: the S3Request
+                attr: the controller parameters for the request
         """
 
         s3 = current.session.s3
@@ -137,8 +138,9 @@ class S3Merge(S3Method):
         """
             Remove a record from the deduplicate list
 
-            @param r: the S3Request
-            @param attr: the controller parameters for the request
+            Args:
+                r: the S3Request
+                attr: the controller parameters for the request
         """
 
         s3 = current.session.s3
@@ -174,9 +176,10 @@ class S3Merge(S3Method):
             view, also renders a link to the duplicate bookmark list to
             initiate the merge process from
 
-            @param r: the S3Request
-            @param tablename: the table name
-            @param record_id: the record ID
+            Args:
+                r: the S3Request
+                tablename: the table name
+                record_id: the record ID
         """
 
         auth = current.auth
@@ -213,12 +216,17 @@ class S3Merge(S3Method):
                      _class = unmark,
                      ),
                    A("",
-                     _href = r.url(method="deduplicate", vars={}),
+                     _href = r.url(method = "deduplicate",
+                                   vars = {},
+                                   ),
                      _id = "markDuplicateURL",
                      _class = "hide",
                      ),
                    A(T("De-duplicate"),
-                     _href = r.url(method="deduplicate", target=0, vars={}),
+                     _href = r.url(method = "deduplicate",
+                                   target = 0,
+                                   vars = {},
+                                   ),
                      _class = deduplicate,
                      ),
                    _id = "markDuplicate",
@@ -233,8 +241,9 @@ class S3Merge(S3Method):
             records in this resource, with option to select two
             and initiate the merge process from here
 
-            @param r: the S3Request
-            @param attr: the controller attributes for the request
+            Args:
+                r: the S3Request
+                attr: the controller attributes for the request
         """
 
         s3 = current.response.s3
@@ -384,12 +393,14 @@ class S3Merge(S3Method):
         """
             Merge form for two records
 
-            @param r: the S3Request
-            @param **attr: the controller attributes for the request
+            Args:
+                r: the S3Request
+                attr: the controller attributes for the request
 
-            @note: this method can always only be POSTed, and requires
-                   both "selected" and "mode" in post_vars, as well as
-                   the duplicate bookmarks list in session.s3
+            Note:
+                This method can always only be POSTed, and requires
+                both "selected" and "mode" in post_vars, as well as
+                the duplicate bookmarks list in session.s3
         """
 
         T = current.T
@@ -427,8 +438,9 @@ class S3Merge(S3Method):
         table = self.table
         query = (table._id == ids[0]) | (table._id == ids[1])
         orderby = table.created_on if "created_on" in table else None
-        rows = current.db(query).select(orderby=orderby,
-                                        limitby=(0, 2))
+        rows = current.db(query).select(limitby = (0, 2),
+                                        orderby = orderby,
+                                        )
         if len(rows) != 2:
             r.error(404, current.ERROR.BAD_RECORD, next = r.url(id=0, vars={}))
         original = rows[0]
@@ -474,7 +486,7 @@ class S3Merge(S3Method):
                              _class = "swap-button",
                              _id = sid,
                              _type = "button",
-                             _tabindex = index+num_fields,
+                             _tabindex = index + num_fields,
                              )
             else:
                 swap = DIV(_class = "swap-button")
@@ -484,14 +496,24 @@ class S3Merge(S3Method):
 
             # Render label row
             label = f.label
-            trs.append(TR(TD(label, _class="w2p_fl"),
+            trs.append(TR(TD(label,
+                             _class = "w2p_fl",
+                             ),
                           TD(),
-                          TD(label, _class="w2p_fl")))
+                          TD(label,
+                             _class = "w2p_fl",
+                             ),
+                          ))
 
             # Append widget row
-            trs.append(TR(TD(owidget, _class="mwidget"),
+            trs.append(TR(TD(owidget,
+                             _class = "mwidget",
+                             ),
                           TD(swap),
-                          TD(dwidget, _class="mwidget")))
+                          TD(dwidget,
+                             _class = "mwidget",
+                             ),
+                          ))
 
             index = index + 1
         # Show created_on/created_by for each record
@@ -586,7 +608,8 @@ class S3Merge(S3Method):
                         formname = formname,
                         onvalidation = lambda form: self.onvalidation(tablename, form),
                         keepvalues = False,
-                        hideerror = False):
+                        hideerror = False,
+                        ):
 
             s3db = current.s3db
 
@@ -656,8 +679,9 @@ class S3Merge(S3Method):
             Runs the onvalidation routine for this table, and maps
             form fields and errors to regular keys
 
-            @param tablename: the table name
-            @param form: the FORM
+            Args:
+                tablename: the table name
+                form: the FORM
         """
 
         ORIGINAL, DUPLICATE, KEEP = cls.ORIGINAL, cls.DUPLICATE, cls.KEEP
@@ -686,9 +710,10 @@ class S3Merge(S3Method):
             Initialize all IS_NOT_IN_DB to allow override of
             both original and duplicate value
 
-            @param field: the Field
-            @param o: the original value
-            @param d: the duplicate value
+            Args:
+                field: the Field
+                o: the original value
+                d: the duplicate value
         """
 
         allowed_override = [str(o), str(d)]
@@ -706,7 +731,6 @@ class S3Merge(S3Method):
                 if hasattr(r, "other") and \
                    hasattr(r.other, "allowed_override"):
                     r.other.allowed_override = allowed_override
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -714,15 +738,17 @@ class S3Merge(S3Method):
         """
             Render a widget for the Field/value
 
-            @param field: the Field
-            @param value: the value
-            @param download_url: the download URL for upload fields
-            @param attr: the HTML attributes for the widget
+            Args:
+                field: the Field
+                value: the value
+                download_url: the download URL for upload fields
+                attr: the HTML attributes for the widget
 
-            @note: upload fields currently not rendered because the
+            Note:
+                Upload fields currently not rendered because the
                    upload widget wouldn't render the current value,
                    hence pointless for merge
-            @note: custom widgets must allow override of both _id
+                Custom widgets must allow override of both _id
                    and _name attributes
         """
 
@@ -780,9 +806,8 @@ class S3RecordMerger:
 
     def __init__(self, resource):
         """
-            Constructor
-
-            @param resource: the resource
+            Args:
+                resource: the resource
         """
 
         self.resource = resource
@@ -793,8 +818,9 @@ class S3RecordMerger:
         """
             Roll back the current transaction and raise an error
 
-            @param message: error message
-            @param error: exception class to raise
+            Args:
+                message: error message
+                error: exception class to raise
         """
 
         current.db.rollback()
@@ -840,9 +866,10 @@ class S3RecordMerger:
             Merge the realms of two person entities (update all
             realm_entities in all records from duplicate to original)
 
-            @param table: the table original and duplicate belong to
-            @param original: the original record
-            @param duplicate: the duplicate record
+            Args:
+                table: the table original and duplicate belong to
+                original: the original record
+                duplicate: the duplicate record
         """
 
         if "pe_id" not in table.fields:
@@ -864,8 +891,6 @@ class S3RecordMerger:
                 except:
                     db.rollback()
                     raise
-        return
-
 
     # -------------------------------------------------------------------------
     def fieldname(self, key):
@@ -885,23 +910,29 @@ class S3RecordMerger:
               duplicate_id,
               replace = None,
               update = None,
-              main = True):
+              main = True,
+              ):
         """
             Merge a duplicate record into its original and remove the
             duplicate, updating all references in the database.
 
-            @param original_id: the ID of the original record
-            @param duplicate_id: the ID of the duplicate record
-            @param replace: list fields names for which to replace the
-                            values in the original record with the values
-                            of the duplicate
-            @param update: dict of {field:value} to update the final record
-            @param main: internal indicator for recursive calls
+            Args:
+                original_id: the ID of the original record
+                duplicate_id: the ID of the duplicate record
+                replace: list fields names for which to replace the
+                         values in the original record with the values
+                         of the duplicate
+                update: dict of {field:value} to update the final record
+                main: internal indicator for recursive calls
 
-            @status: work in progress
-            @todo: de-duplicate components and link table entries
+            Status:
+                work in progress
 
-            @note: virtual references (i.e. non-SQL, without foreign key
+            TODO:
+                de-duplicate components and link table entries
+
+            Note:
+                Virtual references (i.e. non-SQL, without foreign key
                    constraints) must be declared in the table configuration
                    of the referenced table like:
 
@@ -910,11 +941,11 @@ class S3RecordMerger:
                    This does not apply for list:references which will be found
                    automatically.
 
-            @note: this method can only be run from master resources (in order
+                This method can only be run from master resources (in order
                    to find all components). To merge component records, you have
                    to re-define the component as a master resource.
 
-            @note: CLI calls must db.commit()
+                CLI calls must db.commit()
         """
 
         self.main = main
@@ -1051,9 +1082,11 @@ class S3RecordMerger:
 
                         # Get the component records
                         query = (table[pkey] == original[pkey]) & join
-                        osub = db(query).select(limitby=(0, 1)).first()
+                        osub = db(query).select(limitby = (0, 1),
+                                                ).first()
                         query = (table[pkey] == duplicate[pkey]) & join
-                        dsub = db(query).select(limitby=(0, 1)).first()
+                        dsub = db(query).select(limitby = (0, 1),
+                                                ).first()
 
                         ctable = component.table
                         ctable_id = ctable._id
@@ -1131,7 +1164,8 @@ class S3RecordMerger:
                 if not skey_o:
                     msg = "No %s found in %s.%s" % (superkey,
                                                     tablename,
-                                                    original_id)
+                                                    original_id,
+                                                    )
                     current.log.warning(msg)
                     s3db.update_super(table, original)
                     skey_o = original[superkey]
@@ -1141,15 +1175,17 @@ class S3RecordMerger:
                 if not skey_d:
                     msg = "No %s found in %s.%s" % (superkey,
                                                     tablename,
-                                                    duplicate_id)
+                                                    duplicate_id,
+                                                    )
                     current.log.warning(msg)
                     continue
 
                 sresource = define_resource(super_entity)
                 sresource.merge(skey_o, skey_d,
-                                replace=replace,
-                                update=update,
-                                main=False)
+                                replace = replace,
+                                update = update,
+                                main = False,
+                                )
 
         # Merge and update original data
         data = Storage()

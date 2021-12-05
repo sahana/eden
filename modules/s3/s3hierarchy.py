@@ -57,8 +57,9 @@ class S3HierarchyCRUD(S3Method):
         """
             Entry point for REST interface
 
-            @param r: the S3Request
-            @param attr: controller attributes
+            Args:
+                r: the S3Request
+                attr: controller attributes
         """
 
         if r.http == "GET":
@@ -80,8 +81,9 @@ class S3HierarchyCRUD(S3Method):
         """
             Page load
 
-            @param r: the S3Request
-            @param attr: controller attributes
+            Args:
+                r: the S3Request
+                attr: controller attributes
         """
 
         output = {}
@@ -258,8 +260,9 @@ class S3HierarchyCRUD(S3Method):
         """
             Return a single node as JSON (id, parent and label)
 
-            @param r: the S3Request
-            @param attr: controller attributes
+            Args:
+                r: the S3Request
+                attr: controller attributes
         """
 
         resource = self.resource
@@ -303,9 +306,10 @@ class S3HierarchyCRUD(S3Method):
         """
             Render the tree
 
-            @param hierarchy: the S3Hierarchy instance
-            @param widget_id: the widget ID
-            @param record: the root record (if requested)
+            Args:
+                hierarchy: the S3Hierarchy instance
+                widget_id: the widget ID
+                record: the root record (if requested)
         """
 
         root = None
@@ -383,7 +387,8 @@ class S3HierarchyCRUD(S3Method):
             - "branch" defaults to prefix+root
             - "prefix" defaults to "Sub"
 
-            @status: experimental
+            Status:
+                Experimental
         """
 
         resource = self.resource
@@ -520,15 +525,14 @@ class S3Hierarchy:
                  leafonly = True,
                  ):
         """
-            Constructor
-
-            @param tablename: the tablename
-            @param hierarchy: the hierarchy setting for the table
-                              (replaces the current setting)
-            @param represent: a representation method for the node IDs
-            @param filter: additional filter query for the table to
-                           select the relevant subset
-            @param leafonly: filter strictly for leaf nodes
+            Args:
+                tablename: the tablename
+                hierarchy: the hierarchy setting for the table
+                           (replaces the current setting)
+                represent: a representation method for the node IDs
+                filter: additional filter query for the table to
+                        select the relevant subset
+                leafonly: filter strictly for leaf nodes
         """
 
         self.tablename = tablename
@@ -696,12 +700,14 @@ class S3Hierarchy:
         """
             Check or update status flags
 
-            @param flag: the name of the status flag to return
-            @param default: the default value if the flag is not set
-            @param attr: key-value pairs for flags to set
+            Args:
+                flag: the name of the status flag to return
+                default: the default value if the flag is not set
+                attr: key-value pairs for flags to set
 
-            @return: the value of the requested flag, or all flags
-                     as dict if no flag was specified
+            Returns:
+                The value of the requested flag, or all flags
+                as dict if no flag was specified
         """
 
         flags = self.flags
@@ -796,7 +802,6 @@ class S3Hierarchy:
                       dbupdate = None,
                       dbstatus = True,
                       )
-        return
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -805,7 +810,8 @@ class S3Hierarchy:
             Mark this hierarchy as dirty. To be called when the target
             table gets updated (can be called repeatedly).
 
-            @param tablename: the tablename
+            Args:
+                tablename: the tablename
         """
 
         s3db = current.s3db
@@ -843,7 +849,6 @@ class S3Hierarchy:
             elif not row.dirty:
                 row.update_record(dirty = True)
             flags["dbstatus"] = False
-        return
 
     # -------------------------------------------------------------------------
     def read(self):
@@ -892,8 +897,6 @@ class S3Hierarchy:
         # Remove subset
         self.__roots = None
         self.__nodes = None
-
-        return
 
     # -------------------------------------------------------------------------
     def __keys(self):
@@ -992,16 +995,16 @@ class S3Hierarchy:
 
         self.__pkey = pkey
         self.__fkey = fkey
-        return
 
     # -------------------------------------------------------------------------
     def preprocess_create_node(self, r, parent_id):
         """
             Pre-process a CRUD request to create a new node
 
-            @param r: the request
-            @param table: the hierarchical table
-            @param parent_id: the parent ID
+            Args:
+                r: the request
+                table: the hierarchical table
+                parent_id: the parent ID
         """
 
         # Make sure the parent record exists
@@ -1040,9 +1043,10 @@ class S3Hierarchy:
         """
             Create a link table entry for a new node
 
-            @param link: the link information (as returned from
-                         preprocess_create_node)
-            @param node: the new node
+            Args:
+                link: the link information (as returned from
+                      preprocess_create_node)
+                node: the new node
         """
 
         try:
@@ -1077,17 +1081,18 @@ class S3Hierarchy:
             s3db.update_super(linktable, data)
             if link_id and onaccept:
                 callback(onaccept, Storage(vars = Storage(data)))
-        return
 
     # -------------------------------------------------------------------------
     def delete(self, node_ids, cascade=False):
         """
             Recursive deletion of hierarchy branches
 
-            @param node_ids: the parent node IDs of the branches to be deleted
-            @param cascade: cascade call, do not commit (internal use)
+            Args:
+                node_ids: the parent node IDs of the branches to be deleted
+                cascade: cascade call, do not commit (internal use)
 
-            @return: number of deleted nodes, or None if cascade failed
+            Returns:
+                number of deleted nodes, or None if cascade failed
         """
 
         if not self.config:
@@ -1133,9 +1138,10 @@ class S3Hierarchy:
         """
             Add a new node to the hierarchy
 
-            @param node_id: the node ID
-            @param parent_id: the parent node ID
-            @param category: the category
+            Args:
+                node_id: the node ID
+                parent_id: the parent node ID
+                category: the category
         """
 
         theset = self.__theset
@@ -1165,7 +1171,8 @@ class S3Hierarchy:
         """
             Remove a node from the hierarchy
 
-            @param node_id: the node ID
+            Args:
+                node_id: the node ID
         """
 
         theset = self.__theset
@@ -1233,16 +1240,17 @@ class S3Hierarchy:
 
         self.__roots = roots
         self.__nodes = subset
-        return
 
     # -------------------------------------------------------------------------
     def category(self, node_id):
         """
             Get the category of a node
 
-            @param node_id: the node ID
+            Args:
+                node_id: the node ID
 
-            @return: the node category
+            Returns:
+                The node category
         """
 
         node = self.nodes.get(node_id)
@@ -1256,11 +1264,13 @@ class S3Hierarchy:
         """
             Get the parent node of a node
 
-            @param node_id: the node ID
-            @param classify: return the root node as tuple (id, category)
-                             instead of just id
+            Args:
+                node_id: the node ID
+                classify: return the root node as tuple (id, category)
+                          instead of just id
 
-            @return: the root node ID (or tuple (id, category), respectively)
+            Returns:
+                The root node ID (or tuple (id, category), respectively)
         """
 
         nodes = self.nodes
@@ -1287,12 +1297,14 @@ class S3Hierarchy:
         """
             Get child nodes of a node
 
-            @param node_id: the node ID
-            @param category: return only children of this category
-            @param classify: return each node as tuple (id, category) instead
-                             of just ids
+            Args:
+                node_id: the node ID
+                category: return only children of this category
+                classify: return each node as tuple (id, category) instead
+                          of just ids
 
-            @return: the child nodes as Python set
+            Returns:
+                The child nodes as Python set
         """
 
         nodes = self.nodes
@@ -1322,12 +1334,14 @@ class S3Hierarchy:
         """
             Return the ancestor path of a node
 
-            @param node_id: the node ID
-            @param category: start with this category rather than with root
-            @param classify: return each node as tuple (id, category) instead
-                             of just ids
+            Args:
+                node_id: the node ID
+                category: start with this category rather than with root
+                classify: return each node as tuple (id, category) instead
+                          of just ids
 
-            @return: the path as list, starting at the root node
+            Returns:
+                The path as list, starting at the root node
         """
 
         nodes = self.nodes
@@ -1351,13 +1365,15 @@ class S3Hierarchy:
             Get the root node for a node. Returns the node if it is the
             root node itself.
 
-            @param node_id: the node ID
-            @param category: find the closest node of this category rather
-                             than the absolute root
-            @param classify: return the root node as tuple (id, category)
-                             instead of just id
+            Args:
+                node_id: the node ID
+                category: find the closest node of this category rather
+                          than the absolute root
+                classify: return the root node as tuple (id, category)
+                          instead of just id
 
-            @return: the root node ID (or tuple (id, category), respectively)
+            Returns:
+                The root node ID (or tuple (id, category), respectively)
         """
 
         nodes = self.nodes
@@ -1379,7 +1395,8 @@ class S3Hierarchy:
         """
             Determine the depth of a hierarchy
 
-            @param node_id: the start node (default to all root nodes)
+            Args:
+                node_id: the start node (default to all root nodes)
         """
 
         nodes = self.nodes
@@ -1408,14 +1425,16 @@ class S3Hierarchy:
             Get the sibling nodes of a node. If the node is a root node,
             this method returns all root nodes.
 
-            @param node_id: the node ID
-            @param category: return only nodes of this category
-            @param classify: return each node as tuple (id, category)
-                             instead of just id
-            @param inclusive: include the start node
+            Args:
+                node_id: the node ID
+                category: return only nodes of this category
+                classify: return each node as tuple (id, category)
+                          instead of just id
+                inclusive: include the start node
 
-            @param return: a set of node IDs
-                           (or tuples (id, category), respectively)
+            Returns:
+                A set of node IDs
+                (or tuples (id, category), respectively)
         """
 
         result = set()
@@ -1455,13 +1474,15 @@ class S3Hierarchy:
         """
             Find descendant nodes of a node
 
-            @param node_id: the node ID (can be an iterable of node IDs)
-            @param category: find nodes of this category
-            @param classify: return each node as tuple (id, category) instead
-                             of just ids
-            @param inclusive: include the start node(s) if they match
+            Args:
+                node_id: the node ID (can be an iterable of node IDs)
+                category: find nodes of this category
+                classify: return each node as tuple (id, category) instead
+                          of just ids
+                inclusive: include the start node(s) if they match
 
-            @return: a set of node IDs (or tuples (id, category), respectively)
+            Returns:
+                A set of node IDs (or tuples (id, category), respectively)
         """
 
         result = set()
@@ -1496,10 +1517,11 @@ class S3Hierarchy:
             Represent nodes as labels, the labels are stored in the
             nodes as attribute "l".
 
-            @param node_ids: the node IDs (None for all nodes)
-            @param renderer: the representation method (falls back
-                             to the "name" field in the target table
-                             if present)
+            Args:
+                node_ids: the node IDs (None for all nodes)
+                renderer: the representation method (falls back
+                          to the "name" field in the target table
+                          if present)
         """
 
         theset = self.theset
@@ -1539,15 +1561,15 @@ class S3Hierarchy:
                 except:
                     label = s3_str(node_id)
                 theset[node_id][LABEL] = label
-        return
 
     # -------------------------------------------------------------------------
     def label(self, node_id, represent=None):
         """
             Get a label for a node
 
-            @param node_id: the node ID
-            @param represent: the node ID representation method
+            Args:
+                node_id: the node ID
+                represent: the node ID representation method
         """
 
         theset = self.theset
@@ -1563,7 +1585,6 @@ class S3Hierarchy:
             if type(label) is str:
                 label = s3_str(label)
             return label
-        return None
 
     # -------------------------------------------------------------------------
     def repr_expand(self, node_ids, levels=None, represent=None):
@@ -1571,13 +1592,15 @@ class S3Hierarchy:
             Helper function to represent a set of nodes as lists
             of their respective ancestors starting by the root node
 
-            @param node_ids: the node_ids (iterable)
-            @param levels: the number of levels to include (counting from root)
-            @param represent: a representation function for each ancestor
+            Args:
+                node_ids: the node_ids (iterable)
+                levels: the number of levels to include (counting from root)
+                represent: a representation function for each ancestor
 
-            @returns: a dict {node_id: ["Label", "Label", ...]}
-                      => each label list is padded with "-" to reach the
-                         requested number of levels (TODO make this configurable)
+            Returns:
+                A dict {node_id: ["Label", "Label", ...]}
+                => each label list is padded with "-" to reach the
+                   requested number of levels (TODO make this configurable)
         """
 
         paths = {}
@@ -1602,16 +1625,18 @@ class S3Hierarchy:
         """
             Represent a node as JSON-serializable array
 
-            @param node_id: the node ID
-            @param represent: the representation method
-            @param depth: the current recursion depth
-            @param max_depth: the maximum recursion depth
+            Args:
+                node_id: the node ID
+                represent: the representation method
+                depth: the current recursion depth
+                max_depth: the maximum recursion depth
 
-            @returns: the node as [label, category, subnodes],
-                      with subnodes as:
-                        - False: if there are no subnodes
-                        - True: if there are subnodes beyond max_depth
-                        - otherwise: {node_id: [label, category, subnodes], ...}
+            Returns:
+                The node as [label, category, subnodes],
+                with subnodes as:
+                    - False: if there are no subnodes
+                    - True: if there are subnodes beyond max_depth
+                    - otherwise: {node_id: [label, category, subnodes], ...}
         """
 
         node = self.nodes.get(node_id)
@@ -1647,12 +1672,14 @@ class S3Hierarchy:
         """
             Represent the hierarchy as JSON-serializable dict
 
-            @param root: the root node ID (or array of root node IDs)
-            @param represent: the representation method
-            @param max_depth: maximum recursion depth
+            Args:
+                root: the root node ID (or array of root node IDs)
+                represent: the representation method
+                max_depth: maximum recursion depth
 
-            @returns: the hierarchy as dict:
-                         {node_id: [label, category, subnodes], ...}
+            Returns:
+                The hierarchy as dict:
+                    {node_id: [label, category, subnodes], ...}
         """
 
         self._represent(renderer = represent)
@@ -1682,14 +1709,16 @@ class S3Hierarchy:
         """
             Render this hierarchy as nested unsorted list
 
-            @param widget_id: a unique ID for the HTML widget
-            @param root: node ID of the start node (defaults to all
-                         available root nodes)
-            @param represent: the representation method for the node IDs
-            @param hidden: render with style display:none
-            @param _class: the HTML class for the outermost list
+            Args:
+                widget_id: a unique ID for the HTML widget
+                root: node ID of the start node (defaults to all
+                      available root nodes)
+                represent: the representation method for the node IDs
+                hidden: render with style display:none
+                _class: the HTML class for the outermost list
 
-            @return: the list (UL)
+            Returns:
+                The list (UL)
         """
 
         self._represent(renderer = represent)
@@ -1720,13 +1749,16 @@ class S3Hierarchy:
             Recursively render a node as list item (with subnodes
             as unsorted list inside the item)
 
-            @param node_id: the node ID
-            @param widget_id: the unique ID for the outermost list
-            @param represent: the node ID representation method
+            Args:
+                node_id: the node ID
+                widget_id: the unique ID for the outermost list
+                represent: the node ID representation method
 
-            @return: the list item (LI)
+            Returns:
+                The list item (LI)
 
-            @todo: option to add CRUD permissions
+            TODO:
+                option to add CRUD permissions
         """
 
         node = self.nodes.get(node_id)
@@ -1766,20 +1798,23 @@ class S3Hierarchy:
         """
             Export the hierarchy beneath a node
 
-            @param node_id: the root node
-            @param prefix: prefix for the hierarchy column in the output
-            @param depth: the maximum depth to export
-            @param level: the current recursion level (internal)
-            @param path: the path dict for this node (internal)
-            @param hcol: the hierarchy column in the input data
-            @param columns: the list of columns to export
-            @param data: the input data dict {node_id: row}
-            @param node_list: the output data list (will be appended to)
+            Args:
+                node_id: the root node
+                prefix: prefix for the hierarchy column in the output
+                depth: the maximum depth to export
+                level: the current recursion level (internal)
+                path: the path dict for this node (internal)
+                hcol: the hierarchy column in the input data
+                columns: the list of columns to export
+                data: the input data dict {node_id: row}
+                node_list: the output data list (will be appended to)
 
-            @returns: the output data list
+            Returns:
+                The output data list
 
-            @todo: pass the input data as list and retain the original
-                   order when recursing into child nodes?
+            TODO:
+                Pass the input data as list and retain the original
+                order when recursing into child nodes?
         """
 
         if node_list is None:
