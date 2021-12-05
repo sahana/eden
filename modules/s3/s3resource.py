@@ -1880,8 +1880,8 @@ class S3Resource(object):
             if import_prep:
                 tree = import_job.get_tree()
                 callback(import_prep,
-                         # takes tuple (resource, tree) as argument
-                         (self, tree)) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
+                         tree,
+                         ) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
                 # Skip import?
                 if self.skip_import:
                     current.log.debug("Skipping import to %s" % tablename)
@@ -1911,8 +1911,8 @@ class S3Resource(object):
                 if not isinstance(tree, etree._ElementTree):
                     tree = etree.ElementTree(tree)
                 callback(import_prep,
-                         # takes tuple (resource, tree) as argument
-                         (self, tree)) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
+                         tree,
+                         ) # , tablename=tablename (if we ever define callbacks as a dict with tablename)
                 # Skip import?
                 if self.skip_import:
                     current.log.debug("Skipping import to %s" % tablename)

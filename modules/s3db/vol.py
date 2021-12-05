@@ -1609,45 +1609,48 @@ def vol_person_controller():
             )
 
     # Import pre-process
-    def import_prep(data, group=group):
+    def import_prep(tree, group=group):
         """
             Deletes all HR records (of the given group) of the organisation
             before processing a new data import, used for the import_prep
             hook in response.s3
         """
-        if s3.import_replace:
-            resource, tree = data
-            if tree is not None:
-                xml = current.xml
-                tag = xml.TAG
-                att = xml.ATTRIBUTE
+        if s3.import_replace and tree is not None:
+            xml = current.xml
+            tag = xml.TAG
+            att = xml.ATTRIBUTE
 
-                if group == "staff":
-                    group = 1
-                elif group == "volunteer":
-                    group = 2
-                else:
-                    return # don't delete if no group specified
+            if group == "staff":
+                group = 1
+            elif group == "volunteer":
+                group = 2
+            else:
+                return # don't delete if no group specified
 
-                root = tree.getroot()
-                expr = "/%s/%s[@%s='org_organisation']/%s[@%s='name']" % \
-                       (tag.root, tag.resource, att.name, tag.data, att.field)
-                orgs = root.xpath(expr)
-                for org in orgs:
-                    org_name = org.get("value", None) or org.text
-                    if org_name:
-                        try:
-                            org_name = json.loads(xml.xml_decode(org_name))
-                        except:
-                            pass
-                    if org_name:
-                        htable = s3db.hrm_human_resource
-                        otable = s3db.org_organisation
-                        query = (otable.name == org_name) & \
-                                (htable.organisation_id == otable.id) & \
-                                (htable.type == group)
-                        resource = s3db.resource("hrm_human_resource", filter=query)
-                        resource.delete(format="xml", cascade=True)
+            root = tree.getroot()
+            expr = "/%s/%s[@%s='org_organisation']/%s[@%s='name']" % \
+                   (tag.root, tag.resource, att.name, tag.data, att.field)
+            orgs = root.xpath(expr)
+            for org in orgs:
+                org_name = org.get("value", None) or org.text
+                if org_name:
+                    try:
+                        org_name = json.loads(xml.xml_decode(org_name))
+                    except:
+                        pass
+                if org_name:
+                    htable = s3db.hrm_human_resource
+                    otable = s3db.org_organisation
+                    query = (otable.name == org_name) & \
+                            (htable.organisation_id == otable.id) & \
+                            (htable.type == group)
+                    resource = s3db.resource("hrm_human_resource",
+                                             filter = query,
+                                             )
+                    resource.delete(format = "xml",
+                                    cascade = True,
+                                    )
+
     s3.import_prep = import_prep
 
     # CRUD pre-process

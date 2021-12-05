@@ -10469,7 +10469,7 @@ def pr_availability_filter(r):
             r.resource.add_filter(~(FS("id").belongs(person_ids)))
 
 # =============================================================================
-def pr_import_prep(data):
+def pr_import_prep(tree):
     """
         Called when contacts are imported from CSV
 
@@ -10486,8 +10486,6 @@ def pr_import_prep(data):
     set_record_owner = current.auth.s3_set_record_owner
     update_super = s3db.update_super
     table = s3db.org_organisation
-
-    tree = data[1]
 
     # Memberships
     elements = tree.getroot().xpath("/s3xml//resource[@name='pr_contact']/data[@field='pe_id']")

@@ -50,45 +50,43 @@ def inv_item():
     """ REST Controller """
 
     # Import pre-process
-    def import_prep(data):
+    def import_prep(tree):
         """
             Process option to Delete all Stock records of the Organisation/Branch
             before processing a new data import
         """
-        if s3.import_replace:
-            resource, tree = data
-            if tree is not None:
-                xml = current.xml
-                tag = xml.TAG
-                att = xml.ATTRIBUTE
+        if s3.import_replace and tree is not None:
+            xml = current.xml
+            tag = xml.TAG
+            att = xml.ATTRIBUTE
 
-                root = tree.getroot()
-                expr = "/%s/%s[@%s='org_organisation']/%s[@%s='name']" % \
-                       (tag.root, tag.resource, att.name, tag.data, att.field)
-                orgs = root.xpath(expr)
-                otable = s3db.org_organisation
-                stable = s3db.org_site
-                itable = s3db.inv_inv_item
-                for org in orgs:
-                    org_name = org.get("value", None) or org.text
-                    if org_name:
-                        try:
-                            org_name = json.loads(xml.xml_decode(org_name))
-                        except:
-                            pass
-                    if org_name:
-                        query = (otable.name == org_name) & \
-                                (stable.organisation_id == otable.id) & \
-                                (itable.site_id == stable.id)
-                        resource = s3db.resource("inv_inv_item",
-                                                 filter = query,
-                                                 )
-                        # Use cascade = True so that the deletion gets
-                        # rolled back if the import fails:
-                        resource.delete(format = "xml",
-                                        cascade = True,
-                                        )
-            resource.skip_import = True
+            root = tree.getroot()
+            expr = "/%s/%s[@%s='org_organisation']/%s[@%s='name']" % \
+                   (tag.root, tag.resource, att.name, tag.data, att.field)
+            orgs = root.xpath(expr)
+            otable = s3db.org_organisation
+            stable = s3db.org_site
+            itable = s3db.inv_inv_item
+            for org in orgs:
+                org_name = org.get("value", None) or org.text
+                if org_name:
+                    try:
+                        org_name = json.loads(xml.xml_decode(org_name))
+                    except:
+                        pass
+                if org_name:
+                    query = (otable.name == org_name) & \
+                            (stable.organisation_id == otable.id) & \
+                            (itable.site_id == stable.id)
+                    resource = s3db.resource("inv_inv_item",
+                                             filter = query,
+                                             )
+                    # Use cascade = True so that the deletion gets
+                    # rolled back if the import fails:
+                    resource.delete(format = "xml",
+                                    cascade = True,
+                                    )
+
     s3.import_prep = import_prep
 
     def prep(r):

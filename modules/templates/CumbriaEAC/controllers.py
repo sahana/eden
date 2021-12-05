@@ -147,7 +147,7 @@ return false}})''' % (T("Please Select a Shelter")))
         return output
 
 # =============================================================================
-def cr_shelter_import_prep(data):
+def cr_shelter_import_prep(tree):
     """
         Called when Shelters are imported from CSV
 
@@ -160,8 +160,6 @@ def cr_shelter_import_prep(data):
     s3db = current.s3db
     update_super = s3db.update_super
     ctable = s3db.cms_post
-
-    tree = data[1]
 
     def add_plan(name):
         """ Helper to add a New Plan """

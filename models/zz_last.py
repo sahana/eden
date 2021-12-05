@@ -10,6 +10,14 @@ settings.set_theme()
 # Empty dict to store custom CRUD views
 s3.views = {}
 
+if session.s3.pending_consent and request.controller != "default":
+    # Enforce consent response
+    redirect(URL(c="default", f="user",
+                 args = ["consent"],
+                 vars = {"_next": URL(),
+                         },
+                 ))
+
 if auth.permission.format in ("html",):
 
     # Should we use Content-Delivery Networks?

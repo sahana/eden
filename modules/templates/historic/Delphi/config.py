@@ -142,4 +142,30 @@ def config(settings):
         #    )),
     ])
 
+    # =========================================================================
+    def auth_register_onaccept(user_id):
+        """
+            Add user as a participant of the default problem group
+        """
+
+        s3db = current.s3db
+        table = s3db.delphi_group
+        group = current.db(table.uuid == "DEFAULT").select(table.id,
+                                                           limitby = (0, 1),
+                                                           ).first()
+        if group:
+            s3db.delphi_membership.insert(group_id = group.id,
+                                          user_id = user_id,
+                                          status = 3,
+                                          )
+    
+    # -------------------------------------------------------------------------
+    def customise_auth_user_resource(r, tablename):
+
+        current.s3db.configure(tablename,
+                               register_onaccept = auth_register_onaccept,
+                               )
+
+    settings.customise_auth_user_resource = customise_auth_user_resource
+
 # END =========================================================================

@@ -4758,7 +4758,8 @@ class S3BulkImporter(object):
                                   )
 
         # 1st import any Contacts
-        current.response.s3.import_prep = current.s3db.pr_import_prep
+        from s3db.pr import pr_import_prep
+        current.response.s3.import_prep = pr_import_prep
         user_task = [1,
                      "pr",
                      "contact",

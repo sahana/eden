@@ -1288,9 +1288,10 @@ def asset_controller():
     s3.prep = prep
 
     # Import pre-process
-    def import_prep(data):
+    def import_prep(tree):
         # Flag that this is an Import (to distinguish from Sync)
         current.response.s3.asset_import = True
+
     s3.import_prep = import_prep
 
     # Post-processor
