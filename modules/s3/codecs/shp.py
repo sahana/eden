@@ -32,15 +32,13 @@ __all__ = ("S3SHP",)
 
 import os
 
-from io import StringIO
-
 from gluon import *
 from gluon.contenttype import contenttype
 from gluon.storage import Storage
 from gluon.streamer import DEFAULT_CHUNK_SIZE
 
 from ..s3codec import S3Codec
-from ..s3utils import s3_str, s3_strip_markup
+from ..s3utils import get_crud_string, s3_str, s3_strip_markup
 
 # =============================================================================
 class S3SHP(S3Codec):
@@ -49,23 +47,16 @@ class S3SHP(S3Codec):
     """
 
     # -------------------------------------------------------------------------
-    def __init__(self):
-        """
-            Constructor
-        """
-
-        pass
-
-    # -------------------------------------------------------------------------
     def extractResource(self, resource, list_fields):
         """
             Extract the items from the resource
 
-            @param resource: the resource
-            @param list_fields: fields to include in list views
+            Args:
+                resource: the resource
+                list_fields: fields to include in list views
         """
 
-        title = self.crud_string(resource.tablename, "title_list")
+        title = get_crud_string(resource.tablename, "title_list")
 
         get_vars = Storage(current.request.get_vars)
         get_vars["iColumns"] = len(list_fields)
@@ -73,11 +64,12 @@ class S3SHP(S3Codec):
         resource.add_filter(query)
 
         data = resource.select(list_fields,
-                               left=left,
-                               limit=None,
-                               orderby=orderby,
-                               represent=True,
-                               show_links=False)
+                               left = left,
+                               limit = None,
+                               orderby = orderby,
+                               represent = True,
+                               show_links = False,
+                               )
 
         rfields = data["rfields"]
         types = []
@@ -101,15 +93,17 @@ class S3SHP(S3Codec):
         """
             Export data as a Shapefile
 
-            @param data_source: the source of the data that is to be encoded
-                                as a shapefile. This may be:
-                                resource: the resource
-                                item:     a list of pre-fetched values
-                                          the headings are in the first row
-                                          the data types are in the second row
-            @param attr: dictionary of parameters:
-                 * title:          The export filename
-                 * list_fields:    Fields to include in list views
+            Args:
+                data_source: the source of the data that is to be encoded
+                             as a shapefile. This may be:
+                                - resource: the resource
+                                - item:     a list of pre-fetched values
+                                            the headings are in the first row
+                                            the data types are in the second row
+
+            Keyword Args:
+                title: The export filename
+                list_fields: Fields to include in list views
         """
 
         # Get the attributes
@@ -240,12 +234,14 @@ class S3SHP(S3Codec):
         """
             Import data from a Shapefile
 
-            @param resource: the S3Resource
-            @param source: the source
+            Args:
+                resource: the S3Resource
+                source: the source
 
-            @return: an S3XML ElementTree
+            Returns:
+                an S3XML ElementTree
 
-            @ToDo: Handle encodings within Shapefiles other than UTF-8
+            TODO Handle encodings within Shapefiles other than UTF-8
         """
 
         # @ToDo: Complete this!

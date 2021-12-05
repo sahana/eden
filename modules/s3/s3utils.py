@@ -66,6 +66,7 @@ __all__ = ("NONE", # Consistency & RAD
            "StringTemplateParser",
            "Traceback",
            "URL2",
+           "get_crud_string",
            "s3_addrow",
            "s3_avatar_represent",
            "s3_comments_represent",
@@ -105,6 +106,28 @@ __all__ = ("NONE", # Consistency & RAD
            "s3_validate",
            "s3_yes_no_represent",
            )
+
+# =============================================================================
+def get_crud_string(tablename, key):
+    """
+        Get a CRUD string (label) for a table
+
+        Args:
+            tablename: the table name
+            key: the CRUD string key
+
+        Returns:
+            the CRUD string (usually lazyT)
+    """
+
+    crud_strings = current.response.s3.crud_strings
+
+    labels = crud_strings.get(tablename)
+    label = labels.get(key) if labels else None
+    if label is None:
+        label = crud_strings.get(key)
+
+    return label
 
 # =============================================================================
 def s3_get_last_record_id(tablename):

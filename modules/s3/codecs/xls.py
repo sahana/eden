@@ -38,7 +38,7 @@ from gluon.contenttype import contenttype
 from gluon.storage import Storage
 
 from ..s3codec import S3Codec
-from ..s3utils import s3_str, s3_strip_markup, s3_get_foreign_key
+from ..s3utils import get_crud_string, s3_str, s3_strip_markup, s3_get_foreign_key
 
 # =============================================================================
 class S3XLS(S3Codec):
@@ -72,11 +72,12 @@ class S3XLS(S3Codec):
         """
             Extract the rows from the resource
 
-            @param resource: the resource
-            @param list_fields: fields to include in list views
+            Args:
+                resource: the resource
+                list_fields: fields to include in list views
         """
 
-        title = self.crud_string(resource.tablename, "title_list")
+        title = get_crud_string(resource.tablename, "title_list")
 
         get_vars = dict(current.request.vars)
         get_vars["iColumns"] = len(list_fields)
@@ -139,33 +140,33 @@ class S3XLS(S3Codec):
         """
             Export data as a Microsoft Excel spreadsheet
 
-            @param resource: the source of the data that is to be encoded
-                             as a spreadsheet, can be either of:
-                                1) an S3Resource
-                                2) an array of value dicts (dict of
-                                   column labels as first item, list of
-                                   field types as second item)
-                                3) a dict like:
-                                   {columns: [key, ...],
-                                    headers: {key: label},
-                                    types: {key: type},
-                                    rows: [{key:value}],
-                                    }
+            Args:
+                resource: the source of the data that is to be encoded
+                          as a spreadsheet, can be either of:
+                            - a SResource
+                            - an array of value dicts (dict of
+                              column labels as first item, list of
+                              field types as second item)
+                            -a dict like:
+                                {columns: [key, ...],
+                                 headers: {key: label},
+                                 types: {key: type},
+                                 rows: [{key:value}],
+                                 }
 
-            @param attr: keyword arguments (see below)
-
-            @keyword as_stream: return the buffer (BytesIO) rather than
-                                its contents (str), useful when the output
-                                is supposed to be stored locally
-            @keyword title: the main title of the report
-            @keyword list_fields: fields to include in list views
-            @keyword report_groupby: used to create a grouping of the result:
-                                     either a Field object of the resource
-                                     or a string which matches a value in
-                                     the heading
-            @keyword use_colour: True to add colour to the cells, default False
-            @keyword evenodd: render different background colours
-                              for even/odd rows ("stripes")
+            Keyword Args:
+                as_stream: return the buffer (BytesIO) rather than
+                           its contents (str), useful when the output
+                           is supposed to be stored locally
+                title: the main title of the report
+                list_fields: fields to include in list views
+                report_groupby: used to create a grouping of the result:
+                                either a Field object of the resource
+                                or a string which matches a value in
+                                the heading
+                use_colour: True to add colour to the cells, default False
+                evenodd: render different background colours
+                         for even/odd rows ("stripes")
         """
 
         # Do not redirect from here!
@@ -538,11 +539,13 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
             Expand a hierarchical foreign key column into one column
             per hierarchy level
 
-            @param rfield: the column (S3ResourceField)
-            @param num_levels: the number of levels (from root)
-            @param rows: the Rows from S3ResourceData
+            Args:
+                rfield: the column (S3ResourceField)
+                num_levels: the number of levels (from root)
+                rows: the Rows from S3ResourceData
 
-            @returns: list of keys (column names) for the inserted columns
+            Returns:
+                list of keys (column names) for the inserted columns
         """
 
         field = rfield.field
@@ -595,10 +598,12 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
         """
             Encode a S3PivotTable as XLS sheet
 
-            @param pt: the S3PivotTable
-            @param title: the title for the report
+            Args:
+                pt: the S3PivotTable
+                title: the title for the report
 
-            @returns: the XLS file as stream
+            Returns:
+                the XLS file as stream
         """
 
         output = BytesIO()
@@ -617,7 +622,8 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
             Translate a Python datetime format string into an
             Excel datetime format string
 
-            @param pyfmt: the Python format string
+            Args:
+                pyfmt: the Python format string
         """
 
         translate = {"%a": "ddd",
@@ -663,10 +669,11 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
         """
             XLS encoder standard cell styles
 
-            @param use_colour: use background colour in cells
-            @param evenodd: render different background colours
-                            for even/odd rows ("stripes")
-            @param datetime_format: the date/time format
+            Args:
+                use_colour: use background colour in cells
+                evenodd: render different background colours for even/odd
+                         rows ("stripes")
+                datetime_format: the date/time format
         """
 
         import xlwt
@@ -748,9 +755,8 @@ class S3PivotTableXLS(object):
 
     def __init__(self, pt):
         """
-            Constructor
-
-            @param pt: the S3PivotTable to encode
+            Args:
+                pt: the S3PivotTable to encode
         """
 
         self.pt = pt
@@ -767,9 +773,11 @@ class S3PivotTableXLS(object):
         """
             Convert this pivot table into an XLS file
 
-            @param title: the title of the report
+            Args:
+                title: the title of the report
 
-            @returns: the XLS workbook
+            Returns:
+                the XLS workbook
         """
 
         try:
@@ -781,7 +789,7 @@ class S3PivotTableXLS(object):
 
         T = current.T
 
-        TOTAL = s3_str(s3_str(T("Total")).upper())
+        TOTAL = s3_str(T("Total")).upper()
 
         pt = self.pt
 
@@ -987,16 +995,17 @@ class S3PivotTableXLS(object):
         """
             Write a value to a spreadsheet cell
 
-            @param sheet: the work sheet
-            @param rowindex: the row index of the cell
-            @param colindex: the column index of the cell
-            @param value: the value to write
-            @param style: a style name (see styles property)
-            @param numfmt: a number format name (see formats property)
-            @param rowspan: number of rows to merge
-            @param colspan: number of columns to merge
-            @param adjust: True to adjust column width and row height,
-                           False to suppress automatic adjustment
+            Args:
+                sheet: the work sheet
+                rowindex: the row index of the cell
+                colindex: the column index of the cell
+                value: the value to write
+                style: a style name (see styles property)
+                numfmt: a number format name (see formats property)
+                rowspan: number of rows to merge
+                colspan: number of columns to merge
+                adjust: True to adjust column width and row height,
+                        False to suppress automatic adjustment
         """
 
         styles = self.styles
@@ -1083,7 +1092,8 @@ class S3PivotTableXLS(object):
         """
             Style definitions for pivot tables (lazy property)
 
-            @returns: dict of named XFStyle instances
+            Returns:
+                dict of named XFStyle instances
         """
 
         styles = self._styles
@@ -1194,7 +1204,8 @@ class S3PivotTableXLS(object):
         """
             Number formats for pivot tables (lazy property)
 
-            @returns: dict of format strings
+            Returns:
+                dict of format strings
         """
 
         formats = self._formats
@@ -1224,7 +1235,8 @@ class S3PivotTableXLS(object):
         """
             Determine the number format for this pivot table
 
-            @returns: the number format key (see formats property)
+            Returns:
+                the number format key (see formats property)
         """
 
         numfmt = None
@@ -1272,14 +1284,15 @@ class S3PivotTableXLS(object):
         """
             Sort and represent pivot table axes
 
-            @returns: tuple (rows, cols), each a list of tuples:
-                      (index,               ...the index of the row/column in
-                                               the original cell array
-                       total,               ...total value of the row/column
-                       {value: axis_value,  ...group value of the row/column
-                        text: axis_repr,    ...representation of the group value
-                        },
-                       )
+            Returns:
+                tuple (rows, cols), each a list of tuples:
+                    (index,               ...the index of the row/column in
+                                             the original cell array
+                     total,               ...total value of the row/column
+                     {value: axis_value,  ...group value of the row/column
+                      text: axis_repr,    ...representation of the group value
+                      },
+                     )
         """
 
         pt = self.pt
@@ -1325,12 +1338,14 @@ class S3PivotTableXLS(object):
             Represent and sort a list of cell values (for "list" aggregation
             method)
 
-            @param cell - the cell data
-            @param rfield - the fact S3ResourceField
-            @param represent - representation method for the fact field
-            @param fk - fact field is a foreign key
+            Args:
+                cell - the cell data
+                rfield - the fact S3ResourceField
+                represent - representation method for the fact field
+                fk - fact field is a foreign key
 
-            @returns: sorted list of represented cell values
+            Returns:
+                sorted list of represented cell values
         """
 
         pt = self.pt

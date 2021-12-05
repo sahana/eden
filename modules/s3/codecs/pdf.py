@@ -206,9 +206,6 @@ class S3RL_PDF(S3Codec):
     """
 
     def __init__(self):
-        """
-            Constructor
-        """
 
         # Error codes
         self.ERROR = Storage(
@@ -223,48 +220,50 @@ class S3RL_PDF(S3Codec):
         """
             Export data as a PDF document
 
-            @param resource: the resource
-            @param attr: dictionary of keyword arguments, in s3_rest_controller
-                         passed through from the calling controller
+            Args:
+                resource: the resource
+                attr: dictionary of keyword arguments, in s3_rest_controller
+                      passed through from the calling controller
 
-            @keyword request: the S3Request
-            @keyword method: "read" to not include a list view when no
-                             component is specified
-            @keyword list_fields: fields to include in lists
+            Keyword Args:
+                request: the S3Request
+                method: "read" to not include a list view when no
+                        component is specified
+                list_fields: fields to include in lists
 
-            @keyword pdf_componentname: enforce this component
+                pdf_componentname: enforce this component
 
-            @keyword pdf_groupby: how to group the results
-            @keyword pdf_orderby: how to sort rows (within any level of grouping)
+                pdf_groupby: how to group the results
+                pdf_orderby: how to sort rows (within any level of grouping)
 
-            @keyword pdf_callback: callback to be used rather than request
+                pdf_callback: callback to be used rather than request
 
-            @keyword pdf_title: the title of the report
-            @keyword pdf_filename: the filename for the report
+                pdf_title: the title of the report
+                pdf_filename: the filename for the report
 
-            @keyword rheader: HTML page header (override by pdf_header)
-            @keyword rfooter: HTML page footer (override by pdf_footer)
-            @keyword pdf_header: callback to generate the HTML header
-                                 (overrides rheader)
-            @keyword pdf_footer: callback to generate the HTML footer,
-                                 or static HTML (overrides rfooter)
+                rheader: HTML page header (override by pdf_header)
+                rfooter: HTML page footer (override by pdf_footer)
+                pdf_header: callback to generate the HTML header
+                            (overrides rheader)
+                pdf_footer: callback to generate the HTML footer,
+                            or static HTML (overrides rfooter)
 
-            @keyword pdf_header_padding: add this amount of space between
-                                         the header and the body
-            @keyword pdf_footer_padding: add this amount of space between
-                                         the body and the footer
+                pdf_header_padding: add this amount of space between
+                                    the header and the body
+                pdf_footer_padding: add this amount of space between
+                                    the body and the footer
 
-            @keyword pdf_hide_comments: don't show the comments in a table
+                pdf_hide_comments: don't show the comments in a table
 
-            @keyword pdf_table_autogrow: Indicates that a table should grow to
-                                          fill the available space. Valid values:
-                                          H - Horizontal
-                                          V - Vertical
-                                          B - Both
-            @keyword pdf_orientation: Portrait (default) or Landscape
-            @keyword use_colour:      True to add colour to the cells. default False
+                pdf_table_autogrow: Indicates that a table should grow to
+                                    fill the available space. Valid values:
+                                        H - Horizontal
+                                        V - Vertical
+                                        B - Both
+                pdf_orientation: Portrait (default) or Landscape
+                use_colour: True to add colour to the cells. default False
 
-            @keyword pdf_html_styles: styles for S3html2pdf (dict)
+                pdf_html_styles: styles for S3html2pdf (dict)
         """
 
         if not reportLabImported:
@@ -419,11 +418,12 @@ class S3RL_PDF(S3Codec):
             Function to convert the rules passed in to a flowable.
             The rules (for example) could be an rHeader callback
 
-            @param rules: the HTML (web2py helper class) or a callback
-                          to produce it. The callback receives the
-                          S3Request as parameter.
-            @param printable_width: the printable width
-            @param styles: styles for HTML=>PDF conversion
+            Args:
+                rules: the HTML (web2py helper class) or a callback
+                       to produce it. The callback receives the CRUDRequest
+                       as parameter.
+                printable_width: the printable width
+                styles: styles for HTML=>PDF conversion
         """
 
         if callable(rules):
@@ -749,17 +749,20 @@ class EdenDocTemplate(BaseDocTemplate):
         """
             Method to create a paragraph that may be inserted into the document
 
-            @param text: The text for the paragraph
-            @param append: If True then the paragraph will be stored in the
-            document flow ready for generating the pdf.
+            Args:
+                text: The text for the paragraph
+                append: if True then the paragraph will be stored in the
+                        document flow ready for generating the pdf.
 
-            @return The paragraph
+            Returns:
+                the paragraph
 
-            This method can return the paragraph rather than inserting into the
-            document. This is useful if the paragraph needs to be first
-            inserted in another flowable, before being added to the document.
-            An example of when this is useful is when large amounts of text
-            (such as a comment) are added to a cell of a table.
+            Note:
+                This method can return the paragraph rather than inserting into the
+                document. This is useful if the paragraph needs to be first
+                inserted in another flowable, before being added to the document.
+                An example of when this is useful is when large amounts of text
+                (such as a comment) are added to a cell of a table.
         """
 
         if text != "":
@@ -817,12 +820,11 @@ class S3PDFList:
                  totalrows = None,
                  ):
         """
-            Constructor
-
-            @param document: the DocTemplate
-            @param rfields: the S3ResourceFields (for labels and order)
-            @param rows: the data (S3ResourceData.rows)
-            @param totalrows: total number of rows matching the filter
+            Args:
+                document: the DocTemplate
+                rfields: the S3ResourceFields (for labels and order)
+                rows: the data (S3ResourceData.rows)
+                totalrows: total number of rows matching the filter
         """
 
         self.document = document
@@ -843,7 +845,8 @@ class S3PDFList:
         """
             Build the list
 
-            @returns: list of Flowables
+            Returns:
+                list of Flowables
         """
 
         flowables = []
@@ -889,7 +892,8 @@ class S3PDFList:
         """
             Format a field value with label
 
-            @returns: a list of Flowables
+            Returns:
+                a list of Flowables
         """
 
         label = biDiText(rfield.label)
@@ -926,10 +930,12 @@ class S3PDFList:
         """
             Convert represented field value into suitable ReportLab elements
 
-            @param rfield: the S3ResourceField
-            @param value: the field value
+            Args:
+                rfield: the S3ResourceField
+                value: the field value
 
-            @returns: a BiDi-converted unicode string, or a list of Flowables
+            Returns:
+                a BiDi-converted unicode string, or a list of Flowables
         """
 
         if isinstance(value, (str, lazyT)):
@@ -1008,7 +1014,8 @@ class S3PDFList:
         """
             Get the paragraph styles used in this layout
 
-            @returns: dict of paragraph styles
+            Returns:
+                dict of paragraph styles
         """
 
         styles = {}
@@ -1037,9 +1044,9 @@ class S3PDFList:
 class S3PDFTable:
     """
         Class to build a table that can then be placed in a pdf document
-        The table will be formatted so that it fits on the page.
 
-        Called by get_resource_flowable()
+        The table will be formatted so that is fits on the page. This class
+        doesn't need to be called directly. Rather see S3RL_PDF.get_resource_flowable
     """
 
     MIN_COL_WIDTH = 200
@@ -1054,22 +1061,21 @@ class S3PDFTable:
                  totalrows = None,
                  ):
         """
-            Constructor
-
-            @param document: the EdenDocTemplate instance in which the table
-                             shall be rendered
-            @param rfields: list of resolved field selectors for
-                            the columns (S3ResourceData.rfields)
-            @param rows: the represented rows (S3ResourceData.rows)
-            @param groupby: a field name that is to be used as a sub-group
+            Args:
+                document: the EdenDocTemplate instance in which the table
+                          shall be rendered
+                rfields: list of resolved field selectors for
+                         the columns (S3ResourceData.rfields)
+                rows: the represented rows (S3ResourceData.rows)
+                groupby: a field name that is to be used as a sub-group
                             - all records with the same value in that the
                               groupby column will be clustered together
-            @param autogrow: what to do about empty space on the page:
-                             "H" - make columns wider to fill horizontally
-                             "V" - add extra (empty) rows to fill vertically
-                             "B" - do both
-                             False - do nothing
-            @param totalrows: total number of rows matching the filter
+                autogrow: what to do about empty space on the page:
+                            "H" - make columns wider to fill horizontally
+                            "V" - add extra (empty) rows to fill vertically
+                            "B" - do both
+                            False - do nothing
+                totalrows: total number of rows matching the filter
         """
 
         rtl = current.response.s3.rtl
@@ -1131,11 +1137,11 @@ class S3PDFTable:
     # -------------------------------------------------------------------------
     def convert(self, rfield, value):
         """
-            Convert represented field value into a suitable
-            ReportLab element
+            Convert represented field value into a suitable ReportLab element
 
-            @param rfield: the S3ResourceField
-            @param value: the field value
+            Args:
+                rfield: the S3ResourceField
+                value: the field value
         """
 
         if isinstance(value, (str, lazyT)):
@@ -1220,11 +1226,14 @@ class S3PDFTable:
         """
             Method to build the table.
 
-            @returns: a list of ReportLab Table instances
-                      - if the table fits into the page width, this list will
-                        contain a single Table, otherwise it will contain the
-                        parts of the split table in the order in which they
-                        shall be inserted into the main document
+            Returns:
+                a list of ReportLab Table instances
+
+            Note:
+                If the table fits into the page width, this list will
+                contain a single Table, otherwise it will contain the
+                parts of the split table in the order in which they
+                shall be inserted into the main document.
         """
 
         if self.groupby:
@@ -1249,10 +1258,11 @@ class S3PDFTable:
         """
             Group the rows
 
-            @returns: the PDF-formatted data with grouping headers
+            Returns:
+                the PDF-formatted data with grouping headers
 
-            FIXME: will not work with RTL-biDiText or any non-text
-                   representation, rewrite to use raw resource data
+            FIXME will not work with RTL-biDiText or any non-text
+                  representation, rewrite to use raw resource data
         """
 
         groups = self.groupby.split(",")
@@ -1318,8 +1328,9 @@ class S3PDFTable:
                  - row heights and column widths
                  - font-size
 
-            @returns: the table parts, a list of row data arrays:
-                      [ [[value1, value2, value3, ...], ...], ...]
+            Returns:
+                the table parts, a list of row data arrays:
+                [ [[value1, value2, value3, ...], ...], ...]
         """
 
         main_doc = self.doc
@@ -1461,7 +1472,8 @@ class S3PDFTable:
         """
             Render all data parts (self.parts) as a list of ReportLab Tables.
 
-            @returns: a list of ReportLab Table instances
+            Returns:
+                a list of ReportLab Table instances
         """
 
         # Build the tables
@@ -1558,9 +1570,11 @@ class S3PDFTable:
             Helper for calc(): split the table horizontally so that each
             part fits into the page width
 
-            @param temp_doc: the temporary doc
+            Args:
+                temp_doc: the temporary doc
 
-            @returns: the data slices for each part
+            Returns:
+                the data slices for each part
         """
 
         col_widths = self.col_widths[0]
@@ -1684,16 +1698,19 @@ class S3PDFTable:
         """
             Internally used method to assign a style to the table
 
-            @param start_row: The row from the data that the first data row in
-            the table refers to. When a table is split the first row in the
-            table (ignoring the label header row) will not always be the first row
-            in the data. This is needed to align the two. Currently this parameter
-            is used to identify sub headings and give them an emphasised styling
-            @param row_cnt: The number of rows in the table
-            @param end_col: The last column in the table
+            Args:
+                start_row: The row from the data that the first data row in
+                           the table refers to. When a table is split the first
+                           row in the table (ignoring the label header row) will
+                           not always be the first row in the data. This is
+                           needed to align the two. Currently this parameter
+                           is used to identify sub headings and give them an
+                           emphasised styling
+                row_cnt: The number of rows in the table
+                end_col: The last column in the table
 
-            FIXME: replace end_col with -1
-                   (should work but need to test with a split table)
+            FIXME replace end_col with -1
+                  (should work but need to test with a split table)
         """
 
         font_name_bold = self.font_name_bold
@@ -1750,11 +1767,10 @@ class S3html2pdf():
                  styles = None,
                  ):
         """
-            Constructor
-
-            @param page_width: the printable width
-            @param exclude_class_list: list of classes for elements to skip
-            @param styles: the styles dict from the caller (e.g. pdf_html_styles)
+            Args:
+                pageWidth: the printable width
+                exclude_class_list: list of classes for elements to skip
+                styles: the styles dict from the caller (e.g. pdf_html_styles)
         """
 
         # Set Fonts
@@ -1832,11 +1848,13 @@ class S3html2pdf():
         """
             Parses the element and converts it into a format for ReportLab
 
-            @param html: the element to convert
-            @param strip_markup: whether to strip markup
-            @param style: the style to use
+            Args:
+                html: the element to convert
+                strip_markup: whether to strip markup
+                style: the style to use
 
-            @return: a list containing text that ReportLab can use
+            Returns:
+                a list containing text that ReportLab can use
         """
 
         if self.exclude_tag(html):
@@ -1884,10 +1902,14 @@ class S3html2pdf():
         """
             Parses a DIV element and converts it into a format for ReportLab
 
-            @ToDo: Add support for B & I
+            Args:
+                html: the DIV element  to convert
 
-            @param html: the DIV element to convert
-            @return: a list containing text that ReportLab can use
+            Returns:
+                a list containing text that ReportLab can use
+
+            ToDo:
+                Add support for B & I
         """
 
         content = []
@@ -1907,8 +1929,11 @@ class S3html2pdf():
         """
             Parses an A element and converts it into a format for ReportLab
 
-            @param html: the A element to convert
-            @return: a list containing text that ReportLab can use
+            Args:
+                html: the A element  to convert
+
+            Returns:
+                a list containing text that ReportLab can use
         """
 
         content = []
@@ -1929,13 +1954,16 @@ class S3html2pdf():
         """
             Parses an IMG element and converts it into an Image for ReportLab
 
-            @param html: the IMG element to convert
-            @param uploadfolder: an optional uploadfolder in which to find the file
-            @return: a list containing an Image that ReportLab can use
+            Args:
+                html: the IMG element  to convert
+                uploadfolder: an optional uploadfolder in which to find the file                                                     
 
+            Returns:
+                a list containing an Image that ReportLab can use
 
-            @note: The `src` attribute of the image must either
-            point to a static resource, directly to a file, or to an upload.
+            Note:
+                The `src` attribute of the image must either point to a static
+                resource, directly to a file, or to an upload.
         """
 
         I = None
@@ -1994,8 +2022,11 @@ class S3html2pdf():
         """
             Parses a P or H element and converts it into a format for ReportLab
 
-            @param html: the P element to convert
-            @return: a list containing text that ReportLab can use
+            Args:
+                html: the P element  to convert
+
+            Returns:
+                a list containing text that ReportLab can use
         """
 
         style = None
@@ -2049,8 +2080,11 @@ class S3html2pdf():
         """
             Parses a TABLE element and converts it into a format for ReportLab
 
-            @param html: the TABLE element to convert
-            @return: a list containing text that ReportLab can use
+            Args:
+                html: the TABLE element  to convert
+
+            Returns:
+                a list containing text that ReportLab can use
         """
 
         _class = html["_class"]
@@ -2114,10 +2148,11 @@ class S3html2pdf():
         """
             Parses TABLE components
 
-            @param table: the TABLE instance or a subcomponent of it
-            @param content: the current content array
-            @param row_count: the current number of rows in the content array
-            @param table_style: the table_style list
+            Args:
+                table: the TABLE instance or a subcomponent of it
+                content: the current content array
+                row_count: the current number of rows in the content array
+                table_style: the table style list
         """
 
         if content is None:
@@ -2157,12 +2192,14 @@ class S3html2pdf():
         """
             Parses a TR element and converts it into a format for ReportLab
 
-            @param html: the TR element to convert
-            @param table_style: the table_style list
-            @param rowCnt: the row counter
-            @param rowspans: the remaining rowspans (if any)
+            Args:
+                html: the TR element  to convert
+                table_style: the table style list
+                rowCnt: the row counter
+                rowspans: the remaining rowspans (if any)
 
-            @return: a list containing text that ReportLab can use
+            Returns:
+                a list containing text that ReportLab can use
         """
 
         # Identify custom styles
@@ -2350,9 +2387,11 @@ class S3html2pdf():
     # -------------------------------------------------------------------------
     def _styles(self, element):
         """
-            Get the custom styles for the given element (match by tag and classes)
+            Get the custom styles for the given element (match by tag and
+            classes)
 
-            @param element: the HTML element (web2py helper)
+            Args:
+                element: the HTML element (web2py helper)
         """
 
         element_styles = {}
@@ -2379,11 +2418,9 @@ class S3html2pdf():
     def _color(val):
         """
             Get the Color instance from colors for:
-              a given name (e.g. 'white')
-                or
-              Hex string (e.g. '#FFFFFF')
 
-            @param val: the name or hex string
+            Args:
+                val: the name (e.g. 'white') or hex string (e.g. '#FFFFFF')
         """
 
         if not val:

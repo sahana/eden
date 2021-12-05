@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" S3 Person Record Anonymizing
+""" S3 Record Anonymising
 
     @copyright: 2018-2021 (c) Sahana Software Foundation
     @license: MIT
@@ -55,10 +55,12 @@ class S3Anonymize(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request instance
-            @param attr: controller parameters
+            Args:
+                r: the S3Request instance
+                attr: controller parameters
 
-            @return: output data (JSON)
+            Returns:
+                output data (JSON)
         """
 
         output = {}
@@ -88,13 +90,15 @@ class S3Anonymize(S3Method):
     @classmethod
     def anonymize(cls, r, table, record_id):
         """
-            Handle POST (anonymize-request), i.e. anonymize the target record
+            Handle POST (anonymise-request), i.e. anonymise the target record
 
-            @param r: the S3Request
-            @param table: the target Table
-            @param record_id: the target record ID
+            Args:
+                r: the S3Request
+                table: the target Table
+                record_id: the target record ID
 
-            @returns: JSON message
+            Returns:
+                JSON message
         """
 
         # Read+parse body JSON
@@ -160,16 +164,16 @@ class S3Anonymize(S3Method):
             # NB will raise (+roll back) if configuration is invalid
             cls.cascade(table, (record_id,), rules)
 
-            # Audit anonymize
+            # Audit anonymise
             prefix, name = original_tablename(table).split("_", 1)
             current.audit("anonymize", prefix, name,
                           record = record_id,
                           representation = "html",
                           )
 
-            output = current.xml.json_message(updated=record_id)
+            output = current.xml.json_message(updated = record_id)
         else:
-            output = current.xml.json_message(msg="No applicable rules found")
+            output = current.xml.json_message(msg = "No applicable rules found")
 
         return output
 
@@ -178,7 +182,8 @@ class S3Anonymize(S3Method):
         """
             Determine the target table and record ID
 
-            @return: tuple (table, record_id)
+            Returns:
+                tuple (table, record_id)
         """
 
         resource = self.resource
@@ -195,10 +200,12 @@ class S3Anonymize(S3Method):
         """
             Check permissions to anonymize the target record
 
-            @param table: the target Table
-            @param record_id: the target record ID
+            Args:
+                table: the target Table
+                record_id: the target record ID
 
-            @return: True|False
+            Returns:
+                True|False
         """
 
         has_permission = current.auth.s3_has_permission
@@ -210,15 +217,17 @@ class S3Anonymize(S3Method):
     @classmethod
     def cascade(cls, table, record_ids, rules):
         """
-            Apply cascade of rules to anonymize records
+            Apply cascade of rules to anonymise records
 
-            @param table: the Table
-            @param record_ids: a set of record IDs
-            @param rules: the rules for this Table
+            Args:
+                table: the Table
+                record_ids: a set of record IDs
+                rules: the rules for this Table
 
-            @raises Exception: if the cascade failed due to DB constraints
-                               or invalid rules; callers should roll back
-                               the transaction if an exception is raised
+            Raises:
+                Exception: if the cascade failed due to DB constraints
+                           or invalid rules; callers should roll back
+                           the transaction if an exception is raised
         """
 
         s3db = current.s3db
@@ -288,14 +297,16 @@ class S3Anonymize(S3Method):
         """
             Apply field rules on a set of records in a table
 
-            @param table: the Table
-            @param record_ids: the record IDs
-            @param rules: the rules
+            Args:
+                table: the Table
+                record_ids: the record IDs
+                rules: the rules
 
-            @raises Exception: if the field rules could not be applied
-                               due to DB constraints or invalid rules;
-                               callers should roll back the transaction
-                               if an exception is raised
+            Raises:
+                Exception: if the field rules could not be applied
+                           due to DB constraints or invalid rules;
+                           callers should roll back the transaction
+                           if an exception is raised
         """
 
         fields = [table[fn] for fn in rules if fn in table.fields]
@@ -378,15 +389,17 @@ class S3AnonymizeWidget:
             target record of an S3Request, which can be embedded in
             the record view
 
-            @param r: the S3Request
-            @param label: The label for the action item
-            @param ajaxURL: The URL for the AJAX request
-            @param _class: HTML class for the action item
+            Args:
+                r: the S3Request
+                label: The label for the action item
+                ajaxURL: The URL for the AJAX request
+                _class: HTML class for the action item
 
-            @returns: the action item (a HTML helper instance), or an empty
-                      string if no anonymize-rules are configured for the
-                      target table, no target record was specified or the
-                      user is not permitted to anonymize it
+            Returns:
+                the action item (a HTML helper instance), or an empty
+                string if no anonymise-rules are configured for the
+                target table, no target record was specified or the
+                user is not permitted to anonymise it
         """
 
         T = current.T
@@ -437,7 +450,9 @@ class S3AnonymizeWidget:
 
         # Action button
         translated_label = T(label)
-        action_button = A(translated_label, _class="anonymize-btn")
+        action_button = A(translated_label,
+                          _class = "anonymize-btn",
+                          )
         if _class:
             action_button.add_class(_class)
 
@@ -486,9 +501,12 @@ class S3AnonymizeWidget:
             Generate a unique STP token for the widget (CSRF protection) and
             store it in session
 
-            @param widget_id: the widget ID (which includes the target
-                              table name and record ID)
-            @return: a unique identifier (as string)
+            Args:
+                widget_id: the widget ID (which includes the target
+                           table name and record ID)
+
+            Returns:
+                a unique identifier (as string)
         """
 
         session_s3 = current.session.s3
@@ -504,11 +522,13 @@ class S3AnonymizeWidget:
     @staticmethod
     def selector(rules):
         """
-            Generate the rule selector for anonymize-form
+            Generate the rule selector for anonymise-form
 
-            @param rules: the list of configured rules
+            Args:
+                rules: the list of configured rules
 
-            @return: the selector (DIV)
+            Returns:
+                the selector (DIV)
         """
 
         T = current.T
@@ -541,7 +561,8 @@ class S3AnonymizeWidget:
         """
             Generate the submit/cancel buttons for the anonymize-form
 
-            @return: the buttons row (DIV)
+            Returns:
+                the buttons row (DIV)
         """
 
         T = current.T
@@ -564,8 +585,9 @@ class S3AnonymizeWidget:
         """
             Inject the necessary JavaScript for the UI dialog
 
-            @param widget_id: the widget ID
-            @param options: JSON-serializable dict of widget options
+            Args:
+                widget_id: the widget ID
+                options: JSON-serializable dict of widget options
         """
 
         request = current.request
@@ -607,10 +629,12 @@ class S3AnonymizeBulk(S3Anonymize):
         """
             Entry point for REST API
 
-            @param r: the S3Request instance
-            @param attr: controller parameters
+            Args:
+                r: the S3Request instance
+                attr: controller parameters
 
-            @return: output data (JSON)
+            Returns:
+                output data (JSON)
         """
 
         resource = self.resource
@@ -662,13 +686,15 @@ class S3AnonymizeBulk(S3Anonymize):
     @classmethod
     def anonymize(cls, r, table, record_ids):
         """
-            Handle POST (anonymize-request), i.e. anonymize the target record
+            Handle POST (anonymise-request), i.e. anonymise the target record
 
-            @param r: the S3Request
-            @param table: the target Table
-            @param record_ids: the target record IDs
+            Args:
+                r: the S3Request
+                table: the target Table
+                record_ids: the target record IDs
 
-            @returns: JSON message
+            Returns:
+                JSON message
         """
 
         post_vars_get = r.post_vars.get
@@ -752,17 +778,19 @@ class S3AnonymizeBulkWidget(S3AnonymizeWidget):
                _class = "action-lnk",
                ):
         """
-            Render an action item (link or button) to anonymize the
+            Render an action item (link or button) to anonymise the
             provided records
 
-            @param r: the S3Request
-            @param record_ids: The list of record_ids to act on
-            @param _class: HTML class for the action item
+            Args:
+                r: the S3Request
+                record_ids: The list of record_ids to act on
+                _class: HTML class for the action item
 
-            @returns: the action item (a HTML helper instance), or an empty
-                      string if no anonymize-rules are configured for the
-                      target table, no target record was specified or the
-                      user is not permitted to anonymize it
+            Returns:
+                the action item (a HTML helper instance), or an empty
+                string if no anonymize-rules are configured for the
+                target table, no target record was specified or the
+                user is not permitted to anonymize it
         """
 
         T = current.T
