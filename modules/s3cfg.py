@@ -2202,6 +2202,13 @@ class S3Config(Storage):
 
         return self.ui.get("datatables_dom", "fril<'dataTable_table't>pi")
 
+    def get_ui_datatables_pagelength(self):
+        """
+            Default (minimum) pagelength for datatables
+        """
+
+        return self.ui.get("datatables_pagelength", 25)
+
     def get_ui_datatables_initComplete(self):
         """
             Callback for dataTables

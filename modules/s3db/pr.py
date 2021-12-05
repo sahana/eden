@@ -8342,7 +8342,7 @@ class pr_AssignMethod(S3Method):
                 else:
                     display_length = int(display_length)
             else:
-                display_length = 25
+                display_length = current.deployment_settings.get_ui_datatables_pagelength()
             if display_length:
                 limit = 4 * display_length
             else:

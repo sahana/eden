@@ -90,10 +90,11 @@ import s3 as s3base # Shortcut for use, primarily, from views
 import s3log
 s3log.S3Log.setup()
 
-from s3 import AuthS3, S3Audit, S3Calendar, S3GIS, S3Msg, S3Sync, S3XML
+# Keep top-level scope cleaner by accessing these from s3base
+#from s3 import AuthS3, S3Audit, S3Calendar, S3GIS, S3Msg, S3Sync, S3XML
 
 # AAA
-current.auth = auth = AuthS3()
+current.auth = auth = s3base.AuthS3()
 
 # Use session for persistent per-user variables
 # - beware of a user having multiple tabs open!
@@ -111,9 +112,9 @@ auth.define_tables(migrate = migrate,
                    fake_migrate = fake_migrate,
                    )
 
-current.audit = audit = S3Audit(migrate = migrate,
-                                fake_migrate = fake_migrate,
-                                )
+current.audit = audit = s3base.S3Audit(migrate = migrate,
+                                       fake_migrate = fake_migrate,
+                                       )
 
 # Shortcuts for models/controllers/views
 # - removed to reduce per-request overheads & harmonise the environment in
@@ -123,22 +124,22 @@ current.audit = audit = S3Audit(migrate = migrate,
 #s3_logged_in_person = auth.s3_logged_in_person
 
 # Calendar
-current.calendar = S3Calendar()
+current.calendar = s3base.S3Calendar()
 
 # CRUD
 s3.crud = Storage()
 
 # GIS Module
-current.gis = gis = S3GIS()
+current.gis = gis = s3base.S3GIS()
 
 # S3XML
-current.xml = s3xml = S3XML()
+current.xml = s3xml = s3base.S3XML()
 
 # Messaging
-current.msg = msg = S3Msg()
+current.msg = msg = s3base.S3Msg()
 
 # Sync
-current.sync = sync = S3Sync()
+current.sync = sync = s3base.S3Sync()
 
 # Frequently used S3 utilities imported into the global namespace for use by controllers
 from s3 import FS, s3_action_buttons, s3_redirect_default, s3_str

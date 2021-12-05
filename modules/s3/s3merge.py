@@ -280,10 +280,7 @@ class S3Merge(S3Method):
                 limit = None # use default
         else:
             start = None # use default
-        if s3.dataTable_pageLength:
-            display_length = s3.dataTable_pageLength
-        else:
-            display_length = 25
+        display_length = current.deployment_settings.get_ui_datatables_pagelength()
         if limit is None:
             limit = 2 * display_length
 

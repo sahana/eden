@@ -33,6 +33,9 @@ __all__ = ("StatsParameterModel",
            "StatsDemographicModel",
            "StatsImpactModel",
            "stats_demographic_data_controller",
+           "stats_demographic_rebuild_all_aggregates",
+           "stats_demographic_update_aggregates",
+           "stats_demographic_update_location_aggregate",
            "stats_quantile",
            "stats_year",
            "stats_year_options",
@@ -266,9 +269,6 @@ class StatsDemographicModel(S3Model):
              "stats_demographic_data",
              "stats_demographic_aggregate",
              "stats_demographic_id",
-             "stats_demographic_rebuild_all_aggregates",
-             "stats_demographic_update_aggregates",
-             "stats_demographic_update_location_aggregate",
              )
 
     def model(self):
@@ -564,9 +564,6 @@ class StatsDemographicModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {"stats_demographic_id": demographic_id,
-                "stats_demographic_rebuild_all_aggregates": self.stats_demographic_rebuild_all_aggregates,
-                "stats_demographic_update_aggregates": self.stats_demographic_update_aggregates,
-                "stats_demographic_update_location_aggregate": self.stats_demographic_update_location_aggregate,
                 }
 
     # -------------------------------------------------------------------------
@@ -575,66 +572,6 @@ class StatsDemographicModel(S3Model):
 
         return {"stats_demographic_id": S3ReusableField.dummy("parameter_id"),
                 }
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def stats_demographic_rebuild_all_aggregates():
-        """
-            This will delete all the stats_demographic_aggregate records and
-            then rebuild them by triggering off a request for each
-            stats_demographic_data record.
-
-            This function is normally only run during prepop or postpop so we
-            don't need to worry about the aggregate data being unavailable for
-            any length of time
-        """
-
-        # Check to see whether an existing task is running and if it is then kill it
-        db = current.db
-        ttable = db.scheduler_task
-        rtable = db.scheduler_run
-        wtable = db.scheduler_worker
-        query = (ttable.task_name == "stats_demographic_update_aggregates") & \
-                (rtable.task_id == ttable.id) & \
-                (rtable.status == "RUNNING")
-        rows = db(query).select(rtable.id,
-                                rtable.task_id,
-                                rtable.worker_name,
-                                )
-        now = current.request.utcnow
-        for row in rows:
-            db(wtable.worker_name == row.worker_name).update(status = "KILL")
-            db(rtable.id == row.id).update(stop_time = now,
-                                           status = "STOPPED",
-                                           )
-            db(ttable.id == row.task_id).update(stop_time = now,
-                                                status = "STOPPED",
-                                                )
-
-        # Delete the existing aggregates
-        current.s3db.stats_demographic_aggregate.truncate()
-
-        # Read all the approved stats_demographic_data records
-        dtable = db.stats_demographic
-        ddtable = db.stats_demographic_data
-        query = (ddtable.deleted != True) & \
-                (ddtable.parameter_id == dtable.parameter_id) & \
-                (ddtable.approved_by != None)
-        # @ToDo: deployment_setting for whether records need to be approved
-        #   query &= (ddtable.approved_by != None)
-        records = db(query).select(ddtable.data_id,
-                                   ddtable.parameter_id,
-                                   ddtable.date,
-                                   ddtable.location_id,
-                                   ddtable.value,
-                                   dtable.total_id,
-                                   )
-
-        # Fire off a rebuild task
-        current.s3task.run_async("stats_demographic_update_aggregates",
-                                 vars = {"records": records.json()},
-                                 timeout = 21600 # 6 hours
-                                 )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -654,545 +591,6 @@ class StatsDemographicModel(S3Model):
         soap = date(year, 1, 1)
         eoap = date(year, 12, 31)
         return (soap, eoap)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def stats_demographic_update_aggregates(records=None):
-        """
-            This will calculate the stats_demographic_aggregates for the
-            specified records. Either all (when rebuild_all is invoked) or for
-            the individual parameter(s) at the specified location(s) when run
-            onapprove - which currently happens inside the vulnerability
-            approve_report() controller.
-            @ToDo: onapprove/onaccept wrapper function for other workflows.
-
-            This will get the raw data from stats_demographic_data and generate
-            a stats_demographic_aggregate record for the given time period.
-
-            The reason for doing this is so that all aggregated data can be
-            obtained from a single table. So when displaying data for a
-            particular location it will not be necessary to try the aggregate
-            table, and if it's not there then try the data table. Rather just
-            look at the aggregate table.
-
-            Once this has run then a complete set of aggregate records should
-            exists for this parameter_id and location for every time period from
-            the first data item until the current time period.
-
-            @ToDo: Add test cases to modules/unit_tests/s3db/stats.py
-        """
-
-        if not records:
-            return
-
-        from dateutil.rrule import rrule, YEARLY
-
-        db = current.db
-        s3db = current.s3db
-        dtable = s3db.stats_demographic_data
-        atable = db.stats_demographic_aggregate
-        gtable = db.gis_location
-
-        # Data Structures used for the OPTIMISATION
-        param_total_dict = {} # the total_id for each parameter
-        param_location_dict = {} # a list of locations for each parameter
-        location_dict = {} # a list of locations
-        loc_level_list = {} # a list of levels for each location
-
-        aggregated_period = StatsDemographicModel.stats_demographic_aggregated_period
-        (last_period, year_end) = aggregated_period(None)
-
-        # Test to see which date format we have based on how we were called
-        if isinstance(records, str):
-            from_json = True
-            from dateutil.parser import parse
-            records = json.loads(records)
-        elif isinstance(records[0]["stats_demographic_data"]["date"],
-                        (datetime.date, datetime.datetime)):
-            from_json = False
-        else:
-            from_json = True
-            from dateutil.parser import parse
-
-        for record in records:
-            total_id = record["stats_demographic"]["total_id"]
-            record = record["stats_demographic_data"]
-            data_id = record["data_id"]
-            location_id = record["location_id"]
-            parameter_id = record["parameter_id"]
-            # Skip if either the location or the parameter is not valid
-            if not location_id or not parameter_id:
-                current.log.warning("Skipping bad stats_demographic_data record with data_id %s " % data_id)
-                continue
-            if total_id and parameter_id not in param_total_dict:
-                param_total_dict[parameter_id] = total_id
-            if from_json:
-                date = parse(record["date"]) # produces a datetime
-                date = date.date()
-            else:
-                date = record["date"]
-            (start_date, end_date) = aggregated_period(date)
-
-            # Get all the approved stats_demographic_data records for this location and parameter
-            query = (dtable.location_id == location_id) & \
-                    (dtable.deleted != True) & \
-                    (dtable.approved_by != None)
-            # @ToDo: deployment_setting for whether records need to be approved
-            #   query &= (dtable.approved_by != None)
-            fields = [dtable.data_id,
-                      dtable.date,
-                      dtable.value,
-                      ]
-            if total_id:
-                # Also get the records for the Total to use to calculate the percentage
-                query &= (dtable.parameter_id.belongs([parameter_id, total_id]))
-                fields.append(dtable.parameter_id)
-            else:
-                percentage = None
-                query &= (dtable.parameter_id == parameter_id)
-            data_rows = db(query).select(*fields)
-
-            if total_id:
-                # Separate out the rows relating to the Totals
-                total_rows = data_rows.exclude(lambda row: row.parameter_id == total_id)
-                # Get each record and store them in a dict keyed on the start date
-                # of the aggregated period. If a record already exists for the
-                # reporting period then the most recent value will be stored.
-                earliest_period = current.request.utcnow.date()
-                end_date = year_end
-                totals = {}
-                for row in total_rows:
-                    row_date = row.date
-                    (start_date, end_date) = aggregated_period(row_date)
-                    if start_date in totals:
-                        if row_date <= totals[start_date]["date"]:
-                            # The indicator in the row is of the same time period as
-                            # another which is already stored in totals but it is earlier
-                            # so ignore this particular record
-                            continue
-                    elif start_date < earliest_period:
-                        earliest_period = start_date
-                    # Store the record from the db in the totals storage
-                    totals[start_date] = Storage(date = row_date,
-                                                 id = row.data_id,
-                                                 value = row.value,
-                                                 )
-
-            # Get each record and store them in a dict keyed on the start date
-            # of the aggregated period. If a record already exists for the
-            # reporting period then the most recent value will be stored.
-            earliest_period = start_date
-            end_date = year_end
-            data = {}
-            data[start_date] = Storage(date = date,
-                                       id = data_id,
-                                       value = record["value"],
-                                       )
-            for row in data_rows:
-                if row.data_id == data_id:
-                    # This is the record we started with, so skip
-                    continue
-                row_date = row.date
-                (start_date, end_date) = aggregated_period(row_date)
-                if start_date in data:
-                    if row_date <= data[start_date]["date"]:
-                        # The indicator in the row is of the same time period as
-                        # another which is already stored in data but it is earlier
-                        # so ignore this particular record
-                        continue
-                elif start_date < earliest_period:
-                    earliest_period = start_date
-                # Store the record from the db in the data storage
-                data[start_date] = Storage(date = row_date,
-                                           id = row.data_id,
-                                           value = row.value,
-                                           )
-
-            # Get all the aggregate records for this parameter and location
-            query = (atable.location_id == location_id) & \
-                    (atable.parameter_id == parameter_id)
-            aggr_rows = db(query).select(atable.id,
-                                         atable.agg_type,
-                                         atable.date,
-                                         atable.end_date,
-                                         atable.sum,
-                                         )
-
-            aggr = {}
-            for row in aggr_rows:
-                (start_date, end_date) = aggregated_period(row.date)
-                aggr[start_date] = Storage(id = row.id,
-                                           type = row.agg_type,
-                                           end_date = row.end_date,
-                                           sum = row.sum,
-                                           )
-
-            # Step through each period and check that aggr is correct
-            last_type_agg = False # Whether the type of previous non-copy record was aggr
-            last_data_value = None # The value of the previous aggr record
-            last_total = None # The value of the previous aggr record for the totals param
-            # Keep track of which periods the aggr record has been changed in
-            # the database
-            changed_periods = []
-            for dt in rrule(YEARLY, dtstart=earliest_period, until=last_period):
-                # Calculate the end of the dt period.
-                # - it will be None if this is the last period
-                dt = dt.date()
-                if dt != last_period:
-                    (start_date, end_date) = aggregated_period(dt)
-                else:
-                    start_date = dt
-                    end_date = None
-                if dt in aggr:
-                    # Check that the stored aggr data is correct
-                    agg_type = aggr[dt]["type"]
-                    if agg_type == 2:
-                        # This is built using other location aggregates
-                        # so it can be ignored because only time or copy aggregates
-                        # are being calculated in this function
-                        last_type_agg = True
-                        last_data_value = aggr[dt]["sum"]
-                        continue
-                    # Query to use to update aggr records
-                    query = (atable.id == aggr[dt]["id"])
-                    if agg_type == 3:
-                        # This is a copy aggregate
-                        if dt in data:
-                            # There is data in the data dictionary for this period
-                            # so aggregate record needs to be changed
-                            value = data[dt]["value"]
-                            last_data_value = value
-                            if total_id:
-                                if dt in totals:
-                                    last_total = totals[dt]["value"]
-                                if last_total:
-                                    percentage = 100 * value / last_total
-                                    percentage = round(percentage, 3)
-                            db(query).update(agg_type = 1, # time
-                                             #reported_count = 1, # one record
-                                             #ward_count = 1, # one ward
-                                             end_date = end_date,
-                                             percentage = percentage,
-                                             sum = value,
-                                             #min = value,
-                                             #max = value,
-                                             #mean = value,
-                                             #median = value,
-                                             )
-                            changed_periods.append((start_date, end_date))
-                        elif last_type_agg:
-                            # No data in the data dictionary and the last type was aggr
-                            continue
-                        # Check that the data currently stored is correct
-                        elif aggr[dt]["sum"] != last_data_value:
-                            value = last_data_value
-                            if total_id:
-                                if dt in totals:
-                                    last_total = totals[dt]["value"]
-                                if last_total:
-                                    percentage = 100 * value / last_total
-                                    percentage = round(percentage, 3)
-                            db(query).update(agg_type = 3, # copy
-                                             #reported_count = 1, # one record
-                                             #ward_count = 1, # one ward
-                                             end_date = end_date,
-                                             percentage = percentage,
-                                             sum = value,
-                                             #min = value,
-                                             #max = value,
-                                             #mean = value,
-                                             #median = value,
-                                             )
-                            changed_periods.append((start_date, end_date))
-                    elif agg_type == 1:
-                        # The value in the aggr should match the value in data
-                        if dt in data:
-                            value = data[dt]["value"]
-                            last_data_value = value
-                            if total_id and dt in totals:
-                                last_total = totals[dt]["value"]
-                            if aggr[dt]["sum"] != value:
-                                if total_id and last_total:
-                                    percentage = 100 * value / last_total
-                                    percentage = round(percentage, 3)
-                                db(query).update(agg_type = 1, # time
-                                                 #reported_count = 1, # one record
-                                                 #ward_count = 1, # one ward
-                                                 end_date = end_date,
-                                                 percentage = percentage,
-                                                 sum = value,
-                                                 #min = value,
-                                                 #max = value,
-                                                 #mean = value,
-                                                 #median = value,
-                                                 )
-                                changed_periods.append((start_date, end_date))
-                        else:
-                            # The data is not there so it must have been deleted
-                            # Copy the value from the previous record
-                            value = last_data_value
-                            if total_id:
-                                if dt in totals:
-                                    last_total = totals[dt]["value"]
-                                if last_total:
-                                    percentage = 100 * value / last_total
-                                    percentage = round(percentage, 3)
-                            db(query).update(agg_type = 3, # copy
-                                             #reported_count = 1, # one record
-                                             #ward_count = 1, # one ward
-                                             end_date = end_date,
-                                             percentage = percentage,
-                                             sum = value,
-                                             #min = value,
-                                             #max = value,
-                                             #mean = value,
-                                             #median = value,
-                                             )
-                            changed_periods.append((start_date, end_date))
-                # No aggregate record for this time period exists
-                # So one needs to be inserted
-                else:
-                    if dt in data:
-                        value = data[dt]["value"]
-                        agg_type = 1 # time
-                        last_data_value = value
-                    else:
-                        value = last_data_value
-                        agg_type = 3 # copy
-                    if total_id:
-                        if dt in totals:
-                            last_total = totals[dt]["value"]
-                        if last_total:
-                            percentage = 100 * value / last_total
-                            percentage = round(percentage, 3)
-                    atable.insert(parameter_id = parameter_id,
-                                  location_id = location_id,
-                                  agg_type = agg_type,
-                                  #reported_count = 1, # one record
-                                  #ward_count = 1, # one ward
-                                  date = start_date,
-                                  end_date = end_date,
-                                  percentage = percentage,
-                                  sum = value,
-                                  #min = value,
-                                  #max = value,
-                                  #mean = value,
-                                  #median = value,
-                                  )
-                    changed_periods.append((start_date, end_date))
-            # End of loop through each time period
-
-            if changed_periods == []:
-                continue
-            # The following structures are used in the OPTIMISATION step later
-            location = db(gtable.id == location_id).select(gtable.level,
-                                                           limitby = (0, 1),
-                                                           ).first()
-            loc_level_list[location_id] = location.level
-            if parameter_id not in param_location_dict:
-                param_location_dict[parameter_id] = {location_id : changed_periods}
-            elif location_id not in param_location_dict[parameter_id]:
-                param_location_dict[parameter_id][location_id] = changed_periods
-            else:
-                # Store the older of the changed periods (the end will always be None)
-                # Only need to check the start date of the first period
-                if changed_periods[0][0] < param_location_dict[parameter_id][location_id][0][0]:
-                    param_location_dict[parameter_id][location_id] = changed_periods
-            if location_id not in location_dict:
-                location_dict[location_id] = changed_periods
-            else:
-                # Store the older of the changed periods (the end will always be None)
-                # Only need to check the start date of the first period
-                if changed_periods[0][0] < location_dict[location_id][0][0]:
-                    location_dict[location_id] = changed_periods
-
-        # End of loop through each stats_demographic_data record
-
-        # OPTIMISATION
-        # The following code will get all the locations for which a parameter
-        # has been changed. This will remove duplicates which will occur when
-        # items are being imported for many communes in the same district.
-        # Take an import of 12 communes in the same district, without this the
-        # district will be updated 12 times, the province will be updated 12
-        # times and the country will be updated 12 times that is 33 unnecessary
-        # updates (for each time period) (i.e. 15 updates rather than 48)
-
-        # Get all the parents
-        # @ToDo: Optimise by rewriting as custom routine rather than using this wrapper
-        # - we only need immediate children not descendants, so can use parent not path
-        # - look at disease_stats_update_aggregates()
-        parents = {}
-        get_parents = current.gis.get_parents
-        for loc_id in location_dict.keys():
-            _parents = get_parents(loc_id)
-            if parents:
-                parents[loc_id] = _parents
-        # Expand the list of locations for each parameter
-        parents_data = {}
-        for (param_id, loc_dict) in param_location_dict.items():
-            for (loc_id, periods) in loc_dict.items():
-                if loc_id in parents: # There won't be a parent if this is a L0
-                    for p_loc_row in parents[loc_id]:
-                        p_loc_id = p_loc_row.id
-                        if param_id in parents_data:
-                            if p_loc_id in parents_data[param_id]:
-                                # Store the older of the changed periods (the end will always be None)
-                                # Only need to check the start date of the first period
-                                if periods[0][0] < parents_data[param_id][p_loc_id][0][0][0]:
-                                    parents_data[param_id][p_loc_id][0] = periods
-                            else:
-                                parents_data[param_id][p_loc_id] = [periods,
-                                                                    loc_level_list[loc_id]
-                                                                    ]
-                        else:
-                            parents_data[param_id] = {p_loc_id : [periods,
-                                                                  loc_level_list[loc_id]
-                                                                  ]
-                                                      }
-
-        # Now that the time aggregate types have been set up correctly,
-        # fire off requests for the location aggregates to be calculated
-        run_async = current.s3task.run_async
-        for (param_id, loc_dict) in parents_data.items():
-            total_id = param_total_dict[param_id]
-            for (loc_id, (changed_periods, loc_level)) in loc_dict.items():
-                for (start_date, end_date) in changed_periods:
-                    s, e = str(start_date), str(end_date)
-                    run_async("stats_demographic_update_aggregate_location",
-                              args = [loc_level, loc_id, param_id, total_id, s, e],
-                              timeout = 1800 # 30m
-                              )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def stats_demographic_update_location_aggregate(location_level,
-                                                    location_id,
-                                                    parameter_id,
-                                                    total_id,
-                                                    start_date,
-                                                    end_date
-                                                    ):
-        """
-            Calculates the stats_demographic_aggregate for a specific parameter at a
-            specific location.
-
-            @param location_id: the location record ID
-            @param parameter_id: the parameter record ID
-            @param total_id: the parameter record ID for the percentage calculation
-            @param start_date: the start date of the time period (as string)
-            @param end_date: the end date of the time period (as string)
-        """
-
-        db = current.db
-        dtable = current.s3db.stats_demographic_data
-        atable = db.stats_demographic_aggregate
-
-        # Get all the child locations (immediate children only, not all descendants)
-        child_locations = current.gis.get_children(location_id, location_level)
-        child_ids = [row.id for row in child_locations]
-
-        # Get the most recent stats_demographic_data record for all child locations
-        query = (dtable.parameter_id == parameter_id) & \
-                (dtable.deleted != True) & \
-                (dtable.location_id.belongs(child_ids)) & \
-                (dtable.approved_by != None)
-        # @ToDo: deployment_setting for whether records need to be approved
-        #   query &= (dtable.approved_by != None)
-        if end_date == "None": # converted to string as async parameter
-            end_date = None
-        else:
-            query &= (dtable.date <= end_date)
-        rows = db(query).select(dtable.value,
-                                dtable.date,
-                                dtable.location_id,
-                                orderby = (dtable.location_id, ~dtable.date),
-                                # groupby avoids duplicate records for the same
-                                # location, but is slightly slower than just
-                                # skipping the duplicates in the loop below
-                                #groupby = (dtable.location_id)
-                                )
-
-        # Get the most recent aggregate for this location for the total parameter
-        #if total_id == "None": # converted to string as async parameter
-        #    total_id = None
-        values_total = None
-        if total_id != "None":
-            query = (dtable.parameter_id == total_id)
-            if end_date:
-                query &= (dtable.date <= end_date)
-            total_row = db(query).select(dtable.value,
-                                         limitby = (0, 1),
-                                         orderby = ~dtable.date,
-                                         ).first()
-            if total_row:
-                values_total = total_row.value
-
-        # Collect the values, skip duplicate records for the
-        # same location => use the most recent one, which is
-        # the first row for each location as per the orderby
-        # in the query above
-        last_location = None
-        values = []
-        append = values.append
-        for row in rows:
-            new_location_id = row.location_id
-            if new_location_id != last_location:
-                last_location = new_location_id
-                append(row.value)
-
-        # Aggregate the values
-        values_len = len(values)
-        if not values_len:
-            return
-
-        values_sum = sum(values)
-        #values_min = min(values)
-        #values_max = max(values)
-        #values_avg = float(values_sum) / values_len
-
-        if values_total:
-            percentage = 100 * values_sum / values_total
-            values_percentage = round(percentage, 3)
-        else:
-            values_percentage = None
-
-        #from numpy import median
-        #values_med = median(values)
-        #values_mad = median([abs(v - values_med) for v in values])
-
-        # Add or update the aggregated values in the database
-
-        # Do we already have a record?
-        query = (atable.location_id == location_id) & \
-                (atable.parameter_id == parameter_id) & \
-                (atable.date == start_date) & \
-                (atable.end_date == end_date)
-        exists = db(query).select(atable.id,
-                                  limitby = (0, 1),
-                                  ).first()
-
-        attr = {"agg_type": 2, # Location
-                #"reported_count": values_len,
-                #"ward_count": len(child_ids),
-                #"min": values_min,
-                #"max": values_max,
-                #"mean": values_avg,
-                #"median": values_med,
-                #"mad": values_mad,
-                "sum": values_sum,
-                "percentage": values_percentage,
-                }
-        if exists:
-            # Update
-            db(query).update(**attr)
-        else:
-            # Insert new
-            atable.insert(parameter_id = parameter_id,
-                          location_id = location_id,
-                          date = start_date,
-                          end_date = end_date,
-                          **attr
-                          )
 
 # =============================================================================
 def stats_demographic_data_controller():
@@ -1291,17 +689,18 @@ class StatsImpactModel(S3Model):
 
         ADD_IMPACT_TYPE = T("Add Impact Type")
         crud_strings[tablename] = Storage(
-            label_create=ADD_IMPACT_TYPE,
-            title_display=T("Impact Type Details"),
-            title_list=T("Impact Types"),
-            title_update=T("Edit Impact Type"),
-            #title_upload=T("Import Impact Types"),
-            label_list_button=T("Impact Types"),
-            label_delete_button=T("Delete Impact Type"),
-            msg_record_created=T("Impact Type added"),
-            msg_record_modified=T("Impact Type updated"),
-            msg_record_deleted=T("Impact Type deleted"),
-            msg_list_empty=T("No Impact Types defined"))
+            label_create = ADD_IMPACT_TYPE,
+            title_display = T("Impact Type Details"),
+            title_list = T("Impact Types"),
+            title_update = T("Edit Impact Type"),
+            #title_upload = T("Import Impact Types"),
+            label_list_button = T("Impact Types"),
+            label_delete_button = T("Delete Impact Type"),
+            msg_record_created = T("Impact Type added"),
+            msg_record_modified = T("Impact Type updated"),
+            msg_record_deleted = T("Impact Type deleted"),
+            msg_list_empty = T("No Impact Types defined"),
+            )
 
         # Resource Configuration
         configure(tablename,
@@ -1329,7 +728,7 @@ class StatsImpactModel(S3Model):
                      super_link("parameter_id", "stats_parameter",
                                 label = T("Impact Type"),
                                 instance_types = ("stats_impact_type",),
-                                represent = S3Represent(lookup="stats_parameter"),
+                                represent = S3Represent(lookup = "stats_parameter"),
                                 readable = True,
                                 writable = True,
                                 empty = False,
@@ -1350,17 +749,18 @@ class StatsImpactModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            label_create=T("Add Impact"),
-            title_display=T("Impact Details"),
-            title_list=T("Impacts"),
-            title_update=T("Edit Impact"),
-            title_upload=T("Import Impacts"),
-            label_list_button=T("Impacts"),
-            label_delete_button=T("Delete Impact"),
-            msg_record_created=T("Impact added"),
-            msg_record_modified=T("Impact updated"),
-            msg_record_deleted=T("Impact deleted"),
-            msg_list_empty=T("No Impacts defined"))
+            label_create = T("Add Impact"),
+            title_display = T("Impact Details"),
+            title_list = T("Impacts"),
+            title_update = T("Edit Impact"),
+            title_upload = T("Import Impacts"),
+            label_list_button = T("Impacts"),
+            label_delete_button = T("Delete Impact"),
+            msg_record_created = T("Impact added"),
+            msg_record_modified = T("Impact updated"),
+            msg_record_deleted = T("Impact deleted"),
+            msg_list_empty = T("No Impacts defined"),
+            )
 
         filter_widgets = [S3OptionsFilter("parameter_id",
                                           label = T("Type"),
@@ -1373,7 +773,7 @@ class StatsImpactModel(S3Model):
         impact_id = S3ReusableField("impact_id", "reference %s" % tablename,
                                      label = T("Impact"),
                                      ondelete = "CASCADE",
-                                     represent = S3Represent(lookup=tablename),
+                                     represent = S3Represent(lookup = tablename),
                                      requires = IS_EMPTY_OR(
                                         IS_ONE_OF_EMPTY(current.db, "stats_impact.id")),
                                      )
@@ -1386,6 +786,602 @@ class StatsImpactModel(S3Model):
         # Pass names back to global scope (s3.*)
         return {"stats_impact_id": impact_id,
                 }
+
+# =============================================================================
+def stats_demographic_rebuild_all_aggregates():
+    """
+        This will delete all the stats_demographic_aggregate records and
+        then rebuild them by triggering off a request for each
+        stats_demographic_data record.
+
+        This function is normally only run during prepop or postpop so we
+        don't need to worry about the aggregate data being unavailable for
+        any length of time
+    """
+
+    # Check to see whether an existing task is running and if it is then kill it
+    db = current.db
+    ttable = db.scheduler_task
+    rtable = db.scheduler_run
+    wtable = db.scheduler_worker
+    query = (ttable.task_name == "stats_demographic_update_aggregates") & \
+            (rtable.task_id == ttable.id) & \
+            (rtable.status == "RUNNING")
+    rows = db(query).select(rtable.id,
+                            rtable.task_id,
+                            rtable.worker_name,
+                            )
+    now = current.request.utcnow
+    for row in rows:
+        db(wtable.worker_name == row.worker_name).update(status = "KILL")
+        db(rtable.id == row.id).update(stop_time = now,
+                                       status = "STOPPED",
+                                       )
+        db(ttable.id == row.task_id).update(stop_time = now,
+                                            status = "STOPPED",
+                                            )
+
+    # Delete the existing aggregates
+    current.s3db.stats_demographic_aggregate.truncate()
+
+    # Read all the approved stats_demographic_data records
+    dtable = db.stats_demographic
+    ddtable = db.stats_demographic_data
+    query = (ddtable.deleted != True) & \
+            (ddtable.parameter_id == dtable.parameter_id) & \
+            (ddtable.approved_by != None)
+    # @ToDo: deployment_setting for whether records need to be approved
+    #   query &= (ddtable.approved_by != None)
+    records = db(query).select(ddtable.data_id,
+                               ddtable.parameter_id,
+                               ddtable.date,
+                               ddtable.location_id,
+                               ddtable.value,
+                               dtable.total_id,
+                               )
+
+    # Fire off a rebuild task
+    current.s3task.run_async("stats_demographic_update_aggregates",
+                             vars = {"records": records.json()},
+                             timeout = 21600 # 6 hours
+                             )
+
+# =============================================================================
+def stats_demographic_update_aggregates(records=None):
+    """
+        This will calculate the stats_demographic_aggregates for the
+        specified records. Either all (when rebuild_all is invoked) or for
+        the individual parameter(s) at the specified location(s) when run
+        onapprove - which currently happens inside the vulnerability
+        approve_report() controller.
+        @ToDo: onapprove/onaccept wrapper function for other workflows.
+
+        This will get the raw data from stats_demographic_data and generate
+        a stats_demographic_aggregate record for the given time period.
+
+        The reason for doing this is so that all aggregated data can be
+        obtained from a single table. So when displaying data for a
+        particular location it will not be necessary to try the aggregate
+        table, and if it's not there then try the data table. Rather just
+        look at the aggregate table.
+
+        Once this has run then a complete set of aggregate records should
+        exists for this parameter_id and location for every time period from
+        the first data item until the current time period.
+
+        @ToDo: Add test cases to modules/unit_tests/s3db/stats.py
+    """
+
+    if not records:
+        return
+
+    from dateutil.rrule import rrule, YEARLY
+
+    db = current.db
+    s3db = current.s3db
+    dtable = s3db.stats_demographic_data
+    atable = db.stats_demographic_aggregate
+    gtable = db.gis_location
+
+    # Data Structures used for the OPTIMISATION
+    param_total_dict = {} # the total_id for each parameter
+    param_location_dict = {} # a list of locations for each parameter
+    location_dict = {} # a list of locations
+    loc_level_list = {} # a list of levels for each location
+
+    aggregated_period = StatsDemographicModel.stats_demographic_aggregated_period
+    (last_period, year_end) = aggregated_period(None)
+
+    # Test to see which date format we have based on how we were called
+    if isinstance(records, str):
+        from_json = True
+        from dateutil.parser import parse
+        records = json.loads(records)
+    elif isinstance(records[0]["stats_demographic_data"]["date"],
+                    (datetime.date, datetime.datetime)):
+        from_json = False
+    else:
+        from_json = True
+        from dateutil.parser import parse
+
+    for record in records:
+        total_id = record["stats_demographic"]["total_id"]
+        record = record["stats_demographic_data"]
+        data_id = record["data_id"]
+        location_id = record["location_id"]
+        parameter_id = record["parameter_id"]
+        # Skip if either the location or the parameter is not valid
+        if not location_id or not parameter_id:
+            current.log.warning("Skipping bad stats_demographic_data record with data_id %s " % data_id)
+            continue
+        if total_id and parameter_id not in param_total_dict:
+            param_total_dict[parameter_id] = total_id
+        if from_json:
+            date = parse(record["date"]) # produces a datetime
+            date = date.date()
+        else:
+            date = record["date"]
+        (start_date, end_date) = aggregated_period(date)
+
+        # Get all the approved stats_demographic_data records for this location and parameter
+        query = (dtable.location_id == location_id) & \
+                (dtable.deleted != True) & \
+                (dtable.approved_by != None)
+        # @ToDo: deployment_setting for whether records need to be approved
+        #   query &= (dtable.approved_by != None)
+        fields = [dtable.data_id,
+                  dtable.date,
+                  dtable.value,
+                  ]
+        if total_id:
+            # Also get the records for the Total to use to calculate the percentage
+            query &= (dtable.parameter_id.belongs([parameter_id, total_id]))
+            fields.append(dtable.parameter_id)
+        else:
+            percentage = None
+            query &= (dtable.parameter_id == parameter_id)
+        data_rows = db(query).select(*fields)
+
+        if total_id:
+            # Separate out the rows relating to the Totals
+            total_rows = data_rows.exclude(lambda row: row.parameter_id == total_id)
+            # Get each record and store them in a dict keyed on the start date
+            # of the aggregated period. If a record already exists for the
+            # reporting period then the most recent value will be stored.
+            earliest_period = current.request.utcnow.date()
+            end_date = year_end
+            totals = {}
+            for row in total_rows:
+                row_date = row.date
+                (start_date, end_date) = aggregated_period(row_date)
+                if start_date in totals:
+                    if row_date <= totals[start_date]["date"]:
+                        # The indicator in the row is of the same time period as
+                        # another which is already stored in totals but it is earlier
+                        # so ignore this particular record
+                        continue
+                elif start_date < earliest_period:
+                    earliest_period = start_date
+                # Store the record from the db in the totals storage
+                totals[start_date] = Storage(date = row_date,
+                                             id = row.data_id,
+                                             value = row.value,
+                                             )
+
+        # Get each record and store them in a dict keyed on the start date
+        # of the aggregated period. If a record already exists for the
+        # reporting period then the most recent value will be stored.
+        earliest_period = start_date
+        end_date = year_end
+        data = {}
+        data[start_date] = Storage(date = date,
+                                   id = data_id,
+                                   value = record["value"],
+                                   )
+        for row in data_rows:
+            if row.data_id == data_id:
+                # This is the record we started with, so skip
+                continue
+            row_date = row.date
+            (start_date, end_date) = aggregated_period(row_date)
+            if start_date in data:
+                if row_date <= data[start_date]["date"]:
+                    # The indicator in the row is of the same time period as
+                    # another which is already stored in data but it is earlier
+                    # so ignore this particular record
+                    continue
+            elif start_date < earliest_period:
+                earliest_period = start_date
+            # Store the record from the db in the data storage
+            data[start_date] = Storage(date = row_date,
+                                       id = row.data_id,
+                                       value = row.value,
+                                       )
+
+        # Get all the aggregate records for this parameter and location
+        query = (atable.location_id == location_id) & \
+                (atable.parameter_id == parameter_id)
+        aggr_rows = db(query).select(atable.id,
+                                     atable.agg_type,
+                                     atable.date,
+                                     atable.end_date,
+                                     atable.sum,
+                                     )
+
+        aggr = {}
+        for row in aggr_rows:
+            (start_date, end_date) = aggregated_period(row.date)
+            aggr[start_date] = Storage(id = row.id,
+                                       type = row.agg_type,
+                                       end_date = row.end_date,
+                                       sum = row.sum,
+                                       )
+
+        # Step through each period and check that aggr is correct
+        last_type_agg = False # Whether the type of previous non-copy record was aggr
+        last_data_value = None # The value of the previous aggr record
+        last_total = None # The value of the previous aggr record for the totals param
+        # Keep track of which periods the aggr record has been changed in
+        # the database
+        changed_periods = []
+        for dt in rrule(YEARLY, dtstart=earliest_period, until=last_period):
+            # Calculate the end of the dt period.
+            # - it will be None if this is the last period
+            dt = dt.date()
+            if dt != last_period:
+                (start_date, end_date) = aggregated_period(dt)
+            else:
+                start_date = dt
+                end_date = None
+            if dt in aggr:
+                # Check that the stored aggr data is correct
+                agg_type = aggr[dt]["type"]
+                if agg_type == 2:
+                    # This is built using other location aggregates
+                    # so it can be ignored because only time or copy aggregates
+                    # are being calculated in this function
+                    last_type_agg = True
+                    last_data_value = aggr[dt]["sum"]
+                    continue
+                # Query to use to update aggr records
+                query = (atable.id == aggr[dt]["id"])
+                if agg_type == 3:
+                    # This is a copy aggregate
+                    if dt in data:
+                        # There is data in the data dictionary for this period
+                        # so aggregate record needs to be changed
+                        value = data[dt]["value"]
+                        last_data_value = value
+                        if total_id:
+                            if dt in totals:
+                                last_total = totals[dt]["value"]
+                            if last_total:
+                                percentage = 100 * value / last_total
+                                percentage = round(percentage, 3)
+                        db(query).update(agg_type = 1, # time
+                                         #reported_count = 1, # one record
+                                         #ward_count = 1, # one ward
+                                         end_date = end_date,
+                                         percentage = percentage,
+                                         sum = value,
+                                         #min = value,
+                                         #max = value,
+                                         #mean = value,
+                                         #median = value,
+                                         )
+                        changed_periods.append((start_date, end_date))
+                    elif last_type_agg:
+                        # No data in the data dictionary and the last type was aggr
+                        continue
+                    # Check that the data currently stored is correct
+                    elif aggr[dt]["sum"] != last_data_value:
+                        value = last_data_value
+                        if total_id:
+                            if dt in totals:
+                                last_total = totals[dt]["value"]
+                            if last_total:
+                                percentage = 100 * value / last_total
+                                percentage = round(percentage, 3)
+                        db(query).update(agg_type = 3, # copy
+                                         #reported_count = 1, # one record
+                                         #ward_count = 1, # one ward
+                                         end_date = end_date,
+                                         percentage = percentage,
+                                         sum = value,
+                                         #min = value,
+                                         #max = value,
+                                         #mean = value,
+                                         #median = value,
+                                         )
+                        changed_periods.append((start_date, end_date))
+                elif agg_type == 1:
+                    # The value in the aggr should match the value in data
+                    if dt in data:
+                        value = data[dt]["value"]
+                        last_data_value = value
+                        if total_id and dt in totals:
+                            last_total = totals[dt]["value"]
+                        if aggr[dt]["sum"] != value:
+                            if total_id and last_total:
+                                percentage = 100 * value / last_total
+                                percentage = round(percentage, 3)
+                            db(query).update(agg_type = 1, # time
+                                             #reported_count = 1, # one record
+                                             #ward_count = 1, # one ward
+                                             end_date = end_date,
+                                             percentage = percentage,
+                                             sum = value,
+                                             #min = value,
+                                             #max = value,
+                                             #mean = value,
+                                             #median = value,
+                                             )
+                            changed_periods.append((start_date, end_date))
+                    else:
+                        # The data is not there so it must have been deleted
+                        # Copy the value from the previous record
+                        value = last_data_value
+                        if total_id:
+                            if dt in totals:
+                                last_total = totals[dt]["value"]
+                            if last_total:
+                                percentage = 100 * value / last_total
+                                percentage = round(percentage, 3)
+                        db(query).update(agg_type = 3, # copy
+                                         #reported_count = 1, # one record
+                                         #ward_count = 1, # one ward
+                                         end_date = end_date,
+                                         percentage = percentage,
+                                         sum = value,
+                                         #min = value,
+                                         #max = value,
+                                         #mean = value,
+                                         #median = value,
+                                         )
+                        changed_periods.append((start_date, end_date))
+            # No aggregate record for this time period exists
+            # So one needs to be inserted
+            else:
+                if dt in data:
+                    value = data[dt]["value"]
+                    agg_type = 1 # time
+                    last_data_value = value
+                else:
+                    value = last_data_value
+                    agg_type = 3 # copy
+                if total_id:
+                    if dt in totals:
+                        last_total = totals[dt]["value"]
+                    if last_total:
+                        percentage = 100 * value / last_total
+                        percentage = round(percentage, 3)
+                atable.insert(parameter_id = parameter_id,
+                              location_id = location_id,
+                              agg_type = agg_type,
+                              #reported_count = 1, # one record
+                              #ward_count = 1, # one ward
+                              date = start_date,
+                              end_date = end_date,
+                              percentage = percentage,
+                              sum = value,
+                              #min = value,
+                              #max = value,
+                              #mean = value,
+                              #median = value,
+                              )
+                changed_periods.append((start_date, end_date))
+        # End of loop through each time period
+
+        if changed_periods == []:
+            continue
+        # The following structures are used in the OPTIMISATION step later
+        location = db(gtable.id == location_id).select(gtable.level,
+                                                       limitby = (0, 1),
+                                                       ).first()
+        loc_level_list[location_id] = location.level
+        if parameter_id not in param_location_dict:
+            param_location_dict[parameter_id] = {location_id : changed_periods}
+        elif location_id not in param_location_dict[parameter_id]:
+            param_location_dict[parameter_id][location_id] = changed_periods
+        else:
+            # Store the older of the changed periods (the end will always be None)
+            # Only need to check the start date of the first period
+            if changed_periods[0][0] < param_location_dict[parameter_id][location_id][0][0]:
+                param_location_dict[parameter_id][location_id] = changed_periods
+        if location_id not in location_dict:
+            location_dict[location_id] = changed_periods
+        else:
+            # Store the older of the changed periods (the end will always be None)
+            # Only need to check the start date of the first period
+            if changed_periods[0][0] < location_dict[location_id][0][0]:
+                location_dict[location_id] = changed_periods
+
+    # End of loop through each stats_demographic_data record
+
+    # OPTIMISATION
+    # The following code will get all the locations for which a parameter
+    # has been changed. This will remove duplicates which will occur when
+    # items are being imported for many communes in the same district.
+    # Take an import of 12 communes in the same district, without this the
+    # district will be updated 12 times, the province will be updated 12
+    # times and the country will be updated 12 times that is 33 unnecessary
+    # updates (for each time period) (i.e. 15 updates rather than 48)
+
+    # Get all the parents
+    # @ToDo: Optimise by rewriting as custom routine rather than using this wrapper
+    # - we only need immediate children not descendants, so can use parent not path
+    # - look at disease_stats_update_aggregates()
+    parents = {}
+    get_parents = current.gis.get_parents
+    for loc_id in location_dict.keys():
+        _parents = get_parents(loc_id)
+        if parents:
+            parents[loc_id] = _parents
+    # Expand the list of locations for each parameter
+    parents_data = {}
+    for (param_id, loc_dict) in param_location_dict.items():
+        for (loc_id, periods) in loc_dict.items():
+            if loc_id in parents: # There won't be a parent if this is a L0
+                for p_loc_row in parents[loc_id]:
+                    p_loc_id = p_loc_row.id
+                    if param_id in parents_data:
+                        if p_loc_id in parents_data[param_id]:
+                            # Store the older of the changed periods (the end will always be None)
+                            # Only need to check the start date of the first period
+                            if periods[0][0] < parents_data[param_id][p_loc_id][0][0][0]:
+                                parents_data[param_id][p_loc_id][0] = periods
+                        else:
+                            parents_data[param_id][p_loc_id] = [periods,
+                                                                loc_level_list[loc_id]
+                                                                ]
+                    else:
+                        parents_data[param_id] = {p_loc_id : [periods,
+                                                              loc_level_list[loc_id]
+                                                              ]
+                                                  }
+
+    # Now that the time aggregate types have been set up correctly,
+    # fire off requests for the location aggregates to be calculated
+    run_async = current.s3task.run_async
+    for (param_id, loc_dict) in parents_data.items():
+        total_id = param_total_dict[param_id]
+        for (loc_id, (changed_periods, loc_level)) in loc_dict.items():
+            for (start_date, end_date) in changed_periods:
+                s, e = str(start_date), str(end_date)
+                run_async("stats_demographic_update_aggregate_location",
+                          args = [loc_level, loc_id, param_id, total_id, s, e],
+                          timeout = 1800 # 30m
+                          )
+
+# =============================================================================
+def stats_demographic_update_location_aggregate(location_level,
+                                                location_id,
+                                                parameter_id,
+                                                total_id,
+                                                start_date,
+                                                end_date
+                                                ):
+    """
+        Calculates the stats_demographic_aggregate for a specific parameter at a
+        specific location.
+
+        @param location_id: the location record ID
+        @param parameter_id: the parameter record ID
+        @param total_id: the parameter record ID for the percentage calculation
+        @param start_date: the start date of the time period (as string)
+        @param end_date: the end date of the time period (as string)
+    """
+
+    db = current.db
+    dtable = current.s3db.stats_demographic_data
+    atable = db.stats_demographic_aggregate
+
+    # Get all the child locations (immediate children only, not all descendants)
+    child_locations = current.gis.get_children(location_id, location_level)
+    child_ids = [row.id for row in child_locations]
+
+    # Get the most recent stats_demographic_data record for all child locations
+    query = (dtable.parameter_id == parameter_id) & \
+            (dtable.deleted != True) & \
+            (dtable.location_id.belongs(child_ids)) & \
+            (dtable.approved_by != None)
+    # @ToDo: deployment_setting for whether records need to be approved
+    #   query &= (dtable.approved_by != None)
+    if end_date == "None": # converted to string as async parameter
+        end_date = None
+    else:
+        query &= (dtable.date <= end_date)
+    rows = db(query).select(dtable.value,
+                            dtable.date,
+                            dtable.location_id,
+                            orderby = (dtable.location_id, ~dtable.date),
+                            # groupby avoids duplicate records for the same
+                            # location, but is slightly slower than just
+                            # skipping the duplicates in the loop below
+                            #groupby = (dtable.location_id)
+                            )
+
+    # Get the most recent aggregate for this location for the total parameter
+    #if total_id == "None": # converted to string as async parameter
+    #    total_id = None
+    values_total = None
+    if total_id != "None":
+        query = (dtable.parameter_id == total_id)
+        if end_date:
+            query &= (dtable.date <= end_date)
+        total_row = db(query).select(dtable.value,
+                                     limitby = (0, 1),
+                                     orderby = ~dtable.date,
+                                     ).first()
+        if total_row:
+            values_total = total_row.value
+
+    # Collect the values, skip duplicate records for the
+    # same location => use the most recent one, which is
+    # the first row for each location as per the orderby
+    # in the query above
+    last_location = None
+    values = []
+    append = values.append
+    for row in rows:
+        new_location_id = row.location_id
+        if new_location_id != last_location:
+            last_location = new_location_id
+            append(row.value)
+
+    # Aggregate the values
+    values_len = len(values)
+    if not values_len:
+        return
+
+    values_sum = sum(values)
+    #values_min = min(values)
+    #values_max = max(values)
+    #values_avg = float(values_sum) / values_len
+
+    if values_total:
+        percentage = 100 * values_sum / values_total
+        values_percentage = round(percentage, 3)
+    else:
+        values_percentage = None
+
+    #from numpy import median
+    #values_med = median(values)
+    #values_mad = median([abs(v - values_med) for v in values])
+
+    # Add or update the aggregated values in the database
+
+    # Do we already have a record?
+    query = (atable.location_id == location_id) & \
+            (atable.parameter_id == parameter_id) & \
+            (atable.date == start_date) & \
+            (atable.end_date == end_date)
+    exists = db(query).select(atable.id,
+                              limitby = (0, 1),
+                              ).first()
+
+    attr = {"agg_type": 2, # Location
+            #"reported_count": values_len,
+            #"ward_count": len(child_ids),
+            #"min": values_min,
+            #"max": values_max,
+            #"mean": values_avg,
+            #"median": values_med,
+            #"mad": values_mad,
+            "sum": values_sum,
+            "percentage": values_percentage,
+            }
+    if exists:
+        # Update
+        db(query).update(**attr)
+    else:
+        # Insert new
+        atable.insert(parameter_id = parameter_id,
+                      location_id = location_id,
+                      date = start_date,
+                      end_date = end_date,
+                      **attr
+                      )
 
 # =============================================================================
 def stats_quantile(data, q):

@@ -20,6 +20,8 @@
 if not settings.has_module(c):
     raise HTTP(404, body="Module disabled: %s" % c)
 
+from s3 import S3ReusableField
+
 # -----------------------------------------------------------------------------
 # Define the Model
 # @ToDo: Move to modules/s3db/assess.py
@@ -41,10 +43,10 @@ assess_colour_opts = {
 
 def s3_assess_severity_represent(value):
     if value:
-        return IMG(_src="/%s/static/img/%s_circle_16px.png" %
+        return IMG(_src = "/%s/static/img/%s_circle_16px.png" %
                         (appname, assess_colour_opts[value]),
-                   _alt= value,
-                   _align="middle"
+                   _alt = value,
+                   _align = "middle"
                    )
     else:
         return NONE

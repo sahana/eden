@@ -8849,9 +8849,11 @@ class org_AssignMethod(S3Method):
             current.session.confirmation = T("%(number)s assigned") % \
                                            {"number": added}
             if added > 0:
-                redirect(URL(args=[r.id, "organisation"], vars={}))
+                redirect(URL(args = [r.id, "organisation"],
+                             vars = {},
+                             ))
             else:
-                redirect(URL(args=r.args, vars={}))
+                redirect(URL(args = r.args, vars={}))
 
         elif r.http == "GET":
 
@@ -8873,7 +8875,7 @@ class org_AssignMethod(S3Method):
                 else:
                     display_length = int(display_length)
             else:
-                display_length = 25
+                display_length = current.deployment_settings.get_ui_datatables_pagelength()
             if display_length:
                 limit = 4 * display_length
             else:
@@ -8914,14 +8916,14 @@ class org_AssignMethod(S3Method):
                 items = dt.html(totalrows,
                                 filteredrows,
                                 dt_id,
-                                dt_ajax_url=URL(args = r.args,
-                                                extension="aadata",
-                                                vars={},
-                                                ),
-                                dt_bulk_actions=dt_bulk_actions,
-                                dt_pageLength=display_length,
-                                dt_pagination="true",
-                                dt_searching="false",
+                                dt_ajax_url = URL(args = r.args,
+                                                  extension="aadata",
+                                                  vars={},
+                                                  ),
+                                dt_bulk_actions = dt_bulk_actions,
+                                dt_pageLength = display_length,
+                                dt_pagination = "true",
+                                dt_searching = "false",
                                 )
 
                 # Filter form
@@ -8929,33 +8931,35 @@ class org_AssignMethod(S3Method):
 
                     # Where to retrieve filtered data from:
                     _vars = resource.crud._remove_filters(r.get_vars)
-                    filter_submit_url = r.url(vars=_vars)
+                    filter_submit_url = r.url(vars = _vars)
 
                     # Where to retrieve updated filter options from:
-                    filter_ajax_url = URL(f="human_resource",
-                                          args=["filter.options"],
-                                          vars={})
+                    filter_ajax_url = URL(f = "human_resource",
+                                          args = ["filter.options"],
+                                          vars = {},
+                                          )
 
                     get_config = resource.get_config
                     filter_clear = get_config("filter_clear", True)
                     filter_formstyle = get_config("filter_formstyle", None)
                     filter_submit = get_config("filter_submit", True)
                     filter_form = S3FilterForm(filter_widgets,
-                                               clear=filter_clear,
-                                               formstyle=filter_formstyle,
-                                               submit=filter_submit,
-                                               ajax=True,
-                                               url=filter_submit_url,
-                                               ajaxurl=filter_ajax_url,
-                                               _class="filter-form",
-                                               _id="datatable-filter-form",
+                                               clear = filter_clear,
+                                               formstyle = filter_formstyle,
+                                               submit = filter_submit,
+                                               ajax = True,
+                                               url = filter_submit_url,
+                                               ajaxurl = filter_ajax_url,
+                                               _class = "filter-form",
+                                               _id = "datatable-filter-form",
                                                )
                     fresource = current.s3db.resource(resource.tablename)
                     alias = resource.alias if r.component else None
                     ff = filter_form.html(fresource,
                                           r.get_vars,
-                                          target="datatable",
-                                          alias=alias)
+                                          target = "datatable",
+                                          alias = alias,
+                                          )
                 else:
                     ff = ""
 
@@ -8977,7 +8981,8 @@ class org_AssignMethod(S3Method):
                                 filteredrows,
                                 dt_id,
                                 echo,
-                                dt_bulk_actions=dt_bulk_actions)
+                                dt_bulk_actions = dt_bulk_actions,
+                                )
                 response.headers["Content-Type"] = "application/json"
                 return items
 

@@ -658,7 +658,7 @@ def location():
         # We've been called from the Location Selector widget
         table.addr_street.readable = table.addr_street.writable = False
 
-    from s3 import IS_IN_SET_LAZY
+    from s3 import IS_IN_SET_LAZY, S3ReusableField
     country = S3ReusableField("country", "string", length=2,
                               label = COUNTRY,
                               requires = IS_EMPTY_OR(IS_IN_SET_LAZY(

@@ -559,10 +559,7 @@ class S3CrudWizard:
         if r.interactive:
 
             # How many records per page?
-            if s3.dataTable_pageLength:
-                display_length = s3.dataTable_pageLength
-            else:
-                display_length = 25
+            display_length = current.deployment_settings.get_ui_datatables_pagelength()
 
             # Server-side pagination?
             if not s3.no_sspag:

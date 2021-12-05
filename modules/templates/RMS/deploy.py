@@ -1765,7 +1765,7 @@ class deploy_Inbox(S3Method):
             else:
                 display_length = int(display_length)
         else:
-            display_length = 25
+            display_length = current.deployment_settings.get_ui_datatables_pagelength()
         if display_length:
             limit = 4 * display_length
         else:
@@ -1992,7 +1992,7 @@ def deploy_apply(r, **attr):
             else:
                 display_length = int(display_length)
         else:
-            display_length = 25
+            display_length = settings.get_ui_datatables_pagelength()
         if display_length:
             limit = 4 * display_length
         else:
@@ -2245,7 +2245,7 @@ def deploy_alert_select_recipients(r, **attr):
         else:
             display_length = int(display_length)
     else:
-        display_length = 25
+        display_length = current.deployment_settings.get_ui_datatables_pagelength()
     if display_length:
         limit = 4 * display_length
     else:
@@ -2457,7 +2457,7 @@ def deploy_response_select_mission(r, **attr):
         else:
             display_length = int(display_length)
     else:
-        display_length = 25
+        display_length = current.deployment_settings.get_ui_datatables_pagelength()
     if display_length:
         limit = 4 * display_length
     else:

@@ -57,7 +57,10 @@ import s3menus as default_menus
 S3MainMenu = default_menus.S3MainMenu
 S3OptionsMenu = default_menus.S3OptionsMenu
 
-current.menu = Storage(oauth="", options=None, override={})
+current.menu = Storage(oauth = "",
+                       options = None,
+                       override = {},
+                       )
 if auth.permission.format == "html":
 
     # NB cascading templates:
@@ -133,9 +136,10 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     """
         Helper function to apply the S3Resource REST interface
 
-        @param prefix: the application prefix
-        @param resourcename: the resource name (without prefix)
-        @param attr: additional keyword parameters
+        Args:
+            prefix: the application prefix
+            resourcename: the resource name (without prefix)
+            attr: additional keyword parameters
 
         Any keyword parameters will be copied into the output dict (provided
         that the output is a dict). If a keyword parameter is callable, then

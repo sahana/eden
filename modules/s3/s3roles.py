@@ -161,7 +161,7 @@ class S3RoleManager(S3Method):
             current.session["_formkey[admin/rolelist]"] = formkey
 
             # Pagination
-            display_length = s3.dataTable_pageLength or 25
+            display_length = current.deployment_settings.get_ui_datatables_pagelength()
             start = None
             if s3.no_sspag:
                 dt_pagination = "false"

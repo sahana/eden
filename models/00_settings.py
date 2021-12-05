@@ -18,7 +18,8 @@ s3.formats = Storage()
 s3.interactive = settings.get_ui_confirm()
 
 s3.base_url = "%s/%s" % (settings.get_base_public_url(),
-                         appname)
+                         appname,
+                         )
 s3.download_url = "%s/default/download" % s3.base_url
 
 # -----------------------------------------------------------------------------
@@ -157,7 +158,8 @@ if settings.get_auth_openid():
         openid_login_form = OpenIDAuth(auth)
         from gluon.contrib.login_methods.extended_login_form import ExtendedLoginForm
         _settings.login_form = ExtendedLoginForm(auth, openid_login_form,
-                                                 signals=["oid", "janrain_nonce"])
+                                                 signals = ["oid", "janrain_nonce"],
+                                                 )
     except ImportError:
         session.warning = "Library support not available for OpenID"
 
@@ -184,7 +186,8 @@ if settings.get_auth_openid():
 # Require Email Verification
 _settings.registration_requires_verification = settings.get_auth_registration_requires_verification()
 _settings.on_failed_authorization = URL(c="default", f="user",
-                                        args="not_authorized")
+                                        args = "not_authorized",
+                                        )
 _settings.reset_password_requires_verification = True
 _settings.verify_email_next = URL(c="default", f="index")
 
@@ -282,41 +285,39 @@ s3_crud.navigate_away_confirm = settings.get_ui_navigate_away_confirm()
 # Content Type Headers, default is application/xml for XML formats
 # and text/x-json for JSON formats, other content types must be
 # specified here:
-s3.content_type = Storage(
-    tc = "application/atom+xml", # TableCast feeds
-    rss = "application/rss+xml", # RSS
-    georss = "application/rss+xml", # GeoRSS
-    kml = "application/vnd.google-earth.kml+xml", # KML
-)
+s3.content_type = {"tc": "application/atom+xml", # TableCast feeds
+                   "rss": "application/rss+xml", # RSS
+                   "georss": "application/rss+xml", # GeoRSS
+                   "kml": "application/vnd.google-earth.kml+xml", # KML
+                   }
 
 # JSON Formats
-s3.json_formats = ["geojson", "s3json"]
+s3.json_formats = ("geojson", "s3json")
 
 # CSV Formats
-s3.csv_formats = ["hrf", "s3csv"]
+s3.csv_formats = ("hrf", "s3csv")
 
 # Datatables default number of rows per page
 s3.ROWSPERPAGE = 20
 
 # Valid Extensions for Image Upload fields
-s3.IMAGE_EXTENSIONS = ["png", "PNG", "jpg", "JPG", "jpeg", "JPEG"]
+s3.IMAGE_EXTENSIONS = ("png", "PNG", "jpg", "JPG", "jpeg", "JPEG")
 
 # Default CRUD strings
-s3.crud_strings = Storage(
-    label_create = T("Add Record"),
-    title_display = T("Record Details"),
-    title_list = T("Records"),
-    title_update = T("Edit Record"),
-    title_map = T("Map"),
-    title_report = T("Report"),
-    label_list_button = T("List Records"),
-    label_delete_button = T("Delete Record"),
-    msg_record_created = T("Record added"),
-    msg_record_modified = T("Record updated"),
-    msg_record_deleted = T("Record deleted"),
-    msg_list_empty = T("No Records currently available"),
-    msg_match = T("Matching Records"),
-    msg_no_match = T("No Matching Records"),
-    )
+s3.crud_strings = Storage(label_create = T("Add Record"),
+                          title_display = T("Record Details"),
+                          title_list = T("Records"),
+                          title_update = T("Edit Record"),
+                          title_map = T("Map"),
+                          title_report = T("Report"),
+                          label_list_button = T("List Records"),
+                          label_delete_button = T("Delete Record"),
+                          msg_record_created = T("Record added"),
+                          msg_record_modified = T("Record updated"),
+                          msg_record_deleted = T("Record deleted"),
+                          msg_list_empty = T("No Records currently available"),
+                          msg_match = T("Matching Records"),
+                          msg_no_match = T("No Matching Records"),
+                          )
 
 # END =========================================================================

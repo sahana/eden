@@ -53,12 +53,11 @@ class S3Delete(object):
                  representation = None,
                  ):
         """
-            Constructor
-
-            @param resource: the S3Resource to delete records from
-            @param archive: True|False to override global
-                            security.archive_not_delete setting
-            @param representation: the request format (for audit, optional)
+            Args:
+                resource: the S3Resource to delete records from
+                archive: True|False to override global
+                         security.archive_not_delete setting
+                representation: the request format (for audit, optional)
         """
 
         self.resource = resource
@@ -104,13 +103,14 @@ class S3Delete(object):
             Main deletion process, deletes/archives all records
             in the resource
 
-            @param cascade: this is called as a cascade-action from another
-                            process (e.g. another delete)
-            @param skip_undeletable: delete whatever is possible, skip
-                                     undeletable rows
-            @param replaced_by: dict of {replaced_id: replacement_id},
-                                used by record merger to log which record
-                                has replaced which
+            Args:
+                cascade: this is called as a cascade-action from another
+                         process (e.g. another delete)
+                skip_undeletable: delete whatever is possible, skip
+                                  undeletable rows
+                replaced_by: dict of {replaced_id: replacement_id},
+                             used by record merger to log which record
+                             has replaced which
         """
 
         # Must not re-use instance
@@ -270,7 +270,8 @@ class S3Delete(object):
         """
              Extract the rows to be deleted
 
-             @returns: a Rows instance
+             Returns:
+                A Rows instance
         """
 
         table = self.table
@@ -294,13 +295,15 @@ class S3Delete(object):
         """
             Check which rows in the set are deletable, collect all errors
 
-            @param rows: the Rows to be deleted
-            @param check_all: find all restrictions for each record
-                              rather than from just one table (not
-                              standard because of performance cost)
+            Args:
+                rows: the Rows to be deleted
+                check_all: find all restrictions for each record
+                           rather than from just one table (not
+                           standard because of performance cost)
 
-            @returns: array of Rows found to be deletable
-                      NB those can still fail further down the cascade
+            Returns:
+                array of Rows found to be deletable
+                NB those can still fail further down the cascade
         """
 
         db = current.db
@@ -368,10 +371,11 @@ class S3Delete(object):
             Run the automatic deletion cascade: remove or update records
             referencing this row with ondelete!="RESTRICT"
 
-            @param row: the Row to delete
-            @param check_all: process the entire cascade to reveal all
-                              errors (rather than breaking out of it after
-                              the first error)
+            Args:
+                row: the Row to delete
+                check_all: process the entire cascade to reveal all
+                           errors (rather than breaking out of it after
+                           the first error)
         """
 
         tablename = self.tablename
@@ -447,7 +451,8 @@ class S3Delete(object):
         """
             Auto-delete linked records if row was the last link
 
-            @param row: the Row about to get deleted
+            Args:
+                row: the Row about to get deleted
         """
 
         resource = self.resource
@@ -482,7 +487,7 @@ class S3Delete(object):
                                       archive = self.archive,
                                       representation = self.representation,
                                       )
-                    delete(cascade=True)
+                    delete(cascade = True)
                     if delete.errors:
                         delete.log_errors()
 
@@ -493,12 +498,14 @@ class S3Delete(object):
         """
             Archive ("soft-delete") a record
 
-            @param row: the Row to delete
-            @param replaced_by: dict of {replaced_id: replacement_id},
-                                used by record merger to log which record
-                                has replaced which
+            Args:
+                row: the Row to delete
+                replaced_by: dict of {replaced_id: replacement_id},
+                             used by record merger to log which record
+                             has replaced which
 
-            @returns: True for success, False on error
+            Returns:
+                True for success, False on error
         """
 
         table = self.table
@@ -544,9 +551,11 @@ class S3Delete(object):
         """
             Delete a record
 
-            @param row: the Row to delete
+            Args:
+                row: the Row to delete
 
-            @returns: True for success, False on error
+            Returns:
+                True for success, False on error
         """
 
         table = self.table
@@ -574,7 +583,8 @@ class S3Delete(object):
         """
             List of super-keys (instance links) in this resource
 
-            @returns: a list of field names
+            Returns:
+                A list of field names
         """
 
         super_keys = self._super_keys
@@ -610,7 +620,8 @@ class S3Delete(object):
         """
             List of foreign key fields in this resource
 
-            @returns: a list of field names
+            Returns:
+                A list of field names
         """
 
         # Produce a list of foreign key Fields in self.table
@@ -631,7 +642,8 @@ class S3Delete(object):
              A list of foreign keys referencing this resource,
              lazy property
 
-             @returns: a list of Fields
+             Returns:
+                A list of Fields
         """
 
         references = self._references
@@ -649,7 +661,8 @@ class S3Delete(object):
             A list of foreign keys referencing this resource with
             ondelete="RESTRICT", lazy property
 
-            @returns: a list of Fields
+            Returns:
+                A list of Fields
         """
 
         restrictions = self._restrictions
@@ -693,8 +706,9 @@ class S3Delete(object):
         """
             Add an error
 
-            @param record_id: the record ID
-            @param msg: the error message
+            Args:
+                record_id: the record ID
+                msg: the error message
         """
 
         key = (self.tablename, record_id)
@@ -741,9 +755,10 @@ class S3Delete(object):
         """
             Log all errors for a failed master record
 
-            @param master: the master log message
-            @param reference: the prefix for the sub-message
-            @param errors: the errors
+            Args:
+                master: the master log message
+                reference: the prefix for the sub-message
+                errors: the errors
         """
 
         log = current.log.error

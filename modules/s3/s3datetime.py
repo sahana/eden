@@ -79,10 +79,11 @@ class S3DateTime:
         """
             Represent the date according to deployment settings &/or T()
 
-            @param dt: the date (datetime.date or datetime.datetime)
-            @param format: the format (overrides deployment setting)
-            @param utc: the date is given in UTC
-            @param calendar: the calendar to use (defaults to current.calendar)
+            Args:
+                dt: the date (datetime.date or datetime.datetime)
+                format: the format (overrides deployment setting)
+                utc: the date is given in UTC
+                calendar: the calendar to use (defaults to current.calendar)
         """
 
         if not format:
@@ -108,9 +109,10 @@ class S3DateTime:
         """
             Represent the datetime according to deployment settings &/or T()
 
-            @param dt: the datetime
-            @param utc: the datetime is given in UTC
-            @param calendar: the calendar to use (defaults to current.calendar)
+            Args:
+                dt: the datetime
+                utc: the datetime is given in UTC
+                calendar: the calendar to use (defaults to current.calendar)
         """
 
         if format is None:
@@ -136,9 +138,10 @@ class S3DateTime:
         """
             Represent the date according to deployment settings &/or T()
 
-            @param time: the time
-            @param format: the time format (overrides deployment setting)
-            @param utc: the time is given in UTC
+            Args:
+                time: the time
+                format: the time format (overrides deployment setting)
+                utc: the time is given in UTC
         """
 
         settings = current.deployment_settings
@@ -170,9 +173,12 @@ class S3DateTime:
         """
             Convert a date or datetime to local timezone
 
-            @param dt: the date/datetime; if it is tz-naive it is assumed to
-                       be in UTC
-            @returns: a tz-naive datetime in local timezone
+            Args:
+                dt: the date/datetime; if it is tz-naive it is assumed to be in
+                    UTC
+
+            Returns:
+                A tz-naive datetime in local timezone
         """
 
         if not dt:
@@ -211,9 +217,12 @@ class S3DateTime:
         """
             Convert a date or datetime to UTC
 
-            @param dt: the date or datetime; if it is tz-naive it is assumed to
-                       be in local time
-            @returns: tz-naive datetime in UTC
+            Args:
+                dt: the date or datetime; if it is tz-naive it is assumed to
+                    be in local time
+
+            Returns:
+                tz-naive datetime in UTC
         """
 
         if not dt:
@@ -278,10 +287,11 @@ class S3DateTime:
         """
             Convert an UTC offset string into a UTC offset value in seconds
 
-            @param string: the UTC offset in hours as string, valid formats
-                           are: "+HH:MM", "+HHMM", "+HH" (positive sign can
-                           be omitted), can also recognize decimal notation
-                           with "." as mark
+            Args:
+                string: the UTC offset in hours as string, valid formats
+                        are: "+HH:MM", "+HHMM", "+HH" (positive sign can
+                        be omitted), can also recognize decimal notation
+                        with "." as mark
         """
 
         if not string:
@@ -361,7 +371,8 @@ class S3Calendar:
             Convert a Julian day number to a year/month/day tuple
             of this calendar, to be implemented by subclass
 
-            @param jd: the Julian day number
+            Args:
+                jd: the Julian day number
         """
 
         # Gregorian calendar uses default method
@@ -374,9 +385,10 @@ class S3Calendar:
             Convert a year/month/day tuple of this calendar into
             a Julian day number, to be implemented by subclass
 
-            @param year: the year number
-            @param month: the month number
-            @param day: the day-of-month number
+            Args:
+                year: the year number
+                month: the month number
+                day: the day-of-month number
         """
 
         # Gregorian calendar uses default method
@@ -387,7 +399,7 @@ class S3Calendar:
     # -------------------------------------------------------------------------
     @property
     def name(self):
-        """ Get the name of the current """
+        """ Get the name of the current calendar """
 
         name = self._name
         if not name:
@@ -429,11 +441,14 @@ class S3Calendar:
         """
             Parse a datetime string according to this calendar
 
-            @param dtstr: the datetime as string
-            @param dtfmt: the datetime format (strptime), overrides default
-            @param local: whether the default format is local (=deployment
-                          setting) or ISO
-            @return: the datetime (datetime.datetime)
+            Args:
+                dtstr: the datetime as string
+                dtfmt: the datetime format (strptime), overrides default
+                local: whether the default format is local
+                       (deployment_setting) or ISO
+
+            Returns:
+                The datetime (datetime.datetime)
         """
 
         if dtstr is None:
@@ -467,11 +482,14 @@ class S3Calendar:
         """
             Parse a datetime string according to this calendar
 
-            @param dtstr: the datetime as string
-            @param dtfmt: the datetime format (strptime)
-            @param local: whether the default format is local (=deployment
-                          setting) or ISO
-            @return: the datetime (datetime.datetime)
+            Args:
+                dtstr: the datetime as string
+                dtfmt: the datetime format (strptime)
+                local: whether the default format is local
+                       (deployment_setting) or ISO
+
+            Returns:
+                The datetime (datetime.datetime)
         """
 
         if dtstr is None:
@@ -505,8 +523,11 @@ class S3Calendar:
         """
             Format a date according to this calendar
 
-            @param dt: the date (datetime.date or datetime.datetime)
-            @return: the date as string
+            Args:
+                dt: the date (datetime.date or datetime.datetime)
+
+            Returns:
+                The date as string
         """
 
         if dt is None:
@@ -530,8 +551,11 @@ class S3Calendar:
         """
             Format a datetime according to this calendar
 
-            @param dt: the datetime (datetime.datetime)
-            @return: the datetime as string
+            Args:
+                dt: the datetime (datetime.datetime)
+
+            Returns:
+                The datetime as string
         """
 
         if dt is None:
@@ -560,12 +584,10 @@ class S3Calendar:
     # -------------------------------------------------------------------------
     def __init__(self, name=None):
         """
-            Constructor
-
-            @param name: the name of the calendar (see _set_calendar for
-                         supported calendars). If constructed without name,
-                         the L10.calendar deployment setting will be used
-                         instead.
+            Args:
+                name: the name of the calendar (see _set_calendar for
+                      supported calendars). If constructed without name,
+                      the L10.calendar deployment setting will be used instead.
         """
 
         # Supported calendars
@@ -593,7 +615,8 @@ class S3Calendar:
         """
             Set the current calendar
 
-            @param name: the name of the calendar (falls back to CALENDAR)
+            Args:
+                name: the name of the calendar (falls back to CALENDAR)
         """
 
         calendars = self._calendars
@@ -657,12 +680,15 @@ class S3Calendar:
             Get a string representation for a datetime.datetime according
             to this calendar and dtfmt, to be implemented by subclass
 
-            @param dt: the datetime.datetime
-            @param dtfmt: the datetime format (strftime)
+            Args:
+                dt: the datetime.datetime
+                dtfmt: the datetime format (strftime)
 
-            @return: the string representation (str)
+            Returns:
+                The string representation (str)
 
-            @raises TypeError: for invalid argument types
+            Raises:
+                TypeError: for invalid argument types
         """
 
         if self.name == "Gregorian":
@@ -701,8 +727,11 @@ class S3Calendar:
         """
             Convert a time tuple from Gregorian calendar to this calendar
 
-            @param timetuple: time tuple (y, m, d, hh, mm, ss)
-            @return: time tuple (this calendar)
+            Args:
+                timetuple: time tuple (y, m, d, hh, mm, ss)
+
+            Returns:
+                time tuple (this calendar)
         """
 
         if self.name == "Gregorian":
@@ -720,8 +749,11 @@ class S3Calendar:
         """
             Convert a time tuple from this calendar to Gregorian calendar
 
-            @param timetuple: time tuple (y, m, d, hh, mm, ss)
-            @return: time tuple (Gregorian)
+            Args:
+                timetuple: time tuple (y, m, d, hh, mm, ss)
+
+            Returns:
+                time tuple (Gregorian)
         """
 
         if self.name == "Gregorian":
@@ -741,9 +773,10 @@ class S3Calendar:
             Convert a Gregorian date into a Julian day number (matching
             jQuery calendars algorithm)
 
-            @param year: the year number
-            @param month: the month number
-            @param day: the day number
+            Args:
+                year: the year number
+                month: the month number
+                day: the day number
         """
 
         if year < 0:
@@ -766,8 +799,11 @@ class S3Calendar:
             Convert a Julian day number to a Gregorian date (matching
             jQuery calendars algorithm)
 
-            @param jd: the Julian day number
-            @return: tuple (year, month, day)
+            Args:
+                jd: the Julian day number
+
+            Returns:
+                tuple (year, month, day)
         """
 
         z = math.floor(jd + 0.5)
@@ -800,12 +836,13 @@ class S3PersianCalendar(S3Calendar):
     """
         S3Calendar subclass implementing the Solar Hijri calendar
 
-        @note: this calendar is called "Persian" in jQuery calendars despite
-               it actually implements the modern Iranian (=algorithmic Solar
-               Hijri) rather than the traditional Persian (=observation-based
-               Jalali) variant. However, we use the name "Persian" to match
-               the jQuery calendars naming of calendars, in order to avoid
-               confusion about naming differences between these two components.
+        Note:
+            This calendar is called "Persian" in jQuery calendars despite
+            it actually implements the modern Iranian (=algorithmic Solar
+            Hijri) rather than the traditional Persian (=observation-based
+            Jalali) variant. However, we use the name "Persian" to match
+            the jQuery calendars naming of calendars, in order to avoid
+            confusion about naming differences between these two components.
     """
 
     CALENDAR = "Persian"
@@ -836,7 +873,8 @@ class S3PersianCalendar(S3Calendar):
             Convert a Julian day number to a year/month/day tuple
             of this calendar (matching jQuery calendars algorithm)
 
-            @param jd: the Julian day number
+            Args:
+                jd: the Julian day number
         """
 
         jd = math.floor(jd) + 0.5
@@ -874,9 +912,10 @@ class S3PersianCalendar(S3Calendar):
             Convert a year/month/day tuple of this calendar into
             a Julian day number (matching jQuery calendars algorithm)
 
-            @param year: the year number
-            @param month: the month number
-            @param day: the day-of-month number
+            Args:
+                year: the year number
+                month: the month number
+                day: the day-of-month number
         """
 
         if year >= 0:
@@ -903,12 +942,13 @@ class S3AfghanCalendar(S3PersianCalendar):
         the same calendar rules as the "Persian" calendar, but with
         different month names.
 
-        @note: this is using "romanized" Dari month names as translation
-               basis (rather than their actual English translation, which
-               would simply be the names of the signs of Zodiac the sun is
-               passing through in the respective months, e.g. Tawr (Sawr) = Taurus).
-               Transcriptions vary widely between sources, though - as do
-               the Dari and Pashto spellings :/
+        Note:
+            This is using "romanized" Dari month names as translation
+            basis (rather than their actual English translation, which
+            would simply be the names of the signs of Zodiac the sun is
+            passing through in the respective months, e.g. Tawr (Sawr) = Taurus).
+            Transcriptions vary widely between sources, though - as do
+            the Dari and Pashto spellings :/
     """
 
     CALENDAR = "Afghan"
@@ -1112,7 +1152,8 @@ class S3NepaliCalendar(S3Calendar):
             Convert a Julian day number to a year/month/day tuple
             of this calendar (matching jQuery calendars algorithm)
 
-            @param jd: the Julian day number
+            Args:
+                jd: the Julian day number
         """
 
         gyear = cls._jd_to_gregorian(jd)[0]
@@ -1144,9 +1185,10 @@ class S3NepaliCalendar(S3Calendar):
             Convert a year/month/day tuple of this calendar into
             a Julian day number (matching jQuery calendars algorithm)
 
-            @param year: the year number
-            @param month: the month number
-            @param day: the day-of-month number
+            Args:
+                year: the year number
+                month: the month number
+                day: the day-of-month number
         """
 
         cmonth = month
@@ -1205,10 +1247,9 @@ class S3DateTimeParser:
 
     def __init__(self, calendar, dtfmt=None):
         """
-            Constructor
-
-            @param calendar: the calendar
-            @param dtfmt: the date/time format
+            Args:
+                calendar: the calendar
+                dtfmt: the date/time format
         """
 
         # Get the effective calendar
@@ -1226,8 +1267,11 @@ class S3DateTimeParser:
         """
             Parse a date/time string
 
-            @param string: the date/time string
-            @return: a timetuple (y, m, d, hh, mm, ss)
+            Args:
+                string: the date/time string
+
+            Returns:
+                A timetuple (y, m, d, hh, mm, ss)
         """
 
         if not isinstance(string, str):
@@ -1245,7 +1289,8 @@ class S3DateTimeParser:
             Update the date/time format for this parser, and generate
             the corresponding pyparsing grammar
 
-            @param dtfmt: the date/time format
+            Args:
+                dtfmt: the date/time format
         """
 
         if not isinstance(dtfmt, str):
@@ -1308,8 +1353,11 @@ class S3DateTimeParser:
         """
             Validate the parse result and convert it into a time tuple
 
-            @param parse_result: the parse result
-            @return: a timetuple (y, m, d, hh, mm, ss)
+            Args:
+                parse_result: the parse result
+
+            Returns:
+                A timetuple (y, m, d, hh, mm, ss)
         """
 
         calendar = self.calendar
@@ -1383,7 +1431,8 @@ class S3DateTimeParser:
         """
             Generate the general pyparsing rules for this calendar
 
-            @return: the rules dict
+            Returns:
+                The rules dict
 
             rules = {"d": Day of the month as a zero-padded decimal number
                      "b": Month as locale’s abbreviated name
@@ -1398,7 +1447,8 @@ class S3DateTimeParser:
                      "S": Second as a zero-padded decimal number
                      }
 
-            @todo: support day-of-week options (recognize but suppress when parsing)
+            TODO:
+                Support day-of-week options (recognize but suppress when parsing)
         """
 
         import pyparsing as pp
@@ -1499,9 +1549,8 @@ class S3DateTimeFormatter:
 
     def __init__(self, calendar):
         """
-            Constructor
-
-            @param calendar: the calendar
+            Args:
+                calendar: the calendar
         """
 
         # Get the effective calendar
@@ -1514,10 +1563,12 @@ class S3DateTimeFormatter:
         """
             Render a timetuple as string according to the given format
 
-            @param timetuple: the timetuple (y, m, d, hh, mm, ss)
-            @param dtfmt: the date/time format (string)
+            Args:
+                timetuple: the timetuple (y, m, d, hh, mm, ss)
+                dtfmt: the date/time format (string)
 
-            @todo: support day-of-week options
+            TODO:
+                Support day-of-week options
         """
 
         y, m, d, hh, mm, ss = timetuple
@@ -1580,10 +1631,12 @@ def s3_parse_datetime(string, dtfmt=None):
     """
         Parse a date/time string according to the given format.
 
-        @param string: the string
-        @param dtfmt: the string format (defaults to ISOFORMAT)
+        Args:
+            string: the string
+            dtfmt: the string format (defaults to ISOFORMAT)
 
-        @return: a datetime object, or None if the string is invalid
+        Returns:
+            A datetime object, or None if the string is invalid
     """
 
     if not string:
@@ -1602,10 +1655,12 @@ def s3_format_datetime(dt=None, dtfmt=None):
     """
         Format a datetime object according to the given format.
 
-        @param dt: the datetime object, defaults to datetime.datetime.utcnow()
-        @param dtfmt: the string format (defaults to ISOFORMAT)
+        Args:
+            dt: the datetime object, defaults to datetime.datetime.utcnow()
+            dtfmt: the string format (defaults to ISOFORMAT)
 
-        @return: a string
+        Returns:
+            A string
     """
 
     if not dt:
@@ -1621,14 +1676,18 @@ def s3_decode_iso_datetime(dtstr):
     """
         Convert date/time string in ISO-8601 format into a datetime object
 
-        @note: this has "iso" in its name for consistency reasons,
-               but can actually read a variety of formats
+        Args:
+            dtstr: the date/time string
 
-        @param dtstr: the date/time string
+        Returns:
+            A timezone-aware datetime.datetime object
 
-        @returns: a timezone-aware datetime.datetime object
+        Raises:
+            ValueError if the string cannot be parsed
 
-        @raises: ValueError if the string cannot be parsed
+        Note:
+            This has "iso" in its name for consistency reasons,
+            but can actually read a variety of formats
     """
 
     # Default seconds/microseconds=zero
@@ -1654,7 +1713,8 @@ def s3_encode_iso_datetime(dt):
         Convert a datetime object into a ISO-8601 formatted
         string, omitting microseconds
 
-        @param dt: the datetime object
+        Args:
+            dt: the datetime object
     """
 
     if isinstance(dt, (datetime.datetime, datetime.time)):
@@ -1671,7 +1731,8 @@ def s3_utc(dt):
         Get a datetime object for the same date/time as the
         datetime object, but in UTC
 
-        @param dt: the datetime object
+        Args:
+            dt: the datetime object
     """
 
     if dt:
@@ -1760,12 +1821,14 @@ def s3_relative_datetime(dtexpr):
     """
         Return an absolute datetime for a relative date/time expression;
 
-        @param dtexpr: the relative date/time expression,
-                       syntax: "[+|-][numeric][Y|M|D|h|m|s]",
-                       e.g. "+12M" = twelve months from now,
-                       additionally recognizes the string "NOW"
+        Args:
+            dtexpr: the relative date/time expression,
+                    syntax: "[+|-][numeric][Y|M|D|h|m|s]",
+                    e.g. "+12M" = twelve months from now,
+                    additionally recognizes the string "NOW"
 
-        @return: datetime.datetime (UTC), or None if dtexpr is invalid
+        Returns:
+            datetime.datetime (UTC), or None if dtexpr is invalid
     """
 
     if dtexpr:

@@ -97,11 +97,4 @@ s3db.configure("auth_membership",
                              },
                )
 
-# =============================================================================
-# Make available for S3Models
-# - legacy for backwards compatibility w docs & custom modules
-from s3.s3fields import S3ReusableField, s3_comments, s3_meta_fields
-s3.comments = s3_comments
-s3.meta_fields = s3_meta_fields
-
 # END =========================================================================

@@ -5093,7 +5093,7 @@ class cap_AssignArea(S3Method):
                 else:
                     display_length = int(display_length)
             else:
-                display_length = 25
+                display_length = current.deployment_settings.get_ui_datatables_pagelength()
             if display_length:
                 limit = 4 * display_length
             else:
@@ -5163,9 +5163,9 @@ class cap_AssignArea(S3Method):
                     filter_submit_url = r.url(vars=get_vars)
 
                     # Where to retrieve updated filter options from:
-                    filter_ajax_url = URL(f="cap_area",
-                                          args=["filter.options"],
-                                          vars={},
+                    filter_ajax_url = URL(f = "cap_area",
+                                          args = ["filter.options"],
+                                          vars = {},
                                           )
 
                     get_config = aresource.get_config
@@ -5207,7 +5207,7 @@ class cap_AssignArea(S3Method):
                                 filteredrows,
                                 dt_id,
                                 echo,
-                                dt_bulk_actions=dt_bulk_actions,
+                                dt_bulk_actions = dt_bulk_actions,
                                 )
                 response.headers["Content-Type"] = "application/json"
                 return items

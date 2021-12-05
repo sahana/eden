@@ -48,11 +48,14 @@ class S3Exporter(object):
         """
             Export resource as CSV
 
-            @param resource: the resource to export
+            Args:
+                resource: the resource to export
 
-            @note: export does not include components!
+            Note:
+                Export does not include components!
 
-            @todo: implement audit
+            TODO:
+                Implement audit
         """
 
         request = current.request
@@ -80,21 +83,22 @@ class S3Exporter(object):
         """
             Export a resource as JSON
 
-            @param resource: the resource to export from
-            @param start: index of the first record to export
-            @param limit: maximum number of records to export
-            @param fields: list of field selectors for fields to include in
-                           the export (None for all fields)
-            @param orderby: ORDERBY expression
-            @param represent: whether values should be represented
-            @param tooltip: additional tooltip field, either a field selector
-                            or an expression "f(k,v)" where f is a function
-                            name that can be looked up from s3db, and k,v are
-                            field selectors for the row, f will be called with
-                            a list of tuples (k,v) for each row and is expected
-                            to return a dict {k:tooltip} => used by
-                            filterOptionsS3 to extract onhover-tooltips for
-                            Ajax-update of options
+            Args:
+                resource: the resource to export from
+                start: index of the first record to export
+                limit: maximum number of records to export
+                fields: list of field selectors for fields to include in
+                        the export (None for all fields)
+                orderby: ORDERBY expression
+                represent: whether values should be represented
+                tooltip: additional tooltip field, either a field selector
+                         or an expression "f(k,v)" where f is a function
+                         name that can be looked up from s3db, and k,v are
+                         field selectors for the row, f will be called with
+                         a list of tuples (k,v) for each row and is expected
+                         to return a dict {k:tooltip} => used by
+                         filterOptionsS3 to extract onhover-tooltips for
+                         Ajax-update of options
         """
 
         if fields is None:

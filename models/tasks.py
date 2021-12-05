@@ -423,8 +423,7 @@ if has_module("msg"):
             auth.s3_impersonate(user_id)
 
         from s3 import S3Notifications
-        notify = S3Notifications
-        return notify.notify(resource_id)
+        return S3Notifications.notify(resource_id)
 
     tasks["notify_notify"] = notify_notify
 
@@ -446,7 +445,8 @@ if has_module("setup"):
             auth.s3_impersonate(user_id)
 
         # Run the Task & return the result
-        result = s3db.setup_run_playbook(playbook, instance_id, tags, hosts)
+        from s3db.setup import setup_run_playbook
+        result = setup_run_playbook(playbook, instance_id, tags, hosts)
         db.commit()
         return result
 
@@ -460,7 +460,8 @@ if has_module("setup"):
         if user_id:
             auth.s3_impersonate(user_id)
         # Run the Task & return the result
-        result = s3db.setup_monitor_run_task(task_id)
+        from s3db.setup import setup_monitor_run_task
+        result = setup_monitor_run_task(task_id)
         db.commit()
         return result
 
@@ -474,7 +475,8 @@ if has_module("setup"):
         if user_id:
             auth.s3_impersonate(user_id)
         # Run the Task & return the result
-        result = s3db.setup_monitor_check_email_reply(run_id)
+        from s3db.setup import setup_monitor_check_email_reply
+        result = setup_monitor_check_email_reply(run_id)
         db.commit()
         return result
 
@@ -499,7 +501,8 @@ if has_module("stats"):
             auth.s3_impersonate(user_id)
 
         # Run the Task & return the result
-        result = s3db.stats_demographic_update_aggregates(records)
+        from s3db.stats import stats_demographic_update_aggregates
+        result = stats_demographic_update_aggregates(records)
         db.commit()
         return result
 
@@ -529,12 +532,13 @@ if has_module("stats"):
             auth.s3_impersonate(user_id)
 
         # Run the Task & return the result
-        result = s3db.stats_demographic_update_location_aggregate(location_level,
-                                                                  root_location_id,
-                                                                  parameter_id,
-                                                                  start_date,
-                                                                  end_date,
-                                                                  )
+        from s3db.stats import stats_demographic_update_location_aggregate
+        result = stats_demographic_update_location_aggregate(location_level,
+                                                             root_location_id,
+                                                             parameter_id,
+                                                             start_date,
+                                                             end_date,
+                                                             )
         db.commit()
         return result
 
@@ -562,7 +566,8 @@ if has_module("stats"):
                 auth.s3_impersonate(user_id)
 
             # Run the Task & return the result
-            result = s3db.disease_stats_update_aggregates(records, all)
+            from s3db.disease import disease_stats_update_aggregates
+            result = disease_stats_update_aggregates(records, all)
             db.commit()
             return result
 
@@ -590,11 +595,12 @@ if has_module("stats"):
                 auth.s3_impersonate(user_id)
 
             # Run the Task & return the result
-            result = s3db.disease_stats_update_location_aggregates(location_id,
-                                                                   children,
-                                                                   parameter_id,
-                                                                   dates,
-                                                                   )
+            from s3db.disease import disease_stats_update_location_aggregates
+            result = disease_stats_update_location_aggregates(location_id,
+                                                              children,
+                                                              parameter_id,
+                                                              dates,
+                                                              )
             db.commit()
             return result
 
@@ -618,7 +624,8 @@ if has_module("stats"):
                 auth.s3_impersonate(user_id)
 
             # Run the Task & return the result
-            result = s3db.vulnerability_update_aggregates(records)
+            from s3db.vulnerability_update_aggregates import vulnerability_update_aggregates
+            result = vulnerability_update_aggregates(records)
             db.commit()
             return result
 
@@ -648,12 +655,13 @@ if has_module("stats"):
                 auth.s3_impersonate(user_id)
 
             # Run the Task & return the result
-            result = s3db.vulnerability_update_location_aggregate(#location_level,
-                                                                  root_location_id,
-                                                                  parameter_id,
-                                                                  start_date,
-                                                                  end_date,
-                                                                  )
+            from s3db.vulnerability_update_aggregates import vulnerability_update_location_aggregate
+            result = vulnerability_update_location_aggregate(#location_level,
+                                                             root_location_id,
+                                                             parameter_id,
+                                                             start_date,
+                                                             end_date,
+                                                             )
             db.commit()
             return result
 
@@ -688,7 +696,8 @@ if has_module("sync"):
                                action = "check",
                                remote = False,
                                result = sync.log.ERROR,
-                               message = message)
+                               message = message,
+                               )
                 db.commit()
                 return sync.log.ERROR
             sync.set_status(running=True, manual=manual)
@@ -710,9 +719,10 @@ current.s3task = s3task = S3Task()
 
 # -----------------------------------------------------------------------------
 # Reusable field for scheduler task links
-scheduler_task_id = S3ReusableField("scheduler_task_id",
-                                    "reference %s" % S3Task.TASK_TABLENAME,
-                                    ondelete = "CASCADE")
+scheduler_task_id = s3base.S3ReusableField("scheduler_task_id",
+                                           "reference %s" % S3Task.TASK_TABLENAME,
+                                           ondelete = "CASCADE",
+                                           )
 s3.scheduler_task_id = scheduler_task_id
 
 # END =========================================================================

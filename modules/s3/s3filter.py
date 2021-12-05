@@ -93,8 +93,9 @@ class S3FilterWidget:
             Prototype method to render this widget as an instance of
             a web2py HTML helper class, to be implemented by subclasses.
 
-            @param resource: the S3Resource to render with widget for
-            @param values: the values for this widget from the URL query
+            Args:
+                resource: the S3Resource to render with widget for
+                values: the values for this widget from the URL query
         """
 
         raise NotImplementedError
@@ -105,9 +106,12 @@ class S3FilterWidget:
             Prototype method to generate the name for the URL query variable
             for this widget, can be overwritten in subclasses.
 
-            @param resource: the resource
-            @return: the URL query variable name (or list of
-                     variable names if there are multiple operators)
+            Args:
+                resource: the resource
+
+            Returns:
+                The URL query variable name (or list of variable names
+                if there are multiple operators)
         """
 
         opts = self.opts
@@ -139,7 +143,8 @@ class S3FilterWidget:
             Prototype method to construct the hidden element that holds the
             URL query term corresponding to an input element in the widget.
 
-            @param variable: the URL query variable
+            Args:
+                variable: the URL query variable
         """
 
         if type(variable) is list:
@@ -155,17 +160,15 @@ class S3FilterWidget:
     #
     def __init__(self, field=None, **attr):
         """
-            Constructor to configure the widget
+            Args:
+                field: the selector(s) for the field(s) to filter by
+                attr: configuration options for this widget
 
-            @param field: the selector(s) for the field(s) to filter by
-            @param attr: configuration options for this widget
-
-            Common configuration options:
-
-            @keyword label: label for the widget
-            @keyword comment: comment for the widget
-            @keyword hidden: render widget initially hidden
-                             (="advanced" option)
+            Keyword Args:
+                label: label for the widget
+                comment: comment for the widget
+                hidden: render widget initially hidden
+                         (="advanced" option)
 
             - other options see subclasses
         """
@@ -191,10 +194,11 @@ class S3FilterWidget:
         """
             Entry point for the form builder
 
-            @param resource: the S3Resource to render the widget for
-            @param get_vars: the GET vars (URL query vars) to prepopulate
-                             the widget
-            @param alias: the resource alias to use
+            Args:
+                resource: the S3Resource to render the widget for
+                get_vars: the GET vars (URL query vars) to prepopulate
+                          the widget
+                alias: the resource alias to use
         """
 
         self.alias = alias
@@ -278,10 +282,12 @@ class S3FilterWidget:
         """
             Helper method to get the operators from the URL query
 
-            @param get_vars: the GET vars (a dict)
-            @param selector: field selector
+            Args:
+                get_vars: the GET vars (a dict)
+                selector: field selector
 
-            @return: query operator - None, str or list
+            Returns:
+                query operator - None, str or list
         """
 
         variables = ["%s__%s" % (selector, op) for op in cls.alternatives]
@@ -300,10 +306,12 @@ class S3FilterWidget:
         """
             Helper method to prefix an unprefixed field selector
 
-            @param alias: the resource alias to use as prefix
-            @param selector: the field selector
+            Args:
+                alias: the resource alias to use as prefix
+                selector: the field selector
 
-            @return: the prefixed selector
+            Returns:
+                The prefixed selector
         """
 
         alias = self.alias
@@ -330,11 +338,13 @@ class S3FilterWidget:
             Helper method to generate a filter query selector for the
             given field(s) in the given resource.
 
-            @param resource: the S3Resource
-            @param fields: the field selectors (as strings)
+            Args:
+                resource: the S3Resource
+                fields: the field selectors (as strings)
 
-            @return: the field label and the filter query selector, or None
-                     if none of the field selectors could be resolved
+            Returns:
+                The field label and the filter query selector, or None
+                if none of the field selectors could be resolved
         """
 
         prefix = self._prefix
@@ -370,10 +380,12 @@ class S3FilterWidget:
         """
             Helper method to get all values of a URL query variable
 
-            @param get_vars: the GET vars (a dict)
-            @param variable: the name of the query variable
+            Args:
+                get_vars: the GET vars (a dict)
+                variable: the name of the query variable
 
-            @return: a list of values
+            Returns:
+                A list of values
         """
 
         if not variable:
@@ -393,10 +405,12 @@ class S3FilterWidget:
             Construct URL query variable(s) name from a filter query
             selector and the given operator(s)
 
-            @param selector: the selector
-            @param operator: the operator (or tuple/list of operators)
+            Args:
+                selector: the selector
+                operator: the operator (or tuple/list of operators)
 
-            @return: the URL query variable name (or list of variable names)
+            Returns:
+                The URL query variable name (or list of variable names)
         """
 
         if isinstance(operator, (tuple, list)):
@@ -409,14 +423,13 @@ class S3FilterWidget:
 # =============================================================================
 class S3TextFilter(S3FilterWidget):
     """
-        Text filter widget
+        Text Filter Widget
 
-        Configuration options:
-
-        @keyword label: label for the widget
-        @keyword comment: comment for the widget
-        @keyword hidden: render widget initially hidden (="advanced" option)
-        @keyword match_any: match any of the strings
+        Keyword Args:
+            label: label for the widget
+            comment: comment for the widget
+            hidden: render widget initially hidden (="advanced" option)
+            match_any: match any of the strings
     """
 
     _class = "text-filter"
@@ -428,8 +441,9 @@ class S3TextFilter(S3FilterWidget):
         """
             Render this widget as HTML helper object(s)
 
-            @param resource: the resource
-            @param values: the search values from the URL query
+            Args:
+                resource: the resource
+                values: the search values from the URL query
         """
 
         attr = self.attr
@@ -459,11 +473,10 @@ class S3RangeFilter(S3FilterWidget):
     """
         Numerical Range Filter Widget
 
-        Configuration options:
-
-        @keyword label: label for the widget
-        @keyword comment: comment for the widget
-        @keyword hidden: render widget initially hidden (="advanced" option)
+        Keyword Args:
+            label: label for the widget
+            comment: comment for the widget
+            hidden: render widget initially hidden (="advanced" option)
     """
 
     # Overall class
@@ -483,7 +496,8 @@ class S3RangeFilter(S3FilterWidget):
             hidden INPUTs (one per variable) with element IDs of the form
             <id>-<operator>-data (where no operator is translated as "eq").
 
-            @param variables: the variables
+            Args:
+                variables: the variables
         """
 
         if variables is None:
@@ -516,7 +530,8 @@ class S3RangeFilter(S3FilterWidget):
         """
             Method to Ajax-retrieve the current options of this widget
 
-            @param resource: the S3Resource
+            Args:
+                resource: the S3Resource
         """
 
         minimum, maximum = self._options(resource)
@@ -533,7 +548,8 @@ class S3RangeFilter(S3FilterWidget):
             Helper function to retrieve the current options for this
             filter widget
 
-            @param resource: the S3Resource
+            Args:
+                resource: the S3Resource
         """
 
         # Find only values linked to records the user is
@@ -569,8 +585,9 @@ class S3RangeFilter(S3FilterWidget):
         """
             Render this widget as HTML helper object(s)
 
-            @param resource: the resource
-            @param values: the search values from the URL query
+            Args:
+                resource: the resource
+                values: the search values from the URL query
         """
 
         T = current.T
@@ -644,8 +661,9 @@ class S3AgeFilter(S3RangeFilter):
         """
             Render this widget as HTML helper object(s)
 
-            @param resource: the resource
-            @param values: the search values from the URL query
+            Args:
+                resource: the resource
+                values: the search values from the URL query
         """
 
         T = current.T
@@ -727,20 +745,18 @@ class S3DateFilter(S3RangeFilter):
         Date Range Filter Widget
         - use a single field or a pair of fields for start_date/end_date
 
-        Configuration options:
-
-        @keyword label: label for the widget
-        @keyword comment: comment for the widget
-        @keyword hidden: render widget initially hidden (="advanced" option)
-
-        @keyword fieldtype: explicit field type "date" or "datetime" to
-                            use for context or virtual fields
-        @keyword hide_time: don't show time selector
+        Keyword Args:
+            label: label for the widget
+            comment: comment for the widget
+        hidden: render widget initially hidden (="advanced" option)
+        fieldtype: explicit field type "date" or "datetime" to
+                   use for context or virtual fields
+        hide_time: don't show time selector
 
         WIP: Incomplete:
-        @keyword filterby: field to filter records included by
-        @keyword filter_opts: options to filter records included by
-        @keyword negative: To Exclude matching records rather than Including them, provide the selector for the "selector=None"
+            filterby: field to filter records included by
+            filter_opts: options to filter records included by
+            negative: To Exclude matching records rather than Including them, provide the selector for the "selector=None"
     """
 
     _class = "date-filter"
@@ -759,10 +775,11 @@ class S3DateFilter(S3RangeFilter):
             Entry point for the form builder
             - subclassed from S3FilterWidget to handle 'available' selector
 
-            @param resource: the S3Resource to render the widget for
-            @param get_vars: the GET vars (URL query vars) to prepopulate
-                             the widget
-            @param alias: the resource alias to use
+            Args:
+                resource: the S3Resource to render the widget for
+                get_vars: the GET vars (URL query vars) to prepopulate
+                          the widget
+                alias: the resource alias to use
         """
 
         self.alias = alias
@@ -817,7 +834,8 @@ class S3DateFilter(S3RangeFilter):
             hidden INPUTs (one per variable) with element IDs of the form
             <id>-<operator>-data (where no operator is translated as "eq").
 
-            @param variables: the variables
+            Args:
+                variables: the variables
         """
 
         fields = self.field
@@ -854,7 +872,8 @@ class S3DateFilter(S3RangeFilter):
         """
             Method to Ajax-retrieve the current options of this widget
 
-            @param resource: the S3Resource
+            Args:
+                resource: the S3Resource
         """
 
         # Introspective range?
@@ -882,10 +901,12 @@ class S3DateFilter(S3RangeFilter):
             Helper function to retrieve the current options for this
             filter widget
 
-            @param resource: the S3Resource
-            @param as_str: return date as ISO-formatted string not raw DateTime
+            Args:
+                resource: the S3Resource
+                as_str: return date as ISO-formatted string not raw DateTime
 
-            @ToDo: Update for negative
+            TODO:
+                Update for negative
         """
 
         # Find only values linked to records the user is
@@ -998,8 +1019,9 @@ class S3DateFilter(S3RangeFilter):
         """
             Render this widget as HTML helper object(s)
 
-            @param resource: the resource
-            @param values: the search values from the URL query
+            Args:
+                resource: the resource
+                values: the search values from the URL query
         """
 
         attr = self.attr
@@ -1258,11 +1280,10 @@ class S3SliderFilter(S3RangeFilter):
         INPUTs
         Wraps jQueryUI's Range Slider in S3.range_slider in S3.js
 
-        Configuration options:
-
-        @keyword label: label for the widget
-        @keyword comment: comment for the widget
-        @keyword hidden: render widget initially hidden (="advanced" option)
+        Keyword Args:
+            label: label for the widget
+            comment: comment for the widget
+            hidden: render widget initially hidden (="advanced" option)
     """
 
     # -------------------------------------------------------------------------
@@ -1270,7 +1291,8 @@ class S3SliderFilter(S3RangeFilter):
         """
             Method to Ajax-retrieve the current options of this widget
 
-            @param resource: the S3Resource
+            Args:
+                resource: the S3Resource
         """
 
         minimum, maximum = self._options(resource)[:2]
@@ -1287,7 +1309,8 @@ class S3SliderFilter(S3RangeFilter):
             Helper function to retrieve the current options for this
             filter widget
 
-            @param resource: the S3Resource
+            Args:
+                resource: the S3Resource
         """
 
         db = current.db
@@ -1329,8 +1352,9 @@ class S3SliderFilter(S3RangeFilter):
         """
             Render this widget as HTML helper object(s)
 
-            @param resource: the resource
-            @param values: the search values from the URL query
+            Args:
+                resource: the resource
+                values: the search values from the URL query
         """
 
         T = current.T
@@ -1457,30 +1481,27 @@ class S3LocationFilter(S3FilterWidget):
     """
         Hierarchical Location Filter Widget
 
-        NB This will show records linked to all child locations of the Lx
+        Keyword Args:
+            ** Widget appearance:
+            label: label for the widget
+            comment: comment for the widget
+            hidden: render widget initially hidden (="advanced" option)
+            no_opts: text to show if no options available
 
-        Configuration options:
+            ** Options-lookup:
+            levels: list of location hierarchy levels
+            resource: alternative resource to look up options
+            lookup: field in the alternative resource to look up
+            options: fixed set of options (list of gis_location IDs)
 
-        ** Widget appearance:
+            ** Multiselect-dropdowns:
+            search: show search-field to search for options
+            header: show header with bulk-actions
+            selectedList: number of selected items to show on
+                          button before collapsing into number of items
 
-        @keyword label: label for the widget
-        @keyword comment: comment for the widget
-        @keyword hidden: render widget initially hidden (="advanced" option)
-        @keyword no_opts: text to show if no options available
-
-        ** Options-lookup:
-
-        @keyword levels: list of location hierarchy levels
-        @keyword resource: alternative resource to look up options
-        @keyword lookup: field in the alternative resource to look up
-        @keyword options: fixed set of options (list of gis_location IDs)
-
-        ** Multiselect-dropdowns:
-
-        @keyword search: show search-field to search for options
-        @keyword header: show header with bulk-actions
-        @keyword selectedList: number of selected items to show on
-                               button before collapsing into number of items
+        Note:
+            This will show records linked to all child locations of the Lx
     """
 
     _class = "location-filter"
@@ -1492,8 +1513,9 @@ class S3LocationFilter(S3FilterWidget):
         """
             Constructor to configure the widget
 
-            @param field: the selector(s) for the field(s) to filter by
-            @param attr: configuration options for this widget
+            Args:
+                field: the selector(s) for the field(s) to filter by
+                attr: configuration options for this widget
         """
 
         if not field:
@@ -1516,8 +1538,9 @@ class S3LocationFilter(S3FilterWidget):
         """
             Render this widget as HTML helper object(s)
 
-            @param resource: the resource
-            @param values: the search values from the URL query
+            Args:
+                resource: the resource
+                values: the search values from the URL query
         """
 
         attr = self._attr(resource)
@@ -1654,7 +1677,8 @@ class S3LocationFilter(S3FilterWidget):
             Construct the hidden element that holds the
             URL query term corresponding to an input element in the widget.
 
-            @param variable: the URL query variable
+            Args:
+                variable: the URL query variable
         """
 
         output = []
@@ -1689,7 +1713,14 @@ class S3LocationFilter(S3FilterWidget):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def __options(row, levels, inject_hierarchy, hierarchy, _level, translate, name_l10n):
+    def __options(row,
+                  levels,
+                  inject_hierarchy,
+                  hierarchy,
+                  _level,
+                  translate,
+                  name_l10n,
+                  ):
 
         if inject_hierarchy:
             parent = None
@@ -1751,28 +1782,36 @@ class S3LocationFilter(S3FilterWidget):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def get_lx_ancestors(levels, resource, selector=None, location_ids=None, path=False):
+    def get_lx_ancestors(levels,
+                         resource,
+                         selector = None,
+                         location_ids = None,
+                         path = False,
+                         ):
         """
             Look up the immediate Lx ancestors for all locations referenced
             by selector
 
-            @param levels: the relevant Lx levels, tuple of "L1", "L2" etc
-            @param resource: the master resource
-            @param selector: the selector for the location reference
-            @param location_ids: use these location_ids rather than looking them
-                                 up from the resource
-            @param path: include the Lx path in the result rows, to lookup
-                         local names for options (which is done via IDs in
-                         the path)
+            Args:
+                levels: the relevant Lx levels, tuple of "L1", "L2" etc
+                resource: the master resource
+                selector: the selector for the location reference
+                location_ids: use these location_ids rather than looking them
+                              up from the resource
+                path: include the Lx path in the result rows, to lookup
+                      local names for options (which is done via IDs in
+                      the path)
 
-            NB: path=True potentially requires additional iterations in order
+            Returns:
+                gis_location Rows, or empty list
+
+            Note:
+                path=True potentially requires additional iterations in order
                 to reduce the paths to only relevant Lx levels (so that fewer
                 local names would be extracted) - which though limits the
                 performance gain if there actually are only few or no translations.
                 If that becomes a problem somewhere, we can make the iteration
                 mode controllable by a separate parameter.
-
-            @returns: gis_location Rows, or empty list
         """
 
         db = current.db
@@ -2163,11 +2202,13 @@ class S3LocationFilter(S3FilterWidget):
             Helper method to generate a filter query selector for the
             given field(s) in the given resource.
 
-            @param resource: the S3Resource
-            @param fields: the field selectors (as strings)
+            Args:
+                resource: the S3Resource
+                fields: the field selectors (as strings)
 
-            @return: the field label and the filter query selector, or None if none of the
-                     field selectors could be resolved
+            Returns:
+                The field label and the filter query selector, or None if none of the
+                field selectors could be resolved
         """
 
         prefix = self._prefix
@@ -2206,10 +2247,12 @@ class S3LocationFilter(S3FilterWidget):
             Construct URL query variable(s) name from a filter query
             selector and the given operator(s)
 
-            @param selector: the selector
-            @param operator: the operator (or tuple/list of operators)
+            Args:
+                selector: the selector
+                operator: the operator (or tuple/list of operators)
 
-            @return: the URL query variable name (or list of variable names)
+            Returns:
+                The URL query variable name (or list of variable names)
         """
 
         selectors = selector.split("|")
@@ -2221,11 +2264,10 @@ class S3MapFilter(S3FilterWidget):
         Map filter widget
          Normally configured for "~.location_id$the_geom"
 
-        Configuration options:
-
-        @keyword label: label for the widget
-        @keyword comment: comment for the widget
-        @keyword hidden: render widget initially hidden (="advanced" option)
+        Keyword Args:
+            label: label for the widget
+            comment: comment for the widget
+            hidden: render widget initially hidden (="advanced" option)
     """
 
     _class = "map-filter"
@@ -2329,51 +2371,44 @@ class S3OptionsFilter(S3FilterWidget):
     """
         Options filter widget
 
-        Configuration options:
+        Keyword Args:
+            ** Widget appearance:
+            label: label for the widget
+            comment: comment for the widget
+            hidden: render widget initially hidden (="advanced" option)
+            widget: widget to use:
+                    "select", "multiselect" (default), or "groupedopts"
+            no_opts: text to show if no options available
 
-        ** Widget appearance:
+            ** Options-lookup:
+            resource: alternative resource to look up options
+            lookup: field in the alternative resource to look up
+            options: fixed set of options (of {value: label} or
+                     a callable that returns one)
 
-        @keyword label: label for the widget
-        @keyword comment: comment for the widget
-        @keyword hidden: render widget initially hidden (="advanced" option)
-        @keyword widget: widget to use:
-                         "select", "multiselect" (default), or "groupedopts"
-        @keyword no_opts: text to show if no options available
+            ** Options-representation:
+            represent: custom represent for looked-up options
+                       (overrides field representation method)
+            translate: translate the option labels in the fixed set
+                       (looked-up option sets will use the
+                        field representation method instead)
+            none: label for explicit None-option in many-to-many fields
 
-        ** Options-lookup:
+            ** multiselect-specific options:
+            search: show search-field to search for options
+            header: show header with bulk-actions
+            selectedList: number of selected items to show on
+                          button before collapsing into number of items
 
-        @keyword resource: alternative resource to look up options
-        @keyword lookup: field in the alternative resource to look up
-        @keyword options: fixed set of options (of {value: label} or
-                          a callable that returns one)
+            ** groupedopts-specific options:
+            cols: number of columns of checkboxes
+            size: maximum size of multi-letter options groups
+            help_field: field in the referenced table to display on
+                        hovering over a foreign key option
 
-        ** Options-representation:
-
-        @keyword represent: custom represent for looked-up options
-                            (overrides field representation method)
-        @keyword translate: translate the option labels in the fixed set
-                            (looked-up option sets will use the
-                            field representation method instead)
-        @keyword none: label for explicit None-option in many-to-many fields
-
-        ** multiselect-specific options:
-
-        @keyword search: show search-field to search for options
-        @keyword header: show header with bulk-actions
-        @keyword selectedList: number of selected items to show on
-                               button before collapsing into number of items
-
-        ** groupedopts-specific options:
-
-        @keyword cols: number of columns of checkboxes
-        @keyword size: maximum size of multi-letter options groups
-        @keyword help_field: field in the referenced table to display on
-                             hovering over a foreign key option
-
-        ** special purpose / custom filters:
-
-        @keyword anyall: use user-selectable any/all alternatives even
-                         if field is not a list-type
+            ** special purpose / custom filters:
+            anyall: use user-selectable any/all alternatives even
+                    if field is not a list-type
     """
 
     _class = "options-filter"
@@ -2387,8 +2422,9 @@ class S3OptionsFilter(S3FilterWidget):
         """
             Render this widget as HTML helper object(s)
 
-            @param resource: the resource
-            @param values: the search values from the URL query
+            Args:
+                resource: the resource
+                values: the search values from the URL query
         """
 
         attr = self._attr(resource)
@@ -2511,7 +2547,8 @@ class S3OptionsFilter(S3FilterWidget):
         """
             Method to Ajax-retrieve the current options of this widget
 
-            @param resource: the S3Resource
+            Args:
+                resource: the S3Resource
         """
 
         opts = self.opts
@@ -2549,7 +2586,8 @@ class S3OptionsFilter(S3FilterWidget):
             Helper function to retrieve the current options for this
             filter widget
 
-            @param resource: the S3Resource
+            Args:
+                resource: the S3Resource
         """
 
         T = current.T
@@ -2860,10 +2898,12 @@ class S3OptionsFilter(S3FilterWidget):
         """
             Helper method to get all values of a URL query variable
 
-            @param get_vars: the GET vars (a dict)
-            @param variable: the name of the query variable
+            Args:
+                get_vars: the GET vars (a dict)
+                variable: the name of the query variable
 
-            @return: a list of values
+            Returns:
+                A list of values
         """
 
         if not variable:
@@ -2885,15 +2925,14 @@ class S3HierarchyFilter(S3FilterWidget):
     """
         Filter widget for hierarchical types
 
-        Configuration Options (see also: S3HierarchyWidget):
-
-        @keyword lookup: name of the lookup table
-        @keyword represent: representation method for the key
-        @keyword multiple: allow selection of multiple options
-        @keyword leafonly: only leaf nodes can be selected
-        @keyword cascade: automatically select child nodes when
-                          selecting a parent node
-        @keyword bulk_select: provide an option to select/deselect all nodes
+        Keyword Args (see also: S3HierarchyWidget):
+            lookup: name of the lookup table
+            represent: representation method for the key
+            multiple: allow selection of multiple options
+            leafonly: only leaf nodes can be selected
+            cascade: automatically select child nodes when
+                     selecting a parent node
+            bulk_select: provide an option to select/deselect all nodes
     """
 
     _class = "hierarchy-filter"
@@ -2905,8 +2944,9 @@ class S3HierarchyFilter(S3FilterWidget):
         """
             Render this widget as HTML helper object(s)
 
-            @param resource: the resource
-            @param values: the search values from the URL query
+            Args:
+                resource: the resource
+                values: the search values from the URL query
         """
 
         # Currently selected values
@@ -2962,9 +3002,12 @@ class S3HierarchyFilter(S3FilterWidget):
             Generate the name for the URL query variable for this
             widget, detect alternative __typeof queries.
 
-            @param resource: the resource
-            @return: the URL query variable name (or list of
-                     variable names if there are multiple operators)
+            Args:
+                resource: the resource
+
+            Returns:
+                The URL query variable name (or list of
+                variable names if there are multiple operators)
         """
 
         label, self.selector = self._selector(resource, self.field)
@@ -3030,8 +3073,9 @@ class S3NotEmptyFilter(S3FilterWidget):
         """
             Render this widget as HTML helper object(s)
 
-            @param resource: the resource
-            @param values: the search values from the URL query
+            Args:
+                resource: the resource
+                values: the search values from the URL query
         """
 
         attr = self.attr
@@ -3063,8 +3107,9 @@ class S3EmptyFilter(S3FilterWidget):
         """
             Render this widget as HTML helper object(s)
 
-            @param resource: the resource
-            @param values: the search values from the URL query
+            Args:
+                resource: the resource
+                values: the search values from the URL query
         """
 
         attr = self.attr
@@ -3085,10 +3130,9 @@ class S3FilterForm:
 
     def __init__(self, widgets, **attr):
         """
-            Constructor
-
-            @param widgets: the widgets (as list)
-            @param attr: HTML attributes for this form
+            Args:
+                widgets: the widgets (as list)
+                attr: HTML attributes for this form
         """
 
         self.widgets = widgets
@@ -3108,11 +3152,12 @@ class S3FilterForm:
         """
             Render this filter form as HTML form.
 
-            @param resource: the S3Resource
-            @param get_vars: the request GET vars (URL query dict)
-            @param target: the HTML element ID of the target object for
-                           this filter form (e.g. a datatable)
-            @param alias: the resource alias to use in widgets
+            Args:
+                resource: the S3Resource
+                get_vars: the request GET vars (URL query dict)
+                target: the HTML element ID of the target object for
+                        this filter form (e.g. a datatable)
+                alias: the resource alias to use in widgets
         """
 
         attr = self.attr
@@ -3244,9 +3289,10 @@ class S3FilterForm:
             Render the filter widgets without FORM wrapper, e.g. to
             embed them as fieldset in another form.
 
-            @param resource: the S3Resource
-            @param get_vars: the request GET vars (URL query dict)
-            @param alias: the resource alias to use in widgets
+            Args:
+                resource: the S3Resource
+                get_vars: the request GET vars (URL query dict)
+                alias: the resource alias to use in widgets
         """
 
         formstyle = self.opts.get("formstyle", None)
@@ -3282,8 +3328,9 @@ class S3FilterForm:
             Render optional additional filter form controls: advanced
             options toggle, clear filters.
 
-            @param resource: the resource
-            @param filter_manager: the filter manager widget
+            Args:
+                resource: the resource
+                filter_manager: the filter manager widget
         """
 
         T = current.T
@@ -3351,12 +3398,14 @@ class S3FilterForm:
         """
             Render the filter widgets
 
-            @param resource: the S3Resource
-            @param get_vars: the request GET vars (URL query dict)
-            @param alias: the resource alias to use in widgets
-            @param formstyle: the formstyle to use
+            Args:
+                resource: the S3Resource
+                get_vars: the request GET vars (URL query dict)
+                alias: the resource alias to use in widgets
+                formstyle: the formstyle to use
 
-            @return: a list of form rows
+            Returns:
+                A list of form rows
         """
 
         rows = []
@@ -3411,8 +3460,11 @@ class S3FilterForm:
         """
             Render a filter manager widget
 
-            @param resource: the resource
-            @return: the widget
+            Args:
+                resource: the resource
+
+            Returns:
+                The widget
         """
 
         SELECT_FILTER = current.T("Saved Filters")
@@ -3521,8 +3573,9 @@ class S3FilterForm:
         """
             Render this filter form as JSON (for Ajax requests)
 
-            @param resource: the S3Resource
-            @param get_vars: the request GET vars (URL query dict)
+            Args:
+                resource: the S3Resource
+                get_vars: the request GET vars (URL query dict)
         """
 
         raise NotImplementedError
@@ -3536,10 +3589,12 @@ class S3FilterForm:
             the view elements get processed; can be overridden in request
             URL with ?default_filters=0
 
-            @param request: the request
-            @param resource: the resource
+            Args:
+                request: the request
+                resource: the resource
 
-            @return: dict with default filters (URL vars)
+            Returns:
+                dict with default filters (URL vars)
         """
 
         default_filters = {}
@@ -3663,8 +3718,9 @@ class S3Filter(S3Method):
         """
             Entry point for REST interface
 
-            @param r: the S3Request
-            @param attr: additional controller parameters
+            Args:
+                r: the S3Request
+                attr: additional controller parameters
         """
 
         representation = r.representation
@@ -3703,8 +3759,9 @@ class S3Filter(S3Method):
 
             GET filter.html
 
-            @param r: the S3Request
-            @param attr: additional controller parameters
+            Args:
+                r: the S3Request
+                attr: additional controller parameters
         """
 
         r.error(501, current.ERROR.NOT_IMPLEMENTED)
@@ -3721,8 +3778,9 @@ class S3Filter(S3Method):
 
             GET filter.options
 
-            @param r: the S3Request
-            @param attr: additional controller parameters (ignored currently)
+            Args:
+                r: the S3Request
+                attr: additional controller parameters (ignored currently)
         """
 
         resource = self.resource
@@ -3751,8 +3809,9 @@ class S3Filter(S3Method):
         """
             Delete a filter, responds to POST filter.json?delete=
 
-            @param r: the S3Request
-            @param attr: additional controller parameters
+            Args:
+                r: the S3Request
+                attr: additional controller parameters
         """
 
         # Authorization, get pe_id
@@ -3804,8 +3863,9 @@ class S3Filter(S3Method):
         """
             Save a filter, responds to POST filter.json
 
-            @param r: the S3Request
-            @param attr: additional controller parameters
+            Args:
+                r: the S3Request
+                attr: additional controller parameters
         """
 
         # Authorization, get pe_id
@@ -3906,8 +3966,9 @@ class S3Filter(S3Method):
 
             GET filter.json or GET filter.json?load=<id>
 
-            @param r: the S3Request
-            @param attr: additional controller parameters
+            Args:
+                r: the S3Request
+                attr: additional controller parameters
         """
 
         db = current.db
@@ -3970,10 +4031,9 @@ class S3FilterString:
 
     def __init__(self, resource, query):
         """
-            Constructor
-
-            @param query: the URL query (list of key-value pairs or a
-                          string with such a list in JSON)
+            Args:
+                query: the URL query (list of key-value pairs or a
+                       string with such a list in JSON)
         """
 
         if type(query) is not list:
@@ -4050,9 +4110,10 @@ class S3FilterString:
             Recursively render a human-readable representation of a
             S3ResourceQuery.
 
-            @param resource: the S3Resource
-            @param query: the S3ResourceQuery
-            @param invert: invert the query
+            Args:
+                resource: the S3Resource
+                query: the S3ResourceQuery
+                invert: invert the query
         """
 
         T = current.T
@@ -4159,8 +4220,9 @@ class S3FilterString:
             Convert a filter value according to the field type
             before representation
 
-            @param rfield: the S3ResourceField
-            @param value: the value
+            Args:
+                rfield: the S3ResourceField
+                value: the value
         """
 
         if value is None:
@@ -4211,10 +4273,11 @@ class S3FilterString:
         """
             Translate the filter query into human-readable language
 
-            @param query: the S3ResourceQuery
-            @param rfield: the S3ResourceField the query refers to
-            @param values: the filter values
-            @param invert: invert the operation
+            Args:
+                query: the S3ResourceQuery
+                rfield: the S3ResourceField the query refers to
+                values: the filter values
+                invert: invert the operation
         """
 
         T = current.T
@@ -4291,20 +4354,22 @@ def s3_get_filter_opts(tablename,
         of options is significantly smaller than the number of records
         to iterate through
 
-        @note: unlike the built-in reverse lookup in S3OptionsFilter, this
-               function does *not* check whether the options are actually
-               in use - so it can be used to enforce filter options to be
-               shown even if there are no records matching them.
+        Args:
+            tablename: the name of the lookup table
+            fieldname: the name of the field to represent options with
+            location_filter: whether to filter the values by location
+            org_filter: whether to filter the values by root_org
+            key: the option key field (if not "id", e.g. a super key)
+            none: whether to include an option for None
+            orderby: orderby-expression as alternative to alpha-sorting
+                     of options in widget (=> set widget sort=False)
+            translate: whether to translate the values
 
-        @param tablename: the name of the lookup table
-        @param fieldname: the name of the field to represent options with
-        @param location_filter: whether to filter the values by location
-        @param org_filter: whether to filter the values by root_org
-        @param key: the option key field (if not "id", e.g. a super key)
-        @param none: whether to include an option for None
-        @param orderby: orderby-expression as alternative to alpha-sorting
-                        of options in widget (=> set widget sort=False)
-        @param translate: whether to translate the values
+        Note:
+            Unlike the built-in reverse lookup in S3OptionsFilter, this
+            function does *not* check whether the options are actually
+            in use - so it can be used to enforce filter options to be
+            shown even if there are no records matching them.
     """
 
     auth = current.auth
@@ -4352,11 +4417,12 @@ def s3_set_default_filter(selector, value, tablename=None):
     """
         Set a default filter for selector.
 
-        @param selector: the field selector
-        @param value: the value, can be a dict {operator: value},
-                      a list of values, or a single value, or a
-                      callable that returns any of these
-        @param tablename: the tablename
+        Args:
+            selector: the field selector
+            value: the value, can be a dict {operator: value},
+                   a list of values, or a single value, or a
+                   callable that returns any of these
+            tablename: the tablename
     """
 
     s3 = current.response.s3

@@ -63,7 +63,7 @@ from gluon.html import *
 from .s3crud import S3CRUD
 from .s3datetime import s3_decode_iso_datetime
 from .s3forms import S3SQLDefaultForm
-from .s3utils import s3_str
+from .s3utils import get_crud_string, s3_str
 from .s3validators import IS_IN_SET, IS_ONE_OF
 from .s3widgets import S3PentityAutocompleteWidget
 
@@ -2799,11 +2799,11 @@ class S3Compose(S3CRUD):
 
         # Complete the page
         if r.representation == "html":
-            title = self.crud_string(self.tablename, "title_compose")
+            title = get_crud_string(self.tablename, "title_compose")
             if not title:
                 title = T("Send Message")
 
-            # subtitle = self.crud_string(self.tablename, "subtitle_compose")
+            # subtitle = get_crud_string(self.tablename, "subtitle_compose")
             # if not subtitle:
                 # subtitle = ""
 
@@ -2900,17 +2900,18 @@ class S3Compose(S3CRUD):
         mtable.inbound.writable = False
 
         resource = self.resource
+        get_config = resource.get_config
 
         recipient_type = self.recipient_type # from msg.compose()
         if not recipient_type and resource:
             # See if we have defined a custom recipient type for this table
             # pr_person or pr_group
-            recipient_type = self._config("msg_recipient_type", None)
+            recipient_type = get_config("msg_recipient_type", None)
 
         contact_method = self.contact_method # from msg.compose()
         if not contact_method and resource:
             # See if we have defined a custom default contact method for this table
-            contact_method = self._config("msg_contact_method", "EMAIL")
+            contact_method = get_config("msg_contact_method", "EMAIL")
 
         otable.contact_method.default = contact_method
 
@@ -2962,7 +2963,8 @@ class S3Compose(S3CRUD):
 
             if len(recipients) == 1:
                 recipient = recipients[0]
-                represent = s3db.pr_PersonEntityRepresent(show_label = False)(recipient)
+                from s3db.pr import pr_PersonEntityRepresent
+                represent = pr_PersonEntityRepresent(show_label = False)(recipient)
                 # Restrict message options to those available for the entity
                 petable = s3db.pr_pentity
                 entity_type = db(petable.pe_id == recipient).select(petable.instance_type,
@@ -3041,17 +3043,20 @@ class S3Compose(S3CRUD):
                           resource = s3resource("msg_message"),
                           onvalidation = self._compose_onvalidation,
                           message = "Message Sent",
-                          format = "html")
+                          format = "html",
+                          )
 
         outboxform = sqlform(request = request,
                              resource = s3resource("msg_outbox"),
                              message = "Message Sent",
-                             format = "html")
+                             format = "html",
+                             )
 
         mailform = sqlform(request = request,
                            resource = s3resource("msg_email"),
                            message = "Message Sent",
-                           format = "html")
+                           format = "html",
+                           )
 
         # Shortcuts
         lcustom = logform.custom

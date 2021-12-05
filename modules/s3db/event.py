@@ -5889,7 +5889,7 @@ class event_EventAssignMethod(S3Method):
                 else:
                     display_length = int(display_length)
             else:
-                display_length = 25
+                display_length = current.deployment_settings.get_ui_datatables_pagelength()
             if display_length:
                 limit = 4 * display_length
             else:
@@ -6093,7 +6093,7 @@ class event_IncidentAssignMethod(S3Method):
         if not authorised:
             r.unauthorised()
 
-        #settings = current.deployment_settings
+        settings = current.deployment_settings
 
         T = current.T
         db = current.db
@@ -6291,7 +6291,7 @@ class event_IncidentAssignMethod(S3Method):
                 else:
                     display_length = int(display_length)
             else:
-                display_length = 25
+                display_length = settings.get_ui_datatables_pagelength()
             if display_length:
                 limit = 4 * display_length
             else:
@@ -6401,7 +6401,7 @@ class event_IncidentAssignMethod(S3Method):
 
                 response.view = "list_filter.html"
 
-                if current.deployment_settings.get_incident_label(): # == "Ticket"
+                if settings.get_incident_label(): # == "Ticket"
                     title = T("Assign to Ticket")
                 else:
                     title = T("Assign to Incident")
