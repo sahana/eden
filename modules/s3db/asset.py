@@ -890,7 +890,7 @@ $.filterOptionsS3({
 #        # ---------------------------------------------------------------------
 #        # Pass names back to global scope (s3.*)
 #        #
-#        return {}
+#        return None
 
 # =============================================================================
 #class AssetTeamModel(S3Model):
@@ -919,7 +919,7 @@ $.filterOptionsS3({
 #        # ---------------------------------------------------------------------
 #        # Pass names back to global scope (s3.*)
 #        #
-#        return {}
+#        return None
 
 # =============================================================================
 class AssetTelephoneModel(S3Model):
@@ -984,7 +984,7 @@ class AssetTelephoneModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 def asset_get_current_log(asset_id):

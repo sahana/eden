@@ -449,7 +449,7 @@ class HospitalActivityReportModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3db
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -580,7 +580,7 @@ class HospitalBedsModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3db
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -779,7 +779,7 @@ class HospitalCholeraModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3db
         #
-        return {}
+        return None
 
 # =============================================================================
 class HospitalServicesModel(S3Model):
@@ -919,7 +919,7 @@ class HospitalServicesModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3db
         #
-        return {}
+        return None
 
 # =============================================================================
 class HospitalStatusModel(S3Model):
@@ -1150,7 +1150,7 @@ class HospitalStatusModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3db
         #
-        return {}
+        return None
 
 # =============================================================================
 class MedicalContactsModel(S3Model):
@@ -1381,7 +1381,7 @@ class PharmacyModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3db
         #
-        return {}
+        return None
 
 # =============================================================================
 def med_hospital_rheader(r, tabs=None):

@@ -1186,7 +1186,7 @@ class OrganisationCapacityModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class OrganisationGroupModel(S3Model):
@@ -1521,7 +1521,7 @@ class OrganisationGroupPersonModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class OrganisationGroupPersonGroupModel(S3Model):
@@ -1558,7 +1558,7 @@ class OrganisationGroupPersonGroupModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1641,7 +1641,7 @@ class OrganisationLocationModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class OrganisationNameModel(S3Model):
@@ -1683,7 +1683,7 @@ class OrganisationNameModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class OrganisationOrganisationModel(S3Model):
@@ -1732,7 +1732,7 @@ class OrganisationOrganisationModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1934,7 +1934,7 @@ class OrganisationResourceModel(S3Model):
         #settings = current.deployment_settings
         if not current.deployment_settings.has_module("stats"):
             current.log.warning("Organisation Resource Model needs Stats module enabling")
-            return {}
+            return None
 
         T = current.T
         #auth = current.auth
@@ -2079,7 +2079,7 @@ class OrganisationResourceModel(S3Model):
                   )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class OrganisationSectorModel(S3Model):
@@ -2946,7 +2946,7 @@ class OrganisationTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class OrganisationTeamModel(S3Model):
@@ -2981,7 +2981,7 @@ class OrganisationTeamModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3231,7 +3231,7 @@ class OrganisationTypeTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class OrganisationUserModel(S3Model):
@@ -3256,7 +3256,7 @@ class OrganisationUserModel(S3Model):
                           )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class SiteModel(S3Model):
@@ -4062,7 +4062,7 @@ class SiteEventModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class SiteGroupModel(S3Model):
@@ -4088,7 +4088,7 @@ class SiteGroupModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class SiteLayoutModel(S3Model):
@@ -4314,7 +4314,7 @@ class SiteLocationModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class SiteNameModel(S3Model):
@@ -4352,7 +4352,7 @@ class SiteNameModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class SiteShiftModel(S3Model):
@@ -4396,7 +4396,7 @@ class SiteShiftModel(S3Model):
         #    )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class SiteTagModel(S3Model):
@@ -4444,7 +4444,7 @@ class SiteTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class FacilityModel(S3Model):
@@ -5480,7 +5480,7 @@ class OfficeTypeTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 def org_organisation_address(row):

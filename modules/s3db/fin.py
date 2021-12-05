@@ -241,7 +241,7 @@ class FinBankModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3db
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     #@staticmethod
@@ -2928,7 +2928,7 @@ class FinSubscriptionModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod

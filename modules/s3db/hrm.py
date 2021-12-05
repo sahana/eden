@@ -1443,7 +1443,7 @@ class HRSiteModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1659,7 +1659,7 @@ class HRSalaryModel(S3Model):
         #
         # @todo: implement
 
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1811,7 +1811,7 @@ class HRInsuranceModel(S3Model):
                                                  ),
                        )
 
-        return {}
+        return None
 
 # =============================================================================
 class HRContractModel(S3Model):
@@ -1862,7 +1862,7 @@ class HRContractModel(S3Model):
                        deduplicate = S3Duplicate(primary = ("human_resource_id",)),
                        )
 
-        return {}
+        return None
 
 # =============================================================================
 class HRJobModel(S3Model):
@@ -4336,7 +4336,7 @@ class HRAppraisalModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4574,7 +4574,7 @@ class HRExperienceModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class HRAwardModel(S3Model):
@@ -4651,7 +4651,7 @@ class HRAwardModel(S3Model):
             )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class HRDisciplinaryActionModel(S3Model):
@@ -4714,7 +4714,7 @@ class HRDisciplinaryActionModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class HRTagModel(S3Model):
@@ -4755,7 +4755,7 @@ class HRTagModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class HRProgrammeModel(S3Model):

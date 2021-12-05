@@ -121,7 +121,7 @@ class SyncConfigModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3.*
         #
-        return {}
+        return None
 
 # =============================================================================
 class SyncStatusModel(S3Model):
@@ -156,7 +156,7 @@ class SyncStatusModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3.*
         #
-        return {}
+        return None
 
 # =============================================================================
 class SyncRepositoryModel(S3Model):
@@ -918,7 +918,7 @@ class SyncLogModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3.*
         #
-        return {}
+        return None
 
 # =============================================================================
 class SyncTaskModel(S3Model):
@@ -1216,7 +1216,7 @@ class SyncTaskModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3.*
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1355,7 +1355,7 @@ class SyncScheduleModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3.*
         #
-        return {}
+        return None
 
 # =============================================================================
 def sync_rheader(r, tabs=None):

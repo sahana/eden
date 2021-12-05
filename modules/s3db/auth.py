@@ -290,7 +290,7 @@ class AuthConsentModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -445,7 +445,7 @@ class AuthDomainApproverModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class AuthMasterKeyModel(S3Model):
@@ -535,7 +535,7 @@ class AuthUserNotificationModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3.*
         #
-        return {}
+        return None
 
 # =============================================================================
 class AuthUserTempModel(S3Model):
@@ -576,7 +576,7 @@ class AuthUserTempModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class auth_Consent(object):

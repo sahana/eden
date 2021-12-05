@@ -1415,7 +1415,7 @@ $.filterOptionsS3({
             Return safe defaults in case the model has been deactivated.
         """
 
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2483,7 +2483,7 @@ class CAPResourceModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2492,7 +2492,7 @@ class CAPResourceModel(S3Model):
             Return safe defaults in case the model has been deactivated.
         """
 
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3758,7 +3758,7 @@ class CAPHistoryModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3767,7 +3767,7 @@ class CAPHistoryModel(S3Model):
             Return safe defaults in case the model has been deactivated.
         """
 
-        return {}
+        return None
 
 # =============================================================================
 class CAPAlertingAuthorityModel(S3Model):
@@ -3929,7 +3929,7 @@ class CAPAlertingAuthorityModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3938,7 +3938,7 @@ class CAPAlertingAuthorityModel(S3Model):
             Return safe defaults in case the model has been deactivated.
         """
 
-        return {}
+        return None
 
 # =============================================================================
 class CAPMessageModel(S3Model):
@@ -3965,7 +3965,7 @@ class CAPMessageModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3974,7 +3974,7 @@ class CAPMessageModel(S3Model):
             Return safe defaults in case the model has been deactivated.
         """
 
-        return {}
+        return None
 
 # =============================================================================
 def list_string_represent(value, fmt=lambda v: v):

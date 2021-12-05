@@ -1314,7 +1314,7 @@ class LocationNameModel(S3Model):
                   )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class LocationTagModel(S3Model):
@@ -1369,7 +1369,7 @@ class LocationTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class LocationGroupModel(S3Model):
@@ -1425,7 +1425,7 @@ class LocationGroupModel(S3Model):
                      *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class LocationHierarchyModel(S3Model):
@@ -1517,7 +1517,7 @@ class LocationHierarchyModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2477,7 +2477,7 @@ class GISMenuModel(S3Model):
             # )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # ==============================================================================
 class LayerEntityModel(S3Model):
@@ -2782,7 +2782,7 @@ class LayerEntityModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class LayerFeatureModel(S3Model):
@@ -2963,7 +2963,7 @@ class LayerFeatureModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4066,7 +4066,7 @@ class LayerMapModel(S3Model):
                      *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4966,7 +4966,7 @@ class PoIFeedModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 def name_field():

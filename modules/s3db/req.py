@@ -315,7 +315,7 @@ class RequestNeedsContactModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class RequestNeedsItemsModel(S3Model):
@@ -418,7 +418,7 @@ $.filterOptionsS3({
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class RequestNeedsSkillsModel(S3Model):
@@ -494,7 +494,7 @@ class RequestNeedsSkillsModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class RequestNeedsOrganisationModel(S3Model):
@@ -541,7 +541,7 @@ class RequestNeedsOrganisationModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class RequestNeedsPersonModel(S3Model):
@@ -611,7 +611,7 @@ class RequestNeedsPersonModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class RequestNeedsSiteModel(S3Model):
@@ -656,7 +656,7 @@ class RequestNeedsSiteModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class RequestNeedsTagModel(S3Model):
@@ -708,7 +708,7 @@ class RequestNeedsTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 def req_rheader(r):

@@ -534,7 +534,7 @@ class WarehouseModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1912,7 +1912,7 @@ class InventoryCommitItemModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2164,7 +2164,7 @@ class InventoryKittingModel(S3Model):
         #----------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2568,7 +2568,7 @@ class InventoryMinimumModel(S3Model):
            msg_list_empty = T("No Minimum Stock Levels currently registered"),
            )
 
-        return {}
+        return None
 
 # =============================================================================
 class InventoryOrderItemModel(S3Model):
@@ -2639,7 +2639,7 @@ class InventoryOrderItemModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class InventoryPackageModel(S3Model):
@@ -2961,7 +2961,7 @@ class InventoryPackageShipmentModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4032,7 +4032,7 @@ class InventoryRequisitionApproverModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class InventoryRequisitionItemModel(S3Model):
@@ -4496,7 +4496,7 @@ class InventoryRequisitionItemInventoryModel(S3Model):
                                 ),
                           *s3_meta_fields())
 
-        return {}
+        return None
 
 # =============================================================================
 class InventoryRequisitionItemCategoryModel(S3Model):
@@ -4522,7 +4522,7 @@ class InventoryRequisitionItemCategoryModel(S3Model):
                           self.supply_item_category_id(),
                           *s3_meta_fields())
 
-        return {}
+        return None
 
 # =============================================================================
 class InventoryRequisitionProjectModel(S3Model):
@@ -4554,7 +4554,7 @@ class InventoryRequisitionProjectModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class InventoryRequisitionRecurringModel(S3Model):
@@ -4610,7 +4610,7 @@ class InventoryRequisitionRecurringModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class InventoryRequisitionShipmentModel(S3Model):
@@ -4662,7 +4662,7 @@ class InventoryRequisitionShipmentModel(S3Model):
                      *s3_meta_fields()
                      )
 
-        return {}
+        return None
 
 # =============================================================================
 class InventoryRequisitionTagModel(S3Model):
@@ -4705,7 +4705,7 @@ class InventoryRequisitionTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class InventoryStockCardModel(S3Model):
@@ -4850,7 +4850,7 @@ class InventoryStockCardModel(S3Model):
                                  ],
                   )
 
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -189,7 +189,7 @@ class SecurityLevelModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class SecuritySeizedItemsModel(S3Model):
@@ -594,7 +594,7 @@ class SecurityStaffModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
     # -----------------------------------------------------------------------------
     @staticmethod

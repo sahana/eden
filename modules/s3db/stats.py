@@ -27,7 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("StatsModel",
+__all__ = ("StatsParameterModel",
+           "StatsDataModel",
+           "StatsSourceModel",
            "StatsDemographicModel",
            "StatsImpactModel",
            "stats_demographic_data_controller",
@@ -47,28 +49,18 @@ from ..s3 import *
 from s3layouts import S3PopupLink
 
 # =============================================================================
-class StatsModel(S3Model):
+class StatsParameterModel(S3Model):
     """
-        Statistics Data
+        Statistics Parameters
     """
 
     names = ("stats_parameter",
              "stats_parameter_represent",
-             "stats_data",
-             "stats_source",
-             "stats_source_superlink",
-             "stats_source_id",
-             "stats_accuracy",
-             #"stats_source_details",
              )
 
     def model(self):
 
         T = current.T
-        db = current.db
-
-        super_entity = self.super_entity
-        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Super entity: stats_parameter
@@ -88,22 +80,47 @@ class StatsModel(S3Model):
                            )
 
         tablename = "stats_parameter"
-        super_entity(tablename, "parameter_id",
-                     sp_types,
-                     Field("name",
-                           label = T("Name"),
-                           ),
-                     Field("description",
-                           label = T("Description"),
-                           ),
-                     on_define = lambda table: \
-                        [table.instance_type.set_attributes(readable = True),
-                         ],
-                     )
+        self.super_entity(tablename, "parameter_id",
+                          sp_types,
+                          Field("name",
+                                label = T("Name"),
+                                ),
+                          Field("description",
+                                label = T("Description"),
+                                ),
+                          on_define = lambda table: \
+                            [table.instance_type.set_attributes(readable = True),
+                             ],
+                          )
 
         parameter_represent = S3Represent(lookup = "stats_parameter",
                                           translate = True,
                                           )
+
+        # Pass names back to global scope (s3.*)
+        return {"stats_parameter_represent": parameter_represent,
+                }
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """ Safe defaults if module is disabled """
+
+        return {"stats_parameter_represent": lambda v: "",
+                }
+
+# =============================================================================
+class StatsDataModel(S3Model):
+    """
+        Statistics Data
+    """
+
+    names = ("stats_data",
+             "stats_accuracy",
+             )
+
+    def model(self):
+
+        T = current.T
 
         # ---------------------------------------------------------------------
         # Super entity: stats_data
@@ -136,27 +153,47 @@ class StatsModel(S3Model):
                                    )
 
         tablename = "stats_data"
-        super_entity(tablename, "data_id",
-                     sd_types,
-                     # This is a component, so needs to be a super_link
-                     # - can't override field name, ondelete or requires
-                     super_link("parameter_id", "stats_parameter"),
-                     self.gis_location_id(requires = IS_LOCATION(),
-                                          widget = S3LocationAutocompleteWidget(),
-                                          ),
-                     Field("value", "double",
-                           label = T("Value"),
-                           #represent = lambda v: \
-                           # IS_FLOAT_AMOUNT.represent(v, precision=2),
-                           ),
-                     # @ToDo: This will need to be a datetime for some usecases
-                     s3_date(label = T("Start Date"),
-                             ),
-                     s3_date("end_date",
-                             label = T("End Date"),
-                             ),
-                     accuracy(),
-                     )
+        self.super_entity(tablename, "data_id",
+                          sd_types,
+                          # This is a component, so needs to be a super_link
+                          # - can't override field name, ondelete or requires
+                          self.super_link("parameter_id", "stats_parameter"),
+                          self.gis_location_id(requires = IS_LOCATION(),
+                                               widget = S3LocationAutocompleteWidget(),
+                                               ),
+                          Field("value", "double",
+                                label = T("Value"),
+                                #represent = lambda v: \
+                                # IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                ),
+                          # @ToDo: This will need to be a datetime for some usecases
+                          s3_date(label = T("Start Date"),
+                                  ),
+                          s3_date("end_date",
+                                  label = T("End Date"),
+                                  ),
+                          accuracy(),
+                          )
+
+        # Pass names back to global scope (s3.*)
+        return {"stats_accuracy": accuracy,
+                }
+
+# =============================================================================
+class StatsSourceModel(S3Model):
+    """
+        Statistics Sources
+    """
+
+    names = ("stats_source",
+             "stats_source_id",
+             #"stats_source_details",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
 
         # ---------------------------------------------------------------------
         # Stats Source Super-Entity
@@ -169,16 +206,13 @@ class StatsModel(S3Model):
                                )
 
         tablename = "stats_source"
-        super_entity(tablename, "source_id", source_types,
-                     Field("name",
-                           label = T("Name"),
-                           ),
-                     )
+        self.super_entity(tablename, "source_id", source_types,
+                          Field("name",
+                                label = T("Name"),
+                                ),
+                          )
 
-        # For use by Instances or Components
-        source_superlink = lambda: super_link("source_id", "stats_source")
-
-        # For use by other FKs
+        # For use by FKs which are not Component links
         represent = stats_SourceRepresent(show_link = True)
         source_id = S3ReusableField("source_id", "reference %s" % tablename,
                                     label = T("Source"),
@@ -200,7 +234,7 @@ class StatsModel(S3Model):
         #tablename = "stats_source_details"
         #define_table(tablename,
         #             # Component
-        #             source_superlink(),
+        #             self.super_link("source_id", "stats_source"),
         #             Field("reliability",
         #                   label = T("Reliability"),
         #                   ),
@@ -210,22 +244,14 @@ class StatsModel(S3Model):
         #             )
 
         # Pass names back to global scope (s3.*)
-        return {"stats_source_superlink": source_superlink,
-                "stats_source_id": source_id,
-                "stats_accuracy": accuracy,
-                "stats_parameter_represent": parameter_represent,
+        return {"stats_source_id": source_id,
                 }
 
     # -------------------------------------------------------------------------
     def defaults(self):
         """ Safe defaults if module is disabled """
 
-        dummy = S3ReusableField.dummy
-
-        return {# Needed for doc
-                "stats_source_superlink": dummy("source_id"),
-                "stats_parameter_represent": lambda v: "",
-                "stats_source_id": dummy("source_id"),
+        return {"stats_source_id": S3ReusableField.dummy("source_id"),
                 }
 
 # =============================================================================

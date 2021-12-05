@@ -73,7 +73,7 @@ class DocumentEntityModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
         #
-        return {}
+        return None
 
 # =============================================================================
 class DocumentLibrary(S3Model):
@@ -622,7 +622,7 @@ class DocumentTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 def doc_image_represent(filename):
@@ -835,7 +835,7 @@ class CKEditorModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 def doc_filetype(filename):

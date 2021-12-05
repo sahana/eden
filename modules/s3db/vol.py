@@ -502,7 +502,7 @@ $.filterOptionsS3({
                      *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 def vol_activity_hours_month(row):
@@ -716,7 +716,7 @@ class VolunteerAwardModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod

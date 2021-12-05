@@ -1010,7 +1010,7 @@ class EventLocationModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class EventNameModel(S3Model):
@@ -1049,7 +1049,7 @@ class EventNameModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class EventTagModel(S3Model):
@@ -1098,7 +1098,7 @@ class EventTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class EventActivityModel(S3Model):
@@ -1134,7 +1134,7 @@ class EventActivityModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class EventRequestModel(S3Model):
@@ -1175,7 +1175,7 @@ class EventRequestModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class IncidentLogModel(S3Model):
@@ -1248,7 +1248,7 @@ class IncidentLogModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1448,7 +1448,7 @@ class IncidentTypeTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class EventAlertModel(S3Model):
@@ -1557,7 +1557,7 @@ class EventAlertModel(S3Model):
             )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class EventAssessmentModel(S3Model):
@@ -1627,7 +1627,7 @@ class EventAssessmentModel(S3Model):
                   )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class EventAssetModel(S3Model):
@@ -1644,7 +1644,7 @@ class EventAssetModel(S3Model):
         if not settings.has_module("supply"):
             # Don't crash
             #return self.defaults()
-            return {}
+            return None
 
         T = current.T
         db = current.db
@@ -1780,7 +1780,7 @@ class EventAssetModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -1923,7 +1923,7 @@ class EventBookmarkModel(S3Model):
         #    )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class EventCMSModel(S3Model):
@@ -2003,7 +2003,7 @@ class EventCMSModel(S3Model):
                   )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class EventCMSTagModel(S3Model):
@@ -2045,7 +2045,7 @@ class EventCMSTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class EventExpenseModel(S3Model):
@@ -2094,7 +2094,7 @@ class EventExpenseModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class EventForumModel(S3Model):
@@ -2143,7 +2143,7 @@ class EventForumModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class EventHRModel(S3Model):
@@ -2316,7 +2316,7 @@ class EventHRModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -2527,7 +2527,7 @@ class EventTeamModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class EventImpactModel(S3Model):
@@ -2542,7 +2542,7 @@ class EventImpactModel(S3Model):
 
         if not current.deployment_settings.has_module("stats"):
             current.log.warning("Event Impact Model needs Stats module enabling")
-            return {}
+            return None
 
         #T = current.T
 
@@ -2589,7 +2589,7 @@ class EventImpactModel(S3Model):
         #    )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class EventMapModel(S3Model):
@@ -2637,7 +2637,7 @@ class EventMapModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class EventOrganisationModel(S3Model):
@@ -2713,7 +2713,7 @@ class EventOrganisationModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class EventProjectModel(S3Model):
@@ -2749,7 +2749,7 @@ class EventProjectModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class EventSiteModel(S3Model):
@@ -2865,7 +2865,7 @@ class EventSiteModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class EventSitRepModel(S3Model):
@@ -3294,7 +3294,7 @@ class EventTaskModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class IncidentModel(S3Model):
@@ -4683,7 +4683,7 @@ class ScenarioAssetModel(S3Model):
         if not settings.has_module("supply"):
             # Don't crash
             #return self.defaults()
-            return {}
+            return None
 
         T = current.T
 
@@ -4768,7 +4768,7 @@ class ScenarioAssetModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ScenarioHRModel(S3Model):
@@ -4869,7 +4869,7 @@ class ScenarioHRModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ScenarioOrganisationModel(S3Model):
@@ -4921,7 +4921,7 @@ class ScenarioOrganisationModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ScenarioTaskModel(S3Model):
@@ -4976,7 +4976,7 @@ class ScenarioTaskModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 def set_event_from_incident(form, tablename):
@@ -5631,6 +5631,7 @@ class event_EventAssignMethod(S3Method):
         e.g. Incident
     """
 
+    # -------------------------------------------------------------------------
     def __init__(self,
                  component = None,
                  next_tab = None,
@@ -5648,6 +5649,7 @@ class event_EventAssignMethod(S3Method):
         else:
             self.next_tab = component
 
+    # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
             Apply method.

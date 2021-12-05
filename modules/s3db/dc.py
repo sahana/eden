@@ -1347,7 +1347,7 @@ class TrainingEventAssessmentModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 def dc_answer_form(r, tablename):

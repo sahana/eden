@@ -2397,7 +2397,7 @@ class PersonRelationModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class PersonGroupModel(S3Model):
@@ -3122,7 +3122,7 @@ class PersonGroupCompetencyModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class PersonGroupLocationModel(S3Model):
@@ -3173,7 +3173,7 @@ class PersonGroupLocationModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class PersonGroupTagModel(S3Model):
@@ -3207,7 +3207,7 @@ class PersonGroupTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ForumModel(S3Model):
@@ -3620,7 +3620,7 @@ class PersonEntityRealmModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class PersonEntityAddressModel(S3Model):
@@ -3723,7 +3723,7 @@ class PersonEntityAddressModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4378,7 +4378,7 @@ class PersonEntityImageModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4575,7 +4575,7 @@ class PersonEntityNoteModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5351,7 +5351,7 @@ class PersonAvailabilityModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5513,7 +5513,7 @@ class PersonUnavailabilityModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class PersonDescriptionModel(S3Model):
@@ -5994,7 +5994,7 @@ class PersonEducationModel(S3Model):
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
         #
-        return {}
+        return None
 
 # =============================================================================
 class PersonIdentityModel(S3Model):
@@ -6120,7 +6120,7 @@ class PersonIdentityModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class PersonLanguageModel(S3Model):
@@ -6187,7 +6187,7 @@ class PersonLanguageModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class PersonOccupationModel(S3Model):
@@ -6277,7 +6277,7 @@ class PersonOccupationModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class PersonDetailsModel(S3Model):
@@ -6577,7 +6577,7 @@ class PersonLocationModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class PersonTagModel(S3Model):
@@ -6611,7 +6611,7 @@ class PersonTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ImageLibraryModel(S3Model):
@@ -6817,7 +6817,7 @@ class ReligionModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class SavedFilterModel(S3Model):

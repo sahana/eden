@@ -325,14 +325,14 @@ class BRCaseModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1171,14 +1171,14 @@ class BRAppointmentModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        return {}
+        return None
 
 # =============================================================================
 # Category Models
@@ -2571,14 +2571,14 @@ class BRLanguageModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        return {}
+        return None
 
 # =============================================================================
 class BRLegalStatusModel(S3Model):
@@ -2716,7 +2716,7 @@ class BRServiceContactModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class BRNotesModel(S3Model):
@@ -2840,7 +2840,7 @@ class BRNotesModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class BRReferralModel(S3Model):
@@ -3725,7 +3725,7 @@ def br_case_status_filter_opts(closed=None):
                                     )
 
     if not rows:
-        return {}
+        return None
 
     T = current.T
     return OrderedDict((row.id, T(row.name)) for row in rows)

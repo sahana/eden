@@ -96,7 +96,7 @@ class S3DashboardModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3.*
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -625,7 +625,7 @@ class S3HierarchyModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3.*
         #
-        return {}
+        return None
 
 # =============================================================================
 def s3_table_random_name():

@@ -1937,7 +1937,7 @@ class ProjectActivityPersonModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ProjectActivityOrganisationModel(S3Model):
@@ -2002,7 +2002,7 @@ class ProjectActivityOrganisationModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ProjectActivityOrganisationGroupModel(S3Model):
@@ -2042,7 +2042,7 @@ class ProjectActivityOrganisationGroupModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ProjectActivityDemographicsModel(S3Model):
@@ -2108,7 +2108,7 @@ class ProjectActivityDemographicsModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ProjectActivityItemModel(S3Model):
@@ -2171,7 +2171,7 @@ $.filterOptionsS3({
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ProjectActivitySectorModel(S3Model):
@@ -2209,7 +2209,7 @@ class ProjectActivitySectorModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ProjectActivityTagModel(S3Model):
@@ -2252,7 +2252,7 @@ class ProjectActivityTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ProjectAnnualBudgetModel(S3Model):
@@ -2328,7 +2328,7 @@ class ProjectAnnualBudgetModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ProjectBeneficiaryModel(S3Model):
@@ -2348,7 +2348,7 @@ class ProjectBeneficiaryModel(S3Model):
         if not current.deployment_settings.has_module("stats"):
             current.log.warning("Project Beneficiary Model needs Stats module enabling")
             #return self.defaults()
-            return {}
+            return None
 
         T = current.T
         db = current.db
@@ -2697,7 +2697,7 @@ class ProjectBeneficiaryModel(S3Model):
                   )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2773,7 +2773,7 @@ class ProjectCampaignModel(S3Model):
         if not current.deployment_settings.has_module("stats"):
             # Campaigns Model needs Stats module enabling
             #return self.defaults()
-            return {}
+            return None
 
         T = current.T
         db = current.db
@@ -3035,7 +3035,7 @@ class ProjectCampaignModel(S3Model):
         )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ProjectFrameworkModel(S3Model):
@@ -3179,7 +3179,7 @@ class ProjectFrameworkModel(S3Model):
         )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ProjectHazardModel(S3Model):
@@ -3354,7 +3354,7 @@ class ProjectHRModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3396,7 +3396,7 @@ class ProjectIndicatorModel(S3Model):
         if not current.deployment_settings.has_module("stats"):
             current.log.warning("Project Indicator Model needs Stats module enabling")
             #return self.defaults()
-            return {}
+            return None
 
         T = current.T
         db = current.db
@@ -3642,7 +3642,7 @@ class ProjectIndicatorModel(S3Model):
                   )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ProjectL10nModel(S3Model):
@@ -3668,7 +3668,7 @@ class ProjectL10nModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ProjectLocationModel(S3Model):
@@ -4120,7 +4120,7 @@ class ProjectMasterKeyModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class ProjectOrganisationModel(S3Model):
@@ -4237,7 +4237,7 @@ class ProjectOrganisationModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -9981,7 +9981,7 @@ class ProjectProgrammeProjectModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class ProjectSectorModel(S3Model):
@@ -10024,7 +10024,7 @@ class ProjectSectorModel(S3Model):
         )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ProjectStatusModel(S3Model):
@@ -10224,7 +10224,7 @@ class ProjectTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ProjectThemeModel(S3Model):
@@ -10560,7 +10560,7 @@ class ProjectDRRModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -10734,7 +10734,7 @@ class ProjectDRRPPModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -10841,7 +10841,7 @@ class ProjectTargetModel(S3Model):
             )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ProjectTaskModel(S3Model):
@@ -12246,7 +12246,7 @@ class ProjectTaskForumModel(S3Model):
         #    msg_list_empty = T("No Tasks currently shared"))
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ProjectTaskHRMModel(S3Model):
@@ -12295,7 +12295,7 @@ class ProjectTaskHRMModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class ProjectTaskTagModel(S3Model):
@@ -12337,7 +12337,7 @@ class ProjectTaskTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class ProjectWindowModel(S3Model):
@@ -12372,7 +12372,7 @@ class ProjectWindowModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 def multi_theme_percentage_represent(record_id):

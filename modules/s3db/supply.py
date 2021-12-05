@@ -1187,7 +1187,7 @@ class SupplyAltItemModel(S3Model):
             )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class SupplyKitItemModel(S3Model):
@@ -1244,7 +1244,7 @@ class SupplyKitItemModel(S3Model):
             )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class SupplyDistributionModel(S3Model):
@@ -1835,7 +1835,7 @@ class SupplyPersonModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class supply_ItemRepresent(S3Represent):

@@ -30,7 +30,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3Chart"]
+__all__ = ("S3Chart",
+           )
 
 from io import StringIO
 
