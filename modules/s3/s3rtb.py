@@ -44,17 +44,16 @@ from .s3utils import s3_get_foreign_key, s3_str
 from s3dal import original_tablename
 
 # =============================================================================
-class S3ResourceTree(object):
+class S3ResourceTree:
     """ Resource Tree Builder """
 
     def __init__(self, resource, location_data=None, map_data=None):
         """
-            Constructor
-
-            @param resource: the S3Resource to build the tree from
-            @param location_data: dictionary of location data which has been
-                                  looked-up in bulk ready for xml.gis_encode()
-            @param map_data: dictionary of options which can be read by the map
+            Args:
+                resource: the S3Resource to build the tree from
+                location_data: dictionary of location data which has been
+                               looked-up in bulk ready for xml.gis_encode()
+                map_data: dictionary of options which can be read by the map
         """
 
         self.resource = resource
@@ -103,35 +102,32 @@ class S3ResourceTree(object):
         """
             Build the resource tree
 
-            @param start: index of the first record to export (slicing)
-            @param limit: maximum number of records to export (slicing)
+            Args:
+                start: index of the first record to export (slicing)
+                limit: maximum number of records to export (slicing)
+                msince: export only records which have been modified
+                        after this datetime
+                sync_filters: additional URL filters (Sync), as dict
+                              {tablename: {url_var: string}}
+                xmlformat: pre-parsed XSLT stylesheet wrapper
+                fields: data fields to include (default: all)
+                references: foreign keys to include (default: all)
+                mcomponents: components of the master resource to
+                             include (list of aliases), empty list
+                             for all available components
+                target: alias of component targeted
+                        (or None to target master resource)
+                dereference: include referenced resources
+                maxdepth: maximum depth for reference exports
+                rcomponents: components of referenced resources to
+                             include (list of "tablename:alias")
+                mdata: mobile data export
+                       (=>reduced field set, lookup-only option)
+                maxbounds: include lat/lon boundaries in the top
+                           level element (off by default)
 
-            @param msince: export only records which have been modified
-                            after this datetime
-            @param sync_filters: additional URL filters (Sync), as dict
-                                 {tablename: {url_var: string}}
-
-            @param xmlformat: pre-parsed XSLT stylesheet wrapper
-
-            @param fields: data fields to include (default: all)
-            @param references: foreign keys to include (default: all)
-            @param mcomponents: components of the master resource to
-                                include (list of aliases), empty list
-                                for all available components
-            @param target: alias of component targeted
-                           (or None to target master resource)
-
-            @param dereference: include referenced resources
-            @param maxdepth: maximum depth for reference exports
-            @param rcomponents: components of referenced resources to
-                                include (list of "tablename:alias")
-
-            @param mdata: mobile data export
-                          (=>reduced field set, lookup-only option)
-            @param maxbounds: include lat/lon boundaries in the top
-                              level element (off by default)
-
-            @returns: ElementTree
+            Returns:
+                ElementTree
         """
 
         if mcomponents is DEFAULT:
@@ -272,28 +268,25 @@ class S3ResourceTree(object):
         """
             Load the records in a resource and generate nodes for them
 
-            @param resource: the S3Resource
-            @param start: index of the first record to export (slicing)
-            @param limit: maximum number of records to export (slicing)
-
-            @param msince: export only records which have been modified
-                            after this datetime
-            @param sync_filters: additional URL filters (Sync), as dict
-                                 {tablename: {url_var: string}}
-
-            @param xmlformat: pre-parsed XSLT stylesheet wrapper
-
-            @param fields: data fields to include (default: all)
-            @param references: foreign keys to include (default: all)
-            @param components: components to include (list of aliases),
-                               empty list for all available components
-            @param target: alias of component targeted
-                           (or None to target master resource)
-
-            @param mdata: mobile data export
-                          (=>reduced field set, lookup-only option)
-            @param location_data: dictionary of location data which has been
-                                  looked-up in bulk ready for xml.gis_encode()
+            Args:
+                resource: the S3Resource
+                start: index of the first record to export (slicing)
+                limit: maximum number of records to export (slicing)
+                msince: export only records which have been modified
+                        after this datetime
+                sync_filters: additional URL filters (Sync), as dict
+                              {tablename: {url_var: string}}
+                xmlformat: pre-parsed XSLT stylesheet wrapper
+                fields: data fields to include (default: all)
+                references: foreign keys to include (default: all)
+                components: components to include (list of aliases),
+                            empty list for all available components
+                target: alias of component targeted
+                        (or None to target master resource)
+                mdata: mobile data export
+                       (=>reduced field set, lookup-only option)
+                location_data: dictionary of location data which has been
+                               looked-up in bulk ready for xml.gis_encode()
         """
 
         s3db = current.s3db
@@ -508,21 +501,19 @@ class S3ResourceTree(object):
         """
             Load records in a resource
 
-            @param resource: the S3Resource
-            @param start: index of the first record to export (slicing)
-            @param limit: maximum number of records to export (slicing)
-
-            @param msince: export only records which have been modified
-                            after this datetime
-            @param sync_filters: additional URL filters (Sync), as dict
-                                 {tablename: {url_var: string}}
-
-            @param xmlformat: pre-parsed XSLT stylesheet wrapper
-
-            @param target: alias of component targeted
-                           (or None to target master resource)
-            @param hierarchy_link: TODO
-            @param add: flag for the preliminary msince-decision (if component)
+            Args:
+                resource: the S3Resource
+                start: index of the first record to export (slicing)
+                limit: maximum number of records to export (slicing)
+                msince: export only records which have been modified
+                        after this datetime
+                sync_filters: additional URL filters (Sync), as dict
+                              {tablename: {url_var: string}}
+                xmlformat: pre-parsed XSLT stylesheet wrapper
+                target: alias of component targeted
+                        (or None to target master resource)
+                hierarchy_link: TODO
+                add: flag for the preliminary msince-decision (if component)
         """
 
         table = resource.table
@@ -601,15 +592,17 @@ class S3ResourceTree(object):
         """
             Establish fields to export for a resource
 
-            @param resource: the S3Resource
-            @param fields: the requested data fields
-            @param references: the requested references
-            @param mdata: look up fields/references from mobile schema
+            Args:
+                resource: the S3Resource
+                fields: the requested data fields
+                references: the requested references
+                mdata: look up fields/references from mobile schema
 
-            @returns: tuple (rfields, dfields, llrepr), with
-                      rfields = list of reference field names to include
-                      dfields = list of data field names to include
-                      llrepr = lookup-list representation method (mobile schema)
+            Returns:
+                tuple (rfields, dfields, llrepr), with
+                    rfields = list of reference field names to include
+                    dfields = list of data field names to include
+                    llrepr = lookup-list representation method (mobile schema)
         """
 
         llrepr = None
@@ -638,10 +631,12 @@ class S3ResourceTree(object):
             Get a list of aliases of components that shall be exported
             together with the master resource
 
-            @param tablename: the tablename of the master resource
-            @param aliases: the list of required components
+            Args:
+                tablename: the tablename of the master resource
+                aliases: the list of required components
 
-            @returns: a list of component aliases
+            Returns:
+                A list of component aliases
         """
 
         # TODO prevent exporting both link table and linked table (only include the linked table)
@@ -695,10 +690,12 @@ class S3ResourceTree(object):
         """
             Generate a load map from pending dependencies
 
-            @param dependencies: a dict {tablename: {record_ids}}
+            Args:
+                dependencies: a dict {tablename: {record_ids}}
 
-            @returns: a dict {tablename: [record_ids]} with the
-                      records that still need to be exported
+            Returns:
+                A dict {tablename: [record_ids]} with the
+                records that still need to be exported
         """
 
         s3db = current.s3db
@@ -734,11 +731,13 @@ class S3ResourceTree(object):
             Resolve a list of super-entity record IDs into their
             corresponding instance table names and IDs
 
-            @param table: the super-entity table
-            @param ids: the list of super-entity record IDs
+            Args:
+                table: the super-entity table
+                ids: the list of super-entity record IDs
 
-            @returns: a dict {tablename: {record_ids}} with the
-                      corresponding instance table names and IDs
+            Returns:
+                A dict {tablename: {record_ids}} with the
+                corresponding instance table names and IDs
         """
 
         resolved = {}
@@ -792,8 +791,9 @@ class S3ResourceTree(object):
             to the exported-map (rather than exporting the referenced
             records)
 
-            @param dependencies: dict of dependencies,
-                                 {tablename: {record_ids}}
+            Args:
+                dependencies: dict of dependencies,
+                              {tablename: {record_ids}}
         """
 
         db = current.db
@@ -880,13 +880,15 @@ class S3ResourceTree(object):
         """
             Resolve a reference against the map of exported records
 
-            @param tablename: the referenced table (or super-entity)
-            @param ids: the referenced record IDs
+            Args:
+                tablename: the referenced table (or super-entity)
+                ids: the referenced record IDs
 
-            @returns: tuple (target, target_ids, target_uids), where:
-                      target = name of the (instance) table
-                      target_ids = list of referenced (instance) record ids
-                      target_uids = list of the corresponding record UIDs
+            Returns:
+                tuple (target, target_ids, target_uids), where:
+                    target = name of the (instance) table
+                    target_ids = list of referenced (instance) record ids
+                    target_uids = list of the corresponding record UIDs
         """
 
         if not isinstance(ids, list):
@@ -915,21 +917,18 @@ class S3ResourceTree(object):
         return target, target_ids, target_uids
 
 # =============================================================================
-class S3ResourceReference(object):
+class S3ResourceReference:
     """ A pending reference in a tree node """
 
     def __init__(self, table, fieldname, rtablename, pkey, value, multiple=False):
         """
-            Constructor
-
-            @param table: the referencing table
-            @param fieldname: the field name in the referencing table
-
-            @param rtablename: the name of the referenced table
-            @param pkey: the primary key in the referenced table
-
-            @param value: the value of the field in the referencing table
-            @param multiple: whether this is a list:reference
+            Args:
+                table: the referencing table
+                fieldname: the field name in the referencing table
+                rtablename: the name of the referenced table
+                pkey: the primary key in the referenced table
+                value: the value of the field in the referencing table
+                multiple: whether this is a list:reference
         """
 
         self.table = table
@@ -946,9 +945,10 @@ class S3ResourceReference(object):
         """
             The dependency of this reference
 
-            @returns: a tuple (tablename, {record_ids}) with
-                      tablename = the referenced table
-                      record_ids = list of record IDs in the referenced table
+            Returns:
+                A tuple (tablename, {record_ids}) with
+                    tablename = the referenced table
+                    record_ids = list of record IDs in the referenced table
         """
 
         ids = self.value
@@ -961,10 +961,12 @@ class S3ResourceReference(object):
         """
             Resolve this reference against the tree
 
-            @param tree: the S3ResourceTree
+            Args:
+                tree: the S3ResourceTree
 
-            @returns: Storage - a reference map entry suitable
-                                for S3XML.add_references()
+            Returns:
+                Storage - a reference map entry suitable
+                          for S3XML.add_references()
         """
 
         xml = current.xml
@@ -1005,7 +1007,7 @@ class S3ResourceReference(object):
         return Storage(entry)
 
 # =============================================================================
-class S3ResourceNode(object):
+class S3ResourceNode:
     """ A node in the resource tree, representing an exported record """
 
     def __init__(self,
@@ -1022,21 +1024,20 @@ class S3ResourceNode(object):
                  location_data = None,
                  ):
         """
-            Constructor
-
-            @param tree: the S3ResourceTree
-            @param resource: the S3Resource
-            @param record: the record (Row)
-            @param dfields: the data fields to export
-            @param rfields: the reference fields to export
-            @param superkeys: all super-keys in the table
-            @param url: the URL of the resource
-            @param master: whether this is the master resource
-                           of the export (for GIS-encoding)
-            @param alias: the component alias (if the resource is a component)
-            @param llrepr: lookup-list representation function (for EdenMobile)
-            @param location_data: dictionary of location data which has been
-                                  looked-up in bulk ready for xml.gis_encode()
+            Args:
+                tree: the S3ResourceTree
+                resource: the S3Resource
+                record: the record (Row)
+                dfields: the data fields to export
+                rfields: the reference fields to export
+                superkeys: all super-keys in the table
+                url: the URL of the resource
+                master: whether this is the master resource
+                        of the export (for GIS-encoding)
+                alias: the component alias (if the resource is a component)
+                llrepr: lookup-list representation function (for EdenMobile)
+                location_data: dictionary of location data which has been
+                               looked-up in bulk ready for xml.gis_encode()
         """
 
         self.tree = tree
@@ -1084,13 +1085,14 @@ class S3ResourceNode(object):
             record (lazy property); this can be used to resolve any references
             to this record, including via super-links
 
-            @returns: a map {(tablename, id): (itablename, iid, uid)},
-                      where:
-                        - tablename is the table / supertable name
-                        - id is the record ID / super ID
-                        - itablename is the (instance) table name
-                        - iid is the (instance) record id
-                        - uid is the record UID
+            Returns:
+                A map {(tablename, id): (itablename, iid, uid)},
+                where:
+                    - tablename is the table / supertable name
+                    - id is the record ID / super ID
+                    - itablename is the (instance) table name
+                    - iid is the (instance) record id
+                    - uid is the record UID
         """
 
         table = self.table
@@ -1132,7 +1134,8 @@ class S3ResourceNode(object):
         """
             The references of this node (lazy property)
 
-            @returns: a list of S3ResourceReferences
+            Returns:
+                A list of S3ResourceReferences
         """
 
         references = self._references
@@ -1194,9 +1197,10 @@ class S3ResourceNode(object):
         """
             All dependencies of this node (lazy property)
 
-            @returns: a dict {tablename: {record_ids}} with
-                      tablename = the name of the referenced table
-                      record_ids = the IDs of the referenced records
+            Returns:
+                A dict {tablename: {record_ids}} with
+                  tablename = the name of the referenced table
+                  record_ids = the IDs of the referenced records
         """
 
         dependencies = self._dependencies
@@ -1218,11 +1222,13 @@ class S3ResourceNode(object):
         """
             Append the XML Element for this node to a parent element
 
-            @param parent: the parent Element
-            @param lazy: list of lazy representation nodes (written to)
+            Args:
+                parent: the parent Element
+                lazy: list of lazy representation nodes (written to)
 
-            @returns: a list of rmap entries for any location references
-                      in the record, suitable for S3XML.latlon()
+            Returns:
+                A list of rmap entries for any location references
+                in the record, suitable for S3XML.latlon()
         """
 
         table = self.table
@@ -1291,9 +1297,10 @@ class S3ResourceNode(object):
             Generate reference map entries for this node, suitable
             for S3XML.add_references/S3XML.latlon
 
-            @returns: tuple (rmap, lref) with
-                      rmap = all reference map entries for this node
-                      lref = subset of rmap with only location reference entries
+            Returns:
+                tuple (rmap, lref) with
+                    rmap = all reference map entries for this node
+                    lref = subset of rmap with only location reference entries
         """
 
         rmap, lref = [], []

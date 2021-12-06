@@ -1790,7 +1790,7 @@ $('#import-items').on('click','.toggle-item',function(){$('.importItem.item-'+$(
         return db[UPLOAD_TABLE_NAME]
 
 # =============================================================================
-class S3ImportItem(object):
+class S3ImportItem:
     """ Class representing an import item (=a single record) """
 
     METHOD = Storage(

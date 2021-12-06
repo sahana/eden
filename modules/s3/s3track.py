@@ -65,16 +65,15 @@ class S3Trackable:
                  rtable = None,
                  ):
         """
-            Constructor:
-
-            @param table: a Table object
-            @param tablename: a Str tablename
-            @param record: a Row object
-            @param query: a Query object
-            @param record_id: a record ID (if object is a Table)
-            @param record_ids: a list of record IDs (if object is a Table)
-                               - these should be in ascending order
-            @param rtable: the resource table (for the recursive calls)
+            Args:
+                table: a Table object
+                tablename: a Str tablename
+                record: a Row object
+                query: a Query object
+                record_id: a record ID (if object is a Table)
+                record_ids: a list of record IDs (if object is a Table)
+                            - these should be in ascending order
+                rtable: the resource table (for the recursive calls)
         """
 
         db = current.db
@@ -208,7 +207,8 @@ class S3Trackable:
         """
             Check whether a trackable is a super-entity
 
-            @param trackable: the trackable object
+            Args:
+                trackable: the trackable object
         """
 
         if hasattr(trackable, "fields"):
@@ -224,7 +224,8 @@ class S3Trackable:
         """
             Check a trackable for presence of required fields
 
-            @param: the trackable object
+            Args:
+                trackable: the trackable object
         """
 
         fields = []
@@ -260,16 +261,19 @@ class S3Trackable:
         """
             Get the current location of the instance(s) (at the given time)
 
-            @param timestmp: last datetime for presence (defaults to current time)
-            @param _fields: fields to retrieve from the location records (None for ALL)
-            @param _filter: filter for the locations
-            @param as_rows: return the result as Rows object
-            @param exclude: interlocks to break at (avoids circular check-ins)
-            @param empty: return None if no locations (set to False by gis.get_location_data())
+            Args:
+                timestmp: last datetime for presence (defaults to current time)
+                _fields: fields to retrieve from the location records (None for ALL)
+                _filter: filter for the locations
+                as_rows: return the result as Rows object
+                exclude: interlocks to break at (avoids circular check-ins)
+                empty: return None if no locations (set to False by gis.get_location_data())
 
-            @return: a location record, or a list of location records (if multiple)
+            Returns:
+                A location record, or a list of location records (if multiple)
 
-            @ToDo: Also show Timestamp of when seen there
+            TODO:
+                Also show Timestamp of when seen there
         """
 
         if exclude is None:
@@ -351,10 +355,12 @@ class S3Trackable:
         """
             Set the current location of instance(s) (at the given time)
 
-            @param location: the location (as Row or record ID)
-            @param timestmp: the datetime of the presence (defaults to current time)
+            Args:
+                location: the location (as Row or record ID)
+                timestmp: the datetime of the presence (defaults to current time)
 
-            @return: location
+            Returns:
+                location
         """
 
         ptable = current.s3db[PRESENCE]
@@ -400,11 +406,13 @@ class S3Trackable:
         """
             Bind the presence of the instance(s) to another instance
 
-            @param table: table name of the other resource
-            @param record: record in the other resource (as Row or record ID)
-            @param timestmp: datetime of the check-in
+            Args:
+                table: table name of the other resource
+                record: record in the other resource (as Row or record ID)
+                timestmp: datetime of the check-in
 
-            @return: nothing
+            Returns:
+                Nothing
         """
 
         db = current.db
@@ -488,8 +496,9 @@ class S3Trackable:
             Make the last log entry before timestmp independent from
             the referenced entity (if any)
 
-            @param timestmp: the date/time of the check-out, defaults
-                             to current time
+            Args:
+                timestmp: the date/time of the check-out, defaults
+                          to current time
         """
 
         db = current.db
@@ -561,7 +570,8 @@ class S3Trackable:
         """
             Remove a location from the presence log of the instance(s)
 
-            @todo: implement
+            TODO:
+                Implement
         """
         raise NotImplementedError
 
@@ -575,12 +585,14 @@ class S3Trackable:
         """
             Get the base location of the instance(s)
 
-            @param _fields: fields to retrieve from the location records (None for ALL)
-            @param _filter: filter for the locations
-            @param as_rows: return the result as Rows object
-            @param empty: return None if no locations (set to False by gis.get_location_data())
+            Args:
+                _fields: fields to retrieve from the location records (None for ALL)
+                _filter: filter for the locations
+                as_rows: return the result as Rows object
+                empty: return None if no locations (set to False by gis.get_location_data())
 
-            @return: the base location(s) of the current instance
+            Returns:
+                The base location(s) of the current instance
         """
 
         db = current.db
@@ -639,11 +651,14 @@ class S3Trackable:
         """
             Set the base location of the instance(s)
 
-            @param location: the location for the base location as Row or record ID
+            Args:
+                location: the location for the base location as Row or record ID
 
-            @return: nothing
+            Returns:
+                Nothing
 
-            @note: instance tables without a location_id field will be ignored
+            Note:
+                Instance tables without a location_id field will be ignored
         """
 
         if isinstance(location, S3Trackable):
@@ -708,8 +723,9 @@ class S3Trackable:
         """
             Update the timestamp of a trackable
 
-            @param track_id: the trackable ID (super-entity key)
-            @param timestamp: the timestamp
+            Args:
+                track_id: the trackable ID (super-entity key)
+                timestamp: the timestamp
         """
 
         if track_id:
@@ -723,11 +739,6 @@ class S3Tracker:
         S3 Tracking system, can be instantiated once as global 's3tracker' object
     """
 
-    def __init__(self):
-        """
-            Constructor
-        """
-
     # -------------------------------------------------------------------------
     def __call__(self,
                  table = None,
@@ -740,14 +751,16 @@ class S3Tracker:
         """
             Get a tracking interface for a record or set of records
 
-            @param table: a Table object
-            @param record_id: a record ID (together with Table or tablename)
-            @param record_ids: a list/tuple of record IDs (together with Table or tablename)
-            @param tablename: a Str object
-            @param record: a Row object
-            @param query: a Query object
+            Args:
+                table: a Table object
+                record_id: a record ID (together with Table or tablename)
+                record_ids: a list/tuple of record IDs (together with Table or tablename)
+                tablename: a Str object
+                record: a Row object
+                query: a Query object
 
-            @return: a S3Trackable instance for the specified record(s)
+            Returns:
+                S3Trackable instance for the specified record(s)
         """
 
         return S3Trackable(table = table,
@@ -794,8 +807,9 @@ class S3CheckInMethod(S3Method):
         """
             Apply method.
 
-            @param r: the S3Request
-            @param attr: controller options for this request
+            Args:
+                r: the S3Request
+                attr: controller options for this request
         """
 
         if r.representation == "html":
@@ -914,8 +928,9 @@ class S3CheckOutMethod(S3Method):
         """
             Apply method.
 
-            @param r: the S3Request
-            @param attr: controller options for this request
+            Args:
+                r: the S3Request
+                attr: controller options for this request
         """
 
         if r.representation == "html":

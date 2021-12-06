@@ -92,12 +92,13 @@ class S3Task:
             Configure the task table for interactive CRUD,
             setting defaults, widgets and hiding unnecessary fields
 
-            @param task: the task name (will use a UUID if omitted)
-            @param function: the function name (won't hide if omitted)
-            @param args: the function position arguments
-            @param vars: the function named arguments
-            @param period: the default period for tasks
-            @param status_writable: make status and next run time editable
+            Args:
+                task: the task name (will use a UUID if omitted)
+                function: the function name (won't hide if omitted)
+                args: the function position arguments
+                vars: the function named arguments
+                period: the default period for tasks
+                status_writable: make status and next run time editable
         """
 
         T = current.T
@@ -244,12 +245,13 @@ class S3Task:
             Wrapper to call an asynchronous task.
             - run from the main request
 
-            @param task: The function which should be run
-                         - async if a worker is alive
-            @param args: The list of unnamed args to send to the function
-            @param vars: The list of named vars to send to the function
-            @param timeout: The length of time available for the task to complete
-                            - default 300s (5 mins)
+            Args:
+                task: The function which should be run
+                      - async if a worker is alive
+                args: The list of unnamed args to send to the function
+                vars: The list of named vars to send to the function
+                timeout: The length of time available for the task to complete
+                         - default 300s (5 mins)
         """
 
         if args is None:
@@ -321,22 +323,23 @@ class S3Task:
         """
             Schedule a task in web2py Scheduler
 
-            @param task: name of the function/task to be scheduled
-            @param args: args to be passed to the scheduled task
-            @param vars: vars to be passed to the scheduled task
-            @param function_name: function name (if different from task name)
-            @param start_time: start_time for the scheduled task
-            @param next_run_time: next_run_time for the the scheduled task
-            @param stop_time: stop_time for the the scheduled task
-            @param repeats: number of times the task to be repeated (0=unlimited)
-            @param retry_failed: number of times the task to be retried (-1=unlimited)
-            @param period: time period between two consecutive runs (seconds)
-            @param timeout: set timeout for a running task
-            @param enabled: enabled flag for the scheduled task
-            @param group_name: group_name for the scheduled task
-            @param ignore_duplicate: disable or enable duplicate checking
-            @param sync_output: sync output every n seconds (0 = disable sync)
-            @param user_id: Add the user_id to task vars if logged in
+            Args:
+                task: name of the function/task to be scheduled
+                args: args to be passed to the scheduled task
+                vars: vars to be passed to the scheduled task
+                function_name: function name (if different from task name)
+                start_time: start_time for the scheduled task
+                next_run_time: next_run_time for the the scheduled task
+                stop_time: stop_time for the the scheduled task
+                repeats: number of times the task to be repeated (0=unlimited)
+                retry_failed: number of times the task to be retried (-1=unlimited)
+                period: time period between two consecutive runs (seconds)
+                timeout: set timeout for a running task
+                enabled: enabled flag for the scheduled task
+                group_name: group_name for the scheduled task
+                ignore_duplicate: disable or enable duplicate checking
+                sync_output: sync output every n seconds (0 = disable sync)
+                user_id: Add the user_id to task vars if logged in
         """
 
         if args is None:
@@ -418,9 +421,10 @@ class S3Task:
             Checks if given task already exists in the Scheduler and both coincide
             with their execution time
 
-            @param task: name of the task function
-            @param args: the job position arguments (list)
-            @param vars: the job named arguments (dict)
+            Args:
+                task: name of the task function
+                args: the job position arguments (list)
+                vars: the job named arguments (dict)
         """
 
         db = current.db
@@ -442,11 +446,13 @@ class S3Task:
     @staticmethod
     def _is_alive():
         """
-            Returns True if there is at least 1 active worker to run scheduled tasks
-            - run from the main request
+            Returns:
+                True if there is at least 1 active worker to run scheduled tasks
+                - run from the main request
 
-            NB Can't run this 1/request at the beginning since the tables
-               only get defined in zz_last
+            Note:
+                Can't run this 1/request at the beginning since the tables
+                only get defined in zz_last
         """
 
         #if self.scheduler:
@@ -474,7 +480,8 @@ class S3Task:
         """
             Reset the status of a task to QUEUED after FAILED
 
-            @param task_id: the task record ID
+            Args:
+                task_id: the task record ID
         """
 
         db = current.db
@@ -497,8 +504,9 @@ class S3Task:
             Activate the authentication passed from the caller to this new request
             - run from within the task
 
-            NB This is so simple that we don't normally run via this API
-               - this is just kept as an example of what needs to happen within the task
+            Note:
+                This is so simple that we don't normally run via this API
+                - this is just kept as an example of what needs to happen within the task
         """
 
         current.auth.s3_impersonate(user_id)

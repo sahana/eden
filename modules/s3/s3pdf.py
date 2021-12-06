@@ -207,7 +207,6 @@ if reportLabImported:
                 Build the document using the flowables.
 
                 Set up the page templates that the document can use
-
             """
 
             self._calc()    # in case we changed margins sizes etc
@@ -274,8 +273,9 @@ class S3PDF(S3Method):
         """
             Apply CRUD methods
 
-            @param r: the S3Request
-            @param attr: dictionary of parameters for the method handler
+            Args:
+                r: the S3Request
+                attr: dictionary of parameters for the method handler
                         The attributes that it knows about are:
                       * componentname
                       * formname
@@ -283,7 +283,8 @@ class S3PDF(S3Method):
                       * report_groupby
                       * report_hide_comments
 
-            @return: output object to send to the view
+            Returns:
+                output object to send to the view
         """
 
         # ---------------------------------------------------------------------
@@ -1319,8 +1320,11 @@ class S3PDF(S3Method):
         """
             create a dictionary of fields with errors
 
-            @param tree: S3ImportJob.error_tree
-            @return: errordict
+            Args:
+                tree: S3ImportJob.error_tree
+
+            Returns:
+                errordict
         """
 
         errordict = {}
@@ -1388,9 +1392,11 @@ class S3PDF(S3Method):
         """
             convert data generated from ocr parser to a dictionary
 
-            @param s3dataxml: output of S3OCRImageParser
+            Args:
+                s3dataxml: output of S3OCRImageParser
 
-            @return: python dictionary equalant to the input xml
+            Returns:
+                python dictionary equivalent to the input xml
         """
 
         s3ocrdataxml_etree = etree.fromstring(s3ocrdataxml)
@@ -1447,9 +1453,11 @@ class S3PDF(S3Method):
         """
             convert data from import job into a dictionary
 
-            @param importjob: S3ImportJob instance
+            Args:
+                importjob: S3ImportJob instance
 
-            @return: data of S3ImportJob into a dictionary
+            Returns:
+                data of S3ImportJob into a dictionary
         """
 
         s3ocrdata = Storage()
@@ -1467,10 +1475,12 @@ class S3PDF(S3Method):
         """
             create a html review form using the available data
 
-            @param s3ocrdict: output of self.__s3ocrxml2dict()
-            @param s3ocrdata: output of self.__importjob2data()
+            Args:
+                s3ocrdict: output of self.__s3ocrxml2dict()
+                s3ocrdata: output of self.__importjob2data()
 
-            @return: html review form
+            Returns:
+                html review form
         """
 
         ptablecontent = []
@@ -1842,11 +1852,13 @@ class S3PDF(S3Method):
     # -------------------------------------------------------------------------
     def __s3ocrxml2dict(self, s3ocrxml):
         """
-            convert s3ocrxml to dictionary so that it can be used in templates
+            Convert s3ocrxml to dictionary so that it can be used in templates
 
-            @param s3ocrxml: content of a s3ocrxml file, in text
+            Args:
+                s3ocrxml: content of a s3ocrxml file, in text
 
-            @return: equivalent dictionary for s3ocrxml file
+            Returns:
+                Equivalent dictionary for s3ocrxml file
         """
 
         db = current.db
@@ -1934,16 +1946,18 @@ class S3PDF(S3Method):
                     header,
                     footer,
                     filename = None,
-                    heading=None,
+                    heading = None,
                     ):
         """
             This will create a new empty PDF document.
             Data then needs to be added to this document.
 
-            @param title: The title that will appear at the top of the document
-                          and in the filename
+            Args:
+                title: The title that will appear at the top of the document
+                       and in the filename
 
-            @return: An empty pdf document
+            Returns:
+                An empty pdf document
         """
 
         # Get the document variables
@@ -2001,10 +2015,11 @@ class S3PDF(S3Method):
         """
             Get all form UUIDs/Revs available for a given resource
 
-            @return: a list of all available forms for the given
-                     resource, the list will contain tuples such
-                     that the first value is form-uuid and the
-                     second value is form-revision
+            Returns:
+                A list of all available forms for the given
+                resource, the list will contain tuples such
+                that the first value is form-uuid and the
+                second value is form-revision
         """
 
         db = current.db
@@ -2026,11 +2041,13 @@ class S3PDF(S3Method):
         """
             Gets Number of pages for given form UUID
 
-            @param formuuid: uuid of the form, for which
-                             number of pages is required
+            Args:
+                formuuid: uuid of the form, for which
+                          number of pages is required
 
-            @return: number of pages in a form identified
-                     by uuid
+            Returns:
+                number of pages in a form identified
+                by uuid
         """
 
         db = current.db
@@ -2045,7 +2062,8 @@ class S3PDF(S3Method):
         """
             Optimise & Modifiy s3xml etree to and produce s3ocr etree
 
-            @return: s3ocr etree
+            Returns:
+                s3ocr etree
         """
 
         r = self.r
@@ -2418,7 +2436,8 @@ class S3PDF(S3Method):
         """
             return layout file
 
-            @return: layout xml for the generated OCR form
+            Returns:
+                layout xml for the generated OCR form
         """
 
         prettyprint = True if DEBUG else False
@@ -2430,9 +2449,11 @@ class S3PDF(S3Method):
         """
             Helper to trim off any enclosing paranthesis
 
-            @param text: text which need to be trimmed
+            Args:
+                text: text which need to be trimmed
 
-            @return: text with front and rear paranthesis stripped
+            Returns:
+                text with front and rear paranthesis stripped
         """
 
         if isinstance(text, str) and \
@@ -2446,9 +2467,10 @@ class S3PDF(S3Method):
         """
             Store the PDF layout information into the database/disk.
 
-            @param formUUID: uuid of the generated form
-            @param layoutXML: layout xml of the generated form
-            @param numPages: number of pages in the generated form
+            Args:
+                formUUID: uuid of the generated form
+                layoutXML: layout xml of the generated form
+                numPages: number of pages in the generated form
         """
 
         layout_file_stream = StringIO(layoutXML)
@@ -2475,8 +2497,9 @@ class S3PDF(S3Method):
         """
             Books a revision number for current operation in ocr_meta
 
-            @param formUUID: uuid of the generated form
-            @param formResourceName: name of the eden resource
+            Args:
+                formUUID: uuid of the generated form
+                formResourceName: name of the eden resource
         """
 
         db = current.db
@@ -2506,9 +2529,11 @@ class S3PDF(S3Method):
             Method to extract a generic title from the resource using the
             crud strings
 
-            @param: resource: a S3Resource object
+            Args:
+                resource: a S3Resource object
 
-            @return: the title as a String
+            Returns:
+                The title as a String
         """
 
         try:
@@ -2522,16 +2547,18 @@ class S3PDF(S3Method):
         """
             Method to set the margins of the document
 
-            @param left: the size of the left margin, default None
-            @param right: the size of the right margin, default None
-            @param top: the size of the top margin, default None
-            @param bottom: the size of the bottom margin, default None
+            Args:
+                left: the size of the left margin, default None
+                right: the size of the right margin, default None
+                top: the size of the top margin, default None
+                bottom: the size of the bottom margin, default None
 
             The margin is only changed if a value is provided, otherwise the
             last value that was set will be used. The original values are set
             up to be an inch - in newDocument()
 
-            @todo: make this for a page rather than the document
+            TODO:
+                Make this for a page rather than the document
         """
 
         if left != None:
@@ -2560,7 +2587,8 @@ class S3PDF(S3Method):
         """
             Method to set the orientation of the document to be portrait
 
-            @todo: make this for a page rather than the document
+            TODO:
+                Make this for a page rather than the document
         """
 
         self.doc.pagesize = portrait(self.paper_size)
@@ -2570,7 +2598,8 @@ class S3PDF(S3Method):
         """
             Method to set the orientation of the document to be landscape
 
-            @todo: make this for a page rather than the document
+            TODO:
+                Make this for a page rather than the document
         """
 
         self.doc.pagesize = landscape(self.paper_size)
@@ -2586,12 +2615,13 @@ class S3PDF(S3Method):
         """
             Method to create a table that will be inserted into the document
 
-            @param resource: A S3Resource object
-            @param list_Fields: A list of field names
-            @param report_groupby: A field name that is to be used as a sub-group
-                   All the records that share the same report_groupby value will
-                   be clustered together
-            @param report_hide_comments: Any comment field will be hidden
+            Args:
+                resource: A S3Resource object
+                list_Fields: A list of field names
+                report_groupby: A field name that is to be used as a sub-group
+                                All the records that share the same report_groupby value will
+                                be clustered together
+                report_hide_comments: Any comment field will be hidden
 
             This uses the class S3PDFTable to build and properly format the table.
             The table is then built and stored in the document flow ready for
@@ -2647,9 +2677,10 @@ class S3PDF(S3Method):
         """
             Method to create a rHeader table that is inserted into the document
 
-            @param resource: A S3Resource object
-            @param list_Fields: A list of field names
-            @param report_hide_comments: Any comment field will be hidden
+            Args:
+                resource: A S3Resource object
+                list_Fields: A list of field names
+                report_hide_comments: Any comment field will be hidden
 
             This uses the class S3PDFTable to build and properly format the table.
             The table is then built and stored in the document flow ready for
@@ -2681,11 +2712,13 @@ class S3PDF(S3Method):
         """
             Method to create a paragraph that may be inserted into the document
 
-            @param text: The text for the paragraph
-            @param append: If True then the paragraph will be stored in the
-            document flow ready for generating the pdf.
+            Args:
+                text: The text for the paragraph
+                append: If True then the paragraph will be stored in the
+                        document flow ready for generating the pdf.
 
-            @return The paragraph
+            Returns:
+                The paragraph
 
             This method can return the paragraph rather than inserting into the
             document. This is useful if the paragraph needs to be first
@@ -2880,9 +2913,11 @@ class S3PDF(S3Method):
             The response headers are set up for a pdf document and the document
             is then sent
 
-            @return the document as a stream of characters
+            Returns:
+                The document as a stream of characters
 
-            @todo add a proper template class so that the doc.build is more generic
+            TODO:
+                Add a proper template class so that the doc.build is more generic
         """
 
         styleSheet = getSampleStyleSheet()
@@ -3202,7 +3237,7 @@ class S3PDFDataSource:
         return (subheadingList, data)
 
 # =============================================================================
-class S3PDFRHeader():
+class S3PDFRHeader:
     """
         Class to build a simple table that holds the details of one record,
         which can then be placed in a pdf document
@@ -3221,10 +3256,11 @@ class S3PDFRHeader():
         """
             Method to create an rHeader object
 
-            @param document: An S3PDF object
-            @param resource: An S3Resource object
-            @param list_fields: A list of field names
-            @param hide_comments: Any comment field will be hidden
+            Args:
+                document: An S3PDF object
+                resource: An S3Resource object
+                list_fields: A list of field names
+                hide_comments: Any comment field will be hidden
         """
 
         self.pdf = document
@@ -3243,9 +3279,10 @@ class S3PDFRHeader():
         """
             Method to build the table.
 
-            @return: A list of Table objects. Normally this will be a list with
-                     just one table object, but if the table needs to be split
-                     across columns then one object per page will be created.
+            Returns:
+                A list of Table objects. Normally this will be a list with
+                just one table object, but if the table needs to be split
+                across columns then one object per page will be created.
         """
 
         if self.resource != None:
@@ -3826,7 +3863,7 @@ cast2ascii = lambda m: \
                                                                  "ignore")
 
 # =============================================================================
-class S3OCRImageParser(object):
+class S3OCRImageParser:
     """
         Image Parsing and OCR Utility
     """

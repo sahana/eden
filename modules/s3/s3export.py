@@ -38,7 +38,7 @@ from gluon import current
 from .s3codec import S3Codec
 
 # =============================================================================
-class S3Exporter(object):
+class S3Exporter:
     """
         Exporter toolkit
     """

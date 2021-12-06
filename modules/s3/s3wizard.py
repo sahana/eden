@@ -52,8 +52,9 @@ class S3Wizard(S3Method):
         """
             Entry point for REST interface
 
-            @param r: the S3Request
-            @param attr: controller attributes
+            Args:
+                r: the S3Request
+                attr: controller attributes
         """
 
         wizard = r.resource.get_config("wizard") # Should be a sub-class of S3CrudWizard
@@ -384,8 +385,11 @@ class S3CrudWizard:
             Add Back / Next / Cancel buttons
             - for _select() & custom pages
 
-            NB We do NOT have these buttons at the bottom of component_id forms...UX would be too confusing (instead Cancel back to List & access from there...)
-            @ToDo: Sshould we colour the Wizard buttons differently? Match the header...
+            Note:
+                We do NOT have these buttons at the bottom of component_id forms...UX would be too confusing (instead Cancel back to List & access from there...)
+
+            TODO:
+                Should we colour the Wizard buttons differently? Match the header...
         """
 
         T = current.T
@@ -505,8 +509,9 @@ class S3CrudWizard:
             Get a data table
             - comes from S3CRUD._datatable
 
-            @param r: the S3Request
-            @param attr: parameters for the method handler
+            Args:
+                r: the S3Request
+                attr: parameters for the method handler
         """
 
         method = self.method

@@ -28,8 +28,9 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 
-    NB Widgets are processed upon form submission (before form validation)
-       in addition to when generating new forms (so are often processed twice)
+    Note:
+        Widgets are processed upon form submission (before form validation)
+        in addition to when generating new forms (so are often processed twice)
 """
 
 __all__ = ("S3ACLWidget",
@@ -125,8 +126,9 @@ class S3ACLWidget(CheckboxesWidget):
     """
         Widget class for ACLs
 
-        @todo: add option dependency logic (JS)
-        @todo: configurable vertical/horizontal alignment
+        TODO:
+            Add option dependency logic (JS)
+            Configurable vertical/horizontal alignment
     """
 
     @staticmethod
@@ -206,7 +208,8 @@ class S3AddObjectWidget(FormWidget):
     """
         This widget displays an inline form loaded via AJAX on demand.
 
-        UNUSED
+        Status:
+            Currently Unused
 
         In the browser:
             A load request must made to this widget to enable it.
@@ -420,26 +423,21 @@ class S3AddPersonWidget(FormWidget):
                  pe_label = False,
                  ):
         """
-            Constructor
-
-            @param controller: controller for autocomplete
-            @param separate_name_fields: use separate name fields, overrides
-                                         deployment setting
-
-            @param father_name: expose father name field, overrides
-                                deployment setting
-            @param grandfather_name: expose grandfather name field, overrides
-                                     deployment setting
-
-            @param year_of_birth: use just year-of-birth field instead of full
-                                  date-of-birth, overrides deployment setting
-
-            @param first_name_only: treat single name field entirely as
-                                    first name (=do not split into name parts),
-                                    overrides auto-detection, otherwise default
-                                    for right-to-left written languages
-
-            @param pe_label: expose ID label field
+            Args:
+                controller: controller for autocomplete
+                separate_name_fields: use separate name fields, overrides
+                                      deployment setting
+                father_name: expose father name field, overrides
+                             deployment setting
+                grandfather_name: expose grandfather name field, overrides
+                                  deployment setting
+                year_of_birth: use just year-of-birth field instead of full
+                               date-of-birth, overrides deployment setting
+                first_name_only: treat single name field entirely as
+                                 first name (=do not split into name parts),
+                                 overrides auto-detection, otherwise default
+                                 for right-to-left written languages
+                pe_label: expose ID label field
         """
 
         self.controller = controller
@@ -461,9 +459,10 @@ class S3AddPersonWidget(FormWidget):
         """
             Widget builder
 
-            @param field: the Field
-            @param value: the current or default value
-            @param attributes: additional HTML attributes for the widget
+            Args:
+                field: the Field
+                value: the current or default value
+                attributes: additional HTML attributes for the widget
         """
 
         T = current.T
@@ -759,14 +758,16 @@ class S3AddPersonWidget(FormWidget):
         """
             Extract the data for a record ID
 
-            @param record_id: the record ID
-            @param fields: the fields to extract, dict {propName: Field}
-            @param details: includes person details
-            @param tags: list of Tags
-            @param hrm: record ID is a hrm_human_resource ID rather
-                        than person ID
+            Args:
+                record_id: the record ID
+                fields: the fields to extract, dict {propName: Field}
+                details: includes person details
+                tags: list of Tags
+                hrm: record ID is a hrm_human_resource ID rather
+                     than person ID
 
-            @return: dict of {propName: value}
+            Returns:
+                dict of {propName: value}
         """
 
         db = current.db
@@ -837,10 +838,12 @@ class S3AddPersonWidget(FormWidget):
             Extract the contact data for a pe_id; extracts only the first
             value per contact method
 
-            @param pe_id: the pe_id
+            Args:
+                pe_id: the pe_id
 
-            @return: a dict {fieldname: value}, where field names
-                     correspond to the contact method (field map)
+            Returns:
+                dict {fieldname: value}, where field names
+                correspond to the contact method (field map)
         """
 
         # Map contact method <=> form field name
@@ -886,11 +889,13 @@ class S3AddPersonWidget(FormWidget):
         """
             Extract the tag data for a person_id
 
-            @param person_id: the person_id
-            @param tags: list of tags
+            Args:
+                person_id: the person_id
+                tags: list of tags
 
-            @return: a dict {fieldname: value}, where field names
-                     correspond to the tag name (field map)
+            Returns:
+                dict {fieldname: value}, where field names
+                correspond to the tag name (field map)
         """
 
         ttable = current.s3db.pr_person_tag
@@ -908,16 +913,17 @@ class S3AddPersonWidget(FormWidget):
         """
             Construct the embedded form
 
-            @param label: the label for the embedded form
-                          (= field label for the person_id)
-            @param widget_id: the widget ID
-                              (=element ID of the person_id field)
-            @param formfields: list of field names indicating which
-                               fields to render and in which order
-            @param values: dict with values to populate the embedded
-                           form
+            Args:
+                label: the label for the embedded form
+                       (= field label for the person_id)
+                widget_id: the widget ID
+                           (=element ID of the person_id field)
+                formfields: list of field names indicating which
+                            fields to render and in which order
+                values: dict with values to populate the embedded form
 
-            @return: a DIV containing the embedded form rows
+            Returns:
+                DIV containing the embedded form rows
         """
 
         T = current.T
@@ -1049,9 +1055,11 @@ class S3AddPersonWidget(FormWidget):
         """
             Get a label for an embedded field
 
-            @param fieldname: the name of the embedded form field
+            Args:
+                fieldname: the name of the embedded form field
 
-            @return: the label
+            Returns:
+                label
         """
 
         label = self.labels.get(fieldname)
@@ -1073,10 +1081,12 @@ class S3AddPersonWidget(FormWidget):
             a specific widget => otherwise return None here, so the form
             builder will render a standard INPUT
 
-            @param fieldname: the name of the embedded form field
-            @param field: the Field corresponding to the form field
+            Args:
+                fieldname: the name of the embedded form field
+                field: the Field corresponding to the form field
 
-            @return: the widget; or None if no specific widget is required
+            Returns:
+                widget; or None if no specific widget is required
         """
 
         # Fields which require a specific widget
@@ -1098,12 +1108,13 @@ class S3AddPersonWidget(FormWidget):
         """
             Inject the necessary JavaScript for the widget
 
-            @param widget_id: the widget ID
-                              (=element ID of the person_id field)
-            @param options: JSON-serializable dict of widget options
-            @param i18n: translations of screen messages rendered by
-                         the client-side script,
-                         a dict {messageKey: translation}
+            Args:
+                widget_id: the widget ID
+                           (=element ID of the person_id field)
+                options: JSON-serializable dict of widget options
+                i18n: translations of screen messages rendered by
+                      the client-side script,
+                      a dict {messageKey: translation}
         """
 
         s3 = current.response.s3
@@ -1141,7 +1152,8 @@ class S3AddPersonWidget(FormWidget):
             Inject translations for screen messages rendered by the
             client-side script
 
-            @param labels: dict of translations {messageKey: translation}
+            Args:
+                labels: dict of translations {messageKey: translation}
         """
 
         strings = ['''i18n.%s="%s"''' % (k, s3_str(v))
@@ -1153,11 +1165,13 @@ class S3AddPersonWidget(FormWidget):
         """
             Validate main input value
 
-            @param value: the main input value (JSON)
-            @param record_id: the record ID (unused, for API compatibility)
+            Args:
+                value: the main input value (JSON)
+                record_id: the record ID (unused, for API compatibility)
 
-            @return: tuple (id, error), where "id" is the record ID of the
-                     selected or newly created record
+            Returns:
+                tuple (id, error), where "id" is the record ID of the
+                selected or newly created record
         """
 
         if not isinstance(value, str) or value.isdigit():
@@ -1225,10 +1239,12 @@ class S3AddPersonWidget(FormWidget):
         """
             Parse the main input JSON when the form gets submitted
 
-            @param value: the main input value (JSON)
+            Args:
+                value: the main input value (JSON)
 
-            @return: tuple (data, error), where data is a dict with the
-                     submitted data like: {fieldname: value, ...}
+            Returns:
+                tuple (data, error), where data is a dict with the
+                submitted data like: {fieldname: value, ...}
         """
 
         #from .s3validators import JSONERRORS
@@ -1247,9 +1263,11 @@ class S3AddPersonWidget(FormWidget):
         """
             Get first, middle and last names from the input data
 
-            @param data: the input data dict
+            Args:
+                data: the input data dict
 
-            @return: dict with the name parts found
+            Returns:
+                dict with the name parts found
         """
 
         settings = current.deployment_settings
@@ -1310,9 +1328,11 @@ class S3AddPersonWidget(FormWidget):
         """
             Split a full name into first/middle/last
 
-            @param name: the full name
+            Args:
+                name: the full name
 
-            @return: tuple (first, middle, last)
+            Returns:
+                tuple (first, middle, last)
         """
 
         # https://github.com/derek73/python-nameparser
@@ -1327,12 +1347,14 @@ class S3AddPersonWidget(FormWidget):
             Validate the email address; checks whether the email address
             is valid and unique
 
-            @param value: the email address
-            @param person_id: the person ID, if known
+            Args:
+                value: the email address
+                person_id: the person ID, if known
 
-            @return: tuple (value, error), where error is None if the
-                     email address is valid, otherwise contains the
-                     error message
+            Returns:
+                tuple (value, error), where error is None if the
+                email address is valid, otherwise contains the
+                error message
         """
 
         T = current.T
@@ -1381,9 +1403,12 @@ class S3AddPersonWidget(FormWidget):
         """
             Create a new record from form data
 
-            @param data - the submitted data
-            @return: tuple (id, error), where "id" is the record ID of the
-                     newly created record
+            Args:
+                data - the submitted data
+
+            Returns:
+                tuple (id, error), where "id" is the record ID of the
+                newly created record
         """
 
         s3db = current.s3db
@@ -1480,9 +1505,12 @@ class S3AddPersonWidget(FormWidget):
         """
             Create/Update records from form data
 
-            @param data - the submitted data
-            @return: tuple (id, error), where "id" is the record ID of the
-                     existing person record
+            Args:
+                data - the submitted data
+
+            Returns:
+                tuple (id, error), where "id" is the record ID of the
+                existing person record
         """
 
         db = current.db
@@ -1603,7 +1631,7 @@ class S3AgeWidget(FormWidget):
         it progresses over time; contains both widget and representation
         method
 
-        @example:
+        Example:
             s3_date("date_of_birth",
                     label = T("Age"),
                     widget = S3AgeWidget.widget,
@@ -1618,9 +1646,10 @@ class S3AgeWidget(FormWidget):
         """
             The widget method, renders a simple integer-input
 
-            @param field: the Field
-            @param value: the current or default value
-            @param attributes: additional HTML attributes for the widget
+            Args:
+                field: the Field
+                value: the current or default value
+                attributes: additional HTML attributes for the widget
         """
 
         if isinstance(value, str) and value and not value.isdigit():
@@ -1648,9 +1677,11 @@ class S3AgeWidget(FormWidget):
             Convert a date value into age in years, can be used as
             representation method
 
-            @param value: the date
+            Args:
+                value: the date
 
-            @return: the age in years (integer)
+            Returns:
+                the age in years (integer)
         """
 
         if value and isinstance(value, datetime.date):
@@ -1667,10 +1698,12 @@ class S3AgeWidget(FormWidget):
             Convert age in years into an approximate date of birth, acts
             as inner validator of the widget
 
-            @param value: age value
-            @param error_message: error message (override)
+            Args:
+                value: age value
+                error_message: error message (override)
 
-            @returns: tuple (date, error)
+            Returns:
+                tuple (date, error)
         """
 
         try:
@@ -1873,8 +1906,11 @@ class S3ColorPickerWidget(FormWidget):
 
     def __init__(self, options=None):
         """
-            @param options: options for the JavaScript widget
-            @see: http://bgrins.github.com/spectrum/
+            Args:
+                options: options for the JavaScript widget
+
+            See:
+                http://bgrins.github.com/spectrum/
         """
 
         self.options = dict(self.DEFAULT_OPTIONS)
@@ -1938,9 +1974,10 @@ class S3CalendarWidget(FormWidget):
         Widget to select a date from a popup calendar, with
         optional time input
 
-        @note: this widget must be combined with the IS_UTC_DATE or
-               IS_UTC_DATETIME validators to have the value properly
-               converted from/to local timezone and format.
+        Note:
+            This widget must be combined with the IS_UTC_DATE or
+            IS_UTC_DATETIME validators to have the value properly
+            converted from/to local timezone and format.
 
         - control script is s3.ui.calendar.js
         - uses jQuery UI DatePicker for Gregorian calendars: https://jqueryui.com/datepicker/
@@ -1974,39 +2011,32 @@ class S3CalendarWidget(FormWidget):
                  clear_text = None,
                  ):
         """
-            Constructor
-
-            @param calendar: which calendar to use (override default)
-
-            @param date_format: the date format (override default)
-            @param time_format: the time format (override default)
-            @param separator: date-time separator (override default)
-
-            @param minimum: the minimum selectable date/time (overrides past)
-            @param maximum: the maximum selectable date/time (overrides future)
-            @param past: how many hours into the past are selectable (overrides past_months)
-            @param future: how many hours into the future are selectable (overrides future_months)
-            @param past_months: how many months into the past are selectable
-            @param future_months: how many months into the future are selectable
-
-            @param month_selector: show a months drop-down
-            @param year_selector: show a years drop-down
-            @param min_year: the minimum selectable year (can be relative to now like "-10")
-            @param max_year: the maximum selectable year (can be relative to now like "+10")
-
-            @param week_number: show the week number in the calendar
-            @param buttons: show the button panel (defaults to True if
-                            the widget has a timepicker, else False)
-
-            @param timepicker: show a timepicker
-            @param minute_step: minute-step for the timepicker slider
-
-            @param set_min: CSS selector for another S3Calendar widget for which to
-                            dynamically update the minimum selectable date/time from
-                            the selected date/time of this widget
-            @param set_max: CSS selector for another S3Calendar widget for which to
-                            dynamically update the maximum selectable date/time from
-                            the selected date/time of this widget
+            Args:
+                calendar: which calendar to use (override default)
+                date_format: the date format (override default)
+                time_format: the time format (override default)
+                separator: date-time separator (override default)
+                minimum: the minimum selectable date/time (overrides past)
+                maximum: the maximum selectable date/time (overrides future)
+                past: how many hours into the past are selectable (overrides past_months)
+                future: how many hours into the future are selectable (overrides future_months)
+                past_months: how many months into the past are selectable
+                future_months: how many months into the future are selectable
+                month_selector: show a months drop-down
+                year_selector: show a years drop-down
+                min_year: the minimum selectable year (can be relative to now like "-10")
+                max_year: the maximum selectable year (can be relative to now like "+10")
+                week_number: show the week number in the calendar
+                buttons: show the button panel (defaults to True if
+                         the widget has a timepicker, else False)
+                timepicker: show a timepicker
+                minute_step: minute-step for the timepicker slider
+                set_min: CSS selector for another S3Calendar widget for which to
+                         dynamically update the minimum selectable date/time from
+                         the selected date/time of this widget
+                set_max: CSS selector for another S3Calendar widget for which to
+                         dynamically update the maximum selectable date/time from
+                         the selected date/time of this widget
         """
 
         self.calendar = calendar
@@ -2045,9 +2075,10 @@ class S3CalendarWidget(FormWidget):
         """
             Widget builder
 
-            @param field: the Field
-            @param value: the current value
-            @param attributes: the HTML attributes for the widget
+            Args:
+                field: the Field
+                value: the current value
+                attributes: the HTML attributes for the widget
         """
 
         # Modify class as required
@@ -2149,9 +2180,11 @@ class S3CalendarWidget(FormWidget):
             Compute the minimum/maximum selectable date/time, as well as
             the default time (=the minute-step closest to now)
 
-            @param dtformat: the user datetime format
+            Args:
+                dtformat: the user datetime format
 
-            @return: a dict {minDateTime, maxDateTime, defaultValue, yearRange}
+            Returns:
+                dict {minDateTime, maxDateTime, defaultValue, yearRange}
                      with the min/max options as ISO-formatted strings, and the
                      defaultValue in user-format (all in local time), to be
                      passed as-is to s3.calendarwidget
@@ -2250,9 +2283,10 @@ class S3CalendarWidget(FormWidget):
             Helper function to inject the document-ready-JavaScript for
             this widget.
 
-            @param field: the Field
-            @param value: the current value
-            @param attr: the HTML attributes for the widget
+            Args:
+                field: the Field
+                value: the current value
+                attr: the HTML attributes for the widget
         """
 
         if not selector:
@@ -2379,14 +2413,13 @@ class S3DateWidget(FormWidget):
                  default_explicit = False,
                  ):
         """
-            Constructor
-
-            @param format: format of date
-            @param past: how many months into the past the date can be set to
-            @param future: how many months into the future the date can be set to
-            @param start_field: "selector" for start date field
-            @param default_interval: x months from start date
-            @param default_explicit: bool for explicit default
+            Args:
+                format: format of date
+                past: how many months into the past the date can be set to
+                future: how many months into the future the date can be set to
+                start_field: "selector" for start date field
+                default_interval: x months from start date
+                default_explicit: bool for explicit default
         """
 
         self.format = format
@@ -2401,9 +2434,10 @@ class S3DateWidget(FormWidget):
         """
             Widget builder
 
-            @param field: the Field
-            @param value: the current value
-            @param attributes: the HTML attributes for the widget
+            Args:
+                field: the Field
+                value: the current value
+                attributes: the HTML attributes for the widget
         """
 
         # Need to convert value into ISO-format
@@ -2565,33 +2599,30 @@ class S3DateTimeWidget(FormWidget):
         """
             Constructor
 
-            @param opts: the widget options
+            Args:
+                opts: the widget options
 
-            @keyword date_format: the date format (falls back to
-                                  deployment_settings.L10n.date_format)
-            @keyword time_format: the time format (falls back to
-                                  deployment_settings.L10n.time_format)
-            @keyword separator: the date/time separator (falls back to
-                                deployment_settings.L10n.datetime_separator)
-
-            @keyword min: the earliest selectable datetime (datetime, overrides "past")
-            @keyword max: the latest selectable datetime (datetime, overrides "future")
-            @keyword past: the earliest selectable datetime relative to now (hours)
-            @keyword future: the latest selectable datetime relative to now (hours)
-
-            @keyword min_year: the earliest year in the drop-down (default: now-10 years)
-            @keyword max_year: the latest year in the drop-down (default: now+10 years)
-
-            @keyword hide_time: Hide the time selector (default: False)
-            @keyword minute_step: number of minutes per slider step (default: 5)
-
-            @keyword weeknumber: show week number in calendar widget (default: False)
-            @keyword month_selector: show drop-down selector for month (default: False)
-            @keyword year_selector: show drop-down selector for year (default: True)
-            @keyword buttons: show the button panel (default: True)
-
-            @keyword set_min: set a minimum for another datetime widget
-            @keyword set_max: set a maximum for another datetime widget
+            Keyword Args:
+                date_format: the date format (falls back to
+                             deployment_settings.L10n.date_format)
+                time_format: the time format (falls back to
+                             deployment_settings.L10n.time_format)
+                separator: the date/time separator (falls back to
+                           deployment_settings.L10n.datetime_separator)
+                min: the earliest selectable datetime (datetime, overrides "past")
+                max: the latest selectable datetime (datetime, overrides "future")
+                past: the earliest selectable datetime relative to now (hours)
+                future: the latest selectable datetime relative to now (hours)
+                min_year: the earliest year in the drop-down (default: now-10 years)
+                max_year: the latest year in the drop-down (default: now+10 years)
+                hide_time: Hide the time selector (default: False)
+                minute_step: number of minutes per slider step (default: 5)
+                weeknumber: show week number in calendar widget (default: False)
+                month_selector: show drop-down selector for month (default: False)
+                year_selector: show drop-down selector for year (default: True)
+                buttons: show the button panel (default: True)
+                set_min: set a minimum for another datetime widget
+                set_max: set a maximum for another datetime widget
         """
 
         self.opts = Storage(opts)
@@ -2602,9 +2633,10 @@ class S3DateTimeWidget(FormWidget):
         """
             Widget builder.
 
-            @param field: the Field
-            @param value: the current value
-            @param attributes: the HTML attributes for the widget
+            Args:
+                field: the Field
+                value: the current value
+                attributes: the HTML attributes for the widget
         """
 
         self.inject_script(field, value, **attributes)
@@ -2632,9 +2664,10 @@ class S3DateTimeWidget(FormWidget):
             Helper function to inject the document-ready-JavaScript for
             this widget.
 
-            @param field: the Field
-            @param value: the current value
-            @param attributes: the HTML attributes for the widget
+            Args:
+                field: the Field
+                value: the current value
+                attributes: the HTML attributes for the widget
         """
 
         ISO = "%Y-%m-%dT%H:%M:%S"
@@ -2836,12 +2869,13 @@ class S3HoursWidget(FormWidget):
         Widget to enter a duration in hours (e.g. of a task), supporting
         flexible input format (e.g. "1h 15min", "1.75", "2:10")
 
-        NB users who frequently enter minutes-fragments sometimes forget
-           that the field expects hours, e.g. input of "15" interpreted
-           as 15 hours while the user actually meant 15 minutes. To avoid
-           this, use the explicit_above parameter to require an explicit
-           time unit or colon notation for implausible numbers (e.g. >10)
-           - so the user must enter "15h", "15m", "15:00" or "0:15" explicitly.
+        Note:
+            Users who frequently enter minutes-fragments sometimes forget
+            that the field expects hours, e.g. input of "15" interpreted
+            as 15 hours while the user actually meant 15 minutes. To avoid
+            this, use the explicit_above parameter to require an explicit
+            time unit or colon notation for implausible numbers (e.g. >10)
+            - so the user must enter "15h", "15m", "15:00" or "0:15" explicitly.
     """
 
     PARTS = re.compile(r"((?:[+-]{0,1}\s*)(?:[0-9,.:]+)\s*(?:[^0-9,.:+-]*))")
@@ -2849,13 +2883,12 @@ class S3HoursWidget(FormWidget):
 
     def __init__(self, interval=None, precision=2, explicit_above=None):
         """
-            Constructor
-
-            @param interval: standard interval to round up to (minutes),
-                             None to disable rounding
-            @param precision: number of decimal places to keep
-            @param explicit_above: require explicit time unit or colon notation
-                                   for value fragments above this limit
+            Args:
+                interval: standard interval to round up to (minutes),
+                          None to disable rounding
+                precision: number of decimal places to keep
+                explicit_above: require explicit time unit or colon notation
+                                for value fragments above this limit
         """
 
         self.interval = interval
@@ -2868,9 +2901,10 @@ class S3HoursWidget(FormWidget):
         """
             Entry point for form processing
 
-            @param field: the Field
-            @param value: the current/default value
-            @param attributes: HTML attributes for the widget
+            Args:
+                field: the Field
+                value: the current/default value
+                attributes: HTML attributes for the widget
         """
 
         default = {"value": (value != None and str(value)) or ""}
@@ -2888,9 +2922,11 @@ class S3HoursWidget(FormWidget):
         """
             Pre-validator to parse the input value before validating it
 
-            @param value: the input value
+            Args:
+                value: the input value
 
-            @returns: tuple (parsed, error)
+            Returns:
+                tuple (parsed, error)
         """
 
         try:
@@ -2906,8 +2942,11 @@ class S3HoursWidget(FormWidget):
         """
             Function to parse the input value (if it is a string)
 
-            @param value: the value
-            @returns: the value as float (hours)
+            Args:
+                value: the value
+
+            Returns:
+                float (hours)
         """
 
         hours = 0.0
@@ -2981,13 +3020,12 @@ class S3WeeklyHoursWidget(FormWidget):
 
     def __init__(self, daynames=None, hours=None, ticks=6):
         """
-            Constructor
-
-            @param daynames: the weekdays to show and their (localized)
-                             names, as dict {daynumber: dayname}, with
-                             day number 0 meaning Sunday
-            @param hours: the hours to show (0..23) as tuple (first, last)
-            @param ticks: render tick marks every n hours (0/None=off)
+            Args:
+                daynames: the weekdays to show and their (localized)
+                          names, as dict {daynumber: dayname}, with
+                          day number 0 meaning Sunday
+                hours: the hours to show (0..23) as tuple (first, last)
+                ticks: render tick marks every n hours (0/None=off)
         """
 
         if daynames:
@@ -3007,9 +3045,10 @@ class S3WeeklyHoursWidget(FormWidget):
         """
             Widget builder
 
-            @param field: the Field
-            @param value: the current field value
-            @param attributes: additional DOM attributes for the widget
+            Args:
+                field: the Field
+                value: the current field value
+                attributes: additional DOM attributes for the widget
         """
 
         default = {"value": value,
@@ -3041,8 +3080,9 @@ class S3WeeklyHoursWidget(FormWidget):
         """
             Inject static JS and instantiate client-side UI widget
 
-            @param widget_id: the widget ID
-            @param options: JSON-serializable dict with UI widget options
+            Args:
+                widget_id: the widget ID
+                options: JSON-serializable dict with UI widget options
         """
 
         s3 = current.response.s3
@@ -3069,7 +3109,8 @@ class S3WeeklyHoursWidget(FormWidget):
         """
             Default weekday names (abbreviations)
 
-            @returns: dict of {daynumber: dayname}
+            Returns:
+                dict of {daynumber: dayname}
         """
 
         T = current.T
@@ -3090,14 +3131,16 @@ class S3WeeklyHoursWidget(FormWidget):
             Represent a set of weekly time rules, as list of rules
             per weekday (HTML)
 
-            @param rules: array of rules, or a JSON string encoding
-                          such an array
-            @param daynames: override for default daynames, as dict
-                             {daynumber: dayname}, with day number 0
-                             meaning Sunday
-            @param html: produce HTML rather than text (overridable for e.g. XLS export)
+            Args:
+                rules: array of rules, or a JSON string encoding
+                       such an array
+                daynames: override for default daynames, as dict
+                          {daynumber: dayname}, with day number 0
+                          meaning Sunday
+                html: produce HTML rather than text (overridable for e.g. XLS export)
 
-            @returns: UL instance
+            Returns:
+                UL instance
         """
 
         if isinstance(rules, str) and rules:
@@ -3140,7 +3183,7 @@ class S3WeeklyHoursWidget(FormWidget):
                     slots.append(slot)
                 slots_by_day[day] = slots
 
-        output = UL(_class="wh-schedule") if html else []
+        output = UL(_class = "wh-schedule") if html else []
 
         for index in range(first_dow, first_dow + 7):
 
@@ -3154,7 +3197,9 @@ class S3WeeklyHoursWidget(FormWidget):
                 slotsrepr = "-"
 
             if html:
-                output.append(LI(SPAN(dn[day], _class="wh-dayname"),
+                output.append(LI(SPAN(dn[day],
+                                      _class = "wh-dayname",
+                                      ),
                                  slotsrepr,
                                  ))
             else:
@@ -3168,16 +3213,16 @@ class S3QRInput(FormWidget):
         Simple input widget with attached QR-code decoder, using the
         device camera (if available) to capture the code
 
-        @status: experimental
+        Status:
+            Experimental
     """
 
     def __init__(self, hidden=False, icon=True, label=False):
         """
-            Constructor
-
-            @param hidden: use a hidden input
-            @param icon: show icon on button
-            @param label: show label on button
+            Args:
+                hidden: use a hidden input
+                icon: show icon on button
+                label: show label on button
         """
 
         self.hidden = hidden
@@ -3189,9 +3234,10 @@ class S3QRInput(FormWidget):
         """
             Widget builder
 
-            @param field: the Field
-            @param value: the current field value
-            @param attributes: additional DOM attributes for the widget
+            Args:
+                field: the Field
+                value: the current field value
+                attributes: additional DOM attributes for the widget
         """
 
         T = current.T
@@ -3255,8 +3301,9 @@ class S3QRInput(FormWidget):
         """
             Inject static JS and instantiate client-side UI widget
 
-            @param widget_id: the widget ID
-            @param options: JSON-serializable dict with UI widget options
+            Args:
+                widget_id: the widget ID
+                options: JSON-serializable dict with UI widget options
         """
 
         s3 = current.response.s3
@@ -3299,16 +3346,15 @@ class S3EmbeddedComponentWidget(FormWidget):
                  select_existing = True,
                  ):
         """
-            Constructor
-
-            @param link: the name of the link table
-            @param component: the name of the component table
-            @param autocomplete: name of the autocomplete field
-            @param link_filter: filter expression to filter out records
-                                in the component that are already linked
-                                to the main record
-            @param select_existing: allow the selection of existing
-                                    component records from the registry
+            Args:
+                link: the name of the link table
+                component: the name of the component table
+                autocomplete: name of the autocomplete field
+                link_filter: filter expression to filter out records
+                             in the component that are already linked
+                             to the main record
+                select_existing: allow the selection of existing
+                                 component records from the registry
         """
 
         self.link = link
@@ -3322,9 +3368,10 @@ class S3EmbeddedComponentWidget(FormWidget):
         """
             Widget renderer
 
-            @param field: the Field
-            @param value: the current value
-            @param attributes: the HTML attributes for the widget
+            Args:
+                field: the Field
+                value: the current value
+                attributes: the HTML attributes for the widget
         """
 
         T = current.T
@@ -3346,21 +3393,21 @@ class S3EmbeddedComponentWidget(FormWidget):
 
         # Subform controls
         controls = TAG[""](A(T("Select from Registry"),
-                             _id="%s-select" % input_id,
-                             _class="action-btn",
+                             _id = "%s-select" % input_id,
+                             _class = "action-btn",
                              ),
                            A(T("Remove Selection"),
-                             _id="%s-clear" % input_id,
-                             _class="action-btn hide",
-                             _style="padding-left:15px;",
+                             _id = "%s-clear" % input_id,
+                             _class = "action-btn hide",
+                             _style = "padding-left:15px;",
                              ),
                            A(T("Edit Details"),
-                             _id="%s-edit" % input_id,
-                             _class="action-btn hide",
-                             _style="padding-left:15px;",
+                             _id = "%s-edit" % input_id,
+                             _class = "action-btn hide",
+                             _style = "padding-left:15px;",
                              ),
-                           DIV(_class="throbber hide",
-                               _style="padding-left:85px;",
+                           DIV(_class = "throbber hide",
+                               _style = "padding-left:85px;",
                                ),
                            )
         controls = widgetstyle("%s-select-row" % input_id,
@@ -3381,14 +3428,15 @@ class S3EmbeddedComponentWidget(FormWidget):
             ac_field = ctable[autocomplete]
 
             widget = S3AutocompleteWidget(prefix,
-                                          resourcename=resourcename,
-                                          fieldname=autocomplete,
-                                          link_filter=self.link_filter,
+                                          resourcename = resourcename,
+                                          fieldname = autocomplete,
+                                          link_filter = self.link_filter,
                                           )
             selector = widgetstyle("%s-autocomplete-row" % input_id,
                                    LABEL("%s: " % ac_field.label,
-                                         _class="hide",
-                                         _id="%s-autocomplete-label" % input_id),
+                                         _class = "hide",
+                                         _id = "%s-autocomplete-label" % input_id,
+                                         ),
                                    widget(field, value),
                                    "",
                                    )
@@ -3397,14 +3445,16 @@ class S3EmbeddedComponentWidget(FormWidget):
             # Options widget
             # @todo: add link_filter here as well
             widget = OptionsWidget.widget(field, None,
-                                          _class="hide",
-                                          _id="dummy_%s" % input_id,
+                                          _class = "hide",
+                                          _id = "dummy_%s" % input_id,
                                           )
             label = LABEL("%s: " % field.label,
-                          _class="hide",
-                          _id="%s-autocomplete-label" % input_id,
+                          _class = "hide",
+                          _id = "%s-autocomplete-label" % input_id,
                           )
-            hidden_input = INPUT(_id=input_id, _class="hide")
+            hidden_input = INPUT(_id = input_id,
+                                 _class = "hide",
+                                 )
 
             selector = widgetstyle("%s-autocomplete-row" % input_id,
                                    label,
@@ -3435,10 +3485,10 @@ class S3EmbeddedComponentWidget(FormWidget):
             s3.has_required = True
 
         # Generate embedded form
-        form = SQLFORM.factory(table_name=self.component,
-                               labels=labels,
-                               formstyle=formstyle,
-                               upload="default/download",
+        form = SQLFORM.factory(table_name = self.component,
+                               labels = labels,
+                               formstyle = formstyle,
+                               upload = "default/download",
                                separator = "",
                                *fields)
 
@@ -3453,7 +3503,7 @@ class S3EmbeddedComponentWidget(FormWidget):
         formrows = TAG[""](formrows)
 
         # Divider
-        divider = widgetstyle("", "", DIV(_class="subheading"), "")
+        divider = widgetstyle("", "", DIV(_class = "subheading"), "")
         divider.add_class("box_bottom embedded")
 
         # Widget script
@@ -3501,9 +3551,12 @@ class S3EmbeddedComponentWidget(FormWidget):
             Fallback for legacy formstyles (i.e. not callable or tuple-rows)
         """
 
-        return TR(TD(label, widget, _class="w2p_fw"),
+        return TR(TD(label,
+                     widget,
+                     _class = "w2p_fw",
+                     ),
                   TD(comments),
-                  _id=row_id,
+                  _id = row_id,
                   )
 
     # -------------------------------------------------------------------------
@@ -3523,7 +3576,8 @@ class S3EmbeddedComponentWidget(FormWidget):
             Example:
                 ?link=project_organisation.organisation_id.5.project_id.id
 
-            @param expression: the link filter expression
+            Args:
+                expression: the link filter expression
         """
 
         try:
@@ -3641,24 +3695,23 @@ class S3GroupedOptionsWidget(FormWidget):
                  option_comment = None,
                  ):
         """
-            Constructor
-
-            @param options: the options for the SELECT, as list of tuples
-                            [(value, label)], or as dict {value: label},
-                            or None to auto-detect the options from the
-                            Field when called
-            @param multiple: multiple options can be selected
-            @param size: maximum number of options in merged letter-groups,
-                         None to not group options by initial letter
-            @param cols: number of columns for the options table
-            @param help_field: field in the referenced table to retrieve
-                               a tooltip text from (for foreign keys only)
-            @param none: True to render "None" as normal option
-            @param sort: sort the options (only effective if size==None)
-            @param orientation: the ordering orientation, "columns"|"rows"
-            @param table: whether to render options inside a table or not
-            @param no_opts: text to show if no options available
-            @param option_comment: HTML template to render after the LABELs
+            Args:
+                options: the options for the SELECT, as list of tuples
+                         [(value, label)], or as dict {value: label},
+                         or None to auto-detect the options from the
+                         Field when called
+                multiple: multiple options can be selected
+                size: maximum number of options in merged letter-groups,
+                      None to not group options by initial letter
+                cols: number of columns for the options table
+                help_field: field in the referenced table to retrieve
+                            a tooltip text from (for foreign keys only)
+                none: True to render "None" as normal option
+                sort: sort the options (only effective if size==None)
+                orientation: the ordering orientation, "columns"|"rows"
+                table: whether to render options inside a table or not
+                no_opts: text to show if no options available
+                option_comment: HTML template to render after the LABELs
         """
 
         self.options = options
@@ -3678,9 +3731,10 @@ class S3GroupedOptionsWidget(FormWidget):
         """
             Render this widget
 
-            @param field: the Field
-            @param value: the currently selected value(s)
-            @param attributes: HTML attributes for the widget
+            Args:
+                field: the Field
+                value: the currently selected value(s)
+                attributes: HTML attributes for the widget
         """
 
         fieldname = field.name
@@ -3738,7 +3792,8 @@ class S3GroupedOptionsWidget(FormWidget):
         """
             Helper method to render an options group
 
-            @param group: the group as dict {label:label, items:[items]}
+            Args:
+                group: the group as dict {label:label, items:[items]}
         """
 
         items = group["items"]
@@ -3761,8 +3816,9 @@ class S3GroupedOptionsWidget(FormWidget):
         """
             Helper method to render one option
 
-            @param item: the item as tuple (key, label, value, tooltip),
-                         value=True indicates that the item is selected
+            Args:
+                item: the item as tuple (key, label, value, tooltip),
+                      value=True indicates that the item is selected
         """
 
         key, label, value, tooltip = item
@@ -3778,8 +3834,9 @@ class S3GroupedOptionsWidget(FormWidget):
         """
             Find, group and sort the options
 
-            @param field: the Field
-            @param value: the currently selected value(s)
+            Args:
+                field: the Field
+                value: the currently selected value(s)
         """
 
         # Get the options as sorted list of tuples (key, value)
@@ -3917,9 +3974,10 @@ class S3GroupedOptionsWidget(FormWidget):
             Helper method to finalize an options group, render its label
             and sort the options
 
-            @param group: the group as dict {letters: [], items: []}
-            @param values: the currently selected values as list
-            @param helptext: dict of {key: helptext} for the options
+            Args:
+                group: the group as dict {letters: [], items: []}
+                values: the currently selected values as list
+                helptext: dict of {key: helptext} for the options
         """
 
         # Construct the group label
@@ -3960,7 +4018,9 @@ class S3GroupedOptionsWidget(FormWidget):
 class S3RadioOptionsWidget(FormWidget):
     """
         Widget with radio buttons for S3OptionsFilter
-        - unused: can just use S3GroupedOptionsWidget with multiple=False
+        
+        Status:
+            unused: can just use S3GroupedOptionsWidget with multiple=False
     """
 
     def __init__(self,
@@ -3971,17 +4031,16 @@ class S3RadioOptionsWidget(FormWidget):
                  sort = True
                  ):
         """
-            Constructor
-
-            @param options: the options for the SELECT, as list of tuples
-                            [(value, label)], or as dict {value: label},
-                            or None to auto-detect the options from the
-                            Field when called
-            @param cols: number of columns for the options table
-            @param help_field: field in the referenced table to retrieve
-                               a tooltip text from (for foreign keys only)
-            @param none: True to render "None" as normal option
-            @param sort: sort the options
+            Args:
+                options: the options for the SELECT, as list of tuples
+                         [(value, label)], or as dict {value: label},
+                         or None to auto-detect the options from the
+                         Field when called
+                cols: number of columns for the options table
+                help_field: field in the referenced table to retrieve
+                            a tooltip text from (for foreign keys only)
+                none: True to render "None" as normal option
+                sort: sort the options
         """
 
         self.options = options
@@ -3995,9 +4054,10 @@ class S3RadioOptionsWidget(FormWidget):
         """
             Render this widget
 
-            @param field: the Field
-            @param value: the currently selected value(s)
-            @param attributes: HTML attributes for the widget
+            Args:
+                field: the Field
+                value: the currently selected value(s)
+                attributes: HTML attributes for the widget
         """
 
         fieldname = field.name
@@ -4037,8 +4097,9 @@ class S3RadioOptionsWidget(FormWidget):
         """
             Helper method to render one option
 
-            @param item: the item as tuple (key, label, value, tooltip),
-                         value=True indicates that the item is selected
+            Args:
+                item: the item as tuple (key, label, value, tooltip),
+                      value=True indicates that the item is selected
         """
 
         key, label, value, tooltip = item
@@ -4062,8 +4123,9 @@ class S3RadioOptionsWidget(FormWidget):
         """
             Find and sort the options
 
-            @param field: the Field
-            @param value: the currently selected value(s)
+            Args:
+                field: the Field
+                value: the currently selected value(s)
         """
 
         # Get the options as sorted list of tuples (key, value)
@@ -4242,22 +4304,25 @@ class S3ImageCropWidget(FormWidget):
         - @ToDo: Replace with https://blueimp.github.io/jQuery-File-Upload/ ?
         Uses the IS_PROCESSED_IMAGE validator
 
-        @ToDo: Doesn't currently work with Inline Component Forms
+        TODO:
+            Doesn't currently work with Inline Component Forms
     """
 
     def __init__(self, image_bounds=None):
         """
-            @param image_bounds: Limits the Size of the Image that can be
-                                 uploaded.
-                                 Tuple/List - (MaxWidth, MaxHeight)
+            Args:
+                image_bounds: Limits the Size of the Image that can be
+                              uploaded.
+                              Tuple/List - (MaxWidth, MaxHeight)
         """
         self.image_bounds = image_bounds
 
     def __call__(self, field, value, download_url=None, **attributes):
         """
-            @param field: Field using this widget
-            @param value: value if any
-            @param download_url: Download URL for saved Image
+            Args:
+                field: Field using this widget
+                value: value if any
+                download_url: Download URL for saved Image
         """
 
         T = current.T
@@ -4659,14 +4724,13 @@ class S3LocationDropdownWidget(FormWidget):
 
     def __init__(self, level="L0", default=None, validate=False, empty=DEFAULT, blank=False):
         """
-            Constructor
-
-            @param level: the Lx-level (as string)
-            @param default: the default location name
-            @param validate: validate input in-widget (special purpose)
-            @param empty: allow selection to be empty
-            @param blank: start without options (e.g. when options are
-                          Ajax-added later by filterOptionsS3)
+            Args:
+                level: the Lx-level (as string)
+                default: the default location name
+                validate: validate input in-widget (special purpose)
+                empty: allow selection to be empty
+                blank: start without options (e.g. when options are
+                       Ajax-added later by filterOptionsS3)
         """
 
         self.level = level
@@ -4843,11 +4907,13 @@ class S3Selector(FormWidget):
 
             To be implemented in subclass.
 
-            @param field: the Field
-            @param value: the current value(s)
-            @param attr: additional HTML attributes for the widget
+            Args:
+                field: the Field
+                value: the current value(s)
+                attr: additional HTML attributes for the widget
 
-            @return: the widget HTML
+            Returns:
+                The widget HTML
         """
 
         values = self.parse(value)
@@ -4861,10 +4927,12 @@ class S3Selector(FormWidget):
 
             To be implemented in subclass.
 
-            @param record_id: the record ID
-            @param values: the values dict
+            Args:
+                record_id: the record ID
+                values: the values dict
 
-            @return: the (updated) values dict
+            Returns:
+                The (updated) values dict
         """
 
         if values is None:
@@ -4885,9 +4953,11 @@ class S3Selector(FormWidget):
 
             To be implemented in subclass.
 
-            @param values: the values dict
+            Args:
+                values: the values dict
 
-            @return: string representation for the values dict
+            Returns:
+                string representation for the values dict
         """
 
         return s3_str(value)
@@ -4901,10 +4971,13 @@ class S3Selector(FormWidget):
 
             To be implemented in subclass.
 
-            @param value: the value from the form
-            @param requires: the field validator
-            @returns: tuple (values, error) with values being the parsed
-                      value dict, and error any validation errors
+            Args:
+                value: the value from the form
+                requires: the field validator
+
+            Returns:
+                tuple (values, error) with values being the parsed
+                value dict, and error any validation errors
         """
 
         values = self.parse(value)
@@ -4919,9 +4992,12 @@ class S3Selector(FormWidget):
 
             To be implemented in subclass.
 
-            @param value: the value from the form (as JSON)
-            @param record_id: the record ID (unused, for API compatibility)
-            @return: tuple (record_id, error)
+            Args:
+                value: the value from the form (as JSON)
+                record_id: the record ID (unused, for API compatibility)
+
+            Returns:
+                tuple (record_id, error)
         """
 
         # Convert value into dict and validate
@@ -4946,12 +5022,14 @@ class S3Selector(FormWidget):
         """
             Generate the (hidden) input field. Should be used in __call__.
 
-            @param field: the Field
-            @param values: the parsed value (as dict)
-            @param classes: standard HTML classes
-            @param attributes: the widget attributes as passed in to the widget
+            Args:
+                field: the Field
+                values: the parsed value (as dict)
+                classes: standard HTML classes
+                attributes: the widget attributes as passed in to the widget
 
-            @return: the INPUT field
+            Returns:
+                INPUT field
         """
 
         if isinstance(classes, (tuple, list)):
@@ -4979,8 +5057,11 @@ class S3Selector(FormWidget):
         """
             Serialize the values (as JSON string). Called from inputfield().
 
-            @param values: the values (as dict)
-            @return: the serialized values
+            Args:
+                values: the values (as dict)
+
+            Returns:
+                The serialized values
         """
 
         return json.dumps(values, separators=SEPARATORS)
@@ -4993,8 +5074,11 @@ class S3Selector(FormWidget):
             from a form. Should be called from validate(), doesn't need to
             be re-implemented in subclass.
 
-            @param value: the value
-            @return: the parsed data as dict
+            Args:
+                value: the value
+
+            Returns:
+                The parsed data as dict
         """
 
         record_id = None
@@ -5089,46 +5173,45 @@ class S3LocationSelector(S3Selector):
                  outside = None,
                  ):
         """
-            Constructor
-
-            @param levels: list or tuple of hierarchy levels (names) to expose,
-                           in order (e.g. ("L0", "L1", "L2"))
-                           or False to disable completely
-            @param required_levels: list or tuple of required hierarchy levels (if empty,
-                                    only the highest selectable Lx will be required)
-            @param hide_lx: hide Lx selectors until higher level has been selected
-            @param reverse_lx: render Lx selectors in the order usually used by
-                               street Addresses (lowest level first), and below the
-                               address line
-            @param filter_lx: filter the top-level selectable Lx by name (tuple of names),
-                              i.e. restrict to regional
-            @param show_address: show a field for street address.
-                                 If the parameter is set to a string then this is used as the label.
-            @param address_required: address field is mandatory
-            @param show_postcode: show a field for postcode
-            @param postcode_required: postcode field is mandatory
-            @param postcode_to_address: service to use to lookup a list of addresses from the postcode
-            @param show_latlon: show fields for manual Lat/Lon input
-            @param latlon_mode: (initial) lat/lon input mode ("decimal" or "dms")
-            @param latlon_mode_toggle: allow user to toggle lat/lon input mode
-            @param show_map: show a map to select specific points
-            @param open_map_on_load: show map on load
-            @param feature_required: map feature is required
-            @param lines: use a line draw tool
-            @param points: use a point draw tool
-            @param polygons: use a polygon draw tool
-            @param circles: use a circle draw tool
-            @param color_picker: display a color-picker to set per-feature styling
-                                 (also need to enable in the feature layer to show on map)
-            @param catalog_layers: display catalogue layers or just the default base layer
-            @param min_bbox: minimum BBOX in map selector, used to determine automatic
-                             zoom level for single-point locations
-            @param labels: show labels on inputs
-            @param placeholders: show placeholder text in inputs
-            @param error_message: default error message for server-side validation
-            @param represent: an S3Represent instance that can represent non-DB rows
-            @param prevent_duplicate_addresses: do a check for duplicate addresses & prevent
-                                                creation of record if a dupe is found
+            Args:
+                levels: list or tuple of hierarchy levels (names) to expose,
+                        in order (e.g. ("L0", "L1", "L2"))
+                        or False to disable completely
+                required_levels: list or tuple of required hierarchy levels (if empty,
+                                 only the highest selectable Lx will be required)
+                hide_lx: hide Lx selectors until higher level has been selected
+                reverse_lx: render Lx selectors in the order usually used by
+                            street Addresses (lowest level first), and below the
+                            address line
+                filter_lx: filter the top-level selectable Lx by name (tuple of names),
+                           i.e. restrict to regional
+                show_address: show a field for street address.
+                              If the parameter is set to a string then this is used as the label.
+                address_required: address field is mandatory
+                show_postcode: show a field for postcode
+                postcode_required: postcode field is mandatory
+                postcode_to_address: service to use to lookup a list of addresses from the postcode
+                show_latlon: show fields for manual Lat/Lon input
+                latlon_mode: (initial) lat/lon input mode ("decimal" or "dms")
+                latlon_mode_toggle: allow user to toggle lat/lon input mode
+                show_map: show a map to select specific points
+                open_map_on_load: show map on load
+                feature_required: map feature is required
+                lines: use a line draw tool
+                points: use a point draw tool
+                polygons: use a polygon draw tool
+                circles: use a circle draw tool
+                color_picker: display a color-picker to set per-feature styling
+                              (also need to enable in the feature layer to show on map)
+                catalog_layers: display catalogue layers or just the default base layer
+                min_bbox: minimum BBOX in map selector, used to determine automatic
+                          zoom level for single-point locations
+                labels: show labels on inputs
+                placeholders: show placeholder text in inputs
+                error_message: default error message for server-side validation
+                represent: an S3Represent instance that can represent non-DB rows
+                prevent_duplicate_addresses: do a check for duplicate addresses & prevent
+                                             creation of record if a dupe is found
         """
 
         settings = current.deployment_settings
@@ -5261,7 +5344,8 @@ class S3LocationSelector(S3Selector):
         """
             Mobile widget settings
 
-            @ToDo: Expose configuration options
+            TODO:
+                Expose configuration options
         """
 
         widget = {"type": "location",
@@ -5274,9 +5358,10 @@ class S3LocationSelector(S3Selector):
         """
             Widget renderer
 
-            @param field: the Field
-            @param value: the current value(s)
-            @param attr: additional HTML attributes for the widget
+            Args:
+                field: the Field
+                value: the current value(s)
+                attr: additional HTML attributes for the widget
         """
 
         # Environment
@@ -5621,15 +5706,18 @@ class S3LocationSelector(S3Selector):
         """
             Extract the hierarchy labels
 
-            @param levels: the exposed hierarchy levels
-            @param country: the country (gis_location record ID) for which
-                            to read the hierarchy labels
+            Args:
+                levels: the exposed hierarchy levels
+                country: the country (gis_location record ID) for which
+                         to read the hierarchy labels
 
-            @return: tuple (labels, compact) where labels is for
-                     internal use with _lx_selectors, and compact
-                     the version ready for JSON output
+            Returns:
+                tuple (labels, compact) where labels is for
+                internal use with _lx_selectors, and compact
+                the version ready for JSON output
 
-            @ToDo: Country-specific Translations of Labels
+            TODO:
+                Country-specific Translations of Labels
         """
 
         T = current.T
@@ -5693,18 +5781,21 @@ class S3LocationSelector(S3Selector):
         """
             Build initial location dict (to populate Lx dropdowns)
 
-            @param levels: the exposed levels
-            @param values: the current values
-            @param default_bounds: the default bounds (if already known, e.g.
-                                   single-country deployment)
-            @param filter_lx: filter the top-level Lx by names
-            @param lowest_lx: the lowest un-selectable Lx level (to determine
-                              default bounds if not passed in)
-            @param config: the current GIS config
+            Args:
+                levels: the exposed levels
+                values: the current values
+                default_bounds: the default bounds (if already known, e.g.
+                                single-country deployment)
+                filter_lx: filter the top-level Lx by names
+                lowest_lx: the lowest un-selectable Lx level (to determine
+                           default bounds if not passed in)
+                config: the current GIS config
 
-            @return: dict of location data, ready for JSON output
+            Returns:
+                dict of location data, ready for JSON output
 
-            @ToDo: DRY with controllers/gis.py ldata()
+            TODO:
+                DRY with controllers/gis.py ldata()
         """
 
         db = current.db
@@ -5961,14 +6052,16 @@ class S3LocationSelector(S3Selector):
     def _layout(components,
                 map_icon = None,
                 formstyle = None,
-                inline = False):
+                inline = False,
+                ):
         """
             Overall layout for visible components
 
-            @param components: the components as dict
-                               {name: (label, widget, id, hidden)}
-            @param map icon: the map icon
-            @param formstyle: the formstyle (falls back to CRUD formstyle)
+            Args:
+                components: the components as dict
+                            {name: (label, widget, id, hidden)}
+                map icon: the map icon
+                formstyle: the formstyle (falls back to CRUD formstyle)
         """
 
         if formstyle is None:
@@ -6038,20 +6131,23 @@ class S3LocationSelector(S3Selector):
                       levels,
                       labels,
                       multiselect = False,
-                      required = False):
+                      required = False,
+                      ):
         """
             Render the Lx-dropdowns
 
-            @param field: the field (to construct the HTML Names)
-            @param fieldname: the fieldname (to construct the HTML IDs)
-            @param levels: tuple of levels in order, like ("L0", "L1", ...)
-            @param labels: the labels for the hierarchy levels as dict {level:label}
-            @param multiselect: Use multiselect-dropdowns (specify "search" to
-                                make the dropdowns searchable)
-            @param required: whether selection is required
+            Args:
+                field: the field (to construct the HTML Names)
+                fieldname: the fieldname (to construct the HTML IDs)
+                levels: tuple of levels in order, like ("L0", "L1", ...)
+                labels: the labels for the hierarchy levels as dict {level:label}
+                multiselect: Use multiselect-dropdowns (specify "search" to
+                             make the dropdowns searchable)
+                required: whether selection is required
 
-            @return: a dict of components
-                     {name: (label, widget, id, hidden)}
+            Returns:
+                dict of components
+                {name: (label, widget, id, hidden)}
         """
 
         # Use multiselect widget?
@@ -6127,18 +6223,21 @@ class S3LocationSelector(S3Selector):
                label,
                hidden = False,
                required = False,
-               _class = "string"):
+               _class = "string",
+               ):
         """
             Render a text input (e.g. address or postcode field)
 
-            @param fieldname: the field name (for ID construction)
-            @param name: the name for the input field
-            @param value: the initial value for the input
-            @param label: the label for the input
-            @param hidden: render hidden
-            @param required: mark as required
+            Args:
+                fieldname: the field name (for ID construction)
+                name: the name for the input field
+                value: the initial value for the input
+                label: the label for the input
+                hidden: render hidden
+                required: mark as required
 
-            @return: a tuple (label, widget, id, hidden)
+            Returns:
+                tuple (label, widget, id, hidden)
         """
 
         input_id = "%s_%s" % (fieldname, name)
@@ -6180,25 +6279,29 @@ class S3LocationSelector(S3Selector):
              radius,
              callback = None,
              geocoder = False,
-             tablename = None):
+             tablename = None,
+             ):
         """
             Initialize the map
 
-            @param field: the field
-            @param fieldname: the field name (to construct HTML IDs)
-            @param lat: the Latitude of the current point location
-            @param lon: the Longitude of the current point location
-            @param wkt: the WKT
-            @param radius: the radius of the location
-            @param callback: the script to initialize the widget, if to be
-                             initialized as callback of the MapJS loader
-            @param geocoder: use a geocoder
-            @param tablename: tablename to determine the controller/function
-                              for custom colorpicker style
+            Args:
+                field: the field
+                fieldname: the field name (to construct HTML IDs)
+                lat: the Latitude of the current point location
+                lon: the Longitude of the current point location
+                wkt: the WKT
+                radius: the radius of the location
+                callback: the script to initialize the widget, if to be
+                          initialized as callback of the MapJS loader
+                geocoder: use a geocoder
+                tablename: tablename to determine the controller/function
+                           for custom colorpicker style
 
-            @return: the HTML components for the map (including the map icon row)
+            Returns:
+                HTML components for the map (including the map icon row)
 
-            @ToDo: handle multiple LocationSelectors in 1 page
+            TODO:
+                Handle multiple LocationSelectors in 1 page
                    (=> multiple callbacks, as well as the need to
                        migrate options from globals to a parameter)
         """
@@ -6478,8 +6581,9 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         """
             Load record data from database and update the values dict
 
-            @param record_id: the location record ID
-            @param values: the values dict
+            Args:
+                record_id: the location record ID
+                values: the values dict
         """
 
         # Initialize the values dict
@@ -6520,7 +6624,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                                   table.radius,
                                                   table.addr_street,
                                                   table.addr_postcode,
-                                                  limitby = (0, 1)
+                                                  limitby = (0, 1),
                                                   ).first()
         if not record:
             raise ValueError
@@ -6620,16 +6724,19 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         """
             Representation of a new/updated location row (before DB commit).
 
-            NB: Using a fake path here in order to prevent
+            Note:
+                Using a fake path here in order to prevent
                 gis_LocationRepresent.represent_row() from running
                 update_location_tree as that would change DB status which
                 is an invalid action at this point (row not committed yet).
 
             This method is called during S3CRUD.validate for inline components
 
-            @param values: the values dict
+            Args:
+                values: the values dict
 
-            @return: string representation for the values dict
+            Returns:
+                string representation for the values dict
         """
 
         if not value:
@@ -6704,7 +6811,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             limitby = (0, len(lx_ids))
             lx_names = current.db(query).select(ltable.id,
                                                 ltable.name,
-                                                limitby = limitby
+                                                limitby = limitby,
                                                 ).as_dict()
             for l in range(0, 6):
                 if l in lx_ids:
@@ -6736,10 +6843,13 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             Parse and validate the input value, but don't create or update
             any location data
 
-            @param value: the value from the form
-            @param requires: the field validator
-            @returns: tuple (values, error) with values being the parsed
-                      value dict, and error any validation errors
+            Args:
+                value: the value from the form
+                requires: the field validator
+
+            Returns:
+                tuple (values, error) with values being the parsed
+                value dict, and error any validation errors
         """
 
         values = self.parse(value)
@@ -6856,7 +6966,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                                     table.addr_street,
                                                     table.addr_postcode,
                                                     table.parent,
-                                                    limitby = (0, 1)
+                                                    limitby = (0, 1),
                                                     ).first()
                 if not location:
                     return (values, msg or current.T("Invalid Location!"))
@@ -7042,10 +7152,14 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             Takes the JSON from the real input and returns a location ID
             for it. Creates or updates the location if necessary.
 
-            @param value: the JSON from the real input
-            @return: tuple (location_id, error)
+            Args:
+                value: the JSON from the real input
 
-            @ToDo: Audit
+            Returns:
+                tuple (location_id, error)
+
+            TODO:
+                Audit
         """
 
         # Convert and validate
@@ -7182,12 +7296,10 @@ class S3SelectWidget(OptionsWidget):
                  icons = False
                  ):
         """
-            Constructor
-
-            @param icons: show icons next to options,
-                           can be:
-                                - False (don't show icons)
-                                - function (function to call add Icon URLs, height and width to the options)
+            Args:
+                icons: show icons next to options, can be:
+                        - False (don't show icons)
+                        - function (function to call add Icon URLs, height and width to the options)
         """
 
         self.icons = icons
@@ -7284,30 +7396,30 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                  create = None,
                  ):
         """
-            Constructor
-
-            @param search: show an input field in the widget to search for options,
+            Args:
+                search: show an input field in the widget to search for options,
                            can be:
-                                - True (always show search field)
-                                - False (never show the search field)
-                                - "auto" (show search if more than 10 options)
-                                - <number> (show search if more than <number> options)
-            @param header: show a header for the options list, can be:
-                                - True (show the default Select All/Deselect All header)
-                                - False (don't show a header unless required for search field)
-            @param selectedList: maximum number of individual selected options to show
-                                 on the widget button (before collapsing into "<number>
-                                 selected")
-            @param noneSelectedText: text to show on the widget button when no option is
-                                     selected (automatic l10n, no T() required)
-            @param columns: set the columns width class for Foundation forms
-            @param create: options to create a new record {"c": "controller",
-                                                           "f": "function",
-                                                           "label": "label",
-                                                           "parent": "parent", (optional: which function to lookup options from)
-                                                           "child": "child", (optional: which field to lookup options for)
-                                                           }
-            @ToDo: Complete the 'create' feature:
+                            - True (always show search field)
+                            - False (never show the search field)
+                            - "auto" (show search if more than 10 options)
+                            - <number> (show search if more than <number> options)
+                header: show a header for the options list, can be:
+                            - True (show the default Select All/Deselect All header)
+                            - False (don't show a header unless required for search field)
+                selectedList: maximum number of individual selected options to show
+                              on the widget button (before collapsing into "<number>
+                              selected")
+                noneSelectedText: text to show on the widget button when no option is
+                                  selected (automatic l10n, no T() required)
+                columns: set the columns width class for Foundation forms
+                create: options to create a new record {"c": "controller",
+                                                        "f": "function",
+                                                        "label": "label",
+                                                        "parent": "parent", (optional: which function to lookup options from)
+                                                        "child": "child", (optional: which field to lookup options for)
+                                                        }
+            TODO:
+                Complete the 'create' feature:
                 * Ensure the Create option doesn't get filtered out when searching for items
                 * Style option to make it clearer that it's an Action item
         """
@@ -7427,23 +7539,22 @@ class S3CascadeSelectWidget(FormWidget):
                  inline = False,
                  ):
         """
-            Constructor
-
-            @param lookup: the name of the hierarchical lookup-table
-            @param formstyle: the formstyle to use for the inline-selectors
-                              (defaults to s3.crud.formstyle)
-            @param levels: list of labels for the hierarchy levels, in
-                           top-down order
-            @param multiple: allow selection of multiple options
-            @param filter: resource filter expression to filter the
-                           selectable options
-            @param leafonly: allow only leaf-nodes to be selected
-            @param cascade: automatically select child-nodes when a
-                            parent node is selected (override option,
-                            implied by leafonly if not set explicitly)
-            @param represent: representation function for the nodes
-                              (defaults to the represent of the field)
-            @param inline: formstyle uses inline-labels, so add a colon
+            Args:
+                lookup: the name of the hierarchical lookup-table
+                formstyle: the formstyle to use for the inline-selectors
+                           (defaults to s3.crud.formstyle)
+                levels: list of labels for the hierarchy levels, in
+                        top-down order
+                multiple: allow selection of multiple options
+                filter: resource filter expression to filter the
+                        selectable options
+                leafonly: allow only leaf-nodes to be selected
+                cascade: automatically select child-nodes when a
+                         parent node is selected (override option,
+                         implied by leafonly if not set explicitly)
+                represent: representation function for the nodes
+                           (defaults to the represent of the field)
+                inline: formstyle uses inline-labels, so add a colon
         """
 
         self.lookup = lookup
@@ -7464,9 +7575,10 @@ class S3CascadeSelectWidget(FormWidget):
         """
             Widget renderer
 
-            @param field: the Field
-            @param value: the current value(s)
-            @param attr: additional HTML attributes for the widget
+            Args:
+                field: the Field
+                value: the current value(s)
+                attr: additional HTML attributes for the widget
         """
 
         # Get the lookup table
@@ -7567,10 +7679,11 @@ class S3CascadeSelectWidget(FormWidget):
             Construct the hidden (real) input and populate it with the
             current field value
 
-            @param input_id: the DOM-ID for the input
-            @param field: the Field
-            @param value: the current value
-            @param attr: widget attributes from caller
+            Args:
+                input_id: the DOM-ID for the input
+                field: the Field
+                value: the current value
+                attr: widget attributes from caller
         """
 
         # Currently selected values
@@ -7612,8 +7725,9 @@ class S3CascadeSelectWidget(FormWidget):
         """
             Inject static JS and instantiate client-side UI widget
 
-            @param widget_id: the widget ID
-            @param options: JSON-serializable dict with UI widget options
+            Args:
+                widget_id: the widget ID
+                options: JSON-serializable dict with UI widget options
         """
 
         request = current.request
@@ -7649,10 +7763,12 @@ class S3CascadeSelectWidget(FormWidget):
         """
             Value parser for the hidden input field of the widget
 
-            @param value: the value received from the client, JSON string
-            @param record_id: the record ID (unused, for API compatibility)
+            Args:
+                value: the value received from the client, JSON string
+                record_id: the record ID (unused, for API compatibility)
 
-            @return: a list (if multiple=True) or the value
+            Returns:
+                list (if multiple=True) or the value
         """
 
         default = [] if self.multiple else None
@@ -7685,28 +7801,26 @@ class S3HierarchyWidget(FormWidget):
                  sep = None,
                  ):
         """
-            Constructor
-
-            @param lookup: name of the lookup table (must have a hierarchy
-                           configured)
-            @param represent: alternative representation method (falls back
-                              to the field's represent-method)
-            @param multiple: allow selection of multiple options
-            @param leafonly: True = only leaf nodes can be selected (with
-                             multiple=True: selection of a parent node will
-                             automatically select all leaf nodes of that
-                             branch)
-                             False = any nodes can be selected independently
-            @param cascade: automatic selection of children when selecting
-                            a parent node (if leafonly=False, otherwise
-                            this is the standard behavior!), requires
-                            multiple=True
-            @param bulk_select: provide option to select/deselect all nodes
-            @param filter: filter query for the lookup table
-            @param columns: set the columns width class for Foundation forms
-            @param none: label for an option that delivers "None" as value
-                         (useful for HierarchyFilters with explicit none-selection)
-            @param sep: separator to use to concatenate the hierarchy to represent the selected node
+            Args:
+                lookup: name of the lookup table (must have a hierarchy
+                        configured)
+                represent: alternative representation method (falls back
+                           to the field's represent-method)
+                multiple: allow selection of multiple options
+                leafonly: True = only leaf nodes can be selected (with
+                          multiple=True: selection of a parent node will
+                          automatically select all leaf nodes of that branch)
+                          False = any nodes can be selected independently
+                cascade: automatic selection of children when selecting
+                         a parent node (if leafonly=False, otherwise
+                         this is the standard behavior!), requires
+                         multiple=True
+                bulk_select: provide option to select/deselect all nodes
+                filter: filter query for the lookup table
+                columns: set the columns width class for Foundation forms
+                one: label for an option that delivers "None" as value
+                     (useful for HierarchyFilters with explicit none-selection)
+                sep: separator to use to concatenate the hierarchy to represent the selected node
         """
 
         self.lookup = lookup
@@ -7728,9 +7842,10 @@ class S3HierarchyWidget(FormWidget):
         """
             Widget renderer
 
-            @param field: the Field
-            @param value: the current value(s)
-            @param attr: additional HTML attributes for the widget
+            Args:
+                field: the Field
+                value: the current value(s)
+                attr: additional HTML attributes for the widget
         """
 
         if isinstance(field, Field):
@@ -7912,10 +8027,12 @@ class S3HierarchyWidget(FormWidget):
         """
             Value parser for the hidden input field of the widget
 
-            @param value: the value received from the client, JSON string
-            @param record_id: the record ID (unused, for API compatibility)
+            Args:
+                value: the value received from the client, JSON string
+                record_id: the record ID (unused, for API compatibility)
 
-            @return: a list (if multiple=True) or the value
+            Returns:
+                list (if multiple=True) or the value
         """
 
         default = [] if self.multiple else None
@@ -7940,15 +8057,11 @@ class S3OptionsMatrixWidget(FormWidget):
 
     def __init__(self, rows, cols):
         """
-            @type rows: tuple
-            @param rows:
-                A tuple of tuples.
-                The nested tuples will have the row label followed by a value
-                for each checkbox in that row.
-
-            @type cols: tuple
-            @param cols:
-                A tuple containing the labels to use in the column headers
+            Args:
+                rows: tuple of tuples.
+                      The nested tuples will have the row label followed by a value
+                      for each checkbox in that row.
+                cols: tuple containing the labels to use in the column headers
         """
         self.rows = rows
         self.cols = cols
@@ -7958,16 +8071,10 @@ class S3OptionsMatrixWidget(FormWidget):
             Returns the grid/matrix of checkboxes as a web2py TABLE object and
             adds references to required Javascript files.
 
-            @type field: Field
-            @param field:
-                This gets passed in when the widget is rendered or used.
-
-            @type value: list
-            @param value:
-                A list of the values matching those of the checkboxes.
-
-            @param attributes:
-                HTML attributes to assign to the table.
+            Args:
+                field: Field. This gets passed in when the widget is rendered or used.
+                value: list of the values matching those of the checkboxes.
+                attributes: HTML attributes to assign to the table.
         """
 
         if isinstance(value, (list, tuple)):
@@ -8017,8 +8124,9 @@ class S3OrganisationAutocompleteWidget(FormWidget):
         Renders an org_organisation SELECT as an INPUT field with AJAX Autocomplete.
         Differs from the S3AutocompleteWidget in that it can default to the setting in the profile.
 
-        @ToDo: Add an option to hide the widget completely when using the Org from the Profile
-               - i.e. prevent user overrides
+        TODO:
+            Add an option to hide the widget completely when using the Org from the Profile
+            - i.e. prevent user overrides
     """
 
     def __init__(self,
@@ -8109,7 +8217,8 @@ class S3PersonAutocompleteWidget(FormWidget):
 
         To make this widget use the HR table, set the controller to "hrm"
 
-        @ToDo: Migrate to template (initial attempt failed)
+        TODO:
+            Migrate to template (initial attempt failed)
     """
 
     def __init__(self,
@@ -8533,12 +8642,11 @@ class S3StringWidget(StringWidget):
                  textarea = False,
                  ):
         """
-            Constructor
-
-            @param columns: number of grid columns to span (Foundation-themes)
-            @param placeholder: placeholder text for the input field
-            @param prefix: text for prefix button (Foundation-themes)
-            @param textarea: render as textarea rather than string input
+            Args:
+                columns: number of grid columns to span (Foundation-themes)
+                placeholder: placeholder text for the input field
+                prefix: text for prefix button (Foundation-themes)
+                textarea: render as textarea rather than string input
         """
 
         self.columns = columns
@@ -8602,9 +8710,10 @@ class S3TimeIntervalWidget(FormWidget):
         """
             Widget builder
 
-            @param field: the Field
-            @param value: the current value
-            @param attributes: DOM attributes for the widget
+            Args:
+                field: the Field
+                value: the current value
+                attributes: DOM attributes for the widget
         """
 
         if value is None:
@@ -8645,9 +8754,11 @@ class S3TimeIntervalWidget(FormWidget):
         """
             Return an internal validator (converter) for the numeric input
 
-            @param field: the Field
+            Args:
+                field: the Field
 
-            @returns: a validator function
+            Returns:
+                validator function
         """
 
         def requires(value, record_id=None):
@@ -8676,9 +8787,11 @@ class S3TimeIntervalWidget(FormWidget):
         """
             Represent the field value in a convenient unit of time
 
-            @param value: the field value (seconds)
+            Args:
+                value: the field value (seconds)
 
-            @returns: string representation of the field value
+            Returns:
+                string representation of the field value
         """
 
         try:
@@ -8698,9 +8811,11 @@ class S3TimeIntervalWidget(FormWidget):
         """
             Get a convenient multiplier (=unit of time) for a value in seconds
 
-            @param value: the value in seconds
+            Args:
+                value: the value in seconds
 
-            @returns: a tuple (multiplier, multiplier-name)
+            Returns:
+                tuple (multiplier, multiplier-name)
         """
 
         multipliers = cls.multipliers
@@ -8733,9 +8848,11 @@ class S3UploadWidget(UploadWidget):
         the file can be deleted.
         All is wrapped in a DIV.
 
-        @see: :meth:`FormWidget.widget`
-        @param download_url: Optional URL to link to the file (default = None)
+        See:
+            :meth:`FormWidget.widget`
 
+        Args:
+            download_url: Optional URL to link to the file (default = None)
         """
 
         T = current.T
@@ -8817,15 +8934,14 @@ class S3FixedOptionsWidget(OptionsWidget):
 
     def __init__(self, options, translate=False, sort=True, empty=True):
         """
-            Constructor
-
-            @param options: the options for the widget, either as iterable of
-                            tuples (value, representation) or as dict
-                            {value:representation}, or as iterable of strings
-                            if value is the same as representation
-            @param translate: automatically translate the representation
-            @param sort: alpha-sort options (by representation)
-            @param empty: add an empty-option (to select none of the options)
+            Args:
+                options: the options for the widget, either as iterable of
+                         tuples (value, representation) or as dict
+                         {value:representation}, or as iterable of strings
+                         if value is the same as representation
+                translate: automatically translate the representation
+                sort: alpha-sort options (by representation)
+                empty: add an empty-option (to select none of the options)
         """
 
         self.options = options
@@ -9084,8 +9200,9 @@ def search_ac(r, **attr):
     """
         JSON search method for S3AutocompleteWidget
 
-        @param r: the S3Request
-        @param attr: request attributes
+        Args:
+            r: the S3Request
+            attr: request attributes
     """
 
     _vars = current.request.get_vars
@@ -9226,14 +9343,14 @@ class S3XMLContents:
                                    (this should come last in the expression)
         {{noargs}}               - strip all URL args
 
-        @note: does not check permissions for the result URLs
+        Note:
+            Does not check permissions for the result URLs
     """
 
     def __init__(self, contents):
         """
-            Constructor
-
-            @param contents: the contents (string)
+            Args:
+                contents: the contents (string)
         """
 
         self.contents = contents
@@ -9246,7 +9363,8 @@ class S3XMLContents:
             override controller, function and URL query variables.Called
             from re.sub.
 
-            @param match: the re match object
+            Args:
+                match: the re match object
         """
 
         # Parse the expression
@@ -9297,7 +9415,8 @@ class S3QuestionEditorWidget(FormWidget):
         A Question Editor widget for DC
         Client-side JS in s3.ui.question.js
 
-        Currently unused.
+        Status:
+            Currently unused.
         - replace with simple DIV + Hidden IINPUT & build UI client-side?
             . less load on server
             . DRYer (no need to read/extend settings in 2 places)
@@ -9310,9 +9429,10 @@ class S3QuestionEditorWidget(FormWidget):
         """
             Widget builder
 
-            @param field: the Field
-            @param value: the current value
-            @param attributes: the HTML attributes for the widget
+            Args:
+                field: the Field
+                value: the current value
+                attributes: the HTML attributes for the widget
         """
 
         selector = attr.get("id")
@@ -9333,10 +9453,10 @@ class S3QuestionEditorWidget(FormWidget):
         s3 = current.response.s3
 
         # The actual hidden input containing the JSON of the fields
-        real_input = INPUT(_id=selector,
-                           _name=name,
-                           _value=value,
-                           _type="hidden",
+        real_input = INPUT(_id = selector,
+                           _name = name,
+                           _value = value,
+                           _type = "hidden",
                            )
 
         formstyle = s3.crud.formstyle
@@ -9468,8 +9588,9 @@ class S3QuestionEditorWidget(FormWidget):
         """
             Overall layout for visible components
 
-            @param components: the components as dict
-            @param formstyle: the formstyle (falls back to CRUD formstyle)
+            Args:
+                components: the components as dict
+                formstyle: the formstyle (falls back to CRUD formstyle)
         """
 
         if formstyle is None:
@@ -9509,13 +9630,15 @@ class S3QuestionEditorWidget(FormWidget):
         """
             Render a text input with given attributes
 
-            @param fieldname: the field name (for ID construction)
-            @param name: the name for the input field
-            @param value: the initial value for the input
-            @param label: the label for the input
-            @param hidden: render hidden
+            Args:
+                fieldname: the field name (for ID construction)
+                name: the name for the input field
+                value: the initial value for the input
+                label: the label for the input
+                hidden: render hidden
 
-            @return: a tuple (label, widget, id, hidden)
+            Returns:
+                tuple (label, widget, id, hidden)
         """
 
         input_id = "%s_%s" % (fieldname, name)
@@ -9538,23 +9661,21 @@ class S3TagCheckboxWidget(FormWidget):
         Like an S3BooleanWidget but real Booleans cannot be stored in strings.
         Designed for use with tag.value
 
-        NB it is usually better to use a boolean Field with a context-specific
-           representation function than this.
-
-        NB make sure the field validator accepts the configured on/off values,
-           e.g. IS_IN_SET(("Y", "N")) (also for consistency with imports)
-
-        NB when using this with a filtered key-value component (e.g.
-           pr_person_tag), make the filtered component multiple=False and
-           embed *.value as subtable-field (do not use S3SQLInlineComponent)
+        Note:
+            It is usually better to use a boolean Field with a context-specific
+                representation function than this.
+            Make sure the field validator accepts the configured on/off values,
+                e.g. IS_IN_SET(("Y", "N")) (also for consistency with imports)
+            When using this with a filtered key-value component (e.g.
+                pr_person_tag), make the filtered component multiple=False and
+                embed *.value as subtable-field (do not use S3SQLInlineComponent)
     """
 
     def __init__(self, on="Y", off="N"):
         """
-            Constructor
-
-            @param on: the value of the tag for checkbox=on
-            @param off: the value of the tag for checkbox=off
+            Args:
+                on: the value of the tag for checkbox=on
+                off: the value of the tag for checkbox=off
         """
 
         self.on = on
@@ -9565,9 +9686,10 @@ class S3TagCheckboxWidget(FormWidget):
         """
             Widget construction
 
-            @param field: the Field
-            @param value: the current (or default) value
-            @param attributes: overrides for default attributes
+            Args:
+                field: the Field
+                value: the current (or default) value
+                attributes: overrides for default attributes
         """
 
         defaults = {"_type": "checkbox",
@@ -9583,7 +9705,8 @@ class S3TagCheckboxWidget(FormWidget):
             Input-validator to convert the checkbox value into the
             corresponding tag value
 
-            @param value: the checkbox value ("on" if checked)
+            Args:
+                value: the checkbox value ("on" if checked)
         """
 
         v = self.on if value == "on" else self.off
@@ -9596,7 +9719,8 @@ class ICON(I):
         icon names to theme-specific CSS classes. The standard icon
         set can be configured using settings.ui.icons
 
-        e.g. ICON("book"), gives:
+        Example:
+            ICON("book"), gives:
             - font-awesome: <i class="icon icon-book">
             - foundation: <i class="fi-book">
 
@@ -9609,8 +9733,9 @@ class ICON(I):
         layout can be configured as settings.ui.icon_layout. See
         S3Config for more details.
 
-        @todo: apply in widgets/crud/profile+datalist layouts etc.
-        @todo: better abstract names for the icons to indicate what they
+        TODO:
+            Apply in widgets/crud/profile+datalist layouts etc.
+            Better abstract names for the icons to indicate what they
                symbolize rather than what they depict, e.g. "sitemap" is
                typically used to symbolize an organisation => rename into
                "organisation".
@@ -9947,10 +10072,9 @@ class ICON(I):
     # -------------------------------------------------------------------------
     def __init__(self, name, **attr):
         """
-            Constructor
-
-            @param name: the abstract icon name
-            @param attr: additional HTML attributes (optional)
+            Args:
+                name: the abstract icon name
+                attr: additional HTML attributes (optional)
         """
 
         self.name = name

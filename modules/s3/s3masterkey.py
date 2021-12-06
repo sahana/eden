@@ -44,7 +44,7 @@ from .s3utils import s3_str
 DIGEST_ALG = "pbkdf2(1000,64,sha512)"
 
 # =============================================================================
-class S3MasterKey(object):
+class S3MasterKey:
     """ Master Key Verification and Authentication """
 
     # -------------------------------------------------------------------------

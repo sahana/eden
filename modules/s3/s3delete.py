@@ -42,7 +42,7 @@ __all__ = ("S3Delete",
 DELETED = "deleted"
 
 # =============================================================================
-class S3Delete(object):
+class S3Delete:
     """
         Process to delete/archive records in a S3Resource
     """

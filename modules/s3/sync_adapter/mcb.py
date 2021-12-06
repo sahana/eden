@@ -41,7 +41,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
     """
         Mariner CommandBridge Synchronization Adapter
 
-        @status: experimental
+        Status:
+            Experimental
     """
 
     # -------------------------------------------------------------------------
@@ -49,7 +50,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
             Register at the repository (does nothing in CommandBridge)
 
-            @return: True if successful, otherwise False
+            Returns:
+                True if successful, otherwise False
         """
 
         return True
@@ -59,7 +61,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
             Login to the repository (does nothing in CommandBridge)
 
-            @return: None if successful, otherwise error message
+            Returns:
+                None if successful, otherwise error message
         """
 
         return None
@@ -69,9 +72,12 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
             Pull updates from this repository
 
-            @param task: the task Row
-            @param onconflict: synchronization conflict resolver
-            @return: tuple (error, mtime), with error=None if successful,
+            Args:
+                task: the task Row
+                onconflict: synchronization conflict resolver
+
+            Returns:
+                tuple (error, mtime), with error=None if successful,
                      else error=message, and mtime=modification timestamp
                      of the youngest record received
         """
@@ -85,8 +91,11 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
             Push data for a task
 
-            @param task: the task Row
-            @return: tuple (error, mtime), with error=None if successful,
+            Args:
+                task: the task Row
+
+            Returns:
+                tuple (error, mtime), with error=None if successful,
                      else error=message, and mtime=modification timestamp
                      of the youngest record sent
         """
@@ -177,18 +186,20 @@ class S3SyncAdapter(S3SyncBaseAdapter):
     # Internal methods:
     # -------------------------------------------------------------------------
     def _send_request(self,
-                      method="GET",
-                      path=None,
-                      args=None,
-                      data=None,
-                      auth=False):
+                      method = "GET",
+                      path = None,
+                      args = None,
+                      data = None,
+                      auth = False,
+                      ):
         """
             Send a request to the CommandBridge API
 
-            @param method: the HTTP method
-            @param path: the path relative to the repository URL
-            @param data: the data to send
-            @param auth: this is an authorization request
+            Args:
+                method: the HTTP method
+                path: the path relative to the repository URL
+                data: the data to send
+                auth: this is an authorization request
         """
 
         xml = current.xml

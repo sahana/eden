@@ -854,7 +854,7 @@ class need_NeedRepresent(S3Represent):
                 return current.messages["NONE"]
 
 # =============================================================================
-class HomepageStatistics(object):
+class HomepageStatistics:
     """
         Data extraction for homepage statistics (charts)
     """

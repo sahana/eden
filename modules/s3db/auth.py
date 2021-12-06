@@ -579,7 +579,7 @@ class AuthUserTempModel(S3Model):
         return None
 
 # =============================================================================
-class auth_Consent(object):
+class auth_Consent:
     """ Helper class to track consent """
 
     def __init__(self, processing_types=None):

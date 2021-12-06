@@ -61,37 +61,37 @@ class S3Organizer(S3Method):
         """
             Page-render entry point for REST interface.
 
-            @param r: the S3Request instance
-            @param attr: controller attributes
+            Args:
+                r: the S3Request instance
+                attr: controller attributes
         """
 
-        output = {}
         if r.http == "GET":
             if r.representation == "json":
-                output = self.get_json_data(r, **attr)
+                return self.get_json_data(r, **attr)
             elif r.interactive:
-                output = self.organizer(r, **attr)
+                return self.organizer(r, **attr)
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
         elif r.http == "POST":
             if r.representation == "json":
-                output = self.update_json(r, **attr)
+                return self.update_json(r, **attr)
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
-
-        return output
 
     # -------------------------------------------------------------------------
     def organizer(self, r, **attr):
         """
             Render the organizer view (HTML method)
 
-            @param r: the S3Request instance
-            @param attr: controller attributes
+            Args:
+                r: the S3Request instance
+                attr: controller attributes
 
-            @returns: dict of values for the view
+            Returns:
+                dict of values for the view
         """
 
         output = {}
@@ -255,22 +255,26 @@ class S3Organizer(S3Method):
         """
             Extract the resource data and return them as JSON (Ajax method)
 
-            @param r: the S3Request instance
-            @param attr: controller attributes
+            Args:
+                r: the S3Request instance
+                attr: controller attributes
 
-            TODO correct documentation!
-            @returns: JSON string containing an array of items, format:
-                      [{"id": the record ID,
-                        "title": the record title,
-                        "start": start date as ISO8601 string,
-                        "end": end date as ISO8601 string (if resource has end dates),
-                        "description": array of item values to render a description,
-                        TODO:
-                        "editable": item date/duration can be changed (true|false),
-                        "deletable": item can be deleted (true|false),
-                        },
-                       ...
-                       ]
+            Returns:
+                JSON string containing an array of items, format:
+                  [{"id": the record ID,
+                    "title": the record title,
+                    "start": start date as ISO8601 string,
+                    "end": end date as ISO8601 string (if resource has end dates),
+                    "description": array of item values to render a description,
+                    TODO:
+                    "editable": item date/duration can be changed (true|false),
+                    "deletable": item can be deleted (true|false),
+                    },
+                   ...
+                   ]
+
+            TODO:
+                correct documentation!
         """
 
         db = current.db
@@ -415,8 +419,9 @@ class S3Organizer(S3Method):
         """
             Update or delete calendar items (Ajax method)
 
-            @param r: the S3Request instance
-            @param attr: controller attributes
+            Args:
+                r: the S3Request instance
+                attr: controller attributes
         """
 
         # Read+parse body JSON
@@ -568,15 +573,17 @@ class S3Organizer(S3Method):
         """
             Parse the resource configuration and add any fallbacks
 
-            @param resource: the S3Resource
+            Args:
+                resource: the S3Resource
 
-            @returns: the resource organizer configuration, format:
-                      {"start": S3ResourceField,
-                       "end": S3ResourceField or None,
-                       "use_time": whether this resource has timed events,
-                       "title": selector or callable to produce item titles,
-                       "description": list of selectors for the item description,
-                       }
+            Returns:
+                The resource organizer configuration, format:
+                  {"start": S3ResourceField,
+                   "end": S3ResourceField or None,
+                   "use_time": whether this resource has timed events,
+                   "title": selector or callable to produce item titles,
+                   "description": list of selectors for the item description,
+                   }
         """
 
         prefix = lambda selector: cls.prefix_selector(resource, selector)
@@ -678,10 +685,12 @@ class S3Organizer(S3Method):
         """
             Parse an ISO8601-format date/datetime string as interval start|end
 
-            @param dtstr: the date/datetime string
-            @param end: interpret the string as interval end
+            Args:
+                dtstr: the date/datetime string
+                end: interpret the string as interval end
 
-            @returns: a UTC datetime
+            Returns:
+                a UTC datetime
         """
 
         date_only = "T" not in dtstr
@@ -706,9 +715,11 @@ class S3Organizer(S3Method):
             Parse an interval string of the format "<ISO8601>--<ISO8601>"
             into a pair of datetimes
 
-            @param intervalstr: the interval string
+            Args:
+                intervalstr: the interval string
 
-            @returns: tuple of UTC datetimes (start, end)
+            Returns:
+                tuple of UTC datetimes (start, end)
         """
 
         start = end = None
@@ -729,10 +740,12 @@ class S3Organizer(S3Method):
         """
             Helper method to prefix an unprefixed field selector
 
-            @param resource: the target resource
-            @param selector: the field selector
+            Args:
+                resource: the target resource
+                selector: the field selector
 
-            @return: the prefixed selector
+            Returns:
+                The prefixed selector
         """
 
         alias = resource.alias if resource.parent else None
@@ -770,10 +783,12 @@ class S3Organizer(S3Method):
         """
             Format a date/datetime as ISO8601 datetime string
 
-            @param dt: the date/datetime instance
+            Args:
+                dt: the date/datetime instance
 
-            @returns: the ISO-formatted datetime string,
-                      or None if dt was None
+            Returns:
+                The ISO-formatted datetime string,
+                or None if dt was None
         """
 
         if dt is None:
@@ -790,15 +805,14 @@ class S3OrganizerWidget:
 
     def __init__(self, resources):
         """
-            Constructor
-
-            @param resources: a list of resource specs, format:
-                              [{"ajax_url": URL to retrieve events
-                                "start": start date field (selector)
-                                "end": end date field (selector)
-                                },
-                                ...
-                               ]
+            Args:
+                resources: a list of resource specs, format:
+                           [{"ajax_url": URL to retrieve events
+                             "start": start date field (selector)
+                             "end": end date field (selector)
+                             },
+                             ...
+                            ]
         """
 
         self.resources = resources
@@ -808,7 +822,8 @@ class S3OrganizerWidget:
         """
             Render the organizer container and instantiate the UI widget
 
-            @param widget_id: the container's DOM ID
+            Args:
+                widget_id: the container's DOM ID
         """
 
         T = current.T
@@ -873,8 +888,9 @@ class S3OrganizerWidget:
         """
             Inject the necessary JavaScript
 
-            @param widget_id: the container's DOM ID
-            @param options: widget options (JSON-serializable dict)
+            Args:
+                widget_id: the container's DOM ID
+                options: widget options (JSON-serializable dict)
         """
 
         s3 = current.response.s3

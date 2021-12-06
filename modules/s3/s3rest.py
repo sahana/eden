@@ -74,21 +74,21 @@ class S3Request:
                  http = None,
                  ):
         """
-            Constructor
+            Args:
+                prefix: the table name prefix
+                name: the table name
+                c: the controller prefix
+                f: the controller function
+                args: list of request arguments
+                vars: dict of request variables
+                extension: the format extension (representation)
+                get_vars: the URL query variables (overrides vars)
+                post_vars: the POST variables (overrides vars)
+                http: the HTTP method (GET, PUT, POST, or DELETE)
 
-            @param prefix: the table name prefix
-            @param name: the table name
-            @param c: the controller prefix
-            @param f: the controller function
-            @param args: list of request arguments
-            @param vars: dict of request variables
-            @param extension: the format extension (representation)
-            @param get_vars: the URL query variables (overrides vars)
-            @param post_vars: the POST variables (overrides vars)
-            @param http: the HTTP method (GET, PUT, POST, or DELETE)
-
-            @note: all parameters fall back to the attributes of the
-                   current web2py request object
+            Note:
+                All parameters fall back to the attributes of the
+                current web2py request object
         """
 
         auth = current.auth
@@ -311,14 +311,15 @@ class S3Request:
         """
             Set a method handler for this request
 
-            @param method: the method name
-            @param handler: the handler function
-            @type handler: handler(S3Request, **attr)
-            @param http: restrict to these HTTP methods, list|tuple
-            @param representation: register handler for non-transformable data
-                                   formats
-            @param transform: register handler for transformable data formats
-                              (overrides representation)
+            Args:
+                method: the method name
+                handler: the handler function
+                         handler(S3Request, **attr)
+                http: restrict to these HTTP methods, list|tuple
+                representation: register handler for non-transformable data
+                                formats
+                transform: register handler for transformable data formats
+                           (overrides representation)
         """
 
         if http is None:
@@ -357,10 +358,12 @@ class S3Request:
         """
             Get a method handler for this request
 
-            @param method: the method name
-            @param transform: get handler for transformable data format
+            Args:
+                method: the method name
+                transform: get handler for transformable data format
 
-            @return: the method handler
+            Returns:
+                The method handler
         """
 
         handlers = self._handlers
@@ -401,8 +404,9 @@ class S3Request:
         """
             Get the widget handler for a method
 
-            @param r: the S3Request
-            @param method: the widget method
+            Args:
+                r: the S3Request
+                method: the widget method
         """
 
         if self.component:
@@ -532,7 +536,8 @@ class S3Request:
             in POST vars (if multipart), or from JSON request body (if
             not multipart or $search=ajax).
 
-            NB: overrides S3Request method as GET (r.http) to trigger
+            Note:
+                Overrides S3Request method as GET (r.http) to trigger
                 the correct method handlers, but will not change
                 current.request.env.request_method
         """
@@ -613,7 +618,8 @@ class S3Request:
         """
             Execute this request
 
-            @param attr: Parameters for the method handler
+            Args:
+                attr: Parameters for the method handler
         """
 
         response = current.response
@@ -855,8 +861,9 @@ class S3Request:
         """
             XML Element tree export method
 
-            @param r: the S3Request instance
-            @param attr: controller attributes
+            Args:
+                r: the S3Request instance
+                attr: controller attributes
         """
 
         get_vars = r.get_vars
@@ -1010,8 +1017,9 @@ class S3Request:
         """
             XML Element tree import method
 
-            @param r: the S3Request method
-            @param attr: controller attributes
+            Args:
+                r: the S3Request method
+                attr: controller attributes
         """
 
         get_vars = r.get_vars
@@ -1135,8 +1143,9 @@ class S3Request:
         """
             Resource structure introspection method
 
-            @param r: the S3Request instance
-            @param attr: controller attributes
+            Args:
+                r: the S3Request instance
+                attr: controller attributes
         """
 
         response = current.response
@@ -1170,8 +1179,9 @@ class S3Request:
         """
             Resource structure introspection method (single table)
 
-            @param r: the S3Request instance
-            @param attr: controller attributes
+            Args:
+                r: the S3Request instance
+                attr: controller attributes
         """
 
         representation = r.representation
@@ -1195,8 +1205,9 @@ class S3Request:
         """
             Field options introspection method (single table)
 
-            @param r: the S3Request instance
-            @param attr: controller attributes
+            Args:
+                r: the S3Request instance
+                attr: controller attributes
         """
 
         get_vars = r.get_vars
@@ -1277,7 +1288,8 @@ class S3Request:
         """
             Generate a new request for the same resource
 
-            @param args: arguments for request constructor
+            Args:
+                args: arguments for request constructor
         """
 
         return s3_request(r=self, **args)
@@ -1289,7 +1301,8 @@ class S3Request:
             attribute. Falls back to current.request if the attribute is
             not defined in this S3Request.
 
-            @param key: the key to lookup
+            Args:
+                key: the key to lookup
         """
 
         if key in self.__dict__:
@@ -1306,7 +1319,8 @@ class S3Request:
         """
             Check the request for a transformable format
 
-            @param method: "import" for import methods, else None
+            Args:
+                method: "import" for import methods, else None
         """
 
         if self.representation in ("html", "aadata", "popup", "iframe"):
@@ -1324,7 +1338,8 @@ class S3Request:
         """
             Determine whether to actuate a link or not
 
-            @param component_id: the component_id (if not self.component_id)
+            Args:
+                component_id: the component_id (if not self.component_id)
         """
 
         if not component_id:
@@ -1371,9 +1386,10 @@ class S3Request:
         """
             Action upon error
 
-            @param status: HTTP status code
-            @param message: the error message
-            @param tree: the tree causing the error
+            Args:
+                status: HTTP status code
+                message: the error message
+                tree: the tree causing the error
         """
 
         if self.representation == "html":
@@ -1406,20 +1422,20 @@ class S3Request:
             ):
         """
             Returns the URL of this request, use parameters to override
-            current requests attributes:
-
+                current requests attributes:
                 - None to keep current attribute (default)
                 - 0 or "" to set attribute to NONE
                 - value to use explicit value
 
-            @param id: the master record ID
-            @param component: the component name
-            @param component_id: the component ID
-            @param target: the target record ID (choose automatically)
-            @param method: the URL method
-            @param representation: the representation for the URL
-            @param vars: the URL query variables
-            @param host: string to force absolute URL with host (True means http_host)
+            Args:
+                id: the master record ID
+                component: the component name
+                component_id: the component ID
+                target: the target record ID (choose automatically)
+                method: the URL method
+                representation: the representation for the URL
+                vars: the URL query variables
+                host: string to force absolute URL with host (True means http_host)
 
             Particular behavior:
                 - changing the master record ID resets the component ID
@@ -1530,10 +1546,12 @@ class S3Request:
         """
             Get the target table of the current request
 
-            @return: a tuple of (prefix, name, table, tablename) of the target
+            Returns:
+                a tuple of (prefix, name, table, tablename) of the target
                 resource of this request
 
-            @todo: update for link table support
+            TODO:
+                Update for link table support
         """
 
         component = self.component
@@ -1564,8 +1582,9 @@ class S3Request:
             Parse the "viewing" URL parameter, frequently used for
             perspective discrimination and processing in prep
 
-            @returns: tuple (tablename, record_id) if "viewing" is set,
-                      None otherwise
+            Returns:
+                tuple (tablename, record_id) if "viewing" is set,
+                None otherwise
         """
 
         get_vars = self.get_vars
@@ -1587,9 +1606,10 @@ class S3Request:
         """
             Find the XSLT stylesheet for this request
 
-            @param method: "import" for data imports, else None
-            @param skip_error: do not raise an HTTP error status
-                               if the stylesheet cannot be found
+            Args:
+                method: "import" for data imports, else None
+                skip_error: do not raise an HTTP error status
+                            if the stylesheet cannot be found
         """
 
         representation = self.representation
@@ -1683,9 +1703,10 @@ class S3Request:
         """
             Invoke the customization callback for a resource.
 
-            @param tablename: the tablename of the resource; if called
-                              without tablename it will invoke the callbacks
-                              for the target resources of this request:
+            Args:
+                tablename: the tablename of the resource; if called
+                           without tablename it will invoke the callbacks
+                           for the target resources of this request:
                                 - master
                                 - active component
                                 - active link table
@@ -1702,9 +1723,10 @@ class S3Request:
                 settings.customise_resource_my_table = \
                                         customise_resource_my_table
 
-            @note: the hook itself can call r.customise_resource in order
+            Note:
+                The hook itself can call r.customise_resource in order
                    to cascade customizations as necessary
-            @note: if a table is customised that is not currently loaded,
+                If a table is customised that is not currently loaded,
                    then it will be loaded for this process
         """
 
@@ -1729,17 +1751,18 @@ class S3Request:
                 customise(self, tablename)
 
 # =============================================================================
-class S3Method(object):
+class S3Method:
     """
         REST Method Handler Base Class
 
         Method handler classes should inherit from this class and
         implement the apply_method() method.
 
-        @note: instances of subclasses don't have any of the instance
-               attributes available until they actually get invoked
-               from a request - i.e. apply_method() should never be
-               called directly.
+        Note:
+            Instances of subclasses don't have any of the instance
+            attributes available until they actually get invoked
+            from a request - i.e. apply_method() should never be
+            called directly.
     """
 
     # -------------------------------------------------------------------------
@@ -1747,12 +1770,14 @@ class S3Method(object):
         """
             Entry point for the REST interface
 
-            @param r: the S3Request
-            @param method: the method established by the REST interface
-            @param widget_id: widget ID
-            @param attr: dict of parameters for the method handler
+            Args:
+                r: the S3Request
+                method: the method established by the REST interface
+                widget_id: widget ID
+                attr: dict of parameters for the method handler
 
-            @return: output object to send to the view
+            Returns:
+                output object to send to the view
         """
 
         # Environment of the request
@@ -1862,10 +1887,12 @@ class S3Method(object):
             Stub, to be implemented in subclass. This method is used
             to get the results as a standalone page.
 
-            @param r: the S3Request
-            @param attr: dictionary of parameters for the method handler
+            Args:
+                r: the S3Request
+                attr: dictionary of parameters for the method handler
 
-            @return: output object to send to the view
+            Returns:
+                output object to send to the view
         """
 
         output = {}
@@ -1877,8 +1904,17 @@ class S3Method(object):
             Stub, to be implemented in subclass. This method is used
             by other method handlers to embed this method as widget.
 
-            @note:
+            Args:
+                r: the S3Request
+                method: the URL method
+                widget_id: the widget ID
+                visible: whether the widget is initially visible
+                attr: dictionary of parameters for the method handler
 
+            Returns:
+                output
+
+            Note:
                 For "html" format, the widget method must return an XML
                 component that can be embedded in a DIV. If a dict is
                 returned, it will be rendered against the view template
@@ -1904,14 +1940,6 @@ class S3Method(object):
                 receive its data layer immediately. Widgets can ignore this
                 parameter if delayed loading of the data layer is not
                 all([possible, useful, supported]).
-
-            @param r: the S3Request
-            @param method: the URL method
-            @param widget_id: the widget ID
-            @param visible: whether the widget is initially visible
-            @param attr: dictionary of parameters for the method handler
-
-            @return: output
         """
 
         return None
@@ -1923,8 +1951,9 @@ class S3Method(object):
         """
             Check permission for the requested resource
 
-            @param method: method to check, defaults to the actually
-                           requested method
+            Args:
+                method: method to check, defaults to the actually
+                        requested method
         """
 
         auth = current.auth
@@ -1968,7 +1997,8 @@ class S3Method(object):
         """
             Get the ID of the target record of a S3Request
 
-            @param r: the S3Request
+            Args:
+                r: the S3Request
         """
 
         master_id = r.id
@@ -2005,8 +2035,9 @@ class S3Method(object):
         """
             Get a configuration setting of the current table
 
-            @param key: the setting key
-            @param default: the default value
+            Args:
+                key: the setting key
+                default: the default value
         """
 
         return current.s3db.get_config(self.tablename, key, default)
@@ -2017,8 +2048,9 @@ class S3Method(object):
         """
             Get the path to the view template
 
-            @param r: the S3Request
-            @param default: name of the default view template
+            Args:
+                r: the S3Request
+                default: name of the default view template
         """
 
         folder = r.folder
@@ -2082,12 +2114,14 @@ class S3Method(object):
         """
             Add additional view variables (invokes all callables)
 
-            @param output: the output dict
-            @param r: the S3Request
-            @param attr: the view variables (e.g. 'rheader')
+            Args:
+                output: the output dict
+                r: the S3Request
+                attr: the view variables (e.g. 'rheader')
 
-            @note: overload this method in subclasses if you don't want
-                   additional view variables to be added automatically
+            Note:
+                Overload this method in subclasses if you don't want
+                additional view variables to be added automatically
         """
 
         if r.interactive and isinstance(output, dict):
@@ -2121,7 +2155,8 @@ class S3Method(object):
         """
             Remove all filters from URL vars
 
-            @param get_vars: the URL vars as dict
+            Args:
+                get_vars: the URL vars as dict
         """
 
         return Storage((k, v) for k, v in get_vars.items()
@@ -2133,8 +2168,9 @@ class S3Method(object):
         """
             Get a CRUD info string for interactive pages
 
-            @param tablename: the table name
-            @param name: the name of the CRUD string
+            Args:
+                tablename: the table name
+                name: the name of the CRUD string
         """
 
         crud_strings = current.response.s3.crud_strings
@@ -2151,13 +2187,15 @@ def s3_request(*args, **kwargs):
     """
         Helper function to generate S3Request instances
 
-        @param args: arguments for the S3Request
-        @param kwargs: keyword arguments for the S3Request
+        Args:
+            args: arguments for the S3Request
+            kwargs: keyword arguments for the S3Request
 
-        @keyword catch_errors: if set to False, errors will be raised
-                               instead of returned to the client, useful
-                               for optional sub-requests, or if the caller
-                               implements fallbacks
+        Keyword Args:
+            catch_errors: if set to False, errors will be raised
+                          instead of returned to the client, useful
+                          for optional sub-requests, or if the caller
+                          implements fallbacks
     """
 
     catch_errors = kwargs.pop("catch_errors", True)

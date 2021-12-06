@@ -70,11 +70,8 @@ ogetattr = object.__getattribute__
 MAXDEPTH = 10
 DEFAULT = lambda: None
 
-# Compact JSON encoding
-#SEPARATORS = (",", ":")
-
 # =============================================================================
-class S3Resource(object):
+class S3Resource:
     """
         API for resources.
 
@@ -112,37 +109,30 @@ class S3Resource(object):
                  extra_filters = None
                  ):
         """
-            Constructor
-
-            @param tablename: tablename, Table, or an S3Resource instance
-            @param prefix: prefix to use for the tablename
-
-            @param id: record ID (or list of record IDs)
-            @param uid: record UID (or list of record UIDs)
-
-            @param filter: filter query (S3ResourceQuery or Query)
-            @param vars: dictionary of URL query variables
-
-            @param components: list of component aliases
-                               to load for this resource
-            @param filter_component: alias of the component the URL filters
-                                     apply for (filters for this component
-                                     must be handled separately)
-
-            @param alias: the alias for this resource (internal use only)
-            @param parent: the parent resource (internal use only)
-            @param linked: the linked resource (internal use only)
-            @param linktable: the link table (internal use only)
-
-            @param include_deleted: include deleted records (used for
-                                    synchronization)
-
-            @param approved: include approved records
-            @param unapproved: include unapproved records
-            @param context: apply context filters
-            @param extra_filters: extra filters (to be applied on
-                                  pre-filtered subsets), as list of
-                                  tuples (method, expression)
+            Args:
+                tablename: tablename, Table, or an S3Resource instance
+                prefix: prefix to use for the tablename
+                id: record ID (or list of record IDs)
+                uid: record UID (or list of record UIDs)
+                filter: filter query (S3ResourceQuery or Query)
+                vars: dictionary of URL query variables
+                components: list of component aliases
+                            to load for this resource
+                filter_component: alias of the component the URL filters
+                                  apply for (filters for this component
+                                  must be handled separately)
+                alias: the alias for this resource (internal use only)
+                parent: the parent resource (internal use only)
+                linked: the linked resource (internal use only)
+                linktable: the link table (internal use only)
+                include_deleted: include deleted records (used for
+                                 synchronization)
+                approved: include approved records
+                unapproved: include unapproved records
+                context: apply context filters
+                extra_filters: extra filters (to be applied on
+                               pre-filtered subsets), as list of
+                               tuples (method, expression)
         """
 
         s3db = current.s3db
@@ -330,16 +320,17 @@ class S3Resource(object):
         """
             Query builder
 
-            @param id: record ID or list of record IDs to include
-            @param uid: record UID or list of record UIDs to include
-            @param filter: filtering query (S3ResourceQuery or Query)
-            @param vars: dict of URL query variables
-            @param extra_filters: extra filters (to be applied on
-                                  pre-filtered subsets), as list of
-                                  tuples (method, expression)
-            @param filter_component: the alias of the component the URL
-                                     filters apply for (filters for this
-                                     component must be handled separately)
+            Args:
+                id: record ID or list of record IDs to include
+                uid: record UID or list of record UIDs to include
+                filter: filtering query (S3ResourceQuery or Query)
+                vars: dict of URL query variables
+                extra_filters: extra filters (to be applied on
+                               pre-filtered subsets), as list of
+                               tuples (method, expression)
+                filter_component: the alias of the component the URL
+                                  filters apply for (filters for this
+                                  component must be handled separately)
         """
 
         # Reset the rows counter
@@ -360,10 +351,11 @@ class S3Resource(object):
         """
             Extend the current resource filter
 
-            @param f: a Query or a S3ResourceQuery instance
-            @param c: alias of the component this filter concerns,
-                      automatically adds the respective component join
-                      (not needed for S3ResourceQuery instances)
+            Args:
+                f: a Query or a S3ResourceQuery instance
+                c: alias of the component this filter concerns,
+                   automatically adds the respective component join
+                   (not needed for S3ResourceQuery instances)
         """
 
         if f is None:
@@ -382,8 +374,9 @@ class S3Resource(object):
             Extend the resource filter of a particular component, does
             not affect the master resource filter (as opposed to add_filter)
 
-            @param alias: the alias of the component
-            @param f: a Query or a S3ResourceQuery instance
+            Args:
+                alias: the alias of the component
+                f: a Query or a S3ResourceQuery instance
         """
 
         if f is None:
@@ -399,9 +392,10 @@ class S3Resource(object):
         """
             And an extra filter (to be applied on pre-filtered subsets)
 
-            @param method: a name of a known filter method, or a
-                           callable filter method
-            @param expression: the filter expression (string)
+            Args:
+                method: a name of a known filter method, or a
+                        callable filter method
+                expression: the filter expression (string)
         """
 
         self.clear()
@@ -416,8 +410,9 @@ class S3Resource(object):
         """
             Replace the current extra filters
 
-            @param filters: list of tuples (method, expression), or None
-                            to remove all extra filters
+            Args:
+                filters: list of tuples (method, expression), or None
+                         to remove all extra filters
         """
 
         self.clear()
@@ -432,7 +427,8 @@ class S3Resource(object):
         """
             Get the effective query
 
-            @return: Query
+            Returns:
+                Query
         """
 
         if self.rfilter is None:
@@ -445,7 +441,8 @@ class S3Resource(object):
         """
             Get the effective virtual filter
 
-            @return: S3ResourceQuery
+            Returns:
+                S3ResourceQuery
         """
 
         if self.rfilter is None:
@@ -471,8 +468,9 @@ class S3Resource(object):
         """
             Get the total number of available records in this resource
 
-            @param left: left outer joins, if required
-            @param distinct: only count distinct rows
+            Args:
+                left: left outer joins, if required
+                distinct: only count distinct rows
         """
 
         if self.rfilter is None:
@@ -502,19 +500,20 @@ class S3Resource(object):
         """
             Extract data from this resource
 
-            @param fields: the fields to extract (selector strings)
-            @param start: index of the first record
-            @param limit: maximum number of records
-            @param left: additional left joins required for filters
-            @param orderby: orderby-expression for DAL
-            @param groupby: fields to group by (overrides fields!)
-            @param distinct: select distinct rows
-            @param virtual: include mandatory virtual fields
-            @param count: include the total number of matching records
-            @param getids: include the IDs of all matching records
-            @param as_rows: return the rows (don't extract)
-            @param represent: render field value representations
-            @param raw_data: include raw data in the result
+            Args:
+                fields: the fields to extract (selector strings)
+                start: index of the first record
+                limit: maximum number of records
+                left: additional left joins required for filters
+                orderby: orderby-expression for DAL
+                groupby: fields to group by (overrides fields!)
+                distinct: select distinct rows
+                virtual: include mandatory virtual fields
+                count: include the total number of matching records
+                getids: include the IDs of all matching records
+                as_rows: return the rows (don't extract)
+                represent: render field value representations
+                raw_data: include raw data in the result
         """
 
         data = S3ResourceData(self,
@@ -543,7 +542,8 @@ class S3Resource(object):
         """
             Insert a record into this resource
 
-            @param fields: dict of field/value pairs to insert
+            Args:
+                fields: dict of field/value pairs to insert
         """
 
         table = self.table
@@ -600,16 +600,19 @@ class S3Resource(object):
         """
             Delete all records in this resource
 
-            @param format: the representation format of the request (optional)
-            @param cascade: this is a cascade delete (prevents commits)
-            @param replaced_by: used by record merger
-            @param log_errors: log errors even when cascade=True
+            Args:
+                format: the representation format of the request (optional)
+                cascade: this is a cascade delete (prevents commits)
+                replaced_by: used by record merger
+                log_errors: log errors even when cascade=True
 
-            @return: number of records deleted
+            Returns:
+                number of records deleted
 
-            NB skipping undeletable rows is no longer the default behavior,
-               process will now fail immediately for any error; use S3Delete
-               directly if skipping of undeletable rows is desired
+            Note:
+                Skipping undeletable rows is no longer the default behavior,
+                process will now fail immediately for any error; use S3Delete
+                directly if skipping of undeletable rows is desired
         """
 
         from .s3delete import S3Delete
@@ -631,12 +634,13 @@ class S3Resource(object):
         """
             Approve all records in this resource
 
-            @param components: list of component aliases to include, None
-                               for no components, empty list or tuple to
-                               approve all components (default)
-            @param approve: set to approved (False to reset to unapproved)
-            @param approved_by: set approver explicitly, a valid auth_user.id
-                                or 0 for approval by system authority
+            Args:
+                components: list of component aliases to include, None
+                            for no components, empty list or tuple to
+                            approve all components (default)
+                approve: set to approved (False to reset to unapproved)
+                approved_by: set approver explicitly, a valid auth_user.id
+                             or 0 for approval by system authority
         """
 
         if "approved_by" not in self.fields:
@@ -898,15 +902,17 @@ class S3Resource(object):
         """
             Generate a data table of this resource
 
-            @param fields: list of fields to include (field selector strings)
-            @param start: index of the first record to include
-            @param limit: maximum number of records to include
-            @param left: additional left joins for DB query
-            @param orderby: orderby for DB query
-            @param distinct: distinct-flag for DB query
+            Args:
+                fields: list of fields to include (field selector strings)
+                start: index of the first record to include
+                limit: maximum number of records to include
+                left: additional left joins for DB query
+                orderby: orderby for DB query
+                distinct: distinct-flag for DB query
 
-            @return: tuple (S3DataTable, numrows), where numrows represents
-                     the total number of rows in the table that match the query
+            Returns:
+                tuple (S3DataTable, numrows), where numrows represents
+                the total number of rows in the table that match the query
         """
 
         # Choose fields
@@ -994,17 +1000,19 @@ class S3Resource(object):
         """
             Generate a data list of this resource
 
-            @param fields: list of fields to include (field selector strings)
-            @param start: index of the first record to include
-            @param limit: maximum number of records to include
-            @param left: additional left joins for DB query
-            @param orderby: orderby for DB query
-            @param distinct: distinct-flag for DB query
-            @param list_id: the list identifier
-            @param layout: custom renderer function (see S3DataList.render)
+            Args:
+                fields: list of fields to include (field selector strings)
+                start: index of the first record to include
+                limit: maximum number of records to include
+                left: additional left joins for DB query
+                orderby: orderby for DB query
+                distinct: distinct-flag for DB query
+                list_id: the list identifier
+                layout: custom renderer function (see S3DataList.render)
 
-            @return: tuple (S3DataList, numrows, ids), where numrows represents
-                     the total number of rows in the table that match the query
+            Returns:
+                tuple (S3DataList, numrows, ids), where numrows represents
+                the total number of rows in the table that match the query
         """
 
         # Choose fields
@@ -1059,15 +1067,17 @@ class S3Resource(object):
         """
             Export a JSON representation of the resource.
 
-            @param fields: list of field selector strings
-            @param start: index of the first record
-            @param limit: maximum number of records
-            @param left: list of (additional) left joins
-            @param distinct: select only distinct rows
-            @param orderby: Orderby-expression for the query
+            Args:
+                fields: list of field selector strings
+                start: index of the first record
+                limit: maximum number of records
+                left: list of (additional) left joins
+                distinct: select only distinct rows
+                orderby: Orderby-expression for the query
 
-            @return: the JSON (as string), representing a list of
-                     dicts with {"tablename.fieldname":"value"}
+            Returns:
+                The JSON (as string), representing a list of
+                dicts with {"tablename.fieldname":"value"}
         """
 
         data = self.select(fields = fields,
@@ -1096,17 +1106,19 @@ class S3Resource(object):
             Loads records from the resource, applying the current filters,
             and stores them in the instance.
 
-            @param fields: list of field names to include
-            @param skip: list of field names to skip
-            @param start: the index of the first record to load
-            @param limit: the maximum number of records to load
-            @param orderby: orderby-expression for the query
-            @param virtual: whether to load virtual fields or not
-            @param cacheable: don't define Row actions like update_record
-                              or delete_record (faster, and the record can
-                              be cached)
+            Args:
+                fields: list of field names to include
+                skip: list of field names to skip
+                start: the index of the first record to load
+                limit: the maximum number of records to load
+                orderby: orderby-expression for the query
+                virtual: whether to load virtual fields or not
+                cacheable: don't define Row actions like update_record
+                           or delete_record (faster, and the record can
+                           be cached)
 
-            @return: the records as list of Rows
+            Returns:
+                The records as list of Rows
         """
 
 
@@ -1248,7 +1260,8 @@ class S3Resource(object):
         """
             Get the current set as Rows instance
 
-            @param fields: the fields to include (list of Fields)
+            Args:
+                fields: the fields to include (list of Fields)
         """
 
         if fields is None:
@@ -1269,10 +1282,14 @@ class S3Resource(object):
         """
             Find a record currently stored in this instance by its record ID
 
-            @param key: the record ID
-            @return: a Row
+            Args:
+                key: the record ID
 
-            @raises: IndexError if the record is not currently loaded
+            Returns:
+                a Row
+
+            Raises:
+                IndexError if the record is not currently loaded
         """
 
         index = self._rowindex
@@ -1308,11 +1325,13 @@ class S3Resource(object):
             Get component records for a record currently stored in this
             instance.
 
-            @param key: the record ID
-            @param component: the name of the component
-            @param link: the name of the link table
+            Args:
+                key: the record ID
+                component: the name of the component
+                link: the name of the link table
 
-            @return: a Row (if component is None) or a list of rows
+            Returns:
+                a Row (if component is None) or a list of rows
         """
 
         if not key:
@@ -1465,7 +1484,8 @@ class S3Resource(object):
         """
             Tests whether this resource contains a (real) field.
 
-            @param item: the field selector or Field instance
+            Args:
+                item: the field selector or Field instance
         """
 
         fn = str(item)
@@ -1521,39 +1541,35 @@ class S3Resource(object):
         """
             Export this resource as S3XML
 
-            @param start: index of the first record to export (slicing)
-            @param limit: maximum number of records to export (slicing)
-
-            @param msince: export only records which have been modified
-                            after this datetime
-
-            @param fields: data fields to include (default: all)
-
-            @param dereference: include referenced resources
-            @param maxdepth: maximum depth for reference exports
-
-            @param mcomponents: components of the master resource to
-                                include (list of aliases), empty list
-                                for all available components
-            @param rcomponents: components of referenced resources to
-                                include (list of "tablename:alias")
-
-            @param references: foreign keys to include (default: all)
-            @param mdata: mobile data export
-                          (=>reduced field set, lookup-only option)
-            @param stylesheet: path to the XSLT stylesheet (if required)
-            @param as_tree: return the ElementTree (do not convert into string)
-            @param as_json: represent the XML tree as JSON
-            @param maxbounds: include lat/lon boundaries in the top
-                              level element (off by default)
-            @param filters: additional URL filters (Sync), as dict
-                            {tablename: {url_var: string}}
-            @param pretty_print: insert newlines/indentation in the output
-            @param location_data: dictionary of location data which has been
-                                  looked-up in bulk ready for xml.gis_encode()
-            @param map_data: dictionary of options which can be read by the map
-            @param target: alias of component targetted (or None to target master resource)
-            @param args: dict of arguments to pass to the XSLT stylesheet
+            Args:
+                start: index of the first record to export (slicing)
+                limit: maximum number of records to export (slicing)
+                msince: export only records which have been modified
+                        after this datetime
+                fields: data fields to include (default: all)
+                dereference: include referenced resources
+                maxdepth: maximum depth for reference exports
+                mcomponents: components of the master resource to
+                             include (list of aliases), empty list
+                             for all available components
+                rcomponents: components of referenced resources to
+                             include (list of "tablename:alias")
+                references: foreign keys to include (default: all)
+                mdata: mobile data export
+                       (=>reduced field set, lookup-only option)
+                stylesheet: path to the XSLT stylesheet (if required)
+                as_tree: return the ElementTree (do not convert into string)
+                as_json: represent the XML tree as JSON
+                maxbounds: include lat/lon boundaries in the top
+                           level element (off by default)
+                filters: additional URL filters (Sync), as dict
+                         {tablename: {url_var: string}}
+                pretty_print: insert newlines/indentation in the output
+                location_data: dictionary of location data which has been
+                               looked-up in bulk ready for xml.gis_encode()
+                map_data: dictionary of options which can be read by the map
+                target: alias of component targetted (or None to target master resource)
+                args: dict of arguments to pass to the XSLT stylesheet
         """
 
 
@@ -1637,24 +1653,25 @@ class S3Resource(object):
         """
             XML Importer
 
-            @param source: the data source, accepts source=xxx, source=[xxx, yyy, zzz] or
-                           source=[(resourcename1, xxx), (resourcename2, yyy)], where the
-                           xxx has to be either an ElementTree or a file-like object
-            @param files: attached files (None to read in the HTTP request)
-            @param id: ID (or list of IDs) of the record(s) to update (performs only update)
-            @param format: type of source = "xml", "json" or "csv"
-            @param stylesheet: stylesheet to use for transformation
-            @param extra_data: for CSV imports, dict of extra cols to add to each row
-            @param ignore_errors: skip invalid records silently
-            @param job_id: resume from previous import job_id
-            @param commit_job: commit the job to the database
-            @param delete_job: delete the import job from the queue
-            @param strategy: tuple of allowed import methods (create/update/delete)
-            @param update_policy: policy for updates (sync)
-            @param conflict_policy: policy for conflict resolution (sync)
-            @param last_sync: last synchronization datetime (sync)
-            @param onconflict: callback hook for conflict resolution (sync)
-            @param args: parameters to pass to the transformation stylesheet
+            Args:
+                source: the data source, accepts source=xxx, source=[xxx, yyy, zzz] or
+                        source=[(resourcename1, xxx), (resourcename2, yyy)], where the
+                        xxx has to be either an ElementTree or a file-like object
+                files: attached files (None to read in the HTTP request)
+                id: ID (or list of IDs) of the record(s) to update (performs only update)
+                format: type of source = "xml", "json" or "csv"
+                stylesheet: stylesheet to use for transformation
+                extra_data: for CSV imports, dict of extra cols to add to each row
+                ignore_errors: skip invalid records silently
+                job_id: resume from previous import job_id
+                commit_job: commit the job to the database
+                delete_job: delete the import job from the queue
+                strategy: tuple of allowed import methods (create/update/delete)
+                update_policy: policy for updates (sync)
+                conflict_policy: policy for conflict resolution (sync)
+                last_sync: last synchronization datetime (sync)
+                onconflict: callback hook for conflict resolution (sync)
+                args: parameters to pass to the transformation stylesheet
         """
 
         # Check permission for the resource
@@ -1815,15 +1832,16 @@ class S3Resource(object):
         """
             Import data from an S3XML element tree.
 
-            @param record_id: record ID or list of record IDs to update
-            @param tree: the element tree
-            @param ignore_errors: continue at errors (=skip invalid elements)
+            Args:
+                record_id: record ID or list of record IDs to update
+                tree: the element tree
+                ignore_errors: continue at errors (=skip invalid elements)
+                job_id: restore a job from the job table (ID or UID)
+                delete_job: delete the import job from the job table
+                commit_job: commit the job (default)
 
-            @param job_id: restore a job from the job table (ID or UID)
-            @param delete_job: delete the import job from the job table
-            @param commit_job: commit the job (default)
-
-            @todo: update for link table support
+            TODO:
+                Update for link table support
         """
 
         from .s3import import S3ImportJob
@@ -2026,13 +2044,13 @@ class S3Resource(object):
         """
             Export field options of this resource as element tree
 
-            @param component: name of the component which the options are
-                              requested of, None for the primary table
-            @param fields: list of names of fields for which the options
-                           are requested, None for all fields (which have
-                           options)
-            @param as_json: convert the output into JSON
-            @param only_last: obtain only the latest record
+            Args:
+                component: name of the component which the options are
+                           requested of, None for the primary table
+                fields: list of names of fields for which the options
+                        are requested, None for all fields (which have options)
+                as_json: convert the output into JSON
+                only_last: obtain only the latest record
         """
 
         if component is not None:
@@ -2142,9 +2160,10 @@ class S3Resource(object):
         """
             Export a list of fields in the resource as element tree
 
-            @param component: name of the component to lookup the fields
-                              (None for primary table)
-            @param as_json: convert the output XML into JSON
+            Args:
+                component: name of the component to lookup the fields
+                           (None for primary table)
+                as_json: convert the output XML into JSON
         """
 
         if component is not None:
@@ -2173,10 +2192,11 @@ class S3Resource(object):
         """
             Get the structure of the resource
 
-            @param options: include option lists in option fields
-            @param references: include option lists even for reference fields
-            @param stylesheet: the stylesheet to use for transformation
-            @param as_json: convert into JSON after transformation
+            Args:
+                options: include option lists in option fields
+                references: include option lists even for reference fields
+                stylesheet: the stylesheet to use for transformation
+                as_json: convert into JSON after transformation
         """
 
         xml = current.xml
@@ -2239,8 +2259,9 @@ class S3Resource(object):
                 - otherwise, if the record contains some values for unique
                   fields, all of them must match the same existing DB record
 
-            @param table: the table
-            @param record: the record as dict or S3XML Element
+            Args:
+                table: the table
+                record: the record as dict or S3XML Element
         """
 
         db = current.db
@@ -2329,7 +2350,8 @@ class S3Resource(object):
         """
             Get a list of all readable fields in the resource table
 
-            @param subset: list of fieldnames to limit the selection to
+            Args:
+                subset: list of fieldnames to limit the selection to
         """
 
         fkey = None
@@ -2364,13 +2386,15 @@ class S3Resource(object):
         """
             Resolve a list of field selectors against this resource
 
-            @param selectors: the field selectors
-            @param skip_components: skip fields in components
-            @param extra_fields: automatically add extra_fields of all virtual
-                                 fields in this table
-            @param show: default for S3ResourceField.show
+            Args:
+                selectors: the field selectors
+                skip_components: skip fields in components
+                extra_fields: automatically add extra_fields of all virtual
+                              fields in this table
+                show: default for S3ResourceField.show
 
-            @return: tuple of (fields, joins, left, distinct)
+            Returns:
+                tuple of (fields, joins, left, distinct)
         """
 
         prefix = lambda s: "~.%s" % s \
@@ -2490,9 +2514,10 @@ class S3Resource(object):
             Split the readable fields in the resource table into
             reference and non-reference fields.
 
-            @param skip: list of field names to skip
-            @param data: data fields to include (None for all)
-            @param references: foreign key fields to include (None for all)
+            Args:
+                skip: list of field names to skip
+                data: data fields to include (None for all)
+                references: foreign key fields to include (None for all)
         """
 
         if skip is DEFAULT:
@@ -2559,8 +2584,9 @@ class S3Resource(object):
         """
             Update configuration settings for this resource
 
-            @param settings: configuration settings for this resource
-                             as keyword arguments
+            Args:
+                settings: configuration settings for this resource
+                          as keyword arguments
         """
 
         current.s3db.configure(self.tablename, **settings)
@@ -2570,9 +2596,10 @@ class S3Resource(object):
         """
             Get a configuration setting for the current resource
 
-            @param key: the setting key
-            @param default: the default value to return if the setting
-                            is not configured for this resource
+            Args:
+                key: the setting key
+                default: the default value to return if the setting
+                         is not configured for this resource
         """
 
         return current.s3db.get_config(self.tablename, key, default=default)
@@ -2582,9 +2609,11 @@ class S3Resource(object):
         """
             Clear configuration settings for this resource
 
-            @param keys: keys to remove (can be multiple)
+            Args:
+                keys: keys to remove (can be multiple)
 
-            @note: no keys specified removes all settings for this resource
+            Note:
+                No keys specified removes all settings for this resource
         """
 
         current.s3db.clear_config(self.tablename, *keys)
@@ -2599,8 +2628,9 @@ class S3Resource(object):
                 - limit 0 (or less)   => limit = 1
                 - start less than 0   => start = 0
 
-            @param start: index of the first record to select
-            @param limit: maximum number of records to select
+            Args:
+                start: index of the first record to select
+                limit: maximum number of records to select
         """
 
         if limit is None:
@@ -2623,11 +2653,13 @@ class S3Resource(object):
         """
             Get a join for this component
 
-            @param implicit: return a subquery with an implicit join rather
-                             than an explicit join
-            @param reverse: get the reverse join (joining master to component)
+            Args:
+                implicit: return a subquery with an implicit join rather
+                          than an explicit join
+                reverse: get the reverse join (joining master to component)
 
-            @return: a Query if implicit=True, otherwise a list of joins
+            Returns:
+                a Query if implicit=True, otherwise a list of joins
         """
 
         if self.parent is None:
@@ -2701,8 +2733,9 @@ class S3Resource(object):
             Helper method to find the link table entry ID for
             a pair of linked records.
 
-            @param master_id: the ID of the master record
-            @param component_id: the ID of the component record
+            Args:
+                master_id: the ID of the master record
+                component_id: the ID of the component record
         """
 
         if self.parent is None or self.linked is None:
@@ -2729,9 +2762,10 @@ class S3Resource(object):
             Helper method to find the component record ID for
             a particular link of a particular master record
 
-            @param link: the link (S3Resource)
-            @param master_id: the ID of the master record
-            @param link_id: the ID of the link table entry
+            Args:
+                link: the link (S3Resource)
+                master_id: the ID of the master record
+                link_id: the ID of the link table entry
         """
 
         if self.parent is None or self.linked is None:
@@ -2761,8 +2795,9 @@ class S3Resource(object):
             actuation mode once this gets implemented, therefore the
             method name "update_link".
 
-            @param master: the master record
-            @param record: the new component record to be linked
+            Args:
+                master: the master record
+                record: the new component record to be linked
         """
 
         if self.parent is None or self.linked is None:
@@ -2814,11 +2849,13 @@ class S3Resource(object):
             Parse datatable search/sort vars into a tuple of
             query, orderby and left joins
 
-            @param fields: list of field selectors representing
-                           the order of fields in the datatable (list_fields)
-            @param get_vars: the datatable GET vars
+            Args:
+                fields: list of field selectors representing
+                        the order of fields in the datatable (list_fields)
+                get_vars: the datatable GET vars
 
-            @return: tuple of (query, orderby, left joins)
+            Returns:
+                tuple of (query, orderby, left joins)
         """
 
         db = current.db
@@ -3089,10 +3126,12 @@ class S3Resource(object):
             additional values where dimensions can have multiple values
             per record
 
-            @param axes: the axis fields as list/tuple of S3ResourceFields
+            Args:
+                axes: the axis fields as list/tuple of S3ResourceFields
 
-            @return: a dict with values per axis, only containes those
-                     axes which are affected by the resource filter
+            Returns:
+                a dict with values per axis, only containes those
+                axes which are affected by the resource filter
         """
 
         axisfilter = {}
@@ -3156,7 +3195,8 @@ class S3Resource(object):
         """
             Helper method to ensure consistent prefixing of field selectors
 
-            @param selector: the selector
+            Args:
+                selector: the selector
         """
 
         head = selector.split("$", 1)[0]
@@ -3174,11 +3214,12 @@ class S3Resource(object):
         """
             Get the list_fields for this resource
 
-            @param key: alternative key for the table configuration
-            @param id_column: - False to exclude the record ID
-                              - True to include it if it is configured
-                              - 0 to make it the first column regardless
-                                whether it is configured or not
+            Args:
+                key: alternative key for the table configuration
+                id_column: - False to exclude the record ID
+                           - True to include it if it is configured
+                           - 0 to make it the first column regardless
+                             whether it is configured or not
         """
 
         list_fields = self.get_config(key, None)
@@ -3221,11 +3262,13 @@ class S3Resource(object):
         """
             Get implicit defaults for new component records
 
-            @param master: the master record
-            @param defaults: any explicit defaults
-            @param data: any actual values for the new record
+            Args:
+                master: the master record
+                defaults: any explicit defaults
+                data: any actual values for the new record
 
-            @return: a dict of {fieldname: values} with the defaults
+            Returns:
+                a dict of {fieldname: values} with the defaults
         """
 
         values = {}
@@ -3309,18 +3352,17 @@ class S3Resource(object):
             return self.table
 
 # =============================================================================
-class S3Components(object):
+class S3Components:
     """
         Lazy component loader
     """
 
     def __init__(self, master, expose=None):
         """
-            Constructor
-
-            @param master: the master resource (S3Resource)
-            @param expose: aliases of components to expose, defaults to
-                           all configured components
+            Args:
+                master: the master resource (S3Resource)
+                expose: aliases of components to expose, defaults to
+                        all configured components
         """
 
         self.master = master
@@ -3345,10 +3387,12 @@ class S3Components(object):
             Access a component resource by its alias; will load the
             component if not loaded yet
 
-            @param alias: the component alias
-            @param default: default to return if the alias is not defined
+            Args:
+                alias: the component alias
+                default: default to return if the alias is not defined
 
-            @return: the component resource (S3Resource)
+            Returns:
+                The component resource (S3Resource)
         """
 
         components = self._components
@@ -3370,11 +3414,14 @@ class S3Components(object):
             Access a component by its alias in key notation; will load the
             component if not loaded yet
 
-            @param alias: the component alias
+            Args:
+                alias: the component alias
 
-            @return: the component resource (S3Resource)
+            Returns:
+                The component resource (S3Resource)
 
-            @raises: KeyError if the component is not defined
+            Raises:
+                KeyError if the component is not defined
         """
 
         component = self.get(alias)
@@ -3388,9 +3435,11 @@ class S3Components(object):
         """
             Check if a component is defined for this resource
 
-            @param alias: the alias to check
+            Args:
+                alias: the alias to check
 
-            @return: True|False whether the component is defined
+            Returns:
+                True|False whether the component is defined
         """
 
         if self.get(alias):
@@ -3404,7 +3453,8 @@ class S3Components(object):
         """
             Get all currently loaded components
 
-            @return: dict {alias: resource} with loaded components
+            Returns:
+                dict {alias: resource} with loaded components
         """
         return self._components
 
@@ -3414,7 +3464,8 @@ class S3Components(object):
         """
             Get all exposed components (=> will thus load them all)
 
-            @return: dict {alias: resource} with exposed components
+            Returns:
+                dict {alias: resource} with exposed components
         """
 
         loaded = self._components
@@ -3461,10 +3512,12 @@ class S3Components(object):
         """
             Instantiate component resources
 
-            @param aliases: iterable of aliases of components to instantiate
-            @param force: forced reload of components
+            Args:
+                aliases: iterable of aliases of components to instantiate
+                force: forced reload of components
 
-            @return: dict of loaded components {alias: resource}
+            Returns:
+                dict of loaded components {alias: resource}
         """
 
         s3db = current.s3db
@@ -3618,10 +3671,11 @@ class S3Components(object):
         """
             Detach currently loaded components, e.g. to force a reload
 
-            @param aliases: aliases to remove, None for all
-            @param expose: aliases of components to expose (default:
-                           keep previously exposed aliases), None for
-                           all configured components
+            Args:
+                aliases: aliases to remove, None for all
+                expose: aliases of components to expose (default:
+                        keep previously exposed aliases), None for
+                        all configured components
         """
 
         if expose is not DEFAULT:
@@ -3655,7 +3709,7 @@ class S3Components(object):
             self.links.clear()
 
 # =============================================================================
-class S3AxisFilter(object):
+class S3AxisFilter:
     """
         Experimental: helper class to extract filter values for pivot
         table axis fields
@@ -3667,8 +3721,9 @@ class S3AxisFilter(object):
             Constructor, recursively introspect the query dict and extract
             all relevant subqueries.
 
-            @param qdict: the query dict (from Query.as_dict(flat=True))
-            @param tablenames: the names of the relevant tables
+            Args:
+                qdict: the query dict (from Query.as_dict(flat=True))
+                tablenames: the names of the relevant tables
         """
 
         self.l = None
@@ -3796,9 +3851,11 @@ class S3AxisFilter(object):
         """
             Helper method to filter list:type axis values
 
-            @param rfield: the axis field
+            Args:
+                rfield: the axis field
 
-            @return: pair of value lists [include], [exclude]
+            Returns:
+                pair of value lists [include], [exclude]
         """
 
         op = self.op
@@ -3834,7 +3891,7 @@ class S3AxisFilter(object):
         return [], []
 
 # =============================================================================
-class S3ResourceFilter(object):
+class S3ResourceFilter:
     """ Class representing a resource filter """
 
     def __init__(self,
@@ -3844,21 +3901,21 @@ class S3ResourceFilter(object):
                  filter = None,
                  vars = None,
                  extra_filters = None,
-                 filter_component = None):
+                 filter_component = None,
+                 ):
         """
-            Constructor
-
-            @param resource: the S3Resource
-            @param id: the record ID (or list of record IDs)
-            @param uid: the record UID (or list of record UIDs)
-            @param filter: a filter query (S3ResourceQuery or Query)
-            @param vars: the dict of GET vars (URL filters)
-            @param extra_filters: extra filters (to be applied on
-                                  pre-filtered subsets), as list of
-                                  tuples (method, expression)
-            @param filter_component: the alias of the component the URL
-                                     filters apply for (filters for this
-                                     component must be handled separately)
+            Args:
+                resource: the S3Resource
+                id: the record ID (or list of record IDs)
+                uid: the record UID (or list of record UIDs)
+                filter: a filter query (S3ResourceQuery or Query)
+                vars: the dict of GET vars (URL filters)
+                extra_filters: extra filters (to be applied on
+                               pre-filtered subsets), as list of
+                               tuples (method, expression)
+                filter_component: the alias of the component the URL
+                                  filters apply for (filters for this
+                                  component must be handled separately)
         """
 
         self.resource = resource
@@ -4002,9 +4059,11 @@ class S3ResourceFilter(object):
             Getter for extra filter methods, lazy property so methods
             are only imported/initialized when needed
 
-            @todo: document the expected signature of filter methods
+            Returns:
+                dict {name: callable} of known named filter methods
 
-            @return: dict {name: callable} of known named filter methods
+            TODO:
+                document the expected signature of filter methods
         """
 
         methods = self._extra_filter_methods
@@ -4024,10 +4083,11 @@ class S3ResourceFilter(object):
         """
             Extend this filter
 
-            @param query: a Query or S3ResourceQuery object
-            @param component: alias of the component the filter shall be
-                              added to (None for master)
-            @param master: False to filter only component
+            Args:
+                query: a Query or S3ResourceQuery object
+                component: alias of the component the filter shall be
+                           added to (None for master)
+                master: False to filter only component
         """
 
         alias = None
@@ -4063,9 +4123,10 @@ class S3ResourceFilter(object):
         """
             Add an extra filter
 
-            @param method: a name of a known filter method, or a
-                           callable filter method
-            @param expression: the filter expression (string)
+            Args:
+                method: a name of a known filter method, or a
+                        callable filter method
+                expression: the filter expression (string)
         """
 
         efilters = self.efilters
@@ -4078,8 +4139,9 @@ class S3ResourceFilter(object):
         """
             Replace the current extra filters
 
-            @param filters: list of tuples (method, expression), or None
-                            to remove all extra filters
+            Args:
+                filters: list of tuples (method, expression), or None
+                         to remove all extra filters
         """
 
         self.efilters = []
@@ -4148,7 +4210,8 @@ class S3ResourceFilter(object):
         """
             Get the list of extra filters
 
-            @return: list of tuples (method, expression)
+            Returns:
+                list of tuples (method, expression)
         """
 
         return list(self.efilters)
@@ -4158,8 +4221,9 @@ class S3ResourceFilter(object):
         """
             Get the joins required for this filter
 
-            @param left: get the left joins
-            @param as_list: return a flat list rather than a nested dict
+            Args:
+                left: get the left joins
+                as_list: return a flat list rather than a nested dict
         """
 
         if self.query is None:
@@ -4214,9 +4278,10 @@ class S3ResourceFilter(object):
         """
             Filter a set of rows by the effective virtual filter
 
-            @param rows: a Rows object
-            @param start: index of the first matching record to select
-            @param limit: maximum number of records to select
+            Args:
+                rows: a Rows object
+                start: index of the first matching record to select
+                limit: maximum number of records to select
         """
 
         vfltr = self.get_filter()
@@ -4258,11 +4323,13 @@ class S3ResourceFilter(object):
         """
             Apply all extra filters on a list of record ids
 
-            @param ids: the pre-filtered set of record IDs
-            @param limit: the maximum number of matching IDs to establish,
-                          None to find all matching IDs
+            Args:
+                ids: the pre-filtered set of record IDs
+                limit: the maximum number of matching IDs to establish,
+                       None to find all matching IDs
 
-            @return: a sequence of matching IDs
+            Returns:
+                A sequence of matching IDs
         """
 
         # Get the resource
@@ -4342,8 +4409,9 @@ class S3ResourceFilter(object):
         """
             Get the total number of matching records
 
-            @param left: left outer joins
-            @param distinct: count only distinct rows
+            Args:
+                left: left outer joins
+                distinct: count only distinct rows
         """
 
         distinct |= self.distinct
@@ -4434,8 +4502,9 @@ class S3ResourceFilter(object):
             Generate a Query from a URL boundary box query; supports multiple
             bboxes, but optimised for the usual case of just 1
 
-            @param resource: the resource
-            @param get_vars: the URL GET vars
+            Args:
+                resource: the resource
+                get_vars: the URL GET vars
         """
 
         tablenames = ("gis_location",
@@ -4602,7 +4671,8 @@ class S3ResourceFilter(object):
         """
             Serialize this filter as URL query
 
-            @return: a Storage of URL GET variables
+            Returns:
+                A Storage of URL GET variables
         """
 
         resource = self.resource
@@ -4613,7 +4683,7 @@ class S3ResourceFilter(object):
         return url_vars
 
 # =============================================================================
-class S3ResourceData(object):
+class S3ResourceData:
     """ Class representing data in a resource """
 
     def __init__(self,
@@ -4631,29 +4701,31 @@ class S3ResourceData(object):
                  as_rows = False,
                  represent = False,
                  show_links = True,
-                 raw_data = False
+                 raw_data = False,
                  ):
         """
-            Constructor, extracts (and represents) data from a resource
+            Extracts (and represents) data from a resource
 
-            @param resource: the resource
-            @param fields: the fields to extract (selector strings)
-            @param start: index of the first record
-            @param limit: maximum number of records
-            @param left: additional left joins required for custom filters
-            @param orderby: orderby-expression for DAL
-            @param groupby: fields to group by (overrides fields!)
-            @param distinct: select distinct rows
-            @param virtual: include mandatory virtual fields
-            @param count: include the total number of matching records
-            @param getids: include the IDs of all matching records
-            @param as_rows: return the rows (don't extract/represent)
-            @param represent: render field value representations
-            @param raw_data: include raw data in the result
+            Args:
+                resource: the resource
+                fields: the fields to extract (selector strings)
+                start: index of the first record
+                limit: maximum number of records
+                left: additional left joins required for custom filters
+                orderby: orderby-expression for DAL
+                groupby: fields to group by (overrides fields!)
+                distinct: select distinct rows
+                virtual: include mandatory virtual fields
+                count: include the total number of matching records
+                getids: include the IDs of all matching records
+                as_rows: return the rows (don't extract/represent)
+                represent: render field value representations
+                raw_data: include raw data in the result
 
-            @note: as_rows / groupby prevent automatic splitting of
+            Note:
+                as_rows / groupby prevent automatic splitting of
                    large multi-table joins, so use with care!
-            @note: with groupby, only the groupby fields will be returned
+                with groupby, only the groupby fields will be returned
                    (i.e. fields will be ignored), because aggregates are
                    not supported (yet)
         """
@@ -5168,7 +5240,8 @@ class S3ResourceData(object):
                               determine the lookup strategy for the
                               representation.
 
-            @param rfields: the fields to extract ([S3ResourceField])
+            Args:
+                rfields: the fields to extract ([S3ResourceField])
         """
 
         table = self.resource.table
@@ -5198,16 +5271,20 @@ class S3ResourceData(object):
         """
             Resolve the ORDERBY expression.
 
-            @param orderby: the orderby expression from the caller
-            @return: tuple (expr, aggr, fields, tables):
-                     expr: the orderby expression (resolved into Fields)
-                     aggr: the orderby expression with aggregations
-                     fields: the fields in the orderby
-                     tables: the tables required for the orderby
+            Args:
+                orderby: the orderby expression from the caller
 
-            @note: for GROUPBY id (e.g. filter query), all ORDERBY fields
-                   must appear in aggregation functions, otherwise ORDERBY
-                   can be ambiguous => use aggr instead of expr
+            Returns:
+                tuple (expr, aggr, fields, tables):
+                 expr: the orderby expression (resolved into Fields)
+                 aggr: the orderby expression with aggregations
+                 fields: the fields in the orderby
+                 tables: the tables required for the orderby
+
+            Note:
+                For GROUPBY id (e.g. filter query), all ORDERBY fields
+                must appear in aggregation functions, otherwise ORDERBY
+                can be ambiguous => use aggr instead of expr
         """
 
         table = self.resource.table
@@ -5298,15 +5375,17 @@ class S3ResourceData(object):
             Execute a query to determine the number/record IDs of all
             matching rows
 
-            @param query: the filter query
-            @param join: the inner joins for the query
-            @param left: the left joins for the query
-            @param getids: extract the IDs of matching records
-            @param limitby: tuple of indices (start, end) to extract only
-                            a limited set of IDs
-            @param orderby: ORDERBY expression for the query
+            Args:
+                query: the filter query
+                join: the inner joins for the query
+                left: the left joins for the query
+                getids: extract the IDs of matching records
+                limitby: tuple of indices (start, end) to extract only
+                         a limited set of IDs
+                orderby: ORDERBY expression for the query
 
-            @return: tuple of (TotalNumberOfRecords, RecordIDs)
+            Returns:
+                tuple of (TotalNumberOfRecords, RecordIDs)
         """
 
         db = current.db
@@ -5402,17 +5481,19 @@ class S3ResourceData(object):
         """
             Find all tables and fields to retrieve in the master query
 
-            @param dfields: the requested fields (S3ResourceFields)
-            @param vfields: the virtual filter fields
-            @param joined_tables: the tables joined in the master query
-            @param as_rows: whether to produce web2py Rows
-            @param groupby: the GROUPBY expression from the caller
+            Args:
+                dfields: the requested fields (S3ResourceFields)
+                vfields: the virtual filter fields
+                joined_tables: the tables joined in the master query
+                as_rows: whether to produce web2py Rows
+                groupby: the GROUPBY expression from the caller
 
-            @return: tuple (tables, fields, extract, groupby):
-                     tables: the tables required to join
-                     fields: the fields to retrieve
-                     extract: the fields to extract from the result
-                     groupby: the GROUPBY expression (resolved into Fields)
+            Returns:
+                tuple (tables, fields, extract, groupby):
+                 tables: the tables required to join
+                 fields: the fields to retrieve
+                 extract: the fields to extract from the result
+                 groupby: the GROUPBY expression (resolved into Fields)
         """
 
         db = current.db
@@ -5504,13 +5585,15 @@ class S3ResourceData(object):
             Determine which fields in joined tables haven't been
             retrieved in the master query
 
-            @param all_fields: all requested fields (list of S3ResourceFields)
-            @param master_fields: all fields in the master query, a dict
-                                  {ColumnName: Field}
+            Args:
+                all_fields: all requested fields (list of S3ResourceFields)
+                master_fields: all fields in the master query, a dict
+                               {ColumnName: Field}
 
-            @return: a nested dict {TableName: {ColumnName: Field}},
-                     additionally required left joins are stored per
-                     table in the inner dict as "_left"
+            Returns:
+                A nested dict {TableName: {ColumnName: Field}},
+                  additionally required left joins are stored per
+                  table in the inner dict as "_left"
         """
 
         resource = self.resource
@@ -5548,16 +5631,18 @@ class S3ResourceData(object):
             master query, then we perform a separate query for each joined
             table (this is faster than building a multi-table-join)
 
-            @param tablename: name of the joined table
-            @param query: the Query
-            @param fields: the fields to extract
-            @param records: the output dict to update, structure:
-                            {RecordID: {ColumnName: RawValues}}
-            @param represent: store extracted data (self.field_data) for
-                              fast representation, and estimate lookup
-                              efforts (self.effort)
+            Args:
+                tablename: name of the joined table
+                query: the Query
+                fields: the fields to extract
+                records: the output dict to update, structure:
+                         {RecordID: {ColumnName: RawValues}}
+                represent: store extracted data (self.field_data) for
+                           fast representation, and estimate lookup
+                           efforts (self.effort)
 
-            @return: the output dict
+            Returns:
+                The output dict
         """
 
         s3db = current.s3db
@@ -5619,13 +5704,14 @@ class S3ResourceData(object):
         """
             Extract the data from rows and store them in self.field_data
 
-            @param rows: the rows
-            @param pkey: the primary key
-            @param columns: the columns to extract
-            @param join: the rows are the result of a join query
-            @param records: the records dict to merge the data into
-            @param represent: collect unique values per field and estimate
-                              representation efforts for list:types
+            Args:
+                rows: the rows
+                pkey: the primary key
+                columns: the columns to extract
+                join: the rows are the result of a join query
+                records: the records dict to merge the data into
+                represent: collect unique values per field and estimate
+                           representation efforts for list:types
         """
 
         field_data = self.field_data
@@ -5707,15 +5793,16 @@ class S3ResourceData(object):
             Render the representations of the values for rfield in
             all records in the result
 
-            @param rfield: the field (S3ResourceField)
-            @param results: the output dict to update with the representations,
-                            structure: {RecordID: {ColumnName: Representation}},
-                            the raw data will be a special item "_row" in the
-                            inner dict holding a Storage of the raw field values
-            @param none: default representation of None
-            @param raw_data: retain the raw data in the output dict
-            @param show_links: allow representation functions to render
-                               links as HTML
+            Args:
+                rfield: the field (S3ResourceField)
+                results: the output dict to update with the representations,
+                         structure: {RecordID: {ColumnName: Representation}},
+                         the raw data will be a special item "_row" in the
+                         inner dict holding a Storage of the raw field values
+                none: default representation of None
+                raw_data: retain the raw data in the output dict
+                show_links: allow representation functions to render
+                            links as HTML
         """
 
         colname = rfield.colname
@@ -5832,9 +5919,11 @@ class S3ResourceData(object):
             Helper method to access the results as dict items, for
             backwards-compatibility
 
-            @param key: the key
+            Args:
+                key: the key
 
-            @todo: migrate use-cases to .<key> notation, then deprecate
+            TODO:
+                migrate use-cases to .<key> notation, then deprecate
         """
 
         if key in ("rfields", "numrows", "ids", "rows"):
@@ -5849,10 +5938,12 @@ class S3ResourceData(object):
             Extract all unique record IDs from rows, preserving the
             order by first match
 
-            @param rows: the Rows
-            @param pkey: the primary key
+            Args:
+                rows: the Rows
+                pkey: the primary key
 
-            @return: list of unique record IDs
+            Returns:
+                list of unique record IDs
         """
 
         x = set()
@@ -5873,11 +5964,13 @@ class S3ResourceData(object):
         """
             Select a subset of rows by their record IDs
 
-            @param rows: the Rows
-            @param ids: the record IDs
-            @param pkey: the primary key
+            Args:
+                rows: the Rows
+                ids: the record IDs
+                pkey: the primary key
 
-            @return: the subset (Rows)
+            Returns:
+                The subset (Rows)
         """
 
         if ids:
@@ -5893,15 +5986,17 @@ class S3ResourceData(object):
         """
             Build a subset [start:limit] from rows and ids
 
-            @param rows: the Rows
-            @param ids: all matching record IDs
-            @param start: start index of the page
-            @param limit: maximum length of the page
-            @param has_id: whether the Rows contain the primary key
+            Args:
+                rows: the Rows
+                ids: all matching record IDs
+                start: start index of the page
+                limit: maximum length of the page
+                has_id: whether the Rows contain the primary key
 
-            @return: tuple (rows, page), with:
-                        rows = the Rows in the subset, in order
-                        page = the record IDs in the subset, in order
+            Returns:
+                tuple (rows, page), with:
+                    rows = the Rows in the subset, in order
+                    page = the record IDs in the subset, in order
         """
 
         if limit and start is None:
@@ -5926,9 +6021,11 @@ class S3ResourceData(object):
         """
             Get the names of all tables that need to be joined for a field
 
-            @param rfield: the field (S3ResourceField)
+            Args:
+                rfield: the field (S3ResourceField)
 
-            @return: a set of tablenames
+            Returns:
+                A set of tablenames
         """
 
         left = rfield.left
@@ -5949,7 +6046,8 @@ class S3ResourceData(object):
         """
             Resolve an orderby or groupby expression into its items
 
-            @param expr: the orderby/groupby expression
+            Args:
+                expr: the orderby/groupby expression
         """
 
         if isinstance(expr, str):

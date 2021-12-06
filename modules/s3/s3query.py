@@ -55,7 +55,7 @@ ogetattr = object.__getattribute__
 TEXTTYPES = ("string", "text")
 
 # =============================================================================
-class S3FieldSelector(object):
+class S3FieldSelector:
     """ Helper class to construct a resource query """
 
     LOWER = "lower"
@@ -168,12 +168,14 @@ class S3FieldSelector(object):
         """
             Extract a value from a Row
 
-            @param resource: the resource
-            @param row: the Row
-            @param field: the field
+            Args:
+                resource: the resource
+                row: the Row
+                field: the field
 
-            @return: field if field is not a Field/S3FieldSelector instance,
-                      the value from the row otherwise
+            Returns:
+                field if field is not a Field/S3FieldSelector instance,
+                the value from the row otherwise
         """
 
         error = lambda fn: KeyError("Field not found: %s" % fn)
@@ -243,7 +245,8 @@ class S3FieldSelector(object):
         """
             Resolve this field against a resource
 
-            @param resource: the resource
+            Args:
+                resource: the resource
         """
         return S3ResourceField(resource, self.name)
 
@@ -253,7 +256,7 @@ class S3FieldSelector(object):
 FS = S3FieldSelector
 
 # =============================================================================
-class S3FieldPath(object):
+class S3FieldPath:
     """ Helper class to parse field selectors """
 
     # -------------------------------------------------------------------------
@@ -262,9 +265,10 @@ class S3FieldPath(object):
         """
             Resolve a selector (=field path) against a resource
 
-            @param resource: the S3Resource to resolve against
-            @param selector: the field selector string
-            @param tail: tokens to append to the selector
+            Args:
+                resource: the S3Resource to resolve against
+                selector: the field selector string
+                tail: tokens to append to the selector
 
             The general syntax for a selector is:
 
@@ -329,9 +333,10 @@ class S3FieldPath(object):
         """
             Constructor - not to be called directly, use resolve() instead
 
-            @param resource: the S3Resource
-            @param table: the table
-            @param tokens: the tokens as list
+            Args:
+                resource: the S3Resource
+                table: the table
+                tokens: the tokens as list
         """
 
         s3db = current.s3db
@@ -440,10 +445,12 @@ class S3FieldPath(object):
             Resolve a field name against the table, recognizes "id" as
             table._id.name, and "uid" as current.xml.UID.
 
-            @param table: the Table
-            @param fieldname: the field name
+            Args:
+                table: the Table
+                fieldname: the field name
 
-            @return: tuple (Field, Field.Method)
+            Returns:
+                tuple (Field, Field.Method)
         """
 
         method = None
@@ -474,13 +481,17 @@ class S3FieldPath(object):
             join and left join between the current table and the
             referenced table
 
-            @param table: the current Table
-            @param fieldname: the fieldname of the foreign key
+            Args:
+                table: the current Table
+                fieldname: the fieldname of the foreign key
 
-            @return: tuple of (referenced table, join, left join)
-            @raise: AttributeError is either the field or
-                    the referended table are not found
-            @raise: SyntaxError if the field is not a foreign key
+            Returns:
+                tuple of (referenced table, join, left join)
+
+            Raises:
+                AttributeError is either the field or
+                 the referended table are not found
+                SyntaxError if the field is not a foreign key
         """
 
         if fieldname in table.fields:
@@ -510,16 +521,20 @@ class S3FieldPath(object):
             or free join), and the joins and left joins between the current
             resource and the linked table.
 
-            @param resource: the current S3Resource
-            @param alias: the alias
+            Args:
+                resource: the current S3Resource
+                alias: the alias
 
-            @return: tuple of (linked table, joins, left joins, multiple,
-                     distinct), the two latter being flags to indicate
-                     possible ambiguous query results (needed by the query
-                     builder)
-            @raise: AttributeError if one of the key fields or tables
+            Returns:
+                tuple of (linked table, joins, left joins, multiple,
+                distinct), the two latter being flags to indicate
+                possible ambiguous query results (needed by the query
+                builder)
+
+            Raises:
+                AttributeError if one of the key fields or tables
                     can not be found
-            @raise: SyntaxError if the alias can not be resolved (e.g.
+                SyntaxError if the alias can not be resolved (e.g.
                     because on of the keys isn't a foreign key, points
                     to the wrong table or is ambiguous)
         """
@@ -619,7 +634,7 @@ class S3FieldPath(object):
         return ktable, join, multiple, True
 
 # =============================================================================
-class S3ResourceField(object):
+class S3ResourceField:
     """ Helper class to resolve a field selector against a resource """
 
     # -------------------------------------------------------------------------
@@ -627,8 +642,9 @@ class S3ResourceField(object):
         """
             Constructor
 
-            @param resource: the resource
-            @param selector: the field selector (string)
+            Args:
+                resource: the resource
+                selector: the field selector (string)
         """
 
         self.resource = resource
@@ -758,9 +774,10 @@ class S3ResourceField(object):
         """
             Extract the value for this field from a row
 
-            @param row: the Row
-            @param represent: render a text representation for the value
-            @param lazy: return a lazy representation handle if available
+            Args:
+                row: the Row
+                represent: render a text representation for the value
+                lazy: return a lazy representation handle if available
         """
 
         tname = self.tname
@@ -815,7 +832,8 @@ class S3ResourceField(object):
         """
             Check whether the field type is a fixed set lookup (IS_IN_SET)
 
-            @return: True if field type is a fixed set lookup, else False
+            Returns:
+                True if field type is a fixed set lookup, else False
         """
 
         is_lookup = self._is_lookup
@@ -849,7 +867,8 @@ class S3ResourceField(object):
         """
             Check whether the field type is numeric (lazy property)
 
-            @return: True if field type is integer or double, else False
+            Returns:
+                True if field type is integer or double, else False
         """
 
         is_numeric = self._is_numeric
@@ -870,7 +889,8 @@ class S3ResourceField(object):
         """
             Check whether the field type is a string type (lazy property)
 
-            @return: True if field type is string or text, else False
+            Returns:
+                True if field type is string or text, else False
         """
 
         is_string = self._is_string
@@ -885,7 +905,8 @@ class S3ResourceField(object):
         """
             Check whether the field type is date/time (lazy property)
 
-            @return: True if field type is datetime, date or time, else False
+            Returns:
+                True if field type is datetime, date or time, else False
         """
 
         is_datetime = self._is_datetime
@@ -900,7 +921,8 @@ class S3ResourceField(object):
         """
             Check whether the field type is a reference (lazy property)
 
-            @return: True if field type is a reference, else False
+            Returns:
+                True if field type is a reference, else False
         """
 
         is_reference = self._is_reference
@@ -915,7 +937,8 @@ class S3ResourceField(object):
         """
             Check whether the field type is a list (lazy property)
 
-            @return: True if field type is a list, else False
+            Returns:
+                True if field type is a list, else False
         """
 
         is_list = self._is_list
@@ -925,15 +948,14 @@ class S3ResourceField(object):
         return is_list
 
 # =============================================================================
-class S3Joins(object):
+class S3Joins:
     """ A collection of joins """
 
     def __init__(self, tablename, joins=None):
         """
-            Constructor
-
-            @param tablename: the name of the master table
-            @param joins: list of joins
+            Args:
+                tablename: the name of the master table
+                joins: list of joins
         """
 
         self.tablename = tablename
@@ -955,7 +977,8 @@ class S3Joins(object):
         """
             Get the list of joins for a table
 
-            @param tablename: the tablename
+            Args:
+                tablename: the tablename
         """
 
         return self.joins.__getitem__(tablename)
@@ -965,8 +988,9 @@ class S3Joins(object):
         """
             Update the joins for a table
 
-            @param tablename: the tablename
-            @param joins: the list of joins for this table
+            Args:
+                tablename: the tablename
+                joins: the list of joins for this table
         """
 
         master = self.tablename
@@ -1017,7 +1041,8 @@ class S3Joins(object):
         """
             Get a list of joins for all joined tables
 
-            @return: a nested list like [[join, join, ...], ...]
+            Returns:
+                A nested list like [[join, join, ...], ...]
         """
 
         return list(self.joins.values())
@@ -1027,10 +1052,12 @@ class S3Joins(object):
         """
             Add joins to this collection
 
-            @param joins: a join or a list/tuple of joins
+            Args:
+                joins: a join or a list/tuple of joins
 
-            @return: the list of names of all tables for which joins have
-                     been added to the collection
+            Returns:
+                The list of names of all tables for which joins have
+                been added to the collection
         """
 
         tablenames = set()
@@ -1048,10 +1075,13 @@ class S3Joins(object):
         """
             Extend this collection with the joins from another collection
 
-            @param other: the other collection (S3Joins), or a dict like
-                          {tablename: [join, join]}
-            @return: the list of names of all tables for which joins have
-                     been added to the collection
+            Args:
+                other: the other collection (S3Joins), or a dict like
+                       {tablename: [join, join]}
+
+            Returns:
+                The list of names of all tables for which joins have
+                been added to the collection
         """
 
         if type(other) is S3Joins:
@@ -1079,27 +1109,29 @@ class S3Joins(object):
         """
             Return joins from this collection as list
 
-            @param tablenames: the names of the tables for which joins
-                               shall be returned, defaults to all tables
-                               in the collection. Dependencies will be
-                               included automatically (if available)
-            @param aqueries: dict of accessible-queries {tablename: query}
-                             to include in the joins; if there is no entry
-                             for a particular table, then it will be looked
-                             up from current.auth and added to the dict.
-                             To prevent differential authorization of a
-                             particular joined table, set {<tablename>: None}
-                             in the dict
-            @param prefer: If any table or any of its dependencies would be
-                           joined by this S3Joins collection, then skip this
-                           table here (and enforce it to be joined by the
-                           preferred collection), to prevent duplication of
-                           left joins as inner joins:
-                           join = inner_joins.as_list(prefer=left_joins)
-                           left = left_joins.as_list()
+            Args:
+                tablenames: the names of the tables for which joins
+                            shall be returned, defaults to all tables
+                            in the collection. Dependencies will be
+                            included automatically (if available)
+                aqueries: dict of accessible-queries {tablename: query}
+                          to include in the joins; if there is no entry
+                          for a particular table, then it will be looked
+                          up from current.auth and added to the dict.
+                          To prevent differential authorization of a
+                          particular joined table, set {<tablename>: None}
+                          in the dict
+                prefer: If any table or any of its dependencies would be
+                        joined by this S3Joins collection, then skip this
+                        table here (and enforce it to be joined by the
+                        preferred collection), to prevent duplication of
+                        left joins as inner joins:
+                        join = inner_joins.as_list(prefer=left_joins)
+                        left = left_joins.as_list()
 
-            @return: a list of joins, ordered by their interdependency, which
-                     can be used as join/left parameter of Set.select()
+            Returns:
+                A list of joins, ordered by their interdependency, which
+                can be used as join/left parameter of Set.select()
         """
 
         accessible_query = current.auth.s3_accessible_query
@@ -1179,7 +1211,8 @@ class S3Joins(object):
         """
             Sort a list of left-joins by their interdependency
 
-            @param joins: the list of joins
+            Args:
+                joins: the list of joins
         """
 
         if len(joins) <= 1:
@@ -1211,7 +1244,7 @@ class S3Joins(object):
             raise RuntimeError("circular join dependency")
 
 # =============================================================================
-class S3ResourceQuery(object):
+class S3ResourceQuery:
     """
         Helper class representing a resource query
         - unlike DAL Query objects, these can be converted to/from URL filters
@@ -1241,7 +1274,6 @@ class S3ResourceQuery(object):
 
     # -------------------------------------------------------------------------
     def __init__(self, op, left=None, right=None):
-        """ Constructor """
 
         if op not in self.OPERATORS:
             raise SyntaxError("Invalid operator: %s" % op)
@@ -1338,9 +1370,12 @@ class S3ResourceQuery(object):
         """
             Split this query into a real query and a virtual one (AND)
 
-            @param resource: the S3Resource
-            @return: tuple (DAL-translatable sub-query, virtual filter),
-                     both S3ResourceQuery instances
+            Args:
+                resource: the S3Resource
+
+            Returns:
+                tuple (DAL-translatable sub-query, virtual filter),
+                 both S3ResourceQuery instances
         """
 
         op = self.op
@@ -1414,7 +1449,8 @@ class S3ResourceQuery(object):
         """
             Placeholder for transformation method
 
-            @param resource: the S3Resource
+            Args:
+                resource: the S3Resource
         """
 
         # @todo: implement
@@ -1427,7 +1463,8 @@ class S3ResourceQuery(object):
             fields (the necessary joins for this query can be constructed
             with the joins() method)
 
-            @param resource: the resource to resolve the query against
+            Args:
+                resource: the resource to resolve the query against
         """
 
         op = self.op
@@ -1537,9 +1574,10 @@ class S3ResourceQuery(object):
         """
             Translate a filter expression into a DAL query
 
-            @param op: the operator
-            @param l: the left operand
-            @param r: the right operand
+            Args:
+                op: the operator
+                l: the left operand
+                r: the right operand
         """
 
         if op == self.CONTAINS:
@@ -1579,8 +1617,9 @@ class S3ResourceQuery(object):
         """
             Translate TYPEOF into DAL expression
 
-            @param l: the left operand
-            @param r: the right operand
+            Args:
+                l: the left operand
+                r: the right operand
         """
 
         hierarchy, field, nodeset, none = self._resolve_hierarchy(l, r)
@@ -1622,8 +1661,9 @@ class S3ResourceQuery(object):
         """
             Resolve the hierarchical lookup in a typeof-query
 
-            @param l: the left operand
-            @param r: the right operand
+            Args:
+                l: the left operand
+                r: the right operand
         """
 
         from .s3hierarchy import S3Hierarchy
@@ -1715,9 +1755,10 @@ class S3ResourceQuery(object):
             Resolve BELONGS into a DAL expression (or S3ResourceQuery if
             field is an S3FieldSelector)
 
-            @param l: the left operand
-            @param r: the right operand
-            @param field: alternative left operand
+            Args:
+                l: the left operand
+                r: the right operand
+                field: alternative left operand
         """
 
         if field is None:
@@ -1781,8 +1822,9 @@ class S3ResourceQuery(object):
             Resolve INTERSECTS into a DAL expression;
             will be ignored for non-spatial DBs
 
-            @param l: the left operand (Field)
-            @param r: the right operand
+            Args:
+                l: the left operand (Field)
+                r: the right operand
         """
 
         if current.deployment_settings.get_gis_spatialdb():
@@ -1825,9 +1867,10 @@ class S3ResourceQuery(object):
         """
             Probe whether the row matches the query
 
-            @param resource: the resource to resolve the query against
-            @param row: the DB row
-            @param virtual: execute only virtual queries
+            Args:
+                resource: the resource to resolve the query against
+                row: the DB row
+                virtual: execute only virtual queries
         """
 
         if self.op == self.AND:
@@ -1931,8 +1974,9 @@ class S3ResourceQuery(object):
         """
             Probe whether the value pair matches the query
 
-            @param l: the left value
-            @param r: the right value
+            Args:
+                l: the left value
+                r: the right value
         """
 
         result = False
@@ -2030,7 +2074,8 @@ class S3ResourceQuery(object):
         """
             Represent this query as a human-readable string.
 
-            @param resource: the resource to resolve the query against
+            Args:
+                resource: the resource to resolve the query against
         """
 
         op = self.op
@@ -2091,7 +2136,8 @@ class S3ResourceQuery(object):
         """
             Serialize this query as URL query
 
-            @return: a Storage of URL variables
+            Returns:
+                A Storage of URL variables
         """
 
         op = self.op
@@ -2153,8 +2199,8 @@ class S3ResourceQuery(object):
         """
             Helper method to URL-serialize an OR-subtree in a query in
             alternative field selector syntax if they all use the same
-            operator and value (this is needed to URL-serialize an
-            S3SearchSimpleWidget query).
+            operator and value (this was needed to URL-serialize an
+            S3SearchSimpleWidget query...is it still used anywhere?).
         """
 
         op = self.op
@@ -2185,7 +2231,7 @@ class S3ResourceQuery(object):
             return (l.name, op, r, False)
 
 # =============================================================================
-class S3URLQuery(object):
+class S3URLQuery:
     """ URL Query Parser """
 
     FILTEROP = re.compile(r"__(?!link\.)([_a-z\!]+)$")
@@ -2196,10 +2242,13 @@ class S3URLQuery(object):
         """
             Construct a Storage of S3ResourceQuery from a Storage of get_vars
 
-            @param resource: the S3Resource
-            @param get_vars: the get_vars
-            @return: Storage of S3ResourceQuery like {alias: query}, where
-                     alias is the alias of the component the query concerns
+            Args:
+                resource: the S3Resource
+                get_vars: the get_vars
+
+            Returns:
+                Storage of S3ResourceQuery like {alias: query}, where
+                alias is the alias of the component the query concerns
         """
 
         query = Storage()
@@ -2286,8 +2335,11 @@ class S3URLQuery(object):
         """
             Parse a URL query into get_vars
 
-            @param query: the URL query string
-            @return: the get_vars (Storage)
+            Args:
+                query: the URL query string
+
+            Returns:
+                The get_vars (Storage)
         """
 
         if not url:
@@ -2318,9 +2370,11 @@ class S3URLQuery(object):
         """
             Parse a URL filter key
 
-            @param key: the filter key
+            Args:
+                key: the filter key
 
-            @return: tuple (selector, operator, invert)
+            Returns:
+                tuple (selector, operator, invert)
         """
 
         if key[-1] == "!":
@@ -2350,9 +2404,11 @@ class S3URLQuery(object):
             Parse a URL filter key, separating multiple field selectors
             if the key specifies alternatives
 
-            @param key: the filter key
+            Args:
+                key: the filter key
 
-            @return: tuple ([field selectors], operator, invert)
+            Returns:
+                tuple ([field selectors], operator, invert)
         """
 
         fs, op, invert = cls.parse_key(key)
@@ -2370,8 +2426,11 @@ class S3URLQuery(object):
         """
             Parse a URL query value
 
-            @param value: the value
-            @return: the parsed value
+            Args:
+                value: the value
+
+            Returns:
+                The parsed value
         """
 
         uquote = lambda w: w.replace('\\"', '\\"\\') \
@@ -2417,10 +2476,11 @@ class S3URLQuery(object):
         """
             Construct a sub-query from URL selectors, operator and value
 
-            @param selectors: the selector(s)
-            @param op: the operator
-            @param invert: invert the query
-            @param value: the value
+            Args:
+                selectors: the selector(s)
+                op: the operator
+                invert: invert the query
+                value: the value
         """
 
         v = cls.parse_value(value)
@@ -2473,7 +2533,7 @@ class S3URLQuery(object):
         return q
 
 # =============================================================================
-class S3AIRegex(object):
+class S3AIRegex:
     """
         Helper class to construct quasi-accent-insensitive text search
         queries based on SQL regular expressions (REGEXP).
@@ -2519,8 +2579,9 @@ class S3AIRegex(object):
         """
             Query constructor
 
-            @param l: the left operand
-            @param r: the right operand (string)
+            Args:
+                l: the left operand
+                r: the right operand (string)
         """
 
         string = cls.translate(r)
@@ -2536,7 +2597,8 @@ class S3AIRegex(object):
             Helper method to translate the search string into a regular
             expression
 
-            @param string: the search string
+            Args:
+                string: the search string
         """
 
         if not string:
@@ -2593,11 +2655,10 @@ class S3AIRegex(object):
 combine = lambda x, y: x & y if x is not None else y
 
 # =============================================================================
-class S3URLQueryParser(object):
+class S3URLQueryParser:
     """ New-style URL Filter Parser """
 
     def __init__(self):
-        """ Constructor """
 
         self.parser = None
         self.ParseResults = None
@@ -2660,8 +2721,11 @@ class S3URLQueryParser(object):
             Parse a string expression and convert it into a dict
             of filters (S3ResourceQueries).
 
-            @parameter expression: the filter expression as string
-            @return: a dict of {component_alias: filter_query}
+            Args:
+                expression: the filter expression as string
+
+            Returns:
+                A dict of {component_alias: filter_query}
         """
 
         query = {}
@@ -2686,8 +2750,11 @@ class S3URLQueryParser(object):
             Convert a parsed filter expression into a dict of
             filters (S3ResourceQueries)
 
-            @param expression: the parsed filter expression (ParseResults)
-            @returns: a dict of {component_alias: filter_query}
+            Args:
+                expression: the parsed filter expression (ParseResults)
+
+            Returns:
+                A dict of {component_alias: filter_query}
         """
 
         ParseResults = self.ParseResults
@@ -2723,9 +2790,12 @@ class S3URLQueryParser(object):
         """
             Conjunction of two query {component_alias: filter_query} (AND)
 
-            @param first: the first dict
-            @param second: the second dict
-            @return: the combined dict
+            Args:
+                first: the first dict
+                second: the second dict
+
+            Returns:
+                The combined dict
         """
 
         if not first:
@@ -2747,9 +2817,12 @@ class S3URLQueryParser(object):
         """
             Disjunction of two query dicts {component_alias: filter_query} (OR)
 
-            @param first: the first query dict
-            @param second: the second query dict
-            @return: the combined dict
+            Args:
+                first: the first query dict
+                second: the second query dict
+
+            Returns:
+                The combined dict
         """
 
         if not first:
@@ -2773,7 +2846,8 @@ class S3URLQueryParser(object):
         """
             Negation of a query dict
 
-            @param query: the query dict {component_alias: filter_query}
+            Args:
+                query: the query dict {component_alias: filter_query}
         """
 
         if query is None:
@@ -2806,9 +2880,10 @@ class S3URLQueryParser(object):
         """
             Create an S3ResourceQuery
 
-            @param op: the operator
-            @param first: the first operand (=S3FieldSelector)
-            @param second: the second operand (=value)
+            Args:
+                op: the operator
+                first: the first operand (=S3FieldSelector)
+                second: the second operand (=value)
         """
 
         if not isinstance(first, S3FieldSelector):
@@ -2834,8 +2909,11 @@ class S3URLQueryParser(object):
         """
             Get the component alias from an S3FieldSelector (DRY Helper)
 
-            @param selector: the S3FieldSelector
-            @return: the alias as string or None for the master resource
+            Args:
+                selector: the S3FieldSelector
+
+            Returns:
+                The alias as string or None for the master resource
         """
 
         alias = None

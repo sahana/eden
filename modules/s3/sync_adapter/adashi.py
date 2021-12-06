@@ -46,7 +46,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
             Register this site at the peer repository
 
-            @return: True to indicate success, otherwise False
+            Returns:
+                True to indicate success, otherwise False
         """
 
         # No registration required (passive adapter)
@@ -57,7 +58,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
             Login at the peer repository
 
-            @return: None if successful, otherwise the error
+            Returns:
+                None if successful, otherwise the error
         """
 
         # No login required (passive adapter)
@@ -68,7 +70,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
             Outgoing pull
 
-            @param task: the task (sync_task Row)
+            Args:
+                task: the task (sync_task Row)
         """
 
         repository = self.repository
@@ -149,7 +152,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
             Outgoing push
 
-            @param task: the sync_task Row
+            Args:
+                task: the sync_task Row
         """
 
         repository = self.repository
@@ -173,22 +177,24 @@ class S3SyncAdapter(S3SyncBaseAdapter):
     # -------------------------------------------------------------------------
     def send(self,
              resource,
-             start=None,
-             limit=None,
-             msince=None,
-             filters=None,
-             mixed=False,
-             pretty_print=False):
+             start = None,
+             limit = None,
+             msince = None,
+             filters = None,
+             mixed = False,
+             pretty_print = False,
+             ):
         """
             Respond to an incoming pull from a peer repository
 
-            @param resource: the resource to be synchronized
-            @param start: index of the first record to send
-            @param limit: maximum number of records to send
-            @param msince: minimum modification date/time for records to send
-            @param filters: URL filters for record extraction
-            @param mixed: negotiate resource with peer (disregard resource)
-            @param pretty_print: make the output human-readable
+            Args:
+                resource: the resource to be synchronized
+                start: index of the first record to send
+                limit: maximum number of records to send
+                msince: minimum modification date/time for records to send
+                filters: URL filters for record extraction
+                mixed: negotiate resource with peer (disregard resource)
+                pretty_print: make the output human-readable
         """
 
         if not resource or mixed:
@@ -224,23 +230,25 @@ class S3SyncAdapter(S3SyncBaseAdapter):
     def receive(self,
                 source,
                 resource,
-                strategy=None,
-                update_policy=None,
-                conflict_policy=None,
-                onconflict=None,
-                last_sync=None,
-                mixed=False):
+                strategy = None,
+                update_policy = None,
+                conflict_policy = None,
+                onconflict = None,
+                last_sync = None,
+                mixed = False,
+                ):
         """
             Respond to an incoming push from the peer repository
 
-            @param source: the input stream (list of file-like objects)
-            @param resource: the target resource
-            @param strategy: the import strategy
-            @param update_policy: the update policy
-            @param conflict_policy: the conflict resolution policy
-            @param onconflict: callback for conflict resolution
-            @param last_sync: the last synchronization date/time for the peer
-            @param mixed: negotiate resource with peer (disregard resource)
+            Args:
+                source: the input stream (list of file-like objects)
+                resource: the target resource
+                strategy: the import strategy
+                update_policy: the update policy
+                conflict_policy: the conflict resolution policy
+                onconflict: callback for conflict resolution
+                last_sync: the last synchronization date/time for the peer
+                mixed: negotiate resource with peer (disregard resource)
         """
 
         s3db = current.s3db
@@ -371,11 +379,13 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             Deactivate all previous unit assignments (event_team) for
             an incident which are not in this feed update.
 
-            @param item: the import item
+            Args:
+                item: the import item
 
-            @note: this assumes that the list of incident resources in
+            Note:
+                This assumes that the list of incident resources in
                    the feed update is complete (confirmed for ADASHI)
-            @note: must not deactivate assignments which are newer
+                Must not deactivate assignments which are newer
                    than the feed update (Sync policy NEWER)
         """
 
@@ -428,8 +438,9 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
             Helper method to store source data in file system
 
-            @param tree: the XML element tree of the source
-            @param category: the feed category
+            Args:
+                tree: the XML element tree of the source
+                category: the feed category
         """
 
         repository = self.repository

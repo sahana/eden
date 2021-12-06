@@ -72,7 +72,6 @@ class S3Model:
     DELETED = "deleted"
 
     def __init__(self, module=None):
-        """ Constructor """
 
         self.cache = (current.cache.ram, 60)
 
@@ -477,10 +476,12 @@ class S3Model:
             re-instantiation of an already existing alias for the same
             table (which can otherwise lead to name collisions in PyDAL).
 
-            @param table: the original table
-            @param alias: the alias
+            Args:
+                table: the original table
+                alias: the alias
 
-            @return: the aliased Table instance
+            Returns:
+                The aliased Table instance
         """
 
         db = current.db
@@ -515,8 +516,9 @@ class S3Model:
         """
             Update the extra configuration of a table
 
-            @param tablename: the name of the table
-            @param attr: dict of attributes to update
+            Args:
+                tablename: the name of the table
+                attr: dict of attributes to update
         """
 
         config = current.model["config"]
@@ -533,8 +535,9 @@ class S3Model:
         """
             Reads a configuration attribute of a resource
 
-            @param tablename: the name of the resource DB table
-            @param key: the key (name) of the attribute
+            Args:
+                tablename: the name of the resource DB table
+                key: the key (name) of the attribute
         """
 
         config = current.model["config"]
@@ -551,8 +554,9 @@ class S3Model:
         """
             Removes configuration attributes of a resource
 
-            @param table: the resource DB table
-            @param keys: keys of attributes to remove (maybe multiple)
+            Args:
+                table: the resource DB table
+                keys: keys of attributes to remove (maybe multiple)
         """
 
         config = current.model["config"]
@@ -574,12 +578,13 @@ class S3Model:
             callback to the originally configured callback chain,
             for use in customise_* in templates
 
-            @param tablename: the table name
-            @param hook: the main hook ("onvalidation"|"onaccept")
-            @param cb: the custom callback function
-            @param method: the sub-hook ("create"|"update"|None)
+            Args:
+                tablename: the table name
+                hook: the main hook ("onvalidation"|"onaccept")
+                cb: the custom callback function
+                method: the sub-hook ("create"|"update"|None)
 
-            @example:
+            Example:
                 # Add a create-onvalidation callback for the pr_person
                 # table, while retaining any existing onvalidation:
                 s3db.add_custom_callback("pr_person",
@@ -648,9 +653,11 @@ class S3Model:
                                         },
                           )
 
-            @param field: the Field
+            Args:
+                field: the Field
 
-            @returns: the name of the referenced table
+            Returns:
+                The name of the referenced table
         """
 
         if str(field.type) == "integer":
@@ -680,9 +687,10 @@ class S3Model:
         """
             Helper to run the onvalidation routine for a record
 
-            @param table: the Table
-            @param record: the FORM or the Row to validate
-            @param method: the method
+            Args:
+                table: the Table
+                record: the FORM or the Row to validate
+                method: the method
         """
 
         if hasattr(table, "_tablename"):
@@ -705,9 +713,10 @@ class S3Model:
         """
             Helper to run the onvalidation routine for a record
 
-            @param table: the Table
-            @param record: the FORM or the Row to validate
-            @param method: the method
+            Args:
+                table: the Table
+                record: the FORM or the Row to validate
+                method: the method
         """
 
         if hasattr(table, "_tablename"):
@@ -733,8 +742,9 @@ class S3Model:
         """
             Configure component links for a master table.
 
-            @param master: the name of the master table
-            @param links: component link configurations
+            Args:
+                master: the name of the master table
+                links: component link configurations
         """
 
         components = current.model["components"]
@@ -861,8 +871,9 @@ class S3Model:
             for a table; called by get_components if dynamic_components
             is configured for the table
 
-            @param tablename: the table name
-            @param exclude: names to exclude (static components)
+            Args:
+                tablename: the table name
+                exclude: names to exclude (static components)
         """
 
         mtable = cls.table(tablename)
@@ -939,10 +950,12 @@ class S3Model:
         """
             Get a component description for a component alias
 
-            @param table: the master table
-            @param alias: the component alias
+            Args:
+                table: the master table
+                alias: the component alias
 
-            @returns: the component description (Storage)
+            Returns:
+                The component description (Storage)
         """
         return cls.parse_hook(table, alias)
 
@@ -952,11 +965,13 @@ class S3Model:
         """
             Finds components of a table
 
-            @param table: the table or table name
-            @param names: a list of components names to limit the search to,
-                          None for all available components
+            Args:
+                table: the table or table name
+                names: a list of components names to limit the search to,
+                       None for all available components
 
-            @returns: the component descriptions (Storage {alias: description})
+            Returns:
+                The component descriptions (Storage {alias: description})
         """
 
         table, hooks = cls.get_hooks(table, names=names)
@@ -978,11 +993,13 @@ class S3Model:
             Parse a component configuration, loading all necessary table
             models and applying defaults
 
-            @param table: the master table
-            @param alias: the component alias
-            @param hook: the component configuration (if already known)
+            Args:
+                table: the master table
+                alias: the component alias
+                hook: the component configuration (if already known)
 
-            @returns: the component description (Storage {key: value})
+            Returns:
+                The component description (Storage {key: value})
         """
 
         load = cls.table
@@ -1070,11 +1087,13 @@ class S3Model:
         """
             Find applicable component configurations (hooks) for a table
 
-            @param table: the master table (or table name)
-            @param names: component aliases to find (default: all configured
-                          components for the master table)
+            Args:
+                table: the master table (or table name)
+                names: component aliases to find (default: all configured
+                       components for the master table)
 
-            @returns: tuple (table, {alias: hook, ...})
+            Returns:
+                tuple (table, {alias: hook, ...})
         """
 
         components = current.model["components"]
@@ -1156,13 +1175,15 @@ class S3Model:
         """
             DRY Helper method to filter component hooks
 
-            @param components: components already found, dict {alias: component}
-            @param hooks: component hooks to filter, dict {alias: hook}
-            @param names: the names (=aliases) to include
-            @param supertable: the super-table name to set for the component
+            Args:
+                components: components already found, dict {alias: component}
+                hooks: component hooks to filter, dict {alias: hook}
+                names: the names (=aliases) to include
+                supertable: the super-table name to set for the component
 
-            @returns: set of names that could not be found,
-                      or None if names was None
+            Returns:
+                Set of names that could not be found,
+                or None if names was None
         """
 
         for alias in hooks:
@@ -1181,7 +1202,8 @@ class S3Model:
         """
             Checks whether there are components defined for a table
 
-            @param table: the table or table name
+            Args:
+                table: the table or table name
         """
 
         components = current.model["components"]
@@ -1235,8 +1257,9 @@ class S3Model:
         """
             Find a component alias from the link table alias.
 
-            @param tablename: the name of the master table
-            @param link: the alias of the link table
+            Args:
+                tablename: the name of the master table
+                link: the alias of the link table
         """
 
         components = current.model["components"]
@@ -1289,9 +1312,11 @@ class S3Model:
             Get the alias of the component that represents the parent
             node in a hierarchy (for link-table based hierarchies)
 
-            @param tablename: the table name
+            Args:
+                tablename: the table name
 
-            @returns: the alias of the hierarchy parent component
+            Returns:
+                The alias of the hierarchy parent component
         """
 
         if not cls.table(tablename, db_only=True):
@@ -1320,11 +1345,12 @@ class S3Model:
         """
             Adds a custom method for a resource or component
 
-            @param prefix: prefix of the resource name (=module name)
-            @param name: name of the resource (=without prefix)
-            @param component_name: name of the component
-            @param method: name of the method
-            @param action: function to invoke for this method
+            Args:
+                prefix: prefix of the resource name (=module name)
+                name: name of the resource (=without prefix)
+                component_name: name of the component
+                method: name of the method
+                action: function to invoke for this method
         """
 
         methods = current.model["methods"]
@@ -1357,10 +1383,11 @@ class S3Model:
         """
             Retrieves a custom method for a resource or component
 
-            @param prefix: prefix of the resource name (=module name)
-            @param name: name of the resource (=without prefix)
-            @param component_name: name of the component
-            @param method: name of the method
+            Args:
+                prefix: prefix of the resource name (=module name)
+                name: name of the resource (=without prefix)
+                component_name: name of the component
+                method: name of the method
         """
 
         methods = current.model["methods"]
@@ -1392,11 +1419,12 @@ class S3Model:
         """
             Define a super-entity table
 
-            @param tablename: the tablename
-            @param key: name of the primary key
-            @param types: a dictionary of instance types
-            @param fields: any shared fields
-            @param args: table arguments (e.g. migrate)
+            Args:
+                tablename: the tablename
+                key: name of the primary key
+                types: a dictionary of instance types
+                fields: any shared fields
+                args: table arguments (e.g. migrate)
         """
 
         db = current.db
@@ -1438,7 +1466,8 @@ class S3Model:
         """
             Get the name of the key for a super-entity
 
-            @param supertable: the super-entity table
+            Args:
+                supertable: the super-entity table
         """
 
         if supertable is None and default:
@@ -1480,11 +1509,12 @@ class S3Model:
         """
             Get a foreign key field for a super-entity
 
-            @param supertable: the super-entity table
-            @param label: label for the field
-            @param comment: comment for the field
-            @param readable: set the field readable
-            @param represent: set a representation function for the field
+            Args:
+                supertable: the super-entity table
+                label: label for the field
+                comment: comment for the field
+                readable: set the field readable
+                represent: set a representation function for the field
         """
 
         if isinstance(supertable, str):
@@ -1555,8 +1585,9 @@ class S3Model:
         """
             Updates the super-entity links of an instance record
 
-            @param table: the instance table
-            @param record: the instance record
+            Args:
+                table: the instance table
+                record: the instance record
         """
 
         get_config = cls.get_config
@@ -1684,11 +1715,13 @@ class S3Model:
         """
             Removes the super-entity links of an instance record
 
-            @param table: the instance table
-            @param record: the instance record
+            Args:
+                table: the instance table
+                record: the instance record
 
-            @return: True if successful, otherwise False (caller must
-                     roll back the transaction if False is returned!)
+            Returns:
+                True if successful, otherwise False (caller must
+                roll back the transaction if False is returned!)
         """
 
         # Must have a record ID
@@ -1757,8 +1790,11 @@ class S3Model:
         """
             Get the super-keys in an instance table
 
-            @param table: the instance table
-            @returns: list of field names
+            Args:
+                table: the instance table
+
+            Returns:
+                List of field names
         """
 
         tablename = original_tablename(table)
@@ -1788,10 +1824,13 @@ class S3Model:
         """
             Get prefix, name and ID of an instance record
 
-            @param supertable: the super-entity table
-            @param superid: the super-entity record ID
-            @return: a tuple (prefix, name, ID) of the instance
-                      record (if it exists)
+            Args:
+                supertable: the super-entity table
+                superid: the super-entity record ID
+
+            Returns:
+                A tuple (prefix, name, ID) of the instance
+                record (if it exists)
         """
 
         if not hasattr(supertable, "_tablename"):
@@ -1825,9 +1864,8 @@ class S3DynamicModel:
 
     def __init__(self, tablename):
         """
-            Constructor
-
-            @param tablename: the table name
+            Args:
+                tablename: the table name
         """
 
         self.tablename = tablename
@@ -1842,9 +1880,11 @@ class S3DynamicModel:
         """
             Instantiate a dynamic Table
 
-            @param tablename: the table name
+            Args:
+                tablename: the table name
 
-            @return: a Table instance
+            Returns:
+                a Table instance
         """
 
         # Is the table already defined?
@@ -1975,10 +2015,12 @@ class S3DynamicModel:
         """
             Convert a s3_field Row into a Field instance
 
-            @param tablename: the table name
-            @param row: the s3_field Row
+            Args:
+                tablename: the table name
+                row: the s3_field Row
 
-            @return: a Field instance
+            Returns:
+                a Field instance
         """
 
         field = None
@@ -2045,10 +2087,12 @@ class S3DynamicModel:
         """
             Generic field constructor
 
-            @param tablename: the table name
-            @param row: the s3_field Row
+            Args:
+                tablename: the table name
+                row: the s3_field Row
 
-            @return: the Field instance
+            Returns:
+                The Field instance
         """
 
         fieldname = row.name
@@ -2092,10 +2136,12 @@ class S3DynamicModel:
         """
             Options-field constructor
 
-            @param tablename: the table name
-            @param row: the s3_field Row
+            Args:
+                tablename: the table name
+                row: the s3_field Row
 
-            @return: the Field instance
+            Returns:
+                The Field instance
         """
 
         fieldname = row.name
@@ -2209,10 +2255,12 @@ class S3DynamicModel:
         """
             Date field constructor
 
-            @param tablename: the table name
-            @param row: the s3_field Row
+            Args:
+                tablename: the table name
+                row: the s3_field Row
 
-            @return: the Field instance
+            Returns:
+                The Field instance
         """
 
         fieldname = row.name
@@ -2250,10 +2298,12 @@ class S3DynamicModel:
         """
             DateTime field constructor
 
-            @param tablename: the table name
-            @param row: the s3_field Row
+            Args:
+                tablename: the table name
+                row: the s3_field Row
 
-            @return: the Field instance
+            Returns:
+                The Field instance
         """
 
         fieldname = row.name
@@ -2291,10 +2341,12 @@ class S3DynamicModel:
         """
             Reference field constructor
 
-            @param tablename: the table name
-            @param row: the s3_field Row
+            Args:
+                tablename: the table name
+                row: the s3_field Row
 
-            @return: the Field instance
+            Returns:
+                The Field instance
         """
 
         fieldname = row.name
@@ -2328,10 +2380,12 @@ class S3DynamicModel:
         """
             Numeric field constructor
 
-            @param tablename: the table name
-            @param row: the s3_field Row
+            Args:
+                tablename: the table name
+                row: the s3_field Row
 
-            @return: the Field instance
+            Returns:
+                The Field instance
         """
 
         fieldname = row.name
@@ -2376,10 +2430,12 @@ class S3DynamicModel:
         """
             Boolean field constructor
 
-            @param tablename: the table name
-            @param row: the s3_field Row
+            Args:
+                tablename: the table name
+                row: the s3_field Row
 
-            @return: the Field instance
+            Returns:
+                The Field instance
         """
 
         fieldname = row.name
@@ -2448,10 +2504,12 @@ class S3DynamicModel:
         """
             Boolean field constructor
 
-            @param tablename: the table name
-            @param row: the s3_field Row
+            Args:
+                tablename: the table name
+                row: the s3_field Row
 
-            @return: the Field instance
+            Returns:
+                The Field instance
         """
 
         fieldname = row.name

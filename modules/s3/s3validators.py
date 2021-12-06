@@ -125,12 +125,11 @@ class IS_JSONS3(Validator):
                  error_message = "Invalid JSON",
                  ):
         """
-            Constructor
-
-            @param native_json: return the JSON string rather than
-                                a Python object (e.g. when the field
-                                is "string" type rather than "json")
-            @param error_message: alternative error message
+            Args:
+                native_json: return the JSON string rather than
+                             a Python object (e.g. when the field
+                             is "string" type rather than "json")
+                error_message: alternative error message
         """
 
         self.native_json = native_json
@@ -141,11 +140,13 @@ class IS_JSONS3(Validator):
         """
             Validator
 
-            @param value: the input value
-            @param record_id: the current record ID
-                              (unused, for API compatibility)
+            Args:
+                value: the input value
+                record_id: the current record ID
+                           (unused, for API compatibility)
 
-            @returns: the parsed JSON (or the original JSON string)
+            Returns:
+                parsed JSON (or the original JSON string)
         """
 
         error = lambda e: "%s: %s" % (current.T(self.error_message), e)
@@ -178,9 +179,11 @@ class IS_JSONS3(Validator):
         """
             Formatter, converts the db format into a string
 
-            @param value: the database value
+            Args:
+                value: the database value
 
-            @returns: JSON string
+            Returns:
+                JSON string
         """
 
         if value is None or \
@@ -204,9 +207,8 @@ class IS_LAT(Validator):
                  error_message = "Latitude/Northing should be between -90 & 90!"
                  ):
         """
-            Constructor
-
-            @param error_message: alternative error message
+            Args:
+                error_message: alternative error message
         """
 
         self.error_message = error_message
@@ -223,11 +225,13 @@ class IS_LAT(Validator):
         """
             Validator
 
-            @param value: the input value
-            @param record_id: the current record ID
-                              (unused, for API compatibility)
+            Args:
+                value: the input value
+                record_id: the current record ID
+                          (unused, for API compatibility)
 
-            @returns: the value (converted to decimal degrees)
+            Returns:
+                value (converted to decimal degrees)
         """
 
         if value is None:
@@ -274,9 +278,8 @@ class IS_LON(IS_LAT):
                  error_message = "Longitude/Easting should be between -180 & 180!"
                  ):
         """
-            Constructor
-
-            @param error_message: alternative error message
+            Args:
+                error_message: alternative error message
         """
 
         super(IS_LON, self).__init__(error_message=error_message)
@@ -293,10 +296,9 @@ class IS_LAT_LON(Validator):
 
     def __init__(self, field):
         """
-            Constructor
-
-            @param field: the location Field (used to determine the
-                          names of the lat/lon inputs)
+            Args:
+                field: the location Field (used to determine the
+                       names of the lat/lon inputs)
         """
 
         self.field = field
@@ -309,11 +311,13 @@ class IS_LAT_LON(Validator):
         """
             Validate lat/lon input related to a location
 
-            @param value: the gis_location ID
-            @param record_id: the current record ID
-                              (unused, for API compatibility)
+            Args:
+                value: the gis_location ID
+                record_id: the current record ID
+                           (unused, for API compatibility)
 
-            @returns: the gis_location ID
+            Returns:
+                gis_location ID
         """
 
         if current.response.s3.bulk:
@@ -362,10 +366,12 @@ class IS_NUMBER:
         """
             Represent a number with thousands-separator
 
-            @param number: the number
-            @param precision: number of decimal places
+            Args:
+                number: the number
+                precision: number of decimal places
 
-            @returns: string representation of the number
+            Returns:
+                string representation of the number
         """
 
         if number is None:
@@ -390,18 +396,16 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
                  error_message = None,
                  ):
         """
-            Constructor
-
-            @param minimum: the minimum allowed value
-            @param maximum: the maximum allowed value
-
-            @param error_message: alternative error message
+            Args:
+                minimum: the minimum allowed value
+                maximum: the maximum allowed value
+                error_message: alternative error message
         """
 
         IS_INT_IN_RANGE.__init__(self,
-                                 minimum=minimum,
-                                 maximum=maximum,
-                                 error_message=error_message,
+                                 minimum = minimum,
+                                 maximum = maximum,
+                                 error_message = error_message,
                                  )
 
     # -------------------------------------------------------------------------
@@ -409,11 +413,13 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
         """
             Validator
 
-            @param value: the input value
-            @param record_id: the current record ID
-                              (unused, for API compatibility)
+            Args:
+                value: the input value
+                record_id: the current record ID
+                           (unused, for API compatibility)
 
-            @returns: the value (integer)
+            Returns:
+                integer
         """
 
         thousands_sep = current.deployment_settings.get_L10n_thousands_separator()
@@ -429,8 +435,11 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
             Change the format of the number depending on the language
             Based on https://code.djangoproject.com/browser/django/trunk/django/utils/numberformat.py
 
-            @param number: the number
-            @returns: string representation of the number
+            Args:
+                number: the number
+
+            Returns:
+                string representation of the number
         """
 
         if number is None:
@@ -472,11 +481,13 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
             A form widget for int amounts, replacing the default
             "integer" CSS class with "int_amount"
 
-            @param field: the Field
-            @param value: the current field value
-            @param attributes: DOM attributes for the widget
+            Args:
+                field: the Field
+                value: the current field value
+                attributes: DOM attributes for the widget
 
-            @returns: the form widget (INPUT)
+            Returns:
+                INPUT form widget
         """
 
         from gluon.sqlhtml import StringWidget
@@ -507,12 +518,11 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
                  dot = None,
                  ):
         """
-            Constructor
-
-            @param minimum: the minimum allowed value
-            @param maximum: the maximum allowed value
-            @param error_message: alternative error message
-            @param dot: alternative decimal separator
+            Args:
+                minimum: the minimum allowed value
+                maximum: the maximum allowed value
+                error_message: alternative error message
+                dot: alternative decimal separator
         """
 
         if dot is None:
@@ -530,11 +540,13 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
         """
             Validator
 
-            @param value: the input value
-            @param record_id: the current record_id
-                              (unused, for API-compatibility)
+            Args:
+                value: the input value
+                record_id: the current record_id
+                           (unused, for API-compatibility)
 
-            @returns: the value (as float)
+            Returns:
+                float
         """
 
         # Strip the thousands-separator
@@ -551,11 +563,13 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
             Change the format of the number depending on the language
             Based on https://code.djangoproject.com/browser/django/trunk/django/utils/numberformat.py
 
-            @param number: the number
-            @param precision: the number of decimal places to show
-            @param fixed: show decimal places even if the decimal part is 0
+            Args:
+                number: the number
+                precision: the number of decimal places to show
+                fixed: show decimal places even if the decimal part is 0
 
-            @returns: string representation of the number
+            Returns:
+                string representation of the number
         """
 
         if number is None:
@@ -593,11 +607,13 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
             A form widget for float amounts, replacing the default
             "double" CSS class with "float_amount"
 
-            @param field: the Field
-            @param value: the current field value
-            @param attributes: DOM attributes for the widget
+            Args:
+                field: the Field
+                value: the current field value
+                attributes: DOM attributes for the widget
 
-            @returns: the form widget (INPUT)
+            Returns:
+                INPUT form widget
         """
 
         from gluon.sqlhtml import StringWidget
@@ -626,9 +642,8 @@ class IS_HTML_COLOUR(IS_MATCH):
                  error_message="must be a 6 digit hex code! (format: rrggbb)"
                 ):
         """
-            Constructor
-
-            @param error_message: alternative error message
+            Args:
+                error_message: alternative error message
         """
 
         IS_MATCH.__init__(self, "^[0-9a-fA-F]{6}$",
@@ -650,11 +665,13 @@ class IS_NOT_EMPTY_STR(Validator):
         """
             Validator
 
-            @param value: the input value
-            @param record_id: the current record_id
-                              (unused, for API-compatibility)
+            Args:
+                value: the input value
+                record_id: the current record_id
+                           (unused, for API-compatibility)
 
-            @returns: the value (as str or None)
+            Returns:
+                str or None
         """
 
         if value == "":
@@ -674,7 +691,8 @@ class IS_ONE_OF_EMPTY(Validator):
         'filterby' field for one of the 'filter_opts' options
         (=a selective IS_IN_DB())
 
-        NB Filtering isn't active in GQL.
+        Note:
+            Filtering isn't active in GQL.
 
         For the dropdown representation:
 
@@ -712,35 +730,36 @@ class IS_ONE_OF_EMPTY(Validator):
         """
             Validator for foreign keys.
 
-            @param dbset: a Set of records like db(query), or db itself
-            @param field: the field in the referenced table
-            @param label: lookup method for the label corresponding a value,
-                          alternatively a string template to be filled with
-                          values from the record
-            @param filterby: a field in the referenced table to filter by
-            @param filter_opts: values for the filterby field which indicate
-                                records to include
-            @param not_filterby: a field in the referenced table to filter by
-            @param not_filter_opts: values for not_filterby field which indicate
-                                    records to exclude
-            @param realms: only include records belonging to the listed realms
-                           (if None, all readable records will be included)
-            @param updateable: only include records in the referenced table which
-                               can be updated by the user (if False, all readable
-                               records will be included)
-            @param instance_types: if the referenced table is a super-entity, then
-                                   only include these instance types (this parameter
-                                   is required for super entity lookups!)
-            @param error_message: the error message to return for failed validation
-            @param orderby: orderby for the options
-            @param groupby: groupby for the options
-            @param left: additional left joins required for the options lookup
-                         (super-entity instance left joins will be included
-                         automatically)
-            @param multiple: allow multiple values (for list:reference types)
-            @param zero: add this as label for the None-option (allow selection of "None")
-            @param sort: sort options alphabetically by their label
-            @param _and: internal use
+            Args:
+                dbset: a Set of records like db(query), or db itself
+                field: the field in the referenced table
+                label: lookup method for the label corresponding a value,
+                       alternatively a string template to be filled with
+                       values from the record
+                filterby: a field in the referenced table to filter by
+                filter_opts: values for the filterby field which indicate
+                             records to include
+                not_filterby: a field in the referenced table to filter by
+                not_filter_opts: values for not_filterby field which indicate
+                                 records to exclude
+                realms: only include records belonging to the listed realms
+                        (if None, all readable records will be included)
+                updateable: only include records in the referenced table which
+                            can be updated by the user (if False, all readable
+                            records will be included)
+                instance_types: if the referenced table is a super-entity, then
+                                only include these instance types (this parameter
+                                is required for super entity lookups!)
+                error_message: the error message to return for failed validation
+                orderby: orderby for the options
+                groupby: groupby for the options
+                left: additional left joins required for the options lookup
+                      (super-entity instance left joins will be included
+                       automatically)
+                multiple: allow multiple values (for list:reference types)
+                zero: add this as label for the None-option (allow selection of "None")
+                sort: sort options alphabetically by their label
+                _and: internal use
         """
 
         if hasattr(dbset, "define_table"):
@@ -825,10 +844,12 @@ class IS_ONE_OF_EMPTY(Validator):
         """
             Set the current record ID
 
-            @param record_id: the current record ID
+            Args:
+                record_id: the current record ID
 
-            @note: deprecated in PyDAL, but still used in web2py and Eden
-            @note: record_id not used here, but propagated to _and
+            Note:
+                deprecated in PyDAL, but still used in web2py and Eden
+                record_id not used here, but propagated to _and
         """
 
         if self._and:
@@ -845,10 +866,11 @@ class IS_ONE_OF_EMPTY(Validator):
             This can be called from prep to apply a filter based on
             data in the record or the primary resource id.
 
-            @param filterby: the field to filter by
-            @param filter_opts: the values to match
-            @param not_filterby: the field to filter by
-            @param not_filter_opts: the values to exclude
+            Args:
+                filterby: the field to filter by
+                filter_opts: the values to match
+                not_filterby: the field to filter by
+                not_filter_opts: the values to exclude
         """
 
         if filterby:
@@ -972,11 +994,13 @@ class IS_ONE_OF_EMPTY(Validator):
             build_set so the query can be extracted and used in other
             lookups, e.g. filter options).
 
-            @param table: the lookup table
-            @param fields: fields (updatable list)
-            @param dd: additional query options (updatable dict)
+            Args:
+                table: the lookup table
+                fields: fields (updatable list)
+                dd: additional query options (updatable dict)
 
-            @returns: tuple (query, left)
+            Returns:
+                tuple (query, left)
         """
 
         # Accessible-query
@@ -1059,17 +1083,20 @@ class IS_ONE_OF_EMPTY(Validator):
             Returns an accessible query (and left joins, if necessary) for
             records in table the user is permitted to access with method
 
-            @param method: the method (e.g. "read" or "update")
-            @param table: the table
-            @param instance_types: list of instance tablenames, if table is
-                                   a super-entity (required in this case!)
+            Args:
+                method: the method (e.g. "read" or "update")
+                table: the table
+                instance_types: list of instance tablenames, if table is
+                                a super-entity (required in this case!)
 
-            @return: tuple (query, left) where query is the query and left joins
-                      is the list of left joins required for the query
+            Returns:
+                tuple (query, left) where query is the query and left joins
+                is the list of left joins required for the query
 
-            @note: for higher security policies and super-entities with many
-                   instance types this can give a very complex query. Try to
-                   always limit the instance types to what is really needed
+            Note:
+                For higher security policies and super-entities with many
+                instance types this can give a very complex query. Try to
+                always limit the instance types to what is really needed
         """
 
         DEFAULT = (table._id > 0)
@@ -1119,10 +1146,12 @@ class IS_ONE_OF_EMPTY(Validator):
         """
             Validator
 
-            @param value: the input value
-            @param record_id: the current record ID
+            Args:
+                value: the input value
+                record_id: the current record ID
 
-            @returns: the value
+            Returns:
+                value
         """
 
         dbset = self.dbset
@@ -1225,7 +1254,8 @@ class IS_ONE_OF(IS_ONE_OF_EMPTY):
         """
             Get the valid options for this validator
 
-            @param zero: include an empty-option (overrides self.zero)
+            Args:
+                zero: include an empty-option (overrides self.zero)
         """
 
         self.build_set()
@@ -1258,16 +1288,15 @@ class IS_NOT_ONE_OF(IS_NOT_IN_DB):
                  skip_imports = False,
                  ):
         """
-            Constructor
-
-            @param dbset: the DB set
-            @param field: the Field
-            @param error_message: the error message
-            @param allowed_override: permit duplicates of these values
-            @param ignore_common_filters: enforce uniqueness beyond global
-                                          table filters
-            @param skip_import: do not validate during imports
-                                (e.g. to let deduplicate take care of duplicates)
+            Args:
+                dbset: the DB set
+                field: the Field
+                error_message: the error message
+                allowed_override: permit duplicates of these values
+                ignore_common_filters: enforce uniqueness beyond global
+                                       table filters
+                skip_import: do not validate during imports
+                             (e.g. to let deduplicate take care of duplicates)
         """
 
         super(IS_NOT_ONE_OF, self).__init__(dbset,
@@ -1283,10 +1312,12 @@ class IS_NOT_ONE_OF(IS_NOT_IN_DB):
         """
             Validator
 
-            @param value: the input value
-            @param record_id: the current record ID
+            Args:
+                value: the input value
+                record_id: the current record ID
 
-            @returns: the value
+            Returns:
+                value
         """
 
         value = str(value)
@@ -1376,10 +1407,9 @@ class IS_LOCATION(Validator):
                  error_message = None,
                  ):
         """
-            Constructor
-
-            @param level: level (or list of levels) to restrict to
-            @param error_message: alternative error message
+            Args:
+                level: level (or list of levels) to restrict to
+                error_message: alternative error message
         """
 
         self.level = level # can be a List or a single element
@@ -1401,11 +1431,13 @@ class IS_LOCATION(Validator):
         """
             Validator
 
-            @param value: the input value (location ID)
-            @param record_id: the current record ID
-                              (unused, for API compatibility)
+            Args:
+                value: the input value (location ID)
+                record_id: the current record ID
+                           (unused, for API compatibility)
 
-            @returns: location ID
+            Returns:
+                location ID
         """
 
         level = self.level
@@ -1454,13 +1486,12 @@ class IS_PROCESSED_IMAGE(Validator):
                  upload_path = None,
                  ):
         """
-            Constructor
-
-            @param field_name: the form field holding the uploaded image
-            @param file_cb: callback that returns the file for this field
-            @param error_message: alternative error message
-            @param image_bounds: the boundaries for the processed image
-            @param upload_path: upload path for the image
+            Args:
+                field_name: the form field holding the uploaded image
+                file_cb: callback that returns the file for this field
+                error_message: alternative error message
+                image_bounds: the boundaries for the processed image
+                upload_path: upload path for the image
         """
 
         self.field_name = field_name
@@ -1474,12 +1505,14 @@ class IS_PROCESSED_IMAGE(Validator):
         """
             Validator
 
-            @param value: the input value (uploaded image)
-            @param record_id: the current record ID
-                              (unused, for API compatibility)
+            Args:
+                value: the input value (uploaded image)
+                record_id: the current record ID
+                           (unused, for API compatibility)
 
-            @returns: the processed image as Storage(filename, file),
-                      or None if the processing happens async
+            Returns:
+                Storage(filename, file),
+                or None if the processing happens async
         """
 
         if current.response.s3.bulk:
@@ -1550,9 +1583,8 @@ class IS_UTC_OFFSET(Validator):
 
     def __init__(self, error_message="invalid UTC offset!"):
         """
-            Constructor
-
-            @param error_message: alternative error message
+            Args:
+                error_message: alternative error message
         """
 
         self.error_message = error_message
@@ -1562,11 +1594,13 @@ class IS_UTC_OFFSET(Validator):
         """
             Validator
 
-            @param value: the input value
-            @param record_id: the current record ID
-                              (unused, for API compatibility)
+            Args:
+                value: the input value
+                record_id: the current record ID
+                           (unused, for API compatibility)
 
-            @returns: the UTC offset as string +HHMM
+            Returns:
+                The UTC offset as string +HHMM
         """
 
         if value and isinstance(value, str):
@@ -1590,12 +1624,12 @@ class IS_UTC_DATETIME(Validator):
         Example:
             - INPUT(_type="text", _name="name", requires=IS_UTC_DATETIME())
 
-        @note: a date/time string must be in local format, and can have
+        Note:
+            A date/time string must be in local format, and can have
                an optional trailing UTC offset specified as +/-HHMM
                (+ for eastern, - for western timezones)
-        @note: dates stretch 8 hours West and 16 hours East of the current
-               time zone, i.e. the most Eastern timezones are on the next
-               day.
+            Dates stretch 8 hours West and 16 hours East of the current
+               time zone, i.e. the most Eastern timezones are on the next day.
     """
 
     def __init__(self,
@@ -1607,16 +1641,15 @@ class IS_UTC_DATETIME(Validator):
                  maximum = None,
                  ):
         """
-            Constructor
-
-            @param format: strptime/strftime format template string, for
-                           directives refer to your strptime implementation
-            @param error_message: error message for invalid date/times
-            @param offset_error: error message for invalid UTC offset
-            @param calendar: calendar to use for string evaluation, defaults
-                             to current.calendar
-            @param minimum: the minimum acceptable date/time
-            @param maximum: the maximum acceptable date/time
+            Args:
+                format: strptime/strftime format template string, for
+                        directives refer to your strptime implementation
+                error_message: error message for invalid date/times
+                offset_error: error message for invalid UTC offset
+                calendar: calendar to use for string evaluation, defaults
+                          to current.calendar
+                minimum: the minimum acceptable date/time
+                maximum: the maximum acceptable date/time
         """
 
         if format is None:
@@ -1662,11 +1695,13 @@ class IS_UTC_DATETIME(Validator):
         """
             Validator
 
-            @param value: the input value
-            @param record_id: the current record ID
-                              (unused, for API compatibility)
+            Args:
+                value: the input value
+                record_id: the current record ID
+                           (unused, for API compatibility)
 
-            @returns: the corresponding UTC datetime, timezone-naive
+            Returns:
+                The corresponding UTC datetime, timezone-naive
         """
 
         if isinstance(value, str):
@@ -1723,10 +1758,12 @@ class IS_UTC_DATETIME(Validator):
         """
             Format a datetime as string.
 
-            @param value: the value (datetime)
+            Args:
+                value: the value (datetime)
 
-            @returns: the corresponding string representation,
-                      in local timezone and format
+            Returns:
+                The corresponding string representation,
+                in local timezone and format
         """
 
         if not value:
@@ -1747,7 +1784,8 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
         Example:
             - INPUT(_type="text", _name="name", requires=IS_UTC_DATE())
 
-        @note: dates stretch 8 hours West and 16 hours East of the current
+        Note:
+            Dates stretch 8 hours West and 16 hours East of the current
                time zone, i.e. the most Eastern timezones are on the next
                day.
     """
@@ -1761,16 +1799,15 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
                  maximum = None,
                  ):
         """
-            Constructor
-
-            @param format: strptime/strftime format template string, for
-                           directives refer to your strptime implementation
-            @param error_message: error message for invalid date/times
-            @param offset_error: error message for invalid UTC offset
-            @param calendar: calendar to use for string evaluation, defaults
-                             to current.calendar
-            @param minimum: the minimum acceptable date (datetime.date)
-            @param maximum: the maximum acceptable date (datetime.date)
+            Args:
+                format: strptime/strftime format template string, for
+                        directives refer to your strptime implementation
+                error_message: error message for invalid date/times
+                offset_error: error message for invalid UTC offset
+                calendar: calendar to use for string evaluation, defaults
+                          to current.calendar
+                minimum: the minimum acceptable date (datetime.date)
+                maximum: the maximum acceptable date (datetime.date)
         """
 
         super(IS_UTC_DATE, self).__init__(format = format,
@@ -1808,11 +1845,13 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
         """
             Validator
 
-            @param value: the input value
-            @param record_id: the current record ID
-                              (unused, for API compatibility)
+            Args:
+                value: the input value
+                record_id: the current record ID
+                           (unused, for API compatibility)
 
-            @returns: the corresponding UTC date
+            Returns:
+                The corresponding UTC date
         """
 
         is_datetime = False
@@ -1856,9 +1895,11 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
         """
             Format a date as string.
 
-            @param value: the value (date)
+            Args:
+                value: the value (date)
 
-            @returns: the corresponding string representation
+            Returns:
+                The corresponding string representation
         """
 
         if not value:
@@ -1875,18 +1916,21 @@ class IS_ACL(IS_IN_SET):
     """
         Validator for ACLs
 
-        @attention: Incomplete! Does not validate yet, but just convert.
+        Note:
+            Incomplete! Does not validate yet, but just convert.
     """
 
     def validate(self, value, record_id=None):
         """
             Validation
 
-            @param value: the input value
-            @param record_id: the current record ID
-                              (unused, for API compatibility)
+            Args:
+                value: the input value
+                record_id: the current record ID
+                           (unused, for API compatibility)
 
-            @returns: the ACL as bitmap (integer)
+            Returns:
+                The ACL as bitmap (integer)
         """
 
         if not isinstance(value, (list, tuple)):
@@ -1957,15 +2001,14 @@ class IS_IN_SET_LAZY(Validator):
                  sort = False,
                  ):
         """
-            Constructor
-
-            @param theset_fn: a callable that produces the set
-            @param represent: representation function for items
-                              in the set
-            @param error_message: alternative error message
-            @param multiple: allow multiple-selection
-            @param zero: include an empty-option (label of empty-option)
-            @param sort: alpha-sort the options by their labels
+            Args:
+                theset_fn: a callable that produces the set
+                represent: representation function for items
+                           in the set
+                error_message: alternative error message
+                multiple: allow multiple-selection
+                zero: include an empty-option (label of empty-option)
+                sort: alpha-sort the options by their labels
         """
 
         self.multiple = multiple
@@ -1987,7 +2030,8 @@ class IS_IN_SET_LAZY(Validator):
         """
             Generate the set
 
-            @returns: list of items
+            Returns:
+                list of items
         """
 
         theset = self.theset_fn()
@@ -2014,9 +2058,11 @@ class IS_IN_SET_LAZY(Validator):
         """
             Produce the options for a selector
 
-            @param zero: override for self.zero
+            Args:
+                zero: override for self.zero
 
-            @returns: list of tuples (option, representation)
+            Returns:
+                list of tuples (option, representation)
         """
 
         if not self.theset:
@@ -2037,11 +2083,13 @@ class IS_IN_SET_LAZY(Validator):
         """
             Validator
 
-            @param value: the input value
-            @param record_id: the current record ID
-                              (unused, for API compatiblity)
+            Args:
+                value: the input value
+                record_id: the current record ID
+                           (unused, for API compatiblity)
 
-            @returns: the value
+            Returns:
+                value
         """
 
         if not self.theset:
@@ -2084,11 +2132,13 @@ class IS_PERSON_GENDER(IS_IN_SET):
         """
             Validator
 
-            @param value: the input value
-            @param record_id: the current record ID
-                              (unused, for API compatibility)
+            Args:
+                value: the input value
+                record_id: the current record ID
+                           (unused, for API compatibility)
 
-            @returns: the gender key (s3db.pr_gender_opts)
+            Returns:
+                The gender key (s3db.pr_gender_opts)
         """
 
         if value == 4:
@@ -2130,12 +2180,11 @@ class IS_PHONE_NUMBER_SINGLE(Validator):
                  error_message = None,
                  ):
         """
-            Constructor
-
-            @param international: enforce E.123 international notation,
-                                  no effect if turned off globally in
-                                  deployment settings
-            @param error_message: alternative error message
+            Args:
+                international: enforce E.123 international notation,
+                               no effect if turned off globally in
+                               deployment settings
+                error_message: alternative error message
         """
 
         self.international = international
@@ -2146,10 +2195,13 @@ class IS_PHONE_NUMBER_SINGLE(Validator):
         """
             Validation of a value
 
-            @param value: the phone number
-            @return: the phone number, with international=True, the
-                     phone number returned is converted into E.123
-                     international notation.
+            Args:
+                value: the phone number
+
+            Returns:
+                The phone number, with international=True, the
+                phone number returned is converted into E.123
+                international notation.
         """
 
         error = False
@@ -2203,9 +2255,8 @@ class IS_PHONE_NUMBER_MULTI(Validator):
                  error_message = "Enter a valid phone number",
                  ):
         """
-            Constructor
-
-            @param error_message: alternative error message
+            Args:
+                error_message: alternative error message
         """
 
         self.error_message = error_message
@@ -2215,9 +2266,11 @@ class IS_PHONE_NUMBER_MULTI(Validator):
         """
             Validator
 
-            @param value: the value
+            Args:
+                value: the value
 
-            @returns: the phone number
+            Returns:
+                The phone number
         """
 
         value = value.strip()
@@ -2247,9 +2300,8 @@ class IS_DYNAMIC_FIELDNAME(Validator):
                  error_message = "Invalid field name",
                  ):
         """
-            Constructor
-
-            @param error_message: alternative error message
+            Args:
+                error_message: alternative error message
         """
 
         self.error_message = error_message
@@ -2259,9 +2311,11 @@ class IS_DYNAMIC_FIELDNAME(Validator):
         """
             Validator
 
-            @param value: the value
+            Args:
+                value: the value
 
-            @returns: the field name
+            Returns:
+                the field name
         """
 
         if value:
@@ -2299,9 +2353,8 @@ class IS_DYNAMIC_FIELDTYPE(Validator):
                  error_message = "Unsupported field type",
                  ):
         """
-            Constructor
-
-            @param error_message: the error message for invalid values
+            Args:
+                error_message: the error message for invalid values
         """
 
         self.error_message = error_message
@@ -2311,10 +2364,12 @@ class IS_DYNAMIC_FIELDTYPE(Validator):
         """
             Validation of a value
 
-            @param value: the value
-            @param record_id: the current record ID (unused, for API compatibility)
+            Args:
+                value: the value
+                record_id: the current record ID (unused, for API compatibility)
 
-            @returns: the field type (string)
+            Returns:
+                the field type (string)
         """
 
         if value:
@@ -2353,17 +2408,16 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                  zero = "",
                  ):
         """
-            Constructor
-
-            @param error_message: alternative error message
-            @param multiple: allow selection of multiple options
-            @param select: dict of options for the selector,
-                           defaults to settings.L10n.languages,
-                           set explicitly to None to allow all languages
-            @param sort: sort options in selector
-            @param translate: translate the language options into
-                              the current UI language
-            @param zero: use this label for the empty-option (default="")
+            Args:
+                error_message: alternative error message
+                multiple: allow selection of multiple options
+                select: dict of options for the selector,
+                        defaults to settings.L10n.languages,
+                        set explicitly to None to allow all languages
+                sort: sort options in selector
+                translate: translate the language options into
+                           the current UI language
+                zero: use this label for the empty-option (default="")
         """
 
         super(IS_ISO639_2_LANGUAGE_CODE, self).__init__(
@@ -2387,9 +2441,11 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
             of all valid options (self._select), therefore overriding
             superclass function here.
 
-            @param zero: include an empty-option (overrides self.zero)
+            Args:
+                zero: include an empty-option (overrides self.zero)
 
-            @returns: list of tuples (code, representation)
+            Returns:
+                list of tuples (code, representation)
         """
 
         language_codes = self.language_codes()
@@ -2427,9 +2483,11 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
             representation from deployment_settings if available
             (to allow overrides).
 
-            @param code: the language code
+            Args:
+                code: the language code
 
-            @returns: the language name
+            Returns:
+                The language name
         """
 
         if not code:
@@ -2454,9 +2512,11 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
             Represent a language code by the name of the language in that
             language. e.g. for Use in a Language dropdown
 
-            @param code: the language code
+            Args:
+                code: the language code
 
-            @returns: the language name, translated to that language
+            Returns:
+                The language name, translated to that language
         """
 
         if not code:
@@ -3189,9 +3249,8 @@ class IS_IBAN(Validator):
 
     def __init__(self, error_message="Invalid IBAN"):
         """
-            Constructor
-
-            @param error_message: alternative error message
+            Args:
+                error_message: alternative error message
         """
 
         self.error_message = error_message
@@ -3201,11 +3260,13 @@ class IS_IBAN(Validator):
         """
             Validate an International Bank Account Number (IBAN)
 
-            @param value: the IBAN as string (may contain blanks)
-            @param record_id: the current record ID
-                              (unused, for API compatibility)
+            Args:
+                value: the IBAN as string (may contain blanks)
+                record_id: the current record ID
+                           (unused, for API compatibility)
 
-            @returns: the sanitized IBAN (without blanks)
+            Returns:
+                The sanitised IBAN (without blanks)
         """
 
         if value is None:
@@ -3244,10 +3305,12 @@ class IS_IBAN(Validator):
         """
             Format an IBAN as 4-character blocks, for better readability
 
-            @param value: the IBAN
-            @param row: unused, for API compatibility
+            Args:
+                value: the IBAN
+                row: unused, for API compatibility
 
-            @returns: the formatted IBAN
+            Returns:
+                The formatted IBAN
         """
 
         if not value:

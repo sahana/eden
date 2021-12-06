@@ -1542,7 +1542,7 @@ def config(settings):
 
             person_id = r.component_id
 
-            class REPLACE_TEXT(object):
+            class REPLACE_TEXT:
                 def __call__(self, value):
                     value = "Client going to: %s" % value
                     return (value, None)

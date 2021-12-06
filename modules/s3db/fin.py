@@ -3288,7 +3288,7 @@ def fin_rheader(r, tabs=None):
     return rheader
 
 # =============================================================================
-class fin_VoucherProgram(object):
+class fin_VoucherProgram:
     """
         Helper to record transactions in voucher programs
     """
@@ -3980,7 +3980,7 @@ class fin_VoucherProgram(object):
         return True
 
 # =============================================================================
-class fin_VoucherBilling(object):
+class fin_VoucherBilling:
     """
         Helper to facilitate the billing process for a voucher program
     """

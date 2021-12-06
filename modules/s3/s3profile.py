@@ -49,10 +49,9 @@ class S3Profile(S3CRUD):
 
         Configure widgets using s3db.configure(tablename, profile_widgets=[])
 
-        @ToDo: Make more configurable:
-           * Currently uses internal widgets rather than S3Method widgets
-
-        @todo:
+        TODO:
+            - Make more configurable:
+                * Currently uses internal widgets rather than S3Method widgets
             - unify datalist and datatable methods with the superclass
               methods (requires re-design of the superclass methods)
             - allow as default handler for interactive single-record-no-method
@@ -64,8 +63,9 @@ class S3Profile(S3CRUD):
         """
             API entry point
 
-            @param r: the S3Request instance
-            @param attr: controller attributes for the request
+            Args:
+                r: the S3Request instance
+                attr: controller attributes for the request
         """
 
         if r.http in ("GET", "POST", "DELETE"):
@@ -95,8 +95,9 @@ class S3Profile(S3CRUD):
         """
             Generate a Profile page
 
-            @param r: the S3Request instance
-            @param attr: controller attributes for the request
+            Args:
+                r: the S3Request instance
+                attr: controller attributes for the request
         """
 
         tablename = self.tablename
@@ -284,8 +285,9 @@ class S3Profile(S3CRUD):
         """
             Resolve a context filter
 
-            @param context: the context (as a string)
-            @param id: the record_id
+            Args:
+                context: the context (as a string)
+                id: the record_id
         """
 
         record_id = r.id
@@ -328,11 +330,13 @@ class S3Profile(S3CRUD):
         """
             Generate a Comments widget
 
-            @param r: the S3Request instance
-            @param widget: the widget definition as dict
-            @param attr: controller attributes for the request
+            Args:
+                r: the S3Request instance
+                widget: the widget definition as dict
+                attr: controller attributes for the request
 
-            @ToDo: Configurable to use either Disqus or internal Comments
+            TODO:
+                Configurable to use either Disqus or internal Comments
         """
 
         label = widget.get("label", "")
@@ -366,9 +370,10 @@ class S3Profile(S3CRUD):
         """
             Generate a Custom widget
 
-            @param r: the S3Request instance
-            @param widget: the widget definition as dict
-            @param attr: controller attributes for the request
+            Args:
+                r: the S3Request instance
+                widget: the widget definition as dict
+                attr: controller attributes for the request
         """
 
         label = widget.get("label", "")
@@ -402,9 +407,10 @@ class S3Profile(S3CRUD):
         """
             Generate a data list
 
-            @param r: the S3Request instance
-            @param widget: the widget definition as dict
-            @param attr: controller attributes for the request
+            Args:
+                r: the S3Request instance
+                widget: the widget definition as dict
+                attr: controller attributes for the request
         """
 
         T = current.T
@@ -566,11 +572,13 @@ class S3Profile(S3CRUD):
         """
             Generate a data table.
 
-            @param r: the S3Request instance
-            @param widget: the widget definition as dict
-            @param attr: controller attributes for the request
+            Args:
+                r: the S3Request instance
+                widget: the widget definition as dict
+                attr: controller attributes for the request
 
-            @todo: fix export formats
+            TODO:
+                Fix export formats
         """
 
         widget_get = widget.get
@@ -805,9 +813,10 @@ class S3Profile(S3CRUD):
         """
             Generate a Form widget
 
-            @param r: the S3Request instance
-            @param widget: the widget definition as dict
-            @param attr: controller attributes for the request
+            Args:
+                r: the S3Request instance
+                widget: the widget definition as dict
+                attr: controller attributes for the request
         """
 
         widget_get = widget.get
@@ -894,9 +903,10 @@ class S3Profile(S3CRUD):
         """
             Generate a Map widget
 
-            @param r: the S3Request instance
-            @param widget: the widget as a tuple: (label, type, icon)
-            @param attr: controller attributes for the request
+            Args:
+                r: the S3Request instance
+                widget: the widget as a tuple: (label, type, icon)
+                attr: controller attributes for the request
         """
 
         T = current.T
@@ -1064,9 +1074,10 @@ class S3Profile(S3CRUD):
         """
             Generate a Report widget
 
-            @param r: the S3Request instance
-            @param widget: the widget as a tuple: (label, type, icon)
-            @param attr: controller attributes for the request
+            Args:
+                r: the S3Request instance
+                widget: the widget as a tuple: (label, type, icon)
+                attr: controller attributes for the request
         """
 
         widget_get = widget.get
@@ -1120,9 +1131,10 @@ class S3Profile(S3CRUD):
         """
             Generate an Organizer widget
 
-            @param r: the S3Request instance
-            @param widget: the widget configuration (a dict)
-            @param attr: controller attributes for the request
+            Args:
+                r: the S3Request instance
+                widget: the widget configuration (a dict)
+                attr: controller attributes for the request
         """
 
         from .s3organizer import S3Organizer, S3OrganizerWidget
@@ -1260,8 +1272,9 @@ class S3Profile(S3CRUD):
         """
             Provide the column-width class for the widgets
 
-            @param r: the S3Request
-            @param widget: the widget config (dict)
+            Args:
+                r: the S3Request
+                widget: the widget config (dict)
         """
 
         page_cols = current.s3db.get_config(r.tablename, "profile_cols")
@@ -1285,12 +1298,13 @@ class S3Profile(S3CRUD):
             Render an action link for a create-popup (used in data lists
             and data tables).
 
-            @param r: the S3Request instance
-            @param widget: the widget definition as dict
-            @param list_id: the list ID
-            @param resource: the target resource
-            @param context: the context filter
-            @param numrows: the total number of rows in the list/table
+            Args:
+                r: the S3Request instance
+                widget: the widget definition as dict
+                list_id: the list ID
+                resource: the target resource
+                context: the context filter
+                numrows: the total number of rows in the list/table
         """
 
         create = ""

@@ -45,10 +45,12 @@ class S3XForms(S3Method):
         """
             Apply CRUD methods
 
-            @param r: the S3Request
-            @param attr: controller parameters for the request
+            Args:
+                r: the S3Request
+                attr: controller parameters for the request
 
-            @return: output object to send to the view
+            Returns:
+                output object to send to the view
         """
 
         if r.http == "GET":
@@ -61,8 +63,9 @@ class S3XForms(S3Method):
         """
             Generate an XForms form for the current resource
 
-            @param r: the S3Request
-            @param attr: controller parameters for the request
+            Args:
+                r: the S3Request
+                attr: controller parameters for the request
         """
 
         resource = self.resource
@@ -80,7 +83,8 @@ class S3XForms(S3Method):
         """
             Retrieve a list of available XForms
 
-            @return: a list of tuples (url, title) of available XForms
+            Returns:
+                list of tuples (url, title) of available XForms
         """
 
         resources = current.deployment_settings.get_xforms_resources()
@@ -181,9 +185,8 @@ class S3XFormsWidget:
 
     def __init__(self, translate = True):
         """
-            Constructor
-
-            @param translate: enable/disable label translation
+            Args:
+                translate: enable/disable label translation
         """
 
         self.translate = translate
@@ -194,12 +197,14 @@ class S3XFormsWidget:
         """
             Form builder entry point
 
-            @param field: the Field or a Storage with field information
-            @param label: the label
-            @param ref: the reference (string) that links the widget
-                        with the data model
+            Args:
+                field: the Field or a Storage with field information
+                label: the label
+                ref: the reference (string) that links the widget
+                     with the data model
 
-            @return: tuple (widget, dict of i18n-strings)
+            Returns:
+                tuple (widget, dict of i18n-strings)
         """
 
         if not field:
@@ -224,10 +229,11 @@ class S3XFormsWidget:
         """
             Render the XForms Widget.
 
-            @param field: the Field or a Storage with field information
-            @param attr: dict with XML attributes for the widget, including
-                         the mandatory "ref" attribute that links the widget
-                         to the data model
+            Args:
+                field: the Field or a Storage with field information
+                attr: dict with XML attributes for the widget, including
+                      the mandatory "ref" attribute that links the widget
+                      to the data model
         """
 
         # To be implemented in subclass
@@ -238,7 +244,8 @@ class S3XFormsWidget:
         """
             Render the hint for this formfield
 
-            @return: a <hint> element, or an empty tag if not available
+            Returns:
+                a <hint> element, or an empty tag if not available
         """
 
         return self.getstr("hint", "hint", default=TAG[""]())
@@ -248,7 +255,8 @@ class S3XFormsWidget:
         """
             Render the label for this formfield
 
-            @return: a <label> element, or an empty tag if not available
+            Returns:
+                a <label> element, or an empty tag if not available
         """
 
         return self.getstr("label", "label")
@@ -258,8 +266,9 @@ class S3XFormsWidget:
         """
             Add a translatable string to this widget
 
-            @param key: the key for the string
-            @param string: the string, or None to remove the key
+            Args:
+                key: the key for the string
+                string: the string, or None to remove the key
         """
 
         ref = "%s:%s" % (self.ref, key)
@@ -278,8 +287,9 @@ class S3XFormsWidget:
         """
             Get a translated string reference
 
-            @param tag: the tag to wrap the string reference
-            @param key: the key for the string
+            Args:
+                tag: the tag to wrap the string reference
+                key: the key for the string
         """
 
         empty = False
@@ -350,7 +360,8 @@ class S3XFormsOptionsWidget(S3XFormsWidget):
         """
             Render the items for the selector
 
-            @param options: the options, list of tuples (value, text)
+            Args:
+                options: the options, list of tuples (value, text)
         """
 
         items = []
@@ -428,8 +439,9 @@ class S3XFormsField:
             - widget            the form widget
             - strings           the strings for internationalization
 
-        @todo: implement specialized widgets
-        @todo: extend constraint introspection
+        TODO:
+            Implement specialized widgets
+            Extend constraint introspection
     """
 
     # Mapping field type <=> XForms widget
@@ -464,11 +476,10 @@ class S3XFormsField:
     # -------------------------------------------------------------------------
     def __init__(self, tablename, field, translate=True):
         """
-            Constructor
-
-            @param tablename: the table name
-            @param field: the Field or a Storage with field information
-            @param translate: enable/disable label translation
+            Args:
+                tablename: the table name
+                field: the Field or a Storage with field information
+                translate: enable/disable label translation
         """
 
         self.tablename = tablename
@@ -536,7 +547,8 @@ class S3XFormsField:
             can be accessed via the lazy properties model, binding, widget,
             and strings.
 
-            @return: nothing
+            Returns:
+                Nothing
         """
 
         field = self.field
@@ -642,8 +654,11 @@ class S3XFormsField:
         """
             Introspect range constraints, convert to string for binding
 
-            @param validators: a sequence of validators
-            @return: a string with the range constraints
+            Args:
+                validators: a sequence of validators
+
+            Returns:
+                string with the range constraints
         """
 
         constraints = []
@@ -670,8 +685,11 @@ class S3XFormsField:
         """
             Determine whether field is required
 
-            @param field: the Field or a Storage with field information
-            @return: True if field is required, else False
+            Args:
+                field: the Field or a Storage with field information
+
+            Returns:
+                True if field is required, else False
         """
 
         required = False
@@ -710,11 +728,10 @@ class S3XFormsForm:
 
     def __init__(self, table, name=None, translate=True):
         """
-            Constructor
-
-            @param table: the database table
-            @param name: optional alternative form name
-            @param translate: enable/disable translation of strings
+            Args:
+                table: the database table
+                name: optional alternative form name
+                translate: enable/disable translation of strings
         """
 
         self.table = table
@@ -741,7 +758,8 @@ class S3XFormsForm:
         """
             Render this form as XML string
 
-            @return: XML as string
+            Returns:
+                XML as string
         """
 
         ns = {"_xmlns": "http://www.w3.org/2002/xforms",
@@ -759,7 +777,8 @@ class S3XFormsForm:
         """
             Get the HTML head for this form
 
-            @return: an <h:head> tag
+            Returns:
+                an <h:head> tag
         """
 
         # @todo: introspect title (in caller, then pass-in)
@@ -773,7 +792,8 @@ class S3XFormsForm:
         """
             Get the HTML body for this form
 
-            @return: an <h:body> tag
+            Returns:
+                an <h:body> tag
         """
 
         widgets = self._widgets()
@@ -784,7 +804,8 @@ class S3XFormsForm:
         """
             Get the model for this form
 
-            @return: a <model> tag with instance, bindings and i18n strings
+            Returns:
+                a <model> tag with instance, bindings and i18n strings
         """
 
         instance = self._instance()
@@ -802,7 +823,8 @@ class S3XFormsForm:
         """
             Get the instance for this form
 
-            @return: an <instance> tag with all form field nodes
+            Returns:
+                an <instance> tag with all form field nodes
         """
 
         nodes = []
@@ -818,7 +840,8 @@ class S3XFormsForm:
         """
             Get the bindings for this form
 
-            @return: a TAG with the bindings
+            Returns:
+                a TAG with the bindings
         """
 
         bindings = []
@@ -834,7 +857,8 @@ class S3XFormsForm:
         """
             Get the widgets for this form
 
-            @return: a TAG with the widgets
+            Returns:
+                a TAG with the widgets
         """
 
         strings = self._strings
@@ -852,7 +876,8 @@ class S3XFormsForm:
         """
             Get a dict with all i18n strings for this form
 
-            @return: a dict {key: string}
+            Returns:
+                dict {key: string}
         """
 
         strings = {}
@@ -867,7 +892,8 @@ class S3XFormsForm:
         """
             Render the translations for all configured languages
 
-            @returns: translation tags
+            Returns:
+                translation tags
         """
 
         T = current.T
@@ -881,7 +907,7 @@ class S3XFormsForm:
                            if l != "en"]
             languages.insert(0, "en")
             for language in languages:
-                translation = TAG["translation"](_lang=language)
+                translation = TAG["translation"](_lang = language)
                 append_string = translation.append
                 for key, string in strings.items():
                     tstr = T(string.m if hasattr(string, "m") else string,

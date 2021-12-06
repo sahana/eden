@@ -47,7 +47,8 @@ class PayPalAdapter(S3PaymentService):
         """
             Get a new access token
 
-            @returns: the new access token
+            Returns:
+                The new access token
         """
 
         action = "Get Access Token"
@@ -109,7 +110,8 @@ class PayPalAdapter(S3PaymentService):
         """
             Retrieve user information (of the config owner)
 
-            @returns: a dict with user details
+            Returns:
+                dict with user details
         """
 
         action = "Get User Info"
@@ -133,9 +135,11 @@ class PayPalAdapter(S3PaymentService):
         """
             Register a product with this payment service
 
-            @param product_id: the fin_product record ID
+            Args:
+                product_id: the fin_product record ID
 
-            @returns: True if successful, or False on error
+            Returns:
+                True if successful, or False on error
         """
 
         success = False
@@ -211,9 +215,11 @@ class PayPalAdapter(S3PaymentService):
         """
             Update a product registration in this payment service
 
-            @param product_id: the fin_product record ID
+            Args:
+                product_id: the fin_product record ID
 
-            @returns: True if successful, or False on error
+            Returns:
+                True if successful, or False on error
         """
 
         action = "Update product %s" % product_id
@@ -280,9 +286,11 @@ class PayPalAdapter(S3PaymentService):
         """
             Retire a product from this payment service
 
-            @param product_id: the fin_product record ID
+            Aregs:
+                product_id: the fin_product record ID
 
-            @returns: True if successful, or False on error
+            Returns:
+                True if successful, or False on error
         """
 
         action = "Retire product %s" % product_id
@@ -297,9 +305,11 @@ class PayPalAdapter(S3PaymentService):
         """
             Register a subscription plan with this service
 
-            @param plan_id: the fin_subscription_plan record ID
+            Args:
+                plan_id: the fin_subscription_plan record ID
 
-            @returns: True if successful, or False on error
+            Returns:
+                True if successful, or False on error
         """
 
         if self.has_subscription_plan(plan_id):
@@ -431,9 +441,11 @@ class PayPalAdapter(S3PaymentService):
         """
             Update a subscription plan
 
-            @param plan_id: the fin_subscription_plan record ID
+            Args:
+                plan_id: the fin_subscription_plan record ID
 
-            @returns: True if successful, or False on error
+            Returns:
+                True if successful, or False on error
         """
 
         action = "Update subscription plan %s" % plan_id
@@ -449,9 +461,11 @@ class PayPalAdapter(S3PaymentService):
         """
             Retrieve information about the subscriber from the DB
 
-            @param pe_id: the PE ID of the subscriber
+            Args:
+                pe_id: the PE ID of the subscriber
 
-            @returns: a tuple (info, error)
+            Returns:
+                a tuple (info, error)
         """
 
         info, error = S3PaymentService.get_subscriber_info(pe_id)
@@ -474,10 +488,12 @@ class PayPalAdapter(S3PaymentService):
         """
             Register a subscription with this service
 
-            @param plan_id: the subscription plan ID
-            @param pe_id: the subscriber PE ID
+            Args:
+                plan_id: the subscription plan ID
+                pe_id: the subscriber PE ID
 
-            @returns: the record ID of the newly created subscription
+            Returns:
+                record ID of the newly created subscription
         """
 
         action = "Register subscription for subscriber #%s with plan #%s" % (pe_id, plan_id)
@@ -614,9 +630,11 @@ class PayPalAdapter(S3PaymentService):
             subscription to prompt automated fulfillment/cancelation
             actions
 
-            @param subscription_id: the subscription record ID
+            Args:
+                subscription_id: the subscription record ID
 
-            @returns: the current status of the subscription, or None on error
+            Returns:
+                The current status of the subscription, or None on error
         """
 
         action = "Check subscription #%s" % subscription_id
@@ -681,9 +699,11 @@ class PayPalAdapter(S3PaymentService):
         """
             Activate a subscription (on the service side)
 
-            @param subscription_id: the subscription record ID
+            Args:
+                subscription_id: the subscription record ID
 
-            @returns: True if successful, or False on error
+            Returns:
+                True if successful, or False on error
         """
 
         action = "Activate subscription #%s" % subscription_id
@@ -737,9 +757,11 @@ class PayPalAdapter(S3PaymentService):
         """
             Cancel a subscription
 
-            @param subscription_id: the subscription record ID
+            Args:
+                subscription_id: the subscription record ID
 
-            @returns: True if successful, or False on error
+            Returns:
+                True if successful, or False on error
         """
 
         action = "Cancel subscription #%s" % subscription_id

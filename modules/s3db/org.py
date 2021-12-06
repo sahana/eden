@@ -8537,7 +8537,7 @@ def org_update_root_organisation(organisation_id, root_org=None):
     return root_org
 
 # =============================================================================
-class org_OrganisationDuplicate(object):
+class org_OrganisationDuplicate:
     """ Import item deduplication, match by name or l10_name """
 
     @classmethod
@@ -8545,7 +8545,8 @@ class org_OrganisationDuplicate(object):
         """
             Main method, to be set for the "deduplicate" hook
 
-            @param item: the S3ImportItem
+            Args:
+                item: the S3ImportItem
         """
 
         try:

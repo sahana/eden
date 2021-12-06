@@ -47,8 +47,9 @@ class S3Summary(S3Method):
         """
             Entry point for REST interface
 
-            @param r: the S3Request
-            @param attr: controller attributes
+            Args:
+                r: the S3Request
+                attr: controller attributes
         """
 
         if "w" in r.get_vars:
@@ -63,8 +64,9 @@ class S3Summary(S3Method):
         """
             Render the summary page
 
-            @param r: the S3Request
-            @param attr: controller attributes
+            Args:
+                r: the S3Request
+                attr: controller attributes
         """
 
         output = {}
@@ -114,7 +116,9 @@ class S3Summary(S3Method):
 
             # Section container
             section_id = section["name"]
-            s = DIV(_class="section-container", _id=section_id)
+            s = DIV(_class = "section-container",
+                    _id = section_id,
+                    )
 
             if not common:
                 # Label
@@ -124,7 +128,9 @@ class S3Summary(S3Method):
                     label = current.T(label)
 
                 # Add tab
-                tablist.append(LI(A(label, _href="#%s" % section_id)))
+                tablist.append(LI(A(label,
+                                    _href = "#%s" % section_id,
+                                    )))
 
             if common or active_tab == tab_idx:
                 visible = True
@@ -153,8 +159,8 @@ class S3Summary(S3Method):
                 method = widget.get("method")
                 if callable(method):
                     content = method(r,
-                                     widget_id=widget_id,
-                                     visible=visible,
+                                     widget_id = widget_id,
+                                     visible = visible,
                                      **attr)
                 else:
                     handler = r.get_widget_handler(method)
@@ -168,9 +174,9 @@ class S3Summary(S3Method):
                             dtargs["dt_searching"] = "false"
                             attr["dtargs"] = dtargs
                         content = handler(r,
-                                          method=method,
-                                          widget_id=widget_id,
-                                          visible=visible,
+                                          method = method,
+                                          widget_id = widget_id,
+                                          visible = visible,
                                           **attr)
                     else:
                         r.error(405, current.ERROR.BAD_METHOD)
@@ -191,8 +197,8 @@ class S3Summary(S3Method):
                 elif isinstance(content, MAP) and (common or active_tab == tab_idx):
                     active_map = content
                 s.append(DIV(content,
-                             _id="%s-container" % widget_id,
-                             _class="widget-container",
+                             _id = "%s-container" % widget_id,
+                             _class = "widget-container",
                              ))
                 widget_idx += 1
 
@@ -241,30 +247,33 @@ class S3Summary(S3Method):
 
             # Where to retrieve updated filter options from:
             filter_ajax_url = attr.get("filter_ajax_url",
-                                       r.url(method="filter",
-                                             vars={},
-                                             representation="options"))
+                                       r.url(method = "filter",
+                                             vars = {},
+                                             representation = "options",
+                                             ))
 
             filter_clear = get_config("filter_clear",
                                       current.deployment_settings.get_ui_filter_clear())
             filter_formstyle = get_config("filter_formstyle")
             filter_submit = get_config("filter_submit", True)
             filter_form = S3FilterForm(filter_widgets,
-                                       clear=filter_clear,
-                                       formstyle=filter_formstyle,
-                                       submit=filter_submit,
-                                       ajax=filter_ajax,
-                                       url=filter_submit_url,
-                                       ajaxurl=filter_ajax_url,
-                                       _class="filter-form",
-                                       _id=form_id)
+                                       clear = filter_clear,
+                                       formstyle = filter_formstyle,
+                                       submit = filter_submit,
+                                       ajax = filter_ajax,
+                                       url = filter_submit_url,
+                                       ajaxurl = filter_ajax_url,
+                                       _class = "filter-form",
+                                       _id = form_id,
+                                       )
             fresource = current.s3db.resource(resource.tablename)
 
             alias = resource.alias if r.component else None
             output["filter_form"] = filter_form.html(fresource,
                                                      r.get_vars,
-                                                     target=target,
-                                                     alias=alias)
+                                                     target = target,
+                                                     alias = alias,
+                                                     )
         else:
             # Render as empty string to avoid the exception in the view
             output["filter_form"] = ""
@@ -299,8 +308,9 @@ class S3Summary(S3Method):
         """
             Render a specific widget for pulling-in via AJAX
 
-            @param r: the S3Request
-            @param attr: controller attributes
+            Args:
+                r: the S3Request
+                attr: controller attributes
         """
 
         # Get Summary Page Configuration
@@ -337,7 +347,8 @@ class S3Summary(S3Method):
         """
             Get the summary page configuration
 
-            @param resource: the target S3Resource
+            Args:
+                resource: the target S3Resource
         """
 
         get_config = resource.get_config

@@ -55,7 +55,7 @@ INSTANCE_TYPES = {"prod": 1,
                   }
 
 # =============================================================================
-class S3Monitor(object):
+class S3Monitor:
     """
        Monitoring Check Scripts
     """

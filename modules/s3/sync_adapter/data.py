@@ -56,7 +56,8 @@ class S3SyncAdapter(S3SyncEdenAdapter):
         """
             Register this site at the peer repository
 
-            @return: True|False to indicate success|failure,
+            Returns:
+                True|False to indicate success|failure,
                      or None if registration is not required
         """
 
@@ -68,7 +69,8 @@ class S3SyncAdapter(S3SyncEdenAdapter):
         """
             Refresh sync tasks from peer
 
-            @return: True|False to indicate success|failure,
+            Returns:
+                True|False to indicate success|failure,
                      or None if registration is not required
         """
 
@@ -220,10 +222,12 @@ class S3SyncAdapter(S3SyncEdenAdapter):
         """
             Fetch sync task updates from the repository
 
-            @param update: the update dict containing:
-                           {"url": the url to fetch,
-                            }
-            @return: error message if there was an error, otherwise None
+            Args:
+                update: the update dict containing:
+                        {"url": the url to fetch,
+                         }
+            Returns:
+                error message if there was an error, otherwise None
         """
 
         log = self.repository.log
@@ -293,11 +297,14 @@ class S3SyncAdapter(S3SyncEdenAdapter):
         """
             Import sync task updates
 
-            @param update: the update dict containing:
+            Args:
+                update: the update dict containing:
                            {"response": the response from _fetch,
                             "strategy": the import strategy,
                             }
-            @return: error message if there was an error, otherwise None
+
+            Returns:
+                error message if there was an error, otherwise None
         """
 
 

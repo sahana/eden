@@ -74,33 +74,34 @@ class S3Report(S3Method):
         """
             Page-render entry point for REST interface.
 
-            @param r: the S3Request instance
-            @param attr: controller attributes for the request
+            Args:
+                r: the S3Request instance
+                attr: controller attributes for the request
         """
 
         if r.http == "GET":
             if r.representation == "geojson":
-                output = self.geojson(r, **attr)
+                return self.geojson(r, **attr)
             else:
-                output = self.report(r, **attr)
+                return self.report(r, **attr)
         elif r.http == "POST":
             if r.representation == "json":
                 # NB can additionally check for ?explore=1 to
                 # distinguish from other POSTs (if necessary)
-                output = self.explore(r, **attr)
+                return self.explore(r, **attr)
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
-        return output
 
     # -------------------------------------------------------------------------
     def report(self, r, **attr):
         """
             Pivot table report page
 
-            @param r: the S3Request instance
-            @param attr: controller attributes for the request
+            Args:
+                r: the S3Request instance
+                attr: controller attributes for the request
         """
 
         output = {}
@@ -281,8 +282,9 @@ class S3Report(S3Method):
             Render the pivot table data as a dict ready to be exported as
             GeoJSON for display on a Map.
 
-            @param r: the S3Request instance
-            @param attr: controller attributes for the request
+            Args:
+                r: the S3Request instance
+                attr: controller attributes for the request
         """
 
         resource = self.resource
@@ -468,11 +470,12 @@ class S3Report(S3Method):
         """
             Pivot table report widget
 
-            @param r: the S3Request
-            @param method: the widget method
-            @param widget_id: the widget ID
-            @param visible: whether the widget is initially visible
-            @param attr: controller attributes
+            Args:
+                r: the S3Request
+                method: the widget method
+                widget_id: the widget ID
+                visible: whether the widget is initially visible
+                attr: controller attributes
         """
 
         output = {}
@@ -581,8 +584,9 @@ class S3Report(S3Method):
             - called with a body JSON containing the record IDs to represent,
               and the URL params for the pivot table (rows, cols, fact)
 
-            @param r: the S3Request instance
-            @param attr: controller attributes for the request
+            Args:
+                r: the S3Request instance
+                attr: controller attributes for the request
         """
 
         # Read+parse body JSON
@@ -795,8 +799,9 @@ class S3ReportForm:
         """
             Render the form for the report
 
-            @param get_vars: the GET vars if the request (as dict)
-            @param widget_id: the HTML element base ID for the widgets
+            Args:
+                get_vars: the GET vars if the request (as dict)
+                widget_id: the HTML element base ID for the widgets
         """
 
         T = current.T
@@ -942,8 +947,9 @@ class S3ReportForm:
         """
             Render the widgets for the report options form
 
-            @param get_vars: the GET vars if the request (as dict)
-            @param widget_id: the HTML element base ID for the widgets
+            Args:
+                get_vars: the GET vars if the request (as dict)
+                widget_id: the HTML element base ID for the widgets
         """
 
         T = current.T
@@ -1057,10 +1063,11 @@ class S3ReportForm:
         """
             Construct an OptionsWidget for rows or cols axis
 
-            @param axis: "rows" or "cols"
-            @param options: the report options
-            @param get_vars: the GET vars if the request (as dict)
-            @param widget_id: the HTML element ID for the widget
+            Args:
+                axis: "rows" or "cols"
+                options: the report options
+                get_vars: the GET vars if the request (as dict)
+                widget_id: the HTML element ID for the widget
         """
 
         resource = self.resource
@@ -1124,9 +1131,10 @@ class S3ReportForm:
         """
             Construct an OptionsWidget for the fact layer
 
-            @param options: the report options
-            @param get_vars: the GET vars if the request (as dict)
-            @param widget_id: the HTML element ID for the widget
+            Args:
+                options: the report options
+                get_vars: the GET vars if the request (as dict)
+                widget_id: the HTML element ID for the widget
         """
 
         resource = self.resource
@@ -1290,9 +1298,10 @@ class S3ReportForm:
             Helper method to wrap widgets in a FIELDSET container with
             show/hide option
 
-            @param title: the title for the field set
-            @param widgets: the widgets
-            @param attr: HTML attributes for the field set
+            Args:
+                title: the title for the field set
+                widgets: the widgets
+                attr: HTML attributes for the field set
         """
 
         T = current.T
@@ -1333,11 +1342,11 @@ class S3ReportRepresent:
             to allow it to adapt the representation (e.g. it may often
             be desirable to not repeat the report axes in the record list)
 
-            @param resource: the resource of the report
-            @param rows: the rows-selector (can be None)
-            @param cols: the columns-selector (can be None)
-            @param facts: the list of S3PivotTableFacts showing in
-                          the pivot table
+            Args:
+                resource: the resource of the report
+                rows: the rows-selector (can be None)
+                cols: the columns-selector (can be None)
+                facts: the list of S3PivotTableFacts showing in the pivot table
         """
 
         self.resource = resource
@@ -1350,13 +1359,15 @@ class S3ReportRepresent:
         """
             Represent record IDs, can be overloaded in subclasses
 
-            @param record_ids: list of record IDs
+            Args:
+                record_ids: list of record IDs
 
-            @returns: a JSON-serializable dict {recordID: representation},
-                      or None to suppress recordID representation in the
-                      cell explorer
+            Returns:
+                A JSON-serializable dict {recordID: representation},
+                or None to suppress recordID representation in the cell explorer
 
-            NB default behavior is not sensitive for report axes
+            Note:
+                Default behavior is not sensitive for report axes
         """
 
         # Take a list of record ids
@@ -1408,10 +1419,9 @@ class S3ReportRepresent:
             than implementing __call__ if producing a representation
             method is sufficient)
 
-            @returns: a representation method (preferably an S3Represent)
+            Returns:
+                A representation method (preferably an S3Represent)
         """
-
-        s3db = current.s3db
 
         resource = self.resource
         pkey = resource._id
@@ -1421,7 +1431,8 @@ class S3ReportRepresent:
             # Standard representation methods can be listed here
             # (if they don't normally depend on the report context)
             if resource.tablename == "pr_person":
-                represent = s3db.pr_PersonRepresent()
+                from s3db.pr import pr_PersonRepresent
+                represent = pr_PersonRepresent()
 
         return represent
 
@@ -1442,12 +1453,11 @@ class S3PivotTableFact:
 
     def __init__(self, method, selector, label=None, default_method=True):
         """
-            Constructor
-
-            @param method: the aggregation method
-            @param selector: the field selector
-            @param label: the fact label
-            @param default_method: using default method (used by parser)
+            Args:
+                method: the aggregation method
+                selector: the field selector
+                label: the fact label
+                default_method: using default method (used by parser)
         """
 
         if method is None:
@@ -1471,9 +1481,6 @@ class S3PivotTableFact:
     # -------------------------------------------------------------------------
     @property
     def layer(self):
-        """
-            @todo: docstring
-        """
 
         layer = self._layer
         if not layer:
@@ -1485,11 +1492,12 @@ class S3PivotTableFact:
         """
             Aggregate a list of values.
 
-            @param values: iterable of values
-            @param method: the aggregation method
-            @param totals: this call is computing row/column/grand totals
-            @param precision: limit the precision of the computation to this
-                              number of decimals (@todo: consider a default of 6)
+            Args:
+                values: iterable of values
+                method: the aggregation method
+                totals: this call is computing row/column/grand totals
+                precision: limit the precision of the computation to this
+                           number of decimals (@todo: consider a default of 6)
         """
 
         if values is None:
@@ -1560,7 +1568,8 @@ class S3PivotTableFact:
         """
             Aggregate totals for this fact (hyper-aggregation)
 
-            @param totals: iterable of totals
+            Args:
+                totals: iterable of totals
         """
 
         if self.method in ("list", "count"):
@@ -1575,7 +1584,8 @@ class S3PivotTableFact:
         """
             Parse fact expression
 
-            @param fact: the fact expression
+            Args:
+                fact: the fact expression
         """
 
         if isinstance(fact, tuple):
@@ -1633,8 +1643,11 @@ class S3PivotTableFact:
         """
             Get a label for a method
 
-            @param code: the method code
-            @return: the label (lazyT), or None for unsupported methods
+            Args:
+                code: the method code
+
+            Returns:
+                The label (lazyT), or None for unsupported methods
         """
 
         methods = cls.METHODS
@@ -1652,9 +1665,10 @@ class S3PivotTableFact:
         """
             Get the label for a field
 
-            @param rfield: the S3ResourceField
-            @param fact_options: the corresponding subset of the report
-                                 options ("fact", "rows" or "cols")
+            Args:
+                rfield: the S3ResourceField
+                fact_options: the corresponding subset of the report
+                              options ("fact", "rows" or "cols")
         """
 
         label = None
@@ -1693,8 +1707,9 @@ class S3PivotTableFact:
         """
             Get a label for this fact
 
-            @param rfield: the S3ResourceField
-            @param fact_options: the "fact" list of the report options
+            Args:
+                rfield: the S3ResourceField
+                fact_options: the "fact" list of the report options
         """
 
         label = self.label
@@ -1734,14 +1749,15 @@ class S3PivotTable:
             pivot table from them with the given dimensions and
             computes the aggregated values for each cell.
 
-            @param resource: the S3Resource
-            @param rows: field selector for the rows dimension
-            @param cols: field selector for the columns dimension
-            @param facts: list of S3PivotTableFacts to compute
-            @param strict: filter out dimension values which don't match
-                           the resource filter
-            @param precision: maximum precision of aggregate computations,
-                              a dict {selector: number_of_decimals}
+            Args:
+                resource: the S3Resource
+                rows: field selector for the rows dimension
+                cols: field selector for the columns dimension
+                facts: list of S3PivotTableFacts to compute
+                strict: filter out dimension values which don't match
+                        the resource filter
+                precision: maximum precision of aggregate computations,
+                           a dict {selector: number_of_decimals}
         """
 
         # Initialize ----------------------------------------------------------
@@ -1935,10 +1951,11 @@ class S3PivotTable:
 
             Called by S3Report.geojson()
 
-            @param layer: the layer. e.g. ("id", "count")
-                          - we only support methods "count" & "sum"
-                          - @ToDo: Support density: 'per sqkm' and 'per population'
-            @param level: the aggregation level (defaults to Country)
+            Args:
+                layer: the layer. e.g. ("id", "count")
+                        - we only support methods "count" & "sum"
+                        - @ToDo: Support density: 'per sqkm' and 'per population'
+                level: the aggregation level (defaults to Country)
         """
 
         if fact is None:
@@ -2034,11 +2051,12 @@ class S3PivotTable:
         """
             Render the pivot table data as JSON-serializable dict
 
-            @param layer: the layer
-            @param maxrows: maximum number of rows (None for all)
-            @param maxcols: maximum number of columns (None for all)
-            @param least: render the least n rows/columns rather than
-                          the top n (with maxrows/maxcols)
+            Args:
+                layer: the layer
+                maxrows: maximum number of rows (None for all)
+                maxcols: maximum number of columns (None for all)
+                least: render the least n rows/columns rather than
+                       the top n (with maxrows/maxcols)
 
             {
                 labels: {
@@ -2395,9 +2413,11 @@ class S3PivotTable:
         """
             Convert this pivot table into an XLS file
 
-            @param title: the title of the report
+            Args:
+                title: the title of the report
 
-            @returns: the XLS file as stream
+            Returns:
+                The XLS file as stream
         """
 
         from .s3codec import S3Codec
@@ -2410,7 +2430,8 @@ class S3PivotTable:
         """
             Get the representation functions per fact field
 
-            @param layers: the list of layers, tuples (selector, method)
+            Args:
+                layers: the list of layers, tuples (selector, method)
         """
 
         rfields = self.rfields
@@ -2451,11 +2472,12 @@ class S3PivotTable:
         """
             Sort a dimension (sorts items in-place)
 
-            @param items: the items as list of tuples
-                          (index, sort-total, totals, header)
-            @param rfield: the dimension (S3ResourceField)
-            @param index: alternative index of the value/text dict
-                          within each item
+            Args:
+                items: the items as list of tuples
+                       (index, sort-total, totals, header)
+                rfield: the dimension (S3ResourceField)
+                index: alternative index of the value/text dict
+                       within each item
         """
 
         if not rfield:
@@ -2508,11 +2530,12 @@ class S3PivotTable:
         """
             Find the top/least <length> items (by total)
 
-            @param items: the items as list of tuples
-                          (index, sort-total, totals, header)
-            @param length: the maximum number of items
-            @param least: find least rather than top
-            @param facts: the facts to aggregate the tail totals
+            Args:
+                items: the items as list of tuples
+                       (index, sort-total, totals, header)
+                length: the maximum number of items
+                least: find least rather than top
+                facts: the facts to aggregate the tail totals
         """
 
         try:
@@ -2537,10 +2560,11 @@ class S3PivotTable:
         """
             Get the totals of a row/column/report
 
-            @param values: the values dictionary
-            @param facts: the facts
-            @param append: callback to collect the totals for JSON data
-                           (currently only collects the first layer)
+            Args:
+                values: the values dictionary
+                facts: the facts
+                append: callback to collect the totals for JSON data
+                        (currently only collects the first layer)
         """
 
         totals = []
@@ -2563,15 +2587,17 @@ class S3PivotTable:
         """
             2-dimensional pivoting of a list of unique items
 
-            @param items: list of unique items as dicts
-            @param pkey_colname: column name of the primary key
-            @param rows_colname: column name of the row dimension
-            @param cols_colname: column name of the column dimension
+            Args:
+                items: list of unique items as dicts
+                pkey_colname: column name of the primary key
+                rows_colname: column name of the row dimension
+                cols_colname: column name of the column dimension
 
-            @return: tuple of (cell matrix, row headers, column headers),
-                     where cell matrix is a 2-dimensional array [rows[columns]]
-                     and row headers and column headers each are lists (in the
-                     same order as the cell matrix)
+            Returns:
+                tuple of (cell matrix, row headers, column headers),
+                where cell matrix is a 2-dimensional array [rows[columns]]
+                and row headers and column headers each are lists (in the
+                same order as the cell matrix)
         """
 
         rvalues = Storage()
@@ -2629,9 +2655,10 @@ class S3PivotTable:
                 - self.col: the totals per column
                 - self.totals: the overall totals per layer
 
-            @param matrix: the cell matrix
-            @param fact: the fact field
-            @param method: the aggregation method
+            Args:
+                matrix: the cell matrix
+                fact: the fact field
+                method: the aggregation method
         """
 
         rows = self.row
@@ -2752,7 +2779,8 @@ class S3PivotTable:
         """
             Determine the fields needed to generate the report
 
-            @param fields: fields to include in the report (all fields)
+            Args:
+                fields: fields to include in the report (all fields)
         """
 
         resource = self.resource
@@ -2817,7 +2845,8 @@ class S3PivotTable:
         """
             Get the representation method for a field in the report
 
-            @param field: the field selector
+            Args:
+                field: the field selector
         """
 
         rfields = self.rfields
@@ -2862,8 +2891,9 @@ class S3PivotTable:
         """
             Extract a field value from a DAL row
 
-            @param row: the row
-            @param field: the fieldname (list_fields syntax)
+            Args:
+                row: the row
+                field: the fieldname (list_fields syntax)
         """
 
         rfields = self.rfields
@@ -2880,9 +2910,9 @@ class S3PivotTable:
         """
             Expand a data frame row into a list of rows for list:type values
 
-            @param row: the row
-            @param field: the field to expand (None for all fields)
-            @param axisfilter: dict of filtered field values by column names
+            Args:
+                row: the row
+                axisfilter: dict of filtered field values by column names
         """
 
         pairs = []

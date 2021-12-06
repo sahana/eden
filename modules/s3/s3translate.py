@@ -636,9 +636,11 @@ class TranslateReadFiles:
     def findstr(fileName, spmod, modlist):
         """
             Using the methods in TranslateParseFiles to extract the strings
-            fileName -> the file to be used for extraction
-            spmod -> the required module
-            modlist -> a list of all modules in Eden
+
+            Args:
+                fileName: the file to be used for extraction
+                spmod: the required module
+                modlist: a list of all modules in Eden
         """
 
         try:
@@ -842,8 +844,6 @@ class TranslateReadFiles:
         """
 
         from .s3import import S3BulkImporter
-
-
 
         # List of database strings
         database_strings = []
@@ -1170,8 +1170,10 @@ class Strings:
     @staticmethod
     def read_w2p(fileName):
         """
-            Function to read a web2py language file and
-            return a list of translation string pairs
+            Function to read a web2py language file
+
+            Returns:
+                list of translation string pairs
         """
 
         data = read_dict(fileName)
@@ -1343,8 +1345,9 @@ class Pootle:
         Class to synchronise a Pootle server's translation with the local
         one
 
-        @ToDo: Before uploading file to Pootle, ensure all relevant
-               untranslated strings are present.
+        TODO:
+            Before uploading file to Pootle, ensure all relevant
+            untranslated strings are present.
     """
 
     # ---------------------------------------------------------------------
@@ -1423,7 +1426,8 @@ class Pootle:
         """
             Download a file from Pootle
 
-            @ToDo: Allow selection between different variants of language files
+            TODO:
+                Allow selection between different variants of language files
         """
 
         import requests
@@ -1649,8 +1653,9 @@ class TranslateReportStatus:
             Update the translation percentages for all modules for a given
             language.
 
-            @ToDo: Generate fresh .py files with all relevant strings for this
-                    (since we don't store untranslated strings)
+            TODO:
+                Generate fresh .py files with all relevant strings for this
+                (since we don't store untranslated strings)
         """
 
         base_dir = current.request.folder
@@ -1707,7 +1712,8 @@ class TranslateReportStatus:
             Get the percentages of translated strings per module for
             the given language code.
 
-            @param lang_code: the language code
+            Args:
+                lang_code: the language code
         """
 
         pickle_file = os.path.join(current.request.folder,

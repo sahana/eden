@@ -55,41 +55,38 @@ class S3Payments(S3Method):
         """
             Page-render entry point for REST interface.
 
-            @param r: the S3Request instance
-            @param attr: controller attributes
+            Args:
+                r: the S3Request instance
+                attr: controller attributes
         """
-
-        output = {}
 
         method = r.method
         if method == "approve":
             if r.http in ("GET", "POST"):
-                output = self.approve_subscription(r, **attr)
+                return self.approve_subscription(r, **attr)
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
 
         if method == "confirm":
             if r.http == "GET":
-                output = self.confirm_subscription(r, **attr)
+                return self.confirm_subscription(r, **attr)
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
 
         elif method == "status":
             if r.http == "GET":
-                output = self.subscription_status(r, **attr)
+                return self.subscription_status(r, **attr)
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
 
         elif method == "cancel":
             if r.http in ("GET", "POST"):
-                output = self.cancel_subscription(r, **attr)
+                return self.cancel_subscription(r, **attr)
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
 
         else:
             r.error(405, current.ERROR.BAD_METHOD)
-
-        return output
 
     # -------------------------------------------------------------------------
     def confirm_subscription(self, r, **attr):
@@ -100,8 +97,9 @@ class S3Payments(S3Method):
               the subscription
             - URL query must include the reference number ("subscription_id")
 
-            @param r: the S3Request instance
-            @param attr: controller attributes
+            Args:
+                r: the S3Request instance
+                attr: controller attributes
         """
 
         # Validate parameters
@@ -136,7 +134,7 @@ class S3Payments(S3Method):
             current.response.error = T("Could not verify subscription status")
 
         r.http = "POST"
-        self.next = r.url(method="status")
+        self.next = r.url(method = "status")
 
         return {}
 
@@ -148,8 +146,9 @@ class S3Payments(S3Method):
             - interactive user confirmation is required
             - URL query must include the reference number ("subscription_id")
 
-            @param r: the S3Request instance
-            @param attr: controller attributes
+            Args:
+                r: the S3Request instance
+                attr: controller attributes
         """
 
         T = current.T
@@ -364,16 +363,15 @@ class S3Payments(S3Method):
         return output
 
 # =============================================================================
-class S3PaymentLog(object):
+class S3PaymentLog:
     """
         Simple log writer for Payment Service Adapters
     """
 
     def __init__(self, service_id):
         """
-            Constructor
-
-            @param service_id: the fin_payment_service record ID
+            Args:
+                service_id: the fin_payment_service record ID
         """
         self.service_id = service_id
 
@@ -382,11 +380,13 @@ class S3PaymentLog(object):
         """
             Add a log entry
 
-            @param action: description of the attempted action
-            @param result: result of the action
-            @param reason: reason for the result (e.g. error message)
+            Args:
+                action: description of the attempted action
+                result: result of the action
+                reason: reason for the result (e.g. error message)
 
-            NB: Logging process must either explicitly commit before
+            Note:
+                Logging process must either explicitly commit before
                 raising an exception, or catch+resolve all exceptions,
                 otherwise the log entries will be rolled back
         """
@@ -427,14 +427,13 @@ class S3PaymentLog(object):
         self.write(action, "FATAL", reason)
 
 # =============================================================================
-class S3PaymentService(object):
+class S3PaymentService:
     """ Online Payment Service (base class) """
 
     def __init__(self, row):
         """
-            Constructor
-
-            @param row: the fin_payment_service Row
+            Args:
+                row: the fin_payment_service Row
         """
 
         # Store service config record ID
@@ -464,7 +463,8 @@ class S3PaymentService(object):
             current username (=client_id) and password (=client_secret);
             to be called implicitly by http() if/when required
 
-            @returns: the new access token if successful, otherwise None
+            Returns:
+                The new access token if successful, otherwise None
         """
         raise NotImplementedError
 
@@ -474,7 +474,8 @@ class S3PaymentService(object):
             Retrieve user information from this service; for account
             verification and API testing (implementation optional)
 
-            @returns: a dict with user details
+            Returns:
+                dict with user details
         """
         raise NotImplementedError
 
@@ -483,9 +484,11 @@ class S3PaymentService(object):
         """
             Register a product with this payment service
 
-            @param product_id: the fin_product record ID
+            Args:
+                product_id: the fin_product record ID
 
-            @returns: True if successful, or False on error
+            Returns:
+                True if successful, or False on error
         """
         raise NotImplementedError
 
@@ -494,9 +497,11 @@ class S3PaymentService(object):
         """
             Update a product registration in this payment service
 
-            @param product_id: the fin_product record ID
+            Args:
+                product_id: the fin_product record ID
 
-            @returns: True if successful, or False on error
+            Returns:
+                True if successful, or False on error
         """
         raise NotImplementedError
 
@@ -505,9 +510,11 @@ class S3PaymentService(object):
         """
             Retire a product from this payment service
 
-            @param product_id: the fin_product record ID
+            Args:
+                product_id: the fin_product record ID
 
-            @returns: True if successful, or False on error
+            Returns:
+                True if successful, or False on error
         """
         raise NotImplementedError
 
@@ -516,9 +523,11 @@ class S3PaymentService(object):
         """
             Register a subscription plan with this service
 
-            @param plan_id: the fin_subscription_plan record ID
+            Args:
+                plan_id: the fin_subscription_plan record ID
 
-            @returns: True if successful, or False on error
+            Returns:
+                True if successful, or False on error
         """
         raise NotImplementedError
 
@@ -527,9 +536,11 @@ class S3PaymentService(object):
         """
             Update a subscription plan
 
-            @param plan_id: the fin_subscription_plan record ID
+            Args:
+                plan_id: the fin_subscription_plan record ID
 
-            @returns: True if successful, or False on error
+            Returns:
+                True if successful, or False on error
         """
         raise NotImplementedError
 
@@ -538,10 +549,12 @@ class S3PaymentService(object):
         """
             Register a subscription with this service
 
-            @param plan_id: the subscription plan ID
-            @param pe_id: the subscriber PE ID
+            Args:
+                plan_id: the subscription plan ID
+                pe_id: the subscriber PE ID
 
-            @returns: the record ID of the newly created subscription
+            Returns:
+                The record ID of the newly created subscription
         """
         raise NotImplementedError
 
@@ -551,9 +564,11 @@ class S3PaymentService(object):
             Check the current status of a subscription (and update it
             in the database)
 
-            @param subscription_id: the subscription record ID
+            Args:
+                subscription_id: the subscription record ID
 
-            @returns: the current status of the subscription, or None on error
+            Returns:
+                The current status of the subscription, or None on error
         """
         raise NotImplementedError
 
@@ -562,9 +577,11 @@ class S3PaymentService(object):
         """
             Activate a subscription (on the service side)
 
-            @param subscription_id: the subscription record ID
+            Args:
+                subscription_id: the subscription record ID
 
-            @returns: True if successful, or False on error
+            Returns:
+                True if successful, or False on error
         """
         raise NotImplementedError
 
@@ -573,9 +590,11 @@ class S3PaymentService(object):
         """
             Cancel a subscription
 
-            @param subscription_id: the subscription record ID
+            Args:
+                subscription_id: the subscription record ID
 
-            @returns: True if successful, or False on error
+            Returns:
+                True if successful, or False on error
         """
         raise NotImplementedError
 
@@ -587,9 +606,12 @@ class S3PaymentService(object):
             in the URL; subclasses may override to use a different
             query variable, or not require a match at all
 
-            @param r: the S3Request
-            @returns: True|False whether the specified reference matches
-                      the requested subscription record
+            Args:
+                r: the S3Request
+
+            Returns:
+                True|False whether the specified reference matches
+                the requested subscription record
         """
 
         record = r.record
@@ -616,15 +638,16 @@ class S3PaymentService(object):
         """
             Send a HTTP request to the REST API
 
-            @param method: the HTTP method
-            @param path: the path relative to the base URL of the service
-            @param args: dict of URL parameters
-            @param data: data to send (JSON-serializable object)
-            @param auth: False - do not send an Auth header
-                         "Basic" - send an Auth header with username+password
-                         "Token" - send an Auth header with access token
-            @param encode: encode the request data as "json"|"text"|"bytes"
-            @param decode: decode the response as "json"|"text"|"bytes"
+            Args:
+                method: the HTTP method
+                path: the path relative to the base URL of the service
+                args: dict of URL parameters
+                data: data to send (JSON-serializable object)
+                auth: False - do not send an Auth header
+                      "Basic" - send an Auth header with username+password
+                      "Token" - send an Auth header with access token
+                encode: encode the request data as "json"|"text"|"bytes"
+                decode: decode the response as "json"|"text"|"bytes"
         """
 
         base_url = self.base_url
@@ -706,14 +729,16 @@ class S3PaymentService(object):
         """
             Configure a HTTP opener for API operations
 
-            @param req: the Request
-            @param headers: array of HTTP headers
-            @param auth: False - do not add Authorization
-                         "Basic" - add Auth header using username+password
-                         "Token" - add Auth header using access token
-                         any tru-ish value - add a 401-handler with username+password
+            Args:
+                req: the Request
+                headers: array of HTTP headers
+                auth: False - do not add Authorization
+                      "Basic" - add Auth header using username+password
+                      "Token" - add Auth header using access token
+                      any tru-ish value - add a 401-handler with username+password
 
-            @returns: OpenerDirector instance
+            Returns:
+                OpenerDirector instance
         """
 
         # Configure opener headers
@@ -781,9 +806,11 @@ class S3PaymentService(object):
         """
             Check whether a product is already registered with this service
 
-            @param product_id: the fin_product record ID
+            Args:
+                product_id: the fin_product record ID
 
-            @returns: boolean
+            Returns:
+                boolean
         """
 
         table = current.s3db.fin_product_service
@@ -803,9 +830,11 @@ class S3PaymentService(object):
             Check whether a subscription_plan is already registered
             with this service
 
-            @param plan_id: the fin_subscription_plan record ID
+            Args:
+                plan_id: the fin_subscription_plan record ID
 
-            @returns: boolean
+            Returns:
+                boolean
         """
 
         table = current.s3db.fin_subscription_plan_service
@@ -825,9 +854,11 @@ class S3PaymentService(object):
         """
             Retrieve information about the subscriber from the DB
 
-            @param pe_id: the PE ID of the subscriber
+            Args:
+                pe_id: the PE ID of the subscriber
 
-            @returns: a tuple (info, error), where info is a dict like:
+            Returns:
+                tuple (info, error), where info is a dict like:
                         {"first_name": first or only name
                          "last_name":  last name
                          "email":      email address
@@ -898,9 +929,11 @@ class S3PaymentService(object):
         """
             Get the merchant name (org name) for a product
 
-            @param product_id: the product ID
+            Args:
+                product_id: the product ID
 
-            @returns: the name as string, or None if not available
+            Returns:
+                The name as string, or None if not available
         """
 
         db = current.db
@@ -923,9 +956,10 @@ class S3PaymentService(object):
         """
             Compute the end-date for a subscription
 
-            @param plan_id: the subscription plan ID
-            @param start_date: the start date of the subscription
-            @param cycles: the total number of billing cycles
+            Args:
+                plan_id: the subscription plan ID
+                start_date: the start date of the subscription
+                cycles: the total number of billing cycles
         """
 
         db = current.db
@@ -981,7 +1015,8 @@ class S3PaymentService(object):
             Instantiate and return a suitable API adapter for a payment
             service
 
-            @param service_id: the fin_payment_service record ID
+            Args:
+                service_id: the fin_payment_service record ID
         """
 
         # Load service configuration

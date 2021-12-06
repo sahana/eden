@@ -38,7 +38,7 @@ from urllib.error import HTTPError, URLError
 from gluon import current
 
 # =============================================================================
-class S3Parser(object):
+class S3Parser:
     """ Message Parsing Template """
 
     # -------------------------------------------------------------------------

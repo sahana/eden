@@ -57,9 +57,6 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
     # -------------------------------------------------------------------------
     def __init__(self, repository):
-        """
-            Constructor
-        """
 
         super(S3SyncAdapter, self).__init__(repository)
 
@@ -76,11 +73,13 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             password to obtain the refresh_token and store it in the
             repository config.
 
-            @note: this invalidates the authorization code (if any), so it
+            Note:
+                This invalidates the authorization code (if any), so it
                    will be set to None regardless whether this operation
                    succeeds or not
 
-            @return: True if successful, otherwise False
+            Returns:
+                True if successful, otherwise False
         """
 
         repository = self.repository
@@ -169,7 +168,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             the client secret (password) and the refresh token to obtain the
             access token for subsequent requests.
 
-            @return: None if successful, otherwise error message
+            Returns:
+                None if successful, otherwise error message
         """
 
         repository = self.repository
@@ -226,9 +226,12 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
             Pull updates from this repository
 
-            @param task: the task Row
-            @param onconflict: synchronization conflict resolver
-            @return: tuple (error, mtime), with error=None if successful,
+            Args:
+                task: the task Row
+                onconflict: synchronization conflict resolver
+
+            Returns:
+                tuple (error, mtime), with error=None if successful,
                      else error=message, and mtime=modification timestamp
                      of the youngest record received
         """
@@ -421,8 +424,11 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
             Push data for a task
 
-            @param task: the task Row
-            @return: tuple (error, mtime), with error=None if successful,
+            Args:
+                task: the task Row
+
+            Returns:
+                tuple (error, mtime), with error=None if successful,
                      else error=message, and mtime=modification timestamp
                      of the youngest record sent
         """
@@ -438,7 +444,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
             Get all accessible accounts
 
-            @return: dict {account_id: (rootFolderId, recycleBinId)}
+            Returns:
+                dict {account_id: (rootFolderId, recycleBinId)}
         """
 
         response, message = self._send_request(path="accounts")
@@ -468,8 +475,9 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             Fetch folders from a Wrike account and add them to the
             data tree
 
-            @param root: the root element of the data tree
-            @param account_id: the Wrike account ID
+            Args:
+                root: the root element of the data tree
+                account_id: the Wrike account ID
         """
 
         response, message = self._send_request(path="accounts/%s/folders" % account_id)
@@ -503,12 +511,13 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
             Fetch all tasks in a folder
 
-            @param root: the root element of the data tree
-            @param folder_id: the ID of the folder to read from
-            @param deleted: mark the tasks as deleted in the data
-                            tree (when reading tasks from a recycle bin)
-            @param msince: only retrieve tasks that have been modified
-                           after this date/time (ISO-formatted string)
+            Args:
+                root: the root element of the data tree
+                folder_id: the ID of the folder to read from
+                deleted: mark the tasks as deleted in the data
+                         tree (when reading tasks from a recycle bin)
+                msince: only retrieve tasks that have been modified
+                        after this date/time (ISO-formatted string)
         """
 
         args = {"descendants": "true",
@@ -566,9 +575,10 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
             Recursively convert the nested task details dicts into SubElements
 
-            @param task: the task Element
-            @param data: the nested dict
-            @param keys: the mapping of dict keys to SubElement names
+            Args:
+                task: the task Element
+                data: the nested dict
+                keys: the mapping of dict keys to SubElement names
         """
 
         if not isinstance(data, dict):
@@ -605,18 +615,20 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
     # -------------------------------------------------------------------------
     def _send_request(self,
-                      method="GET",
-                      path=None,
-                      args=None,
-                      data=None,
-                      auth=False):
+                      method = "GET",
+                      path = None,
+                      args = None,
+                      data = None,
+                      auth = False,
+                      ):
         """
             Send a request to the Wrike API
 
-            @param method: the HTTP method
-            @param path: the path relative to the repository URL
-            @param data: the data to send
-            @param auth: this is an authorization request
+            Args:
+                method: the HTTP method
+                path: the path relative to the repository URL
+                data: the data to send
+                auth: this is an authorization request
         """
 
         repository = self.repository

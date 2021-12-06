@@ -1395,7 +1395,7 @@ def config(settings):
 # -----------------------------------------------------------------------------
 
 # =============================================================================
-class TaskSubscriptions(object):
+class TaskSubscriptions:
     """ Manage subscriptions """
 
     def __init__(self):

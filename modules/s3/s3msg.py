@@ -82,7 +82,8 @@ class S3Msg:
     """ Messaging framework """
 
     def __init__(self,
-                 modem=None):
+                 modem = None,
+                 ):
 
         T = current.T
         self.modem = modem
@@ -195,7 +196,8 @@ class S3Msg:
             Decode an RFC2047-encoded email header (e.g.
             "Dominic =?ISO-8859-1?Q?K=F6nig?=") and return it as unicode.
 
-            @param header: the header
+            Args:
+                header: the header
         """
 
         # Deal with missing word separation (thanks Ingmar Hupp)
@@ -247,11 +249,12 @@ class S3Msg:
     @staticmethod
     def parse(channel_id, function_name):
         """
-           Parse unparsed Messages from Channel with Parser
-           - called from Scheduler
+            Parse unparsed Messages from Channel with Parser
+            - called from Scheduler
 
-           @param channel_id: Channel
-           @param function_name: Parser
+            Args:
+                channel_id: Channel
+                function_name: Parser
         """
 
         from .s3parser import S3Parsing
@@ -291,19 +294,20 @@ class S3Msg:
         """
             Form to Compose a Message
 
-            @param type: The default message type: None, EMAIL, SMS or TWITTER
-            @param recipient_type: Send to Persons or Groups? (pr_person or pr_group)
-            @param recipient: The pe_id of the person/group to send the message to
-                              - this can also be set by setting one of
-                                (in priority order, if multiple found):
-                                request.vars.pe_id
-                                request.vars.person_id @ToDo
-                                request.vars.group_id  @ToDo
-                                request.vars.hrm_id    @ToDo
-            @param subject: The default subject text (for Emails)
-            @param message: The default message text
-            @param url: Redirect to the specified URL() after message sent
-            @param formid: If set, allows multiple forms open in different tabs
+            Args:
+                type: The default message type: None, EMAIL, SMS or TWITTER
+                recipient_type: Send to Persons or Groups? (pr_person or pr_group)
+                recipient: The pe_id of the person/group to send the message to
+                           - this can also be set by setting one of
+                             (in priority order, if multiple found):
+                             request.vars.pe_id
+                             request.vars.person_id @ToDo
+                             request.vars.group_id  @ToDo
+                             request.vars.hrm_id    @ToDo
+                subject: The default subject text (for Emails)
+                message: The default message text
+                url: Redirect to the specified URL() after message sent
+                formid: If set, allows multiple forms open in different tabs
         """
 
         if not url:
@@ -353,9 +357,10 @@ class S3Msg:
         """
             Send a single message to an Address
 
-            @param recipient: "email@address", "+4412345678", "@nick"
-            @param message: message body
-            @param subject: message subject (Email only)
+            Args:
+                recipient: "email@address", "+4412345678", "@nick"
+                message: message body
+                subject: message subject (Email only)
         """
 
         # Determine channel to send on based on format of recipient
@@ -384,11 +389,11 @@ class S3Msg:
         """
             Send a single message to a Person Entity (or list thereof)
 
-            @ToDo: contact_method = ALL
+            TODO:
+                contact_method = ALL
                 - look up the pr_contact options available for the pe & send via all
-
-            @ToDo: This is not transaction safe
-              - power failure in the middle will cause no message in the outbox
+                This is not transaction safe
+                - power failure in the middle will cause no message in the outbox
         """
 
         s3db = current.s3db
@@ -485,9 +490,11 @@ class S3Msg:
         """
             Send pending messages from outbox (usually called from scheduler)
 
-            @param contact_method: the output channel (see pr_contact.method)
+            Args:
+                contact_method: the output channel (see pr_contact.method)
 
-            @todo: contact_method = "ALL"
+            TODO:
+                contact_method = "ALL"
         """
 
         db = current.db
@@ -560,13 +567,14 @@ class S3Msg:
             """
                 Helper method to send messages by pe_id
 
-                @param pe_id: the pe_id
-                @param subject: the message subject
-                @param message: the message body
-                @param outbox_id: the outbox record ID
-                @param message_id: the message_id
-                @param organisation_id: the organisation_id (for SMS)
-                @param contact_method: the contact method
+                Args:
+                    pe_id: the pe_id
+                    subject: the message subject
+                    message: the message body
+                    outbox_id: the outbox record ID
+                    message_id: the message_id
+                    organisation_id: the organisation_id (for SMS)
+                    contact_method: the contact method
             """
 
             # Get the recipient's contact info
@@ -946,11 +954,12 @@ class S3Msg:
         """
             Push the message relating to google cloud messaging server
 
-            @param title: The title for notification
-            @param message: The message to be sent to GCM server
-            @param api_key: The API key for GCM server
-            @param registration_ids: The list of id that will be notified
-            @param channel_id: The specific channel_id to use for GCM push
+            Args:
+                title: The title for notification
+                message: The message to be sent to GCM server
+                api_key: The API key for GCM server
+                registration_ids: The list of id that will be notified
+                channel_id: The specific channel_id to use for GCM push
         """
 
         if not title or not uri or not message or not len(registration_ids):
@@ -1071,8 +1080,11 @@ class S3Msg:
             Sanitize the email sender string to prevent MIME-encoding
             of the from-address (RFC2047)
 
-            @param: the sender-string
-            @returns: the sanitized sender-string
+            Args:
+                sender: the sender-string
+
+            Returns:
+                The sanitized sender-string
         """
 
         if not sender:
@@ -1120,15 +1132,17 @@ class S3Msg:
         """
             Function to create an OpenGeoSMS
 
-            @param: location_id - reference to record in gis_location table
-            @param: code - the type of OpenGeoSMS:
-                S = Sahana
-                SI = Incident Report
-                ST = Task Dispatch
-            @param: map: "google" or "osm"
-            @param: text - the rest of the message
+            Args:
+                location_id: reference to record in gis_location table
+                code: the type of OpenGeoSMS:
+                        S = Sahana
+                        SI = Incident Report
+                        ST = Task Dispatch
+                map: "google" or "osm"
+                text: the rest of the message
 
-            Returns the formatted OpenGeoSMS or None if it can't find
+            Returns:
+                The formatted OpenGeoSMS or None if it can't find
                 an appropriate location
         """
 
@@ -1143,7 +1157,7 @@ class S3Msg:
                                     table.lon,
                                     #table.path,
                                     #table.parent,
-                                    limitby = (0, 1)
+                                    limitby = (0, 1),
                                     ).first()
         if not location:
             return text
@@ -1169,9 +1183,13 @@ class S3Msg:
     @staticmethod
     def parse_opengeosms(message):
         """
-           Function to parse an OpenGeoSMS
-           @param: message - Inbound message to be parsed for OpenGeoSMS.
-           Returns the lat, lon, code and text contained in the message.
+            Function to parse an OpenGeoSMS
+
+            Args:
+                message: Inbound message to be parsed for OpenGeoSMS.
+
+            Returns:
+                The lat, lon, code and text contained in the message.
         """
 
         lat = ""
@@ -1543,7 +1561,8 @@ class S3Msg:
             - falls back to @mention (leaves less characters for the message).
             Breaks long text to chunks if needed.
 
-            @ToDo: Option to Send via Tropo
+            TODO:
+                Option to Send via Tropo
         """
 
         # Initialize Twitter API
@@ -1737,10 +1756,11 @@ class S3Msg:
             This is a simple mailbox polling script for the Messaging Module.
             It is normally called from the scheduler.
 
-            @ToDo: If there is a need to collect from non-compliant mailers
+            TODO:
+                If there is a need to collect from non-compliant mailers
                    then suggest using the robust Fetchmail to collect & store
                    in a more compliant mailer!
-            @ToDo: If delete_from_server is false, we don't want to download the
+                If delete_from_server is false, we don't want to download the
                    same messages repeatedly.  Perhaps record time of fetch runs
                    (or use info from the scheduler_run table), compare w/ message
                    timestamp, as a filter. That may not be completely accurate,
@@ -2730,23 +2750,24 @@ class S3Compose(S3CRUD):
         """
             API entry point
 
-            @param r: the S3Request instance
-            @param attr: controller attributes for the request
+            Args:
+                r: the S3Request instance
+                attr: controller attributes for the request
         """
 
         if r.http in ("GET", "POST"):
-            output = self.compose(r, **attr)
+            return self.compose(r, **attr)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
-        return output
 
     # -------------------------------------------------------------------------
     def compose(self, r, **attr):
         """
             Generate a form to send a message
 
-            @param r: the S3Request instance
-            @param attr: controller attributes for the request
+            Args:
+                r: the S3Request instance
+                attr: controller attributes for the request
         """
 
         T = current.T
@@ -3031,8 +3052,8 @@ class S3Compose(S3CRUD):
                 # - permission sets (inc realms) should only be applied to the instances, not the super-entity
                 pe_field.widget = S3PentityAutocompleteWidget()
 
-            pe_field.comment = DIV(_class="tooltip",
-                                   _title="%s|%s" % \
+            pe_field.comment = DIV(_class = "tooltip",
+                                   _title = "%s|%s" % \
                 (T("Recipients"),
                  T("Please enter the first few letters of the Person/Group for the autocomplete.")))
 

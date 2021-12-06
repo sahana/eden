@@ -50,7 +50,7 @@ from s3.s3parser import S3Parsing
 from s3.s3utils import soundex
 
 # =============================================================================
-class S3Parser(object):
+class S3Parser:
     """
        Message Parsing Template
     """

@@ -39,7 +39,7 @@ from gluon import current
 from s3.s3parser import S3Parsing
 
 # =============================================================================
-class S3Parser(object):
+class S3Parser:
     """
        Message Parsing Template.
     """

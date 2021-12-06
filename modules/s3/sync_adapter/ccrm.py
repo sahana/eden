@@ -43,7 +43,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
     """
         CiviCRM Synchronization Adapter
 
-        @status: experimental
+        Status:
+            Experimental
     """
 
     # Resource map
@@ -61,7 +62,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
             Register this site at the peer repository
 
-            @return: True to indicate success, otherwise False
+            Returns:
+                True to indicate success, otherwise False
         """
 
         # CiviCRM does not support via-web peer registration
@@ -72,7 +74,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
             Login at the peer repository
 
-            @return: None if successful, otherwise the error
+            Returns:
+                None if successful, otherwise the error
         """
 
         _debug = current.log.debug
@@ -116,10 +119,12 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             Fetch updates from the peer repository and import them
             into the local database (active pull)
 
-            @param task: the synchronization task (sync_task Row)
-            @param onconflict: callback for automatic conflict resolution
+            Args:
+                task: the synchronization task (sync_task Row)
+                onconflict: callback for automatic conflict resolution
 
-            @return: tuple (error, mtime), with error=None if successful,
+            Returns:
+                tuple (error, mtime), with error=None if successful,
                      else error=message, and mtime=modification timestamp
                      of the youngest record sent
         """
@@ -259,9 +264,11 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             Extract new updates from the local database and send
             them to the peer repository (active push)
 
-            @param task: the synchronization task (sync_task Row)
+            Args:
+                task: the synchronization task (sync_task Row)
 
-            @return: tuple (error, mtime), with error=None if successful,
+            Returns:
+                tuple (error, mtime), with error=None if successful,
                      else error=message, and mtime=modification timestamp
                      of the youngest record sent
         """

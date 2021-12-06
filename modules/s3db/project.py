@@ -12860,7 +12860,7 @@ def project_activity_year_options():
     return years
 
 # =============================================================================
-class ProjectThemeVirtualFields(object):
+class ProjectThemeVirtualFields:
     """
         Virtual fields for the project table
 

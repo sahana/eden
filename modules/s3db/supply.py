@@ -2307,7 +2307,7 @@ def supply_item_rheader(r):
     return None
 
 # =============================================================================
-class SupplyItemPackQuantity(object):
+class SupplyItemPackQuantity:
     """
         Field method for pack quantity of an item, used in req and inv
     """
