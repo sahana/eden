@@ -56,9 +56,6 @@ class S3Log(object):
     """
 
     def __init__(self):
-        """
-            Constructor
-        """
 
         settings = current.deployment_settings
 
@@ -175,9 +172,10 @@ class S3Log(object):
         """
             Log a message
 
-            @param severity: the severity of the message
-            @param message: the message
-            @param value: message suffix (optional)
+            Args:
+                severity: the severity of the message
+                message: the message
+                value: message suffix (optional)
         """
 
         logger = logging.getLogger(__name__)
@@ -200,8 +198,9 @@ class S3Log(object):
             Log a critical message (highest severity level),
             called via current.log.critical()
 
-            @param message: the message
-            @param value: message suffix (optional)
+            Args:
+                message: the message
+                value: message suffix (optional)
         """
 
         cls._log(logging.CRITICAL, message, value=value)
@@ -213,8 +212,9 @@ class S3Log(object):
             Log an error message,
             called via current.log.error()
 
-            @param message: the message
-            @param value: message suffix (optional)
+            Args:
+                message: the message
+                value: message suffix (optional)
         """
 
         cls._log(logging.ERROR, message, value=value)
@@ -226,8 +226,9 @@ class S3Log(object):
             Log a warning message,
             called via current.log.warning()
 
-            @param message: the message
-            @param value: message suffix (optional)
+            Args:
+                message: the message
+                value: message suffix (optional)
         """
 
         cls._log(logging.WARNING, message, value=value)
@@ -239,8 +240,9 @@ class S3Log(object):
             Log an general info message,
             called via current.log.info()
 
-            @param message: the message
-            @param value: message suffix (optional)
+            Args:
+                message: the message
+                value: message suffix (optional)
         """
 
         cls._log(logging.INFO, message, value=value)
@@ -252,8 +254,9 @@ class S3Log(object):
             Log a detailed debug message (lowest severity level),
             called via current.log.debug()
 
-            @param message: the message
-            @param value: message suffix (optional)
+            Args:
+                message: the message
+                value: message suffix (optional)
         """
 
         cls._log(logging.DEBUG, message, value=value)

@@ -343,9 +343,11 @@ class DocumentLibrary(S3Model):
         """
             File representation
 
-            @param filename: the stored file name (field value)
+            Args:
+                filename: the stored file name (field value)
 
-            @return: a link to download the file
+            Returns:
+                A (link to download the file)
         """
 
         if filename:
@@ -629,7 +631,8 @@ def doc_image_represent(filename):
     """
         Represent an image as a clickable thumbnail
 
-        @param filename: name of the image file
+        Args:
+            filename: name of the image file
     """
 
     if not filename:
@@ -667,14 +670,18 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
     """
         Default dataList item renderer for Documents, e.g. on the HRM Profile
 
-        NB The CSS classes here refer to static/themes/bootstrap/cards.css & newsfeed.css
-        - so this CSS either needs moving to core or else this needs modifying for default CSS
+        Args:
+            list_id: the HTML ID of the list
+            item_id: the HTML ID of the item
+            resource: the S3Resource to render
+            rfields: the S3ResourceFields to render
+            record: the record as dict
 
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
+        Note:
+            The CSS classes here refer to static/themes/bootstrap/cards.css &
+            newsfeed.css
+            - so this CSS either needs moving to core or else this needs
+              modifying for default CSS
     """
 
     record_id = record["doc_document.id"]
@@ -724,11 +731,11 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
     table = current.s3db.doc_document
     if permit("update", table, record_id=record_id):
         edit_btn = A(ICON("edit"),
-                     _href=URL(c="doc", f="document",
-                               args = [record_id, "update.popup"],
-                               vars = {"refresh": list_id,
-                                       "record": record_id,
-                                       }),
+                     _href = URL(c="doc", f="document",
+                                 args = [record_id, "update.popup"],
+                                 vars = {"refresh": list_id,
+                                         "record": record_id,
+                                         }),
                      _class = "s3_modal",
                      _title = current.T("Edit Document"),
                      )
@@ -778,9 +785,10 @@ class doc_DocumentRepresent(S3Represent):
         """
             Represent a (key, value) as hypertext link.
 
-            @param k: the key (doc_document.id)
-            @param v: the representation of the key
-            @param row: the row with this key
+            Args:
+                k: the key (doc_document.id)
+                v: the representation of the key
+                row: the row with this key
         """
 
         if row:
@@ -843,7 +851,8 @@ def doc_filetype(filename):
         Takes a filename and returns a category based on the file type.
         Categories: word, excel, powerpoint, flash, pdf, image, video, audio, archive, other.
 
-        Used by ck_browse.html
+        Used by:
+            ck_browse.html
     """
 
     ftype = "other"
@@ -996,9 +1005,10 @@ class DataCardModel(S3Model):
         """
             Make sure each card type can be defined only once per org
 
-            @param record_id: the current doc_card_config record ID
-                              (when currently editing a record)
-            @param organisation_id: the organisation record ID
+            Args:
+                record_id: the current doc_card_config record ID
+                           (when currently editing a record)
+                organisation_id: the organisation record ID
         """
 
         s3db = current.s3db

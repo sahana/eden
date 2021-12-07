@@ -369,10 +369,11 @@ class subscriptions(S3CustomController):
         """
             Custom form to manage subscriptions
 
-            @param resources: available resources config
-            @param filters: subscription filter widgets
-            @param recipient_filters: recipient filter widgets
-            @param group_filters: pr_group filter widgets
+            Args:
+                resources: available resources config
+                filters: subscription filter widgets
+                recipient_filters: recipient filter widgets
+                group_filters: pr_group filter widgets
         """
 
         from gluon import redirect, IS_IN_SET
@@ -1432,11 +1433,12 @@ $('#method_selector').change(function(){
         """
             Update synchronization settings
 
-            @param resource: available resources config
-            @param filters: filter applied on the resource
-            @param selected_repository_id: repository that is under current selection
-            @param properties: comment field of the pr_subscription; used to
-                               store the ids of FTP Sync
+            Args:
+                resource: available resources config
+                filters: filter applied on the resource
+                selected_repository_id: repository that is under current selection
+                properties: comment field of the pr_subscription; used to
+                            store the ids of FTP Sync
 
         """
 
@@ -1571,9 +1573,11 @@ $('#method_selector').change(function(){
         """
             Get the PE-ID for list of group_ids
 
-            @param group_ids: the list of group_ids
+            Args:
+                group_ids: the list of group_ids
 
-            @return: dictionary of pe_id and group_id
+            Returns:
+                dict {pe_id: group_id}
         """
 
         if group_ids:

@@ -211,11 +211,12 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     """
         dataList item renderer for Posts on the Bulletin Board.
 
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
+        Args:
+            list_id: the HTML ID of the list
+            item_id: the HTML ID of the item
+            resource: the S3Resource to render
+            rfields: the S3ResourceFields to render
+            record: the record as dict
     """
 
     record_id = record["cms_post.id"]
@@ -733,7 +734,8 @@ class project_ActivityRepresent(S3Represent):
             key and fields are not used, but are kept for API
             compatibility reasons.
 
-            @param values: the activity IDs
+            Args:
+                values: the activity IDs
         """
 
         s3db = current.s3db
@@ -765,7 +767,8 @@ class project_ActivityRepresent(S3Represent):
         """
             Represent a single Row
 
-            @param row: the project_activity Row
+            Args:
+                row: the project_activity Row
         """
 
         # Custom Row (with the Orgs left-joined)
@@ -806,7 +809,8 @@ class need_NeedRepresent(S3Represent):
             key and fields are not used, but are kept for API
             compatibility reasons.
 
-            @param values: the need IDs
+            Args:
+                values: the need IDs
         """
 
         s3db = current.s3db
@@ -838,7 +842,8 @@ class need_NeedRepresent(S3Represent):
         """
             Represent a single Row
 
-            @param row: the need_need Row
+            Args:
+                row: the need_need Row
         """
 
         # Custom Row (with the tag left-joined)

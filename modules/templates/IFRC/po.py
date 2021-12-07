@@ -210,7 +210,8 @@ class OutreachAreaModel(S3Model):
         """
             Update affiliations for an area
 
-            @param record: the area record
+            Args:
+                record: the area record
         """
 
         ROLE = "Areas"
@@ -961,14 +962,14 @@ class po_HouseholdRepresent(S3Represent):
 
     def __init__(self, show_link=True):
         """
-            Constructor
-
-            @param show_link: whether to add a URL to representations
+            Args:
+                show_link: whether to add a URL to representations
         """
 
-        super(po_HouseholdRepresent, self).__init__(
-                                        lookup = "po_household",
-                                        show_link = show_link)
+        super(po_HouseholdRepresent,
+              self).__init__(lookup = "po_household",
+                             show_link = show_link,
+                             )
 
         self.location_represent = \
                 current.s3db.gis_LocationRepresent(address_only=True,
@@ -980,9 +981,10 @@ class po_HouseholdRepresent(S3Represent):
         """
             Custom rows lookup
 
-            @param key: the key Field
-            @param values: the values
-            @param fields: unused (retained for API compatibility)
+            Args:
+                key: the key Field
+                values: the values
+                fields: unused (retained for API compatibility)
         """
 
         table = self.table
@@ -1011,7 +1013,8 @@ class po_HouseholdRepresent(S3Represent):
         """
             Represent a row
 
-            @param row: the Row
+            Args:
+                row: the Row
         """
 
         # Represent household as its address
@@ -1086,7 +1089,9 @@ def po_organisation_onaccept(form):
            agencies in the household referrals dropdown
         2. Create a po_referral_organisation record onaccept of
            an org_organisation to link it to this module.
-        @param form: the form
+
+        Args:
+            form: the form
     """
 
     try:

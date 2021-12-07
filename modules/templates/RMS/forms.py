@@ -194,11 +194,12 @@ def header_row_(left, right, row=None, labels=None):
 
         Used by inv_req_form, grn_hnrc and waybill_hnrc
 
-        @param left: the column name for the left column
-        @param right: the column name for the right column,
-                      or None for an empty column
-        @param row: the S3ResourceData row
-        @param labels: dict of labels {colname: label}
+        Args:
+            left: the column name for the left column
+            right: the column name for the right column,
+                   or None for an empty column
+            row: the S3ResourceData row
+            labels: dict of labels {colname: label}
     """
 
     if right:
@@ -222,11 +223,12 @@ def json_data_(component, list_fields, aggregate=None):
 
         Used by inv_req_form, grn_hnrc and waybill_hnrc
 
-        @param component: the component (S3Resource)
-        @param list_fields: the columns for the form body
-                            (list of field selectors)
-        @param aggregate: aggregation methods and fields,
-                          a list of tuples (method, column name)
+        Args:
+            component: the component (S3Resource)
+            list_fields: the columns for the form body
+                         (list of field selectors)
+            aggregate: aggregation methods and fields,
+                       a list of tuples (method, column name)
     """
 
     # Extract the data
@@ -266,8 +268,9 @@ def grn(r, **attr):
 
         Using ReportLab's PLATYPUS direct
 
-        @param r: the S3Request instance
-        @param attr: controller attributes
+        Args:
+            r: the S3Request instance
+            attr: controller attributes
     """
 
     # Styles
@@ -962,8 +965,9 @@ def stock_card(r, **attr):
 
         Using ReportLab's PLATYPUS direct
 
-        @param r: the S3Request instance
-        @param attr: controller attributes
+        Args:
+            r: the S3Request instance
+            attr: controller attributes
     """
 
     # Styles
@@ -1516,8 +1520,9 @@ def waybill(r, **attr):
 
         Using ReportLab's PLATYPUS direct
 
-        @param r: the S3Request instance
-        @param attr: controller attributes
+        Args:
+            r: the S3Request instance
+            attr: controller attributes
     """
 
     # Styles
@@ -2330,8 +2335,9 @@ def grn_hnrc(r, **attr):
     """
         GRN (Goods Received Note) for HNRC: Honduran Red Cross
 
-        @param r: the S3Request instance
-        @param attr: controller attributes
+        Args:
+            r: the S3Request instance
+            attr: controller attributes
     """
 
     T = current.T
@@ -2452,7 +2458,8 @@ def grn_hnrc_footer(r):
     """
         Footer for Goods Received Notes for HNRC: Honduran Red Cross
 
-        @param r: the S3Request
+        Args:
+            r: the S3Request
     """
 
     T = current.T
@@ -2480,8 +2487,9 @@ def waybill_hnrc(r, **attr):
     """
         Waybill for HNRC
 
-        @param r: the S3Request instance
-        @param attr: controller attributes
+        Args:
+            r: the S3Request instance
+            attr: controller attributes
     """
 
     T = current.T
@@ -2637,7 +2645,8 @@ def waybill_hnrc_footer(r):
     """
         Footer for Waybills for HNRC
 
-        @param r: the S3Request
+        Args:
+            r: the S3Request
     """
 
     T = current.T

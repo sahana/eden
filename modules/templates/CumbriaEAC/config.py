@@ -2697,11 +2697,12 @@ def config(settings):
             cannot be expressed as components due to conflict between the master
             pr_person & the NoK pr_person
 
-            @param records: list of selected data
-            @param rfields: list of S3ResourceFields in the records
-            @param represent: records contain represented data
-            @param as_rows: records are bare Rows rather than extracted
-                            Storage
+            Args:
+                records: list of selected data
+                rfields: list of S3ResourceFields in the records
+                represent: records contain represented data
+                as_rows: records are bare Rows rather than extracted
+                         Storage
         """
 
         db = current.db
@@ -3562,9 +3563,11 @@ class cr_ShelterReportRepresent(S3ReportRepresent):
         """
             Represent record_ids (custom)
 
-            @param record_ids: shelter record IDs
+            Args:
+                record_ids: shelter record IDs
 
-            @returns: a JSON-serializable dict {recordID: representation}
+            Returns:
+                JSON-serializable dict {recordID: representation}
         """
 
         db = current.db
@@ -3606,12 +3609,14 @@ class pr_Household(S3CRUD):
         """
             Entry point for the REST interface
 
-            @param r: the S3Request
-            @param method: the method established by the REST interface
-            @param widget_id: widget ID
-            @param attr: dict of parameters for the method handler
+            Args:
+                r: the S3Request
+                method: the method established by the REST interface
+                widget_id: widget ID
+                attr: dict of parameters for the method handler
 
-            @return: output object to send to the view
+            Returns:
+                output object to send to the view
         """
 
         # Environment of the request

@@ -725,9 +725,11 @@ class CMSContentModel(S3Model):
             or online documentation):
                 - same name and series => same post
 
-            @param item: the import item
+            Args:
+                item: the import item
 
-            @todo: if no name present => use cms_post_module component
+            TODO:
+                If no name present => use cms_post_module component
                    to identify updates (also requires deduplication of
                    cms_post_module component)
         """
@@ -1454,9 +1456,10 @@ def cms_documentation(r, default_page, default_url):
     """
         Render an online documentation page, to be called from prep
 
-        @param r: the S3Request
-        @param default_page: the default page name
-        @param default_url: the default URL if no contents found
+        Args:
+            r: the S3Request
+            default_page: the default page name
+            default_url: the default URL if no contents found
     """
 
     row = r.record
@@ -1502,10 +1505,12 @@ class S3CMS(S3Method):
             Entry point to apply cms method to S3Requests
             - produces a full page with a Richtext widget
 
-            @param r: the S3Request
-            @param attr: dictionary of parameters for the method handler
+            Args:
+                r: the S3Request
+                attr: dictionary of parameters for the method handler
 
-            @return: output object to send to the view
+            Returns:
+                output object to send to the view
         """
 
         # Not Implemented
@@ -1517,11 +1522,13 @@ class S3CMS(S3Method):
             Render a Rich Text widget suitable for use in a page such as
             S3Summary
 
-            @param method: the widget method
-            @param r: the S3Request
-            @param attr: controller attributes
+            Args:
+                method: the widget method
+                r: the S3Request
+                attr: controller attributes
 
-            @ToDo: Support comments
+            TODO:
+                Support comments
         """
 
         if not current.deployment_settings.has_module("cms"):
@@ -1543,12 +1550,13 @@ class S3CMS(S3Method):
         """
             Render resource-related CMS contents
 
-            @param module: the module prefix
-            @param resource: the resource name (without prefix)
-            @param record: the record ID (optional)
-            @param widget_id: the DOM node ID for the CMS widget
-            @param hide_if_empty: return an empty string when there is no
-                                  contents rather than a blank DIV
+            Args:
+                module: the module prefix
+                resource: the resource name (without prefix)
+                record: the record ID (optional)
+                widget_id: the DOM node ID for the CMS widget
+                hide_if_empty: return an empty string when there is no
+                               contents rather than a blank DIV
         """
 
         db = current.db
@@ -1734,11 +1742,12 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         Default dataList item renderer for CMS Posts on the
         Home & News Feed pages.
 
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
+        Args:
+            list_id: the HTML ID of the list
+            item_id: the HTML ID of the item
+            resource: the S3Resource to render
+            rfields: the S3ResourceFields to render
+            record: the record as dict
     """
 
     record_id = record["cms_post.id"]
@@ -2200,12 +2209,13 @@ class cms_Calendar(S3Method):
     """
         Display Posts on a Calendar format
 
-       @ToDo: Customisable Date Range
-                - currently hardcoded to 1 day in past, today & 5 days ahead
-       @ToDo: Interactive version
-                - drag/drop entries
-                - edit entries
-       @ToDo: PDF/XLS representations
+        TODO:
+            Customisable Date Range
+            - currently hardcoded to 1 day in past, today & 5 days ahead
+            Interactive version
+            - drag/drop entries
+            - edit entries
+            PDF/XLS representations
     """
 
     # -------------------------------------------------------------------------
@@ -2213,8 +2223,9 @@ class cms_Calendar(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "post":
@@ -2383,8 +2394,9 @@ class cms_TagList(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.representation == "json":

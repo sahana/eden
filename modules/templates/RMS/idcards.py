@@ -30,9 +30,11 @@ class IDCardLayout(S3PDFCardLayout):
         """
             The layout-specific list of fields to look up from the resource
 
-            @param resource: the resource
+            Args:
+                resource: the resource
 
-            @returns: list of field selectors
+            Returns:
+                list of field selectors
         """
 
         return ["id",
@@ -56,10 +58,12 @@ class IDCardLayout(S3PDFCardLayout):
         """
             Look up layout-specific common data for all cards
 
-            @param resource: the resource
-            @param items: the items
+            Args:
+                resource: the resource
+                items: the items
 
-            @returns: a dict with common data
+            Returns:
+                dict with common data
         """
 
         db = current.db
@@ -366,11 +370,12 @@ class IDCardLayout(S3PDFCardLayout):
             Helper function to draw a centered field value of self.item above
             position (x, y)
 
-            @param x: drawing position
-            @param y: drawing position
-            @param colname: the column name of the field to look up the value
-            @param size: the font size (points)
-            @param bold: use bold font
+            Args:
+                x: drawing position
+                y: drawing position
+                colname: the column name of the field to look up the value
+                size: the font size (points)
+                bold: use bold font
         """
 
         c = self.canv
@@ -389,17 +394,19 @@ class IDCardLayout(S3PDFCardLayout):
             allows the text to wrap if it would otherwise exceed the given
             width
 
-            @param x: drawing position
-            @param y: drawing position
-            @param value: the text to render
-            @param width: the maximum available width (points)
-            @param height: the maximum available height (points)
-            @param size: the font size (points)
-            @param bold: use bold font
-            @param valign: vertical alignment ("top"|"middle"|"bottom"),
-                           default "bottom"
+            Args:
+                x: drawing position
+                y: drawing position
+                value: the text to render
+                width: the maximum available width (points)
+                height: the maximum available height (points)
+                size: the font size (points)
+                bold: use bold font
+                valign: vertical alignment ("top"|"middle"|"bottom"),
+                        default "bottom"
 
-            @returns: the actual height of the text element drawn
+            Returns:
+                The actual height of the text element drawn
         """
 
         # Preserve line breaks by replacing them with <br/> tags
@@ -438,11 +445,12 @@ class IDCardLayout(S3PDFCardLayout):
         """
             Helper function to draw a centered label below position (x, y)
 
-            @param x: drawing position
-            @param y: drawing position
-            @param colname: the column name of the field to look up the label
-            @param default: the default label (if label cannot be looked up),
-                            pass colname=None to enforce using the default
+            Args:
+                x: drawing position
+                y: drawing position
+                colname: the column name of the field to look up the label
+                default: the default label (if label cannot be looked up),
+                         pass colname=None to enforce using the default
         """
 
         if colname:

@@ -1381,24 +1381,20 @@ class auth_UserRepresent(S3Represent):
                  show_link = True,
                  ):
         """
-            Constructor
-
-            @param labels: callable to render the name part
-                           (defaults to s3_fullname)
-            @param linkto: a URL (as string) to link representations to,
-                           with "[id]" as placeholder for the key
-                           (defaults see pr_PersonRepresent)
-
-            @param show_name: include name in representation
-            @param show_email: include email address in representation
-            @param show_phone: include phone number in representation
-
-            @param access: access level for contact details,
-                           None = ignore access level
-                           1 = show private only
-                           2 = show public only
-
-            @param show_link: render as HTML hyperlink
+            Args:
+                labels: callable to render the name part
+                        (defaults to s3_fullname)
+                linkto: a URL (as string) to link representations to,
+                        with "[id]" as placeholder for the key
+                        (defaults see pr_PersonRepresent)
+                show_name: include name in representation
+                show_email: include email address in representation
+                show_phone: include phone number in representation
+                access: access level for contact details:
+                        None = ignore access level
+                        1 = show private only
+                        2 = show public only
+                show_link: render as HTML hyperlink
         """
 
         if labels is None:
@@ -1424,7 +1420,8 @@ class auth_UserRepresent(S3Represent):
         """
             Represent a row
 
-            @param row: the Row
+            Args:
+                row: the Row
         """
 
         if self.show_name:
@@ -1465,9 +1462,10 @@ class auth_UserRepresent(S3Represent):
         """
             Custom rows lookup
 
-            @param key: the key Field
-            @param values: the values
-            @param fields: unused (retained for API compatibility)
+            Args:
+                key: the key Field
+                values: the values
+                fields: unused (retained for API compatibility)
         """
 
         # Lookup pe_ids and name fields

@@ -503,19 +503,18 @@ class S3PopupLink(S3NavigationItem):
                  _id = None,
                  ):
         """
-            Constructor
-
-            @param c: the target controller
-            @param f: the target function
-            @param t: the target table (defaults to c_f)
-            @param m: the URL method (will be appended to args)
-            @param args: the argument list
-            @param vars: the request vars (format="popup" will be added automatically)
-            @param label: the link label (falls back to label_create)
-            @param info: hover-title for the label
-            @param title: the tooltip title
-            @param tooltip: the tooltip text
-            @param _id: the HTML ID of the button
+            Args:
+                c: the target controller
+                f: the target function
+                t: the target table (defaults to c_f)
+                m: the URL method (will be appended to args)
+                args: the argument list
+                vars: the request vars (format="popup" will be added automatically)
+                label: the link label (falls back to label_create)
+                info: hover-title for the label
+                title: the tooltip title
+                tooltip: the tooltip text
+                _id: the HTML ID of the button
         """
 
         if label is None:
@@ -617,9 +616,10 @@ def homepage(module=None, *match, **attr):
         Shortcut for module homepage menu items using the MM layout,
         retrieves the module's nice name.
 
-        @param module: the module's prefix (controller)
-        @param match: additional prefixes
-        @param attr: attributes for the navigation item
+        Args:
+            module: the module's prefix (controller)
+            match: additional prefixes
+            attr: attributes for the navigation item
     """
 
     settings = current.deployment_settings

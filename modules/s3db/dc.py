@@ -1634,9 +1634,11 @@ class dc_TargetReport(S3Method):
         Results in charts for quantitative questions and
                    full text of the qualitative answers
 
-        Used by IFRC bkk_training_evaluation
+        Used by:
+            IFRC bkk_training_evaluation
 
-        @ToDo: Add support for Grids
+        TODO:
+            Add support for Grids
     """
 
     # -------------------------------------------------------------------------
@@ -1644,8 +1646,9 @@ class dc_TargetReport(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "target":

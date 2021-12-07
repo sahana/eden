@@ -392,9 +392,11 @@ def config(settings):
             Provide context information for a masterkey (populates session
             in mobile app when linking to this masterkey)
 
-            @param masterkey: the auth_masterkey Row
+            Args:
+                masterkey: the auth_masterkey Row
 
-            @returns: a JSON-serializable dict with the context data
+            Returns:
+                JSON-serializable dict with the context data
         """
 
         db = current.db

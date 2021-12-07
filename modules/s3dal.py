@@ -91,7 +91,8 @@ class S3DAL(object):
             Get the original name of an aliased table, with fallback
             cascade for PyDAL < 17.01
 
-            @param table: the Table
+            Args:
+                table: the Table
         """
 
         try:

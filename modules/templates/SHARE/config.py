@@ -2505,9 +2505,11 @@ class NeedResponseLineReportRepresent(S3ReportRepresent):
         """
             Represent record_ids (custom)
 
-            @param record_ids: need_response_line record IDs
+            Args:
+                record_ids: need_response_line record IDs
 
-            @returns: a JSON-serializable dict {recordID: representation}
+            Returns:
+                JSON-serializable dict {recordID: representation}
         """
 
         # Represent the location IDs

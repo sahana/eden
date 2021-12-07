@@ -375,8 +375,9 @@ class organisationApply(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "organisation" and \
@@ -549,8 +550,9 @@ class organisationApplication(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "organisation" and \
@@ -873,8 +875,9 @@ class personAdditional(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "person" and \
@@ -1127,8 +1130,9 @@ class personAffiliation(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "person" and \
@@ -3410,11 +3414,12 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         Default dataList item renderer for CMS Posts on the
         Home & News Feed pages.
 
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
+        Args:
+            list_id: the HTML ID of the list
+            item_id: the HTML ID of the item
+            resource: the S3Resource to render
+            rfields: the S3ResourceFields to render
+            record: the record as dict
     """
 
     record_id = record["cms_post.id"]

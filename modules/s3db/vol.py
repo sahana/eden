@@ -512,7 +512,8 @@ def vol_activity_hours_month(row):
 
         Requires "date" to be in the additional report_fields
 
-        @param row: the Row
+        Args:
+            row: the Row
     """
 
     try:
@@ -724,9 +725,11 @@ class VolunteerAwardModel(S3Model):
         """
             File representation
 
-            @param filename: the stored file name (field value)
+            Args:
+                filename: the stored file name (field value)
 
-            @return: a link to download the file
+            Returns:
+                A (link to download the file)
         """
 
         if filename:
@@ -738,7 +741,10 @@ class VolunteerAwardModel(S3Model):
                 return current.T("File not found")
             else:
                 return A(origname,
-                         _href=URL(c="default", f="download", args=[filename]))
+                         _href = URL(c="default", f="download",
+                                     args = [filename],
+                                     ),
+                         )
         else:
             return NONE
 

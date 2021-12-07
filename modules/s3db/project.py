@@ -6364,9 +6364,11 @@ def project_planning_status_update(project_id):
             project_outcome (weightings may have changed)
             project_goal (weightings may have changed)
 
-        @param project_id: the ID of the project record to update
+        Args:
+            project_id: the ID of the project record to update
 
-        @ToDo: Handle deployment_settings for which levels are exposed
+        TODO:
+            Handle deployment_settings for which levels are exposed
     """
 
     db = current.db
@@ -7152,8 +7154,9 @@ class project_SummaryReport(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "project":
@@ -7172,7 +7175,8 @@ class project_SummaryReport(S3Method):
         """
             Extract the Data
 
-            @ToDo: Read the filters from the HTML view
+            TODO:
+                Read the filters from the HTML view
         """
 
         db = current.db
@@ -8706,9 +8710,10 @@ class project_IndicatorSummaryReport(S3Method):
     """
         Display a Summary of the Indicator Statuses for the Project
 
-       @ToDo: PDF representation (CRMADA want)
-       @ToDo: Should we aggregate entries in the same Month?
-       @ToDo: Handle deployments which miss a step
+        TODO:
+            PDF representation (CRMADA want)
+            Should we aggregate entries in the same Month?
+            Handle deployments which miss a step
     """
 
     # -------------------------------------------------------------------------
@@ -8716,8 +8721,9 @@ class project_IndicatorSummaryReport(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "project":
@@ -12450,7 +12456,8 @@ class project_LocationRepresent(S3Represent):
             key and fields are not used, but are kept for API
             compatiblity reasons.
 
-            @param values: the project_location IDs
+            Args:
+                values: the project_location IDs
         """
 
         db = current.db
@@ -12493,7 +12500,8 @@ class project_LocationRepresent(S3Represent):
         """
             Represent a single Row
 
-            @param row: the joined Row
+            Args:
+                row: the joined Row
         """
 
         community = self.community
@@ -12641,14 +12649,15 @@ class project_TaskRepresent(S3Represent):
                  show_project = False,
                  project_first = True):
         """
-            Constructor
-
-            @param show_link: render representation as link to the task
-            @param show_project: show the project name in the representation
-            @param project_first: show the project name before the task name
+            Args:
+                show_link: render representation as link to the task
+                show_project: show the project name in the representation
+                project_first: show the project name before the task name
         """
 
-        task_url = URL(c="project", f="task", args=["[id]"])
+        task_url = URL(c="project", f="task",
+                       args = ["[id]"],
+                       )
 
         super(project_TaskRepresent, self).__init__(lookup = "project_task",
                                                     show_link = show_link,
@@ -12666,9 +12675,10 @@ class project_TaskRepresent(S3Represent):
         """
             Custom rows lookup
 
-            @param key: the key Field
-            @param values: the values
-            @param fields: unused (retained for API compatibility)
+            Args:
+                key: the key Field
+                values: the values
+                fields: unused (retained for API compatibility)
         """
 
         s3db = current.s3db
@@ -12705,7 +12715,8 @@ class project_TaskRepresent(S3Represent):
         """
             Represent a row
 
-            @param row: the Row
+            Args:
+                row: the Row
         """
 
         output = row["project_task.name"]
@@ -12768,7 +12779,8 @@ class project_ActivityRepresent(S3Represent):
             key and fields are not used, but are kept for API
             compatibility reasons.
 
-            @param values: the activity IDs
+            Args:
+                values: the activity IDs
         """
 
         s3db = current.s3db
@@ -12799,7 +12811,8 @@ class project_ActivityRepresent(S3Represent):
         """
             Represent a single Row
 
-            @param row: the project_activity Row
+            Args:
+                row: the project_activity Row
         """
 
         if self.code:
@@ -12915,7 +12928,8 @@ def project_time_day(row):
 
         Requires "date" to be in the additional report_fields
 
-        @param row: the Row
+        Args:
+            row: the Row
     """
 
     try:
@@ -12942,7 +12956,8 @@ def project_time_week(row):
 
         Requires "date" to be in the additional report_fields
 
-        @param row: the Row
+        Args:
+            row: the Row
     """
 
     try:
@@ -13310,7 +13325,8 @@ class project_IndicatorActivityRepresent(S3Represent):
             the activity. Parameters key and fields are not used, but are kept
             for API compatibility reasons.
 
-            @param values: the indicator_activity IDs
+            Args:
+                values: the indicator_activity IDs
         """
 
         s3db = current.s3db
@@ -13343,7 +13359,8 @@ class project_IndicatorActivityRepresent(S3Represent):
         """
             Represent a single Row
 
-            @param row: the project_indicator_activity Row
+            Args:
+                row: the project_indicator_activity Row
         """
 
         name = row["project_activity.name"]
@@ -13543,8 +13560,9 @@ def project_theme_help_fields(options):
     """
         Provide the tooltips for the Theme filter
 
-        @param options: the options to generate tooltips for, from
-                        S3GroupedOptionsWidget: list of tuples (key, represent)
+        Args:
+            options: the options to generate tooltips for, from
+                     S3GroupedOptionsWidget: list of tuples (key, represent)
     """
 
     table = current.s3db.project_theme
@@ -13563,8 +13581,9 @@ def project_hazard_help_fields(options):
     """
         Provide the tooltips for the Hazard filter
 
-        @param options: the options to generate tooltips for, from
-                        S3GroupedOptionsWidget: list of tuples (key, represent)
+        Args:
+            options: the options to generate tooltips for, from
+                     S3GroupedOptionsWidget: list of tuples (key, represent)
     """
 
     table = current.s3db.project_hazard
@@ -13655,7 +13674,8 @@ def project_project_filters(org_label):
     """
         Filter widgets for project_project
 
-        @param org_label: the label to use for organisation_id
+        Args:
+            org_label: the label to use for organisation_id
     """
 
     T = current.T
@@ -13784,11 +13804,12 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record,
     """
         Default dataList item renderer for Projects on Profile pages
 
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
+        Args:
+            list_id: the HTML ID of the list
+            item_id: the HTML ID of the item
+            resource: the S3Resource to render
+            rfields: the S3ResourceFields to render
+            record: the record as dict
     """
 
     raw = record._row
@@ -13901,11 +13922,12 @@ def project_activity_list_layout(list_id, item_id, resource, rfields, record,
     """
         Default dataList item renderer for Incidents on Profile pages
 
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
+        Args:
+            list_id: the HTML ID of the list
+            item_id: the HTML ID of the item
+            resource: the S3Resource to render
+            rfields: the S3ResourceFields to render
+            record: the record as dict
     """
 
     raw = record._row
@@ -14024,11 +14046,12 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
     """
         Default dataList item renderer for Tasks on Profile pages
 
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
+        Args:
+            list_id: the HTML ID of the list
+            item_id: the HTML ID of the item
+            resource: the S3Resource to render
+            rfields: the S3ResourceFields to render
+            record: the record as dict
     """
 
     raw = record._row
@@ -14196,10 +14219,9 @@ class project_Details(S3Method):
 
     def __init__(self, form=None):
         """
-            Constructor
-
-            @param form: widget config to inject at the top of the page,
-                         or a callable to produce such a widget config
+            Args:
+                form: widget config to inject at the top of the page,
+                      or a callable to produce such a widget config
         """
 
         super(project_Details, self).__init__()
@@ -14211,8 +14233,9 @@ class project_Details(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "project" and \

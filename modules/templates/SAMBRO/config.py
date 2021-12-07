@@ -773,10 +773,11 @@ def config(settings):
         """
             Custom Method to pre-render the contents for the message template
 
-            @param resource: the S3Resource
-            @param data: the data returned from S3Resource.select
-            @param meta_data: the meta data for the notification
-            @param format: the contents format ("text" or "html")
+            Args:
+                resource: the S3Resource
+                data: the data returned from S3Resource.select
+                meta_data: the meta data for the notification
+                format: the contents format ("text" or "html")
         """
 
         notify_on = meta_data["notify_on"]
@@ -834,9 +835,11 @@ def config(settings):
     def custom_msg_notify_subject(resource, data, meta_data):
         """
             Custom Method to subject for the email
-            @param resource: the S3Resource
-            @param data: the data returned from S3Resource.select
-            @param meta_data: the meta data for the notification
+
+            Args:
+                resource: the S3Resource
+                data: the data returned from S3Resource.select
+                meta_data: the meta data for the notification
         """
 
         rows = data["rows"]
@@ -861,9 +864,11 @@ def config(settings):
     def custom_msg_notify_attachment(resource, data, meta_data):
         """
             Custom Method to get the document_ids to be sent as attachment
-            @param resource: the S3Resource
-            @param data: the data returned from S3Resource.select
-            @param meta_data: the meta data for the notification
+
+            Args:
+                resource: the S3Resource
+                data: the data returned from S3Resource.select
+                meta_data: the meta data for the notification
         """
 
         rows = data["rows"]
@@ -882,9 +887,11 @@ def config(settings):
     def custom_msg_notify_send_data(resource, data, meta_data):
         """
             Custom Method to send data containing alert_id to the s3msg.send_by_pe_id
-            @param resource: the S3Resource
-            @param data: the data returned from S3Resource.select
-            @param meta_data: the meta data for the notification
+
+            Args:
+                resource: the S3Resource
+                data: the data returned from S3Resource.select
+                meta_data: the meta data for the notification
         """
 
         rows = data.rows
@@ -1108,11 +1115,12 @@ def config(settings):
     # -------------------------------------------------------------------------
     def get_html_email_content(row, ack_id=None, system=True):
         """
-            prepare the content for html email
+            Prepare the content for HTML email
 
-            @param row: the row from which the email will be constructed
-            @param ack_id: cap_alert_ack.id for including the acknowledgement link
-            @param system: is this system notification email or email for first responders
+            Args:
+                row: the row from which the email will be constructed
+                ack_id: cap_alert_ack.id for including the acknowledgement link
+                system: is this system notification email or email for first responders
         """
 
         itable = current.s3db.cap_info
@@ -1291,9 +1299,10 @@ def config(settings):
         """
             Prepare the content for SMS
 
-            @param row: the row from which the sms will be constructed
-            @param ack_id: cap_alert_ack.id for including the acknowledgement link
-            @param system: is this system notification email or email for first responders
+            Args:
+                row: the row from which the sms will be constructed
+                ack_id: cap_alert_ack.id for including the acknowledgement link
+                system: is this system notification email or email for first responders
         """
 
         itable = current.s3db.cap_info
@@ -1465,10 +1474,13 @@ T("""%(status)s %(message_type)s for %(area_description)s with %(priority)s prio
     def create_ack(alert_id, user_id):
         """
             Create a specific acknowledgement
-            @param alert_id: The particular alert ID for acknowledging
-            @param user_id: The user ID who owns the record
 
-            @todo: use location where the alert is targeted for
+            Args:
+                alert_id: The particular alert ID for acknowledging
+                user_id: The user ID who owns the record
+
+            TODO:
+                Use location where the alert is targeted for
         """
 
         ack_data = {"alert_id": alert_id,
@@ -1484,10 +1496,12 @@ T("""%(status)s %(message_type)s for %(area_description)s with %(priority)s prio
 
     # -------------------------------------------------------------------------
     def get_formatted_value(value,
-                            represent=None,
-                            system=True,
-                            ul=False):
-        """ For non-system notification returns the formatted represented value
+                            represent = None,
+                            system = True,
+                            ul = False,
+                            ):
+        """
+            For non-system notification returns the formatted represented value
         """
 
         if not value:
@@ -1527,9 +1541,11 @@ T("""%(status)s %(message_type)s for %(area_description)s with %(priority)s prio
             else creates CAP file as attachment to be sent with the
             email
 
-            @param alert_id: the cap_alert record ID
+            Args:
+                alert_id: the cap_alert record ID
 
-            @returns: the doc_id of the CAP file
+            Returns:
+                doc_id of the CAP file
         """
 
         s3db = current.s3db

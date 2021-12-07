@@ -385,7 +385,8 @@ class S3DynamicTablesModel(S3Model):
         """
             Set functions to call before write
 
-            @param table: the table (s3_table)
+            Args:
+                table: the table (s3_table)
         """
 
         update_default = cls.s3_table_name_update_default
@@ -400,9 +401,11 @@ class S3DynamicTablesModel(S3Model):
             Set a new default table name when the current default
             is written (to prevent duplicates, i.e. single-use default)
 
-            @param data: the data currently being written
+            Args:
+                data: the data currently being written
 
-            @returns: nothing (otherwise insert/update will not work)
+            Returns:
+                Nothing (otherwise insert/update will not work)
         """
 
         table = current.s3db.s3_table
@@ -421,10 +424,12 @@ class S3DynamicTablesModel(S3Model):
             Return a representation function for dynamic table names,
             renders the table name as a link to the table controller
 
-            @param c: the controller prefix
-            @param f: the function name
+            Args:
+                c: the controller prefix
+                f: the function name
 
-            @returns: function
+            Returns:
+                function
         """
 
         def represent(value):

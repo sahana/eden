@@ -627,7 +627,8 @@ class DeploymentModel(S3Model):
         """
             See if we can auto-populate the Date/Location/Event Type in imported records
 
-            @param form: the form
+            Args:
+                form: the form
         """
 
         if not current.response.s3.bulk:
@@ -699,7 +700,8 @@ class DeploymentModel(S3Model):
         """
             Create/update linked hrm_experience record for assignment
 
-            @param form: the form
+            Args:
+                form: the form
         """
 
         db = current.db
@@ -796,8 +798,9 @@ class DeploymentModel(S3Model):
         """
             Remove linked hrm_experience record
 
-            @param row: the link to be deleted
-            @param tablename: the tablename (ignored)
+            Args:
+                row: the link to be deleted
+                tablename: the tablename (ignored)
         """
 
         s3db = current.s3db
@@ -824,8 +827,9 @@ class DeploymentModel(S3Model):
         """
             Remove linked hrm_appraisal record
 
-            @param row: the link to be deleted
-            @param tablename: the tablename (ignored)
+            Args:
+                row: the link to be deleted
+                tablename: the tablename (ignored)
         """
 
         s3db = current.s3db
@@ -1311,7 +1315,8 @@ class DeploymentAlertModel(S3Model):
             Update the doc_id in all attachments (doc_document) to the
             hrm_human_resource the response is linked to.
 
-            @param form: the form
+            Args:
+                form: the form
         """
 
         form_vars = form.vars
@@ -1366,7 +1371,8 @@ def deploy_availability_filter(r):
             - called from prep of the respective controller
             - adds resource filter for r.resource
 
-        @param r: the S3Request
+        Args:
+            r: the S3Request
     """
 
     get_vars = r.get_vars
@@ -1687,8 +1693,9 @@ class deploy_Inbox(S3Method):
             Custom method for email inbox, provides a datatable with bulk-delete
             option
 
-            @param r: the S3Request
-            @param attr: the controller attributes
+            Args:
+                r: the S3Request
+                attr: the controller attributes
         """
 
         T = current.T
@@ -2662,7 +2669,6 @@ class deploy_MissionProfileLayout(S3DataListLayout):
 
     # -------------------------------------------------------------------------
     def __init__(self, profile="deploy_mission"):
-        """ Constructor """
 
         super(deploy_MissionProfileLayout, self).__init__(profile=profile)
 
@@ -2678,8 +2684,9 @@ class deploy_MissionProfileLayout(S3DataListLayout):
         """
             Bulk lookups for cards
 
-            @param resource: the resource
-            @param records: the records as returned from S3Resource.select
+            Args:
+                resource: the resource
+                records: the records as returned from S3Resource.select
         """
 
         db = current.db
@@ -2827,11 +2834,12 @@ class deploy_MissionProfileLayout(S3DataListLayout):
         """
             Render the card header
 
-            @param list_id: the HTML ID of the list
-            @param item_id: the HTML ID of the item
-            @param resource: the S3Resource to render
-            @param rfields: the S3ResourceFields to render
-            @param record: the record as dict
+            Args:
+                list_id: the HTML ID of the list
+                item_id: the HTML ID of the item
+                resource: the S3Resource to render
+                rfields: the S3ResourceFields to render
+                record: the record as dict
         """
 
         # No card header in this layout
@@ -2842,11 +2850,12 @@ class deploy_MissionProfileLayout(S3DataListLayout):
         """
             Render the card body
 
-            @param list_id: the HTML ID of the list
-            @param item_id: the HTML ID of the item
-            @param resource: the S3Resource to render
-            @param rfields: the S3ResourceFields to render
-            @param record: the record as dict
+            Args:
+                list_id: the HTML ID of the list
+                item_id: the HTML ID of the item
+                resource: the S3Resource to render
+                rfields: the S3ResourceFields to render
+                record: the record as dict
         """
 
         db = current.db
@@ -3296,8 +3305,9 @@ class deploy_MissionProfileLayout(S3DataListLayout):
         """
             Render the body icon
 
-            @param list_id: the list ID
-            @param resource: the S3Resource
+            Args:
+                list_id: the list ID
+                resource: the S3Resource
         """
 
         tablename = resource.tablename
@@ -3325,9 +3335,10 @@ class deploy_MissionProfileLayout(S3DataListLayout):
         """
             Render the toolbox
 
-            @param list_id: the HTML ID of the list
-            @param resource: the S3Resource to render
-            @param record: the record as dict
+            Args:
+                list_id: the HTML ID of the list
+                resource: the S3Resource to render
+                record: the record as dict
         """
 
         table = resource.table
@@ -3395,9 +3406,10 @@ class deploy_MissionProfileLayout(S3DataListLayout):
         """
             Render a data column.
 
-            @param item_id: the HTML element ID of the item
-            @param rfield: the S3ResourceField for the column
-            @param record: the record (from S3Resource.select)
+            Args:
+                item_id: the HTML element ID of the item
+                rfield: the S3ResourceField for the column
+                record: the record (from S3Resource.select)
         """
 
         colname = rfield.colname

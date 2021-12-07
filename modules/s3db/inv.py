@@ -945,7 +945,8 @@ $.filterOptionsS3({
         """
             Update detection for inv_inv_item
 
-            @param item: the S3ImportItem
+            Args:
+                item: the S3ImportItem
         """
 
         table = item.table
@@ -3935,7 +3936,8 @@ class InventoryRequisitionModel(S3Model):
             Remove any scheduled tasks when deleting a recurring request
             template
 
-            @param row: the deleted inv_req Row
+            Args:
+                row: the deleted inv_req Row
         """
 
         db = current.db
@@ -4410,8 +4412,9 @@ $.filterOptionsS3({
             This callback will be called when importing records. It will look
             to see if the record being imported is a duplicate.
 
-            @param item: An S3ImportItem object which includes all the details
-                         of the record being imported
+            Args:
+                item: An S3ImportItem object which includes all the details
+                      of the record being imported
 
             If the record is a duplicate then it will set the item method to update
 
@@ -7602,7 +7605,8 @@ def inv_item_total_volume(row):
     """
         Compute the total volume of an inventory item (Field.Method)
 
-        @param row: the Row
+        Args:
+            row: the Row
     """
 
     try:
@@ -7662,7 +7666,8 @@ def inv_item_total_weight(row):
     """
         Compute the total weight of an inventory item (Field.Method)
 
-        @param row: the Row
+        Args:
+            row: the Row
     """
 
     try:
@@ -10252,7 +10257,8 @@ def inv_req_add_from_template(req_id):
         Add an Inventory Requisition from a Template
         - scheduled function to create recurring requests
 
-        @param req_id: record ID of the request template
+        Args:
+            req_id: record ID of the request template
     """
 
     db = current.db
@@ -11796,7 +11802,8 @@ def inv_req_inline_form(method):
         Function to be called from REST prep functions
          - to add req_item components as inline forms
 
-        @param method: the URL request method
+        Args:
+            method: the URL request method
     """
 
     T = current.T
@@ -12555,11 +12562,13 @@ def inv_req_match(rheader = None):
             - add as inv_req_match controller to the module, then
             - configure as rheader-tab "inv_req_match/" for the site resource
 
-        @param rheader: module-specific rheader
+        Args:
+            rheader: module-specific rheader
 
-        NB make sure rheader uses s3_rheader_resource to handle "viewing"
-        NB can override rheader in customise_inv_req_controller by
-           updating attr dict
+        Note:
+            Make sure rheader uses s3_rheader_resource to handle "viewing"
+            Can override rheader in customise_inv_req_controller by
+                updating attr dict
     """
 
     T = current.T
@@ -13617,10 +13626,12 @@ def inv_req_tabs(r, match=True):
     """
         Add a set of rheader tabs for a site's Inventory Requisition management
 
-        @param r: the S3Request (for permission checking)
-        @param match: request matching is applicable for this type of site
+        Args:
+            r: the S3Request (for permission checking)
+            match: request matching is applicable for this type of site
 
-        @return: list of rheader tab definitions
+        Returns:
+            list of rheader tab definitions
     """
 
     tabs = []
@@ -16223,15 +16234,18 @@ def inv_stock_movements(resource, selectors, orderby):
     """
         Extraction method for stock movements report
 
-        @param resource: the S3Resource (inv_inv_item)
-        @param selectors: the field selectors
-        @param orderby: orderby expression
+        Args:
+            resource: the S3Resource (inv_inv_item)
+            selectors: the field selectors
+            orderby: orderby expression
 
-        @note: transactions can be filtered by earliest/latest date
-               using an S3DateFilter with selector="_transaction.date"
+        Note:
+            Transactions can be filtered by earliest/latest date
+            using an S3DateFilter with selector="_transaction.date"
 
-        @todo: does not take manual stock adjustments into account
-        @todo: does not represent sites or Waybill/GRN as
+        TODO:
+            Does not take manual stock adjustments into account
+            Does not represent sites or Waybill/GRN as
                links (breaks PDF export, but otherwise it's useful)
     """
 
@@ -16718,7 +16732,8 @@ def inv_update_commit_quantities_and_status(req):
     """
         Update commit quantities and status of an Inventory Requisition
 
-        @param req: the inv_req record (Row)
+        Args:
+            req: the inv_req record (Row)
     """
 
     db = current.db
@@ -17286,8 +17301,9 @@ class inv_ReqCheckMethod(S3Method):
         """
             Apply method.
 
-            @param r: the S3Request
-            @param attr: controller options for this request
+            Args:
+                r: the S3Request
+                attr: controller options for this request
         """
 
         T = current.T
@@ -17511,9 +17527,10 @@ class inv_AdjRepresent(S3Represent):
         """
             Custom rows lookup
 
-            @param key: the key Field
-            @param values: the values
-            @param fields: never used for custom fns (retained for API compatibility)
+            Args:
+                key: the key Field
+                values: the values
+                fields: never used for custom fns (retained for API compatibility)
         """
 
         fields = self.fields
@@ -17542,10 +17559,12 @@ class inv_AdjRepresent(S3Represent):
             Represent the referenced row.
             (in foreign key representations)
 
-            @param row: the row
+            Args:
+                row: the row
 
-            @return: the representation of the Row, or None if there
-                     is an error in the Row
+            Returns:
+                The representation of the Row, or None if there
+                is an error in the Row
         """
 
         table = current.s3db.inv_adj
@@ -17581,9 +17600,10 @@ class inv_AdjItemRepresent(S3Represent):
         """
             Custom rows lookup
 
-            @param key: the key Field
-            @param values: the values
-            @param fields: never used for custom fns (retained for API compatibility)
+            Args:
+                key: the key Field
+                values: the values
+                fields: never used for custom fns (retained for API compatibility)
         """
 
         fields = self.fields
@@ -17618,10 +17638,12 @@ class inv_AdjItemRepresent(S3Represent):
             Represent the referenced row.
             (in foreign key representations)
 
-            @param row: the row
+            Args:
+                row: the row
 
-            @return: the representation of the Row, or None if there
-                     is an error in the Row
+            Returns:
+                The representation of the Row, or None if there
+                is an error in the Row
         """
 
         table = current.s3db.inv_adj_item
@@ -17656,9 +17678,10 @@ class inv_CommitRepresent(S3Represent):
         """
             Custom look-up of rows
 
-            @param key: the key field
-            @param values: the values to look up
-            @param fields: unused (retained for API compatibility)
+            Args:
+                key: the key field
+                values: the values to look up
+                fields: unused (retained for API compatibility)
         """
 
         table = self.table
@@ -17694,7 +17717,8 @@ class inv_CommitRepresent(S3Represent):
         """
             Represent a row
 
-            @param row: the Row
+            Args:
+                row: the Row
         """
 
         table = self.table
@@ -17738,9 +17762,10 @@ class inv_InvItemRepresent(S3Represent):
         """
             Custom rows lookup
 
-            @param key: the key Field
-            @param values: the values
-            @param fields: never used for custom fns (retained for API compatibility)
+            Args:
+                key: the key Field
+                values: the values
+                fields: never used for custom fns (retained for API compatibility)
         """
 
         show_bin = self.show_bin
@@ -17798,7 +17823,8 @@ class inv_InvItemRepresent(S3Represent):
         """
             Represent a row
 
-            @param row: the Row
+            Args:
+                row: the Row
         """
 
         s3db = current.s3db
@@ -17854,7 +17880,8 @@ class inv_PackageRepresent(S3Represent):
         """
             Represent a row
 
-            @param row: the Row
+            Args:
+                row: the Row
         """
 
         v = "%s %s" % (current.db.inv_package.type.represent(row.type),
@@ -17897,9 +17924,10 @@ class inv_RecvRepresent(S3Represent):
         """
             Custom rows lookup
 
-            @param key: the key Field
-            @param values: the values
-            @param fields: never used for custom fns (retained for API compatibility)
+            Args:
+                key: the key Field
+                values: the values
+                fields: never used for custom fns (retained for API compatibility)
         """
 
         fields = self.fields
@@ -17934,7 +17962,8 @@ class inv_RecvRepresent(S3Represent):
         """
             Represent a row
 
-            @param row: the Row
+            Args:
+                row: the Row
         """
 
         v = row.recv_ref
@@ -18086,9 +18115,10 @@ class inv_ReqRepresent(S3Represent):
         """
             Custom rows lookup
 
-            @param key: the key Field
-            @param values: the values
-            @param fields: never used for custom fns (retained for API compatibility)
+            Args:
+                key: the key Field
+                values: the values
+                fields: never used for custom fns (retained for API compatibility)
         """
 
         fields = self.fields
@@ -18116,7 +18146,8 @@ class inv_ReqRepresent(S3Represent):
         """
             Represent a row
 
-            @param row: the Row
+            Args:
+                row: the Row
         """
 
         if row.req_ref:
@@ -18150,9 +18181,10 @@ class inv_ReqItemRepresent(S3Represent):
         """
             Custom look-up of rows
 
-            @param key: the key field
-            @param values: the values to look up
-            @param fields: unused (retained for API compatibility)
+            Args:
+                key: the key field
+                values: the values to look up
+                fields: unused (retained for API compatibility)
         """
 
         ritable = self.table
@@ -18178,7 +18210,8 @@ class inv_ReqItemRepresent(S3Represent):
         """
             Represent a row
 
-            @param row: the Row
+            Args:
+                row: the Row
         """
 
         if not hasattr(row, "supply_item"):
@@ -18212,9 +18245,10 @@ class inv_ReqRefRepresent(S3Represent):
             Lookup all rows referenced by values.
             (in foreign key representations)
 
-            @param key: the key Field
-            @param values: the values
-            @param fields: the fields to retrieve
+            Args:
+                key: the key Field
+                values: the values
+                fields: the fields to retrieve
         """
 
         fields = ["id",
@@ -18241,9 +18275,10 @@ class inv_ReqRefRepresent(S3Represent):
                 - In the base class, the linkto-parameter expects a URL (as
                   string) with "[id]" as placeholder for the key.
 
-            @param k: the key
-            @param v: the representation of the key
-            @param row: the row with this key (unused in the base class)
+            Args:
+                k: the key
+                v: the representation of the key
+                row: the row with this key (unused in the base class)
         """
 
         if self.linkto:
@@ -18264,7 +18299,8 @@ class inv_ReqRefRepresent(S3Represent):
         """
             Represent a row
 
-            @param row: the Row
+            Args:
+                row: the Row
         """
 
         return row.req_ref or NONE
@@ -18301,9 +18337,10 @@ class inv_SendRepresent(S3Represent):
         """
             Custom rows lookup
 
-            @param key: the key Field
-            @param values: the values
-            @param fields: never used for custom fns (retained for API compatibility)
+            Args:
+                key: the key Field
+                values: the values
+                fields: never used for custom fns (retained for API compatibility)
         """
 
         fields = self.fields
@@ -18332,7 +18369,8 @@ class inv_SendRepresent(S3Represent):
         """
             Represent a row
 
-            @param row: the Row
+            Args:
+                row: the Row
         """
 
 
@@ -18491,9 +18529,10 @@ class inv_TrackItemRepresent(S3Represent):
         """
             Custom look-up of rows
 
-            @param key: the key field
-            @param values: the values to look up
-            @param fields: unused (retained for API compatibility)
+            Args:
+                key: the key field
+                values: the values to look up
+                fields: unused (retained for API compatibility)
         """
 
         fields = self.fields
@@ -18521,7 +18560,8 @@ class inv_TrackItemRepresent(S3Represent):
         """
             Represent a row
 
-            @param row: the Row
+            Args:
+                row: the Row
         """
 
         send_inv_item_id = row.send_inv_item_id

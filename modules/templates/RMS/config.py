@@ -1154,13 +1154,15 @@ def config(settings):
             Function to configure an organisation_id field to be restricted to just
             NS/Branch
 
-            @param required: Field is mandatory
-            @param branches: Include Branches
-            @param updateable: Limit to Orgs which the user can update
-            @param limit_filter_opts: Also limit the Filter options
+            Args:
+                required: Field is mandatory
+                branches: Include Branches
+                updateable: Limit to Orgs which the user can update
+                limit_filter_opts: Also limit the Filter options
 
-            NB If limit_filter_opts=True, apply in customise_xx_controller inside prep,
-               after standard_prep is run
+            Note:
+                If limit_filter_opts=True, apply in customise_xx_controller inside prep,
+                after standard_prep is run
         """
 
         # Lookup organisation_type_id for Red Cross
@@ -1973,7 +1975,8 @@ RMS Support Team"""
     #    """
     #        Representation of Emergency Contacts (S3Represent label renderer)
 
-    #        @param row: the row
+    #        Args:
+    #           row: the row
     #    """
 
     #    items = [row["pr_contact_emergency.name"]]
@@ -3513,8 +3516,9 @@ Thank you"""
         """
             PDF header for Stock Reports
 
-            @param r: the S3Request
-            @param title: the report title
+            Args:
+                r: the S3Request
+                title: the report title
         """
 
         # Get organisation name and logo

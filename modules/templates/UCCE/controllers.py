@@ -27,11 +27,12 @@ def dc_target_list_layout(list_id, item_id, resource, rfields, record):
     """
         dataList item renderer for Reports.
 
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
+        Args:
+            list_id: the HTML ID of the list
+            item_id: the HTML ID of the item
+            resource: the S3Resource to render
+            rfields: the S3ResourceFields to render
+            record: the record as dict
     """
 
     #T = current.T
@@ -58,11 +59,12 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
     """
         dataList item renderer for Guides
 
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
+        Args:
+            list_id: the HTML ID of the list
+            item_id: the HTML ID of the item
+            resource: the S3Resource to render
+            rfields: the S3ResourceFields to render
+            record: the record as dict
     """
 
     T = current.T
@@ -145,11 +147,12 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record):
     """
         dataList item renderer for Projects.
 
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
+        Args:
+            list_id: the HTML ID of the list
+            item_id: the HTML ID of the item
+            resource: the S3Resource to render
+            rfields: the S3ResourceFields to render
+            record: the record as dict
     """
 
     T = current.T
@@ -443,8 +446,9 @@ class dc_QuestionCreate(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "question":
@@ -492,8 +496,9 @@ class dc_QuestionImageDelete(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "question":
@@ -536,8 +541,9 @@ class dc_QuestionImageUpload(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "question":
@@ -586,8 +592,9 @@ class dc_QuestionSave(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "question":
@@ -676,8 +683,9 @@ class dc_TargetActivate(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "target":
@@ -890,8 +898,9 @@ class dc_TargetDeactivate(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "target":
@@ -940,8 +949,9 @@ class dc_TargetEdit(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "target":
@@ -1077,8 +1087,9 @@ class dc_TargetDelete(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "target":
@@ -1188,8 +1199,9 @@ class dc_TargetName(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "target":
@@ -1239,7 +1251,8 @@ class dc_TargetL10n(S3Method):
     """
         Change the language of a Survey
 
-        NB Currently each Survey is only ever translated into a single language
+        Note:
+            Currently each Survey is only ever translated into a single language
     """
 
     # -------------------------------------------------------------------------
@@ -1247,8 +1260,9 @@ class dc_TargetL10n(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "target":
@@ -1326,8 +1340,9 @@ class dc_TargetReport(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "target":
@@ -2104,8 +2119,9 @@ class dc_TargetReportFilters(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "target":
@@ -2290,8 +2306,9 @@ class dc_TemplateEditor(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "template":
@@ -2687,8 +2704,9 @@ class dc_TemplateExportL10n(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "template":
@@ -2958,8 +2976,9 @@ class dc_TemplateImportL10n(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "template":
@@ -3162,8 +3181,9 @@ class dc_TemplateSave(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "template":
@@ -3203,8 +3223,9 @@ class dc_ProjectDelete(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "project":

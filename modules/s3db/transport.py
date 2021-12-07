@@ -1119,9 +1119,8 @@ class transport_BorderCrossingRepresent(S3Represent):
 
     def __init__(self, show_link=False):
         """
-            Constructor
-
-            @param show_link: render as link to the border crossing
+            Args:
+                show_link: render as link to the border crossing
         """
 
         super(transport_BorderCrossingRepresent, self).__init__(
@@ -1134,7 +1133,8 @@ class transport_BorderCrossingRepresent(S3Represent):
         """
             Represent a row
 
-            @param row: the Row
+            Args:
+                row: the Row
         """
 
         if hasattr(row, "transport_border_crossing"):
@@ -1153,9 +1153,10 @@ class transport_BorderCrossingRepresent(S3Represent):
         """
             Custom rows lookup
 
-            @param key: the key Field
-            @param values: the values
-            @param fields: unused (retained for API compatibility)
+            Args:
+                key: the key Field
+                values: the values
+                fields: unused (retained for API compatibility)
         """
 
         s3db = current.s3db

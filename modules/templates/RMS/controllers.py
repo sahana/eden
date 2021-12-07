@@ -943,12 +943,14 @@ class org_SiteRepresent(S3Represent):
         """
             Represent multiple values as dict {value: representation}
 
-            @param values: list of values
-            @param rows: the referenced rows (if values are foreign keys)
-            @param show_link: render each representation as link
-            @param include_blank: Also include a blank value
+            Args:
+                values: list of values
+                rows: the referenced rows (if values are foreign keys)
+                show_link: render each representation as link
+                include_blank: Also include a blank value
 
-            @return: a dict {value: representation}
+            Returns:
+                dict {value: representation}
         """
 
         show_link = show_link and self.show_link
@@ -988,7 +990,8 @@ class org_SiteRepresent(S3Represent):
             Parameters key and fields are not used, but are kept for API
             compatibility reasons.
 
-            @param values: the site IDs
+            Args:
+                values: the site IDs
         """
 
         db = current.db
@@ -1101,9 +1104,10 @@ class org_SiteRepresent(S3Represent):
         """
             Represent a (key, value) as hypertext link.
 
-            @param k: the key (site_id)
-            @param v: the representation of the key
-            @param row: the row with this key
+            Args:
+                k: the key (site_id)
+                v: the representation of the key
+                row: the row with this key
         """
 
         if row:
@@ -1127,7 +1131,8 @@ class org_SiteRepresent(S3Represent):
         """
             Represent a single Row
 
-            @param row: the org_site Row
+            Args:
+                row: the org_site Row
         """
 
         name = row["org_site.name"]

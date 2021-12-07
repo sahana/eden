@@ -683,8 +683,9 @@ def survey_build_template_summary(template_id):
     """
         Returns a table of details of a particular template
 
-        @param template_id: ID corresponding to the template for which
-                            the summary is to be built
+        Args:
+            template_id: ID corresponding to the template for which
+                         the summary is to be built
     """
 
     from s3.s3data import S3DataTable
@@ -1136,8 +1137,9 @@ def survey_get_series_questions_of_type(question_list, qtype):
     """
         Get questions of a particular question type
 
-        @param question_list: List of questions
-        @param qtype: Questions of this type to be returned
+        Args:
+            question_list: List of questions
+            qtype: Questions of this type to be returned
     """
 
     if isinstance(qtype, (list, tuple)):
@@ -1201,9 +1203,10 @@ def survey_updateMetaData(record, qtype, metadata):
         Function to update the metadata of a question
         corresponding to the record
 
-        @param record: The record for the question to be updated
-        @param qtype: Question Type
-        @param metadata: The metadata to be updated with
+        Args:
+            record: The record for the question to be updated
+            qtype: Question Type
+            metadata: The metadata to be updated with
     """
 
     metatable = current.s3db.survey_question_metadata
@@ -2966,8 +2969,9 @@ def buildCompletedList(series_id, question_id_list):
         2) The seconds row is the type of each column
         3) The remaining rows are the data
 
-        @param series_id: The id of the series
-        @param question_id_list: The list of questions to display
+        Args:
+            series_id: The id of the series
+            question_id_list: The list of questions to display
     """
 
     db = current.db
@@ -3238,8 +3242,9 @@ class survey_TranslateDownload(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.representation != "xls":
@@ -3341,8 +3346,9 @@ class survey_ExportResponses(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.representation != "xls":
@@ -4961,12 +4967,13 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             The basic details will be written to Cell objects that can be
             added to a row in a table object.
 
-            @param ss: StyleSheet object
-            @param langDict: Dictionary of languages
-            @param full_name: Question name(label)
-            @param paragraph: Add paragraph from S3QuestionTypeTextWidget
-            @param para_list: List of paragraphs from S3QuestionTypeOptionWidget
-            @param question_name: Name of question from S3QuestionTypeGridWidget
+            Args:
+                ss: StyleSheet object
+                langDict: Dictionary of languages
+                full_name: Question name(label)
+                paragraph: Add paragraph from S3QuestionTypeTextWidget
+                para_list: List of paragraphs from S3QuestionTypeOptionWidget
+                question_name: Name of question from S3QuestionTypeGridWidget
         """
         from gluon.contrib.pyrtf.Elements import Paragraph, Cell, B
         from gluon.contrib.pyrtf.PropertySets import BorderPS, FramePS
@@ -5008,8 +5015,9 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         """
             Wrapper function for _writeToRTF
 
-            @param ss: StyleSheet object
-            @param langDict: Dictionary of languages
+            Args:
+                ss: StyleSheet object
+                langDict: Dictionary of languages
         """
         full_name = self.fullName()
         return self._writeToRTF(ss, langDict, full_name)
@@ -5103,8 +5111,9 @@ class S3QuestionTypeTextWidget(S3QuestionTypeAbstractWidget):
             The basic details will be written to Cell objects that can be
             added to a row in a table object.
 
-            @param ss: StyleSheet object
-            @param langDict: Dictionary of languages
+            Args:
+                ss: StyleSheet object
+                langDict: Dictionary of languages
         """
         from gluon.contrib.pyrtf.Elements import Paragraph
         paragraph = Paragraph(ss.ParagraphStyles.Normal)
@@ -5579,8 +5588,9 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
             The basic details will be written to Cell objects that can be
             added to a row in a table object.
 
-            @param ss: StyleSheet object
-            @param langDict: Dictionary of languages
+            Args:
+                ss: StyleSheet object
+                langDict: Dictionary of languages
         """
         para_list = self.getList()
         full_name = self.fullName()
@@ -6116,8 +6126,9 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
             This will just display the grid name, following this will be the
             grid child objects.
 
-            @param ss: StyleSheet object
-            @param langDict: Dictionary of languages
+            Args:
+                ss: StyleSheet object
+                langDict: Dictionary of languages
         """
         question_name = self.question.name
         full_name = self.fullName()
@@ -6299,8 +6310,9 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
             The basic details will be written to Cell objects that can be
             added to a row in a table object.
 
-            @param ss: StyleSheet object
-            @param langDict: Dictionary of languages
+            Args:
+                ss: StyleSheet object
+                langDict: Dictionary of languages
         """
         return self.realWidget().writeQuestionToRTF(ss, langDict)
 
@@ -7452,31 +7464,35 @@ def getDataTablesConfig():
         Method to extract the DataTables configuration data from S3 globals and
         store them as an attr variable.
 
-        @return: dictionary of attributes which can be passed into S3DataTable.html()
+        Args:
+            attr: dictionary of attributes which can be passed in
 
-        @param attr: dictionary of attributes which can be passed in
-               dt_pageLength : The default number of records that will be shown
-               dt_pagination: Enable pagination
-               dt_pagingType: type of pagination, one of:
-                                    simple
-                                    simple_numbers
-                                    full
-                                    full_numbers (default)
-                              http://datatables.net/reference/option/pagingType
-               dt_searching: Enable or disable filtering of data.
-               dt_group: The colum that is used to group the data
-               dt_ajax_url: The URL to be used for the Ajax call
-               dt_action_col: The column where the action buttons will be placed
-               dt_bulk_actions: list of labels for the bulk actions.
-               dt_bulk_col: The column in which the checkboxes will appear,
-                            by default it will be the column immediately
-                            before the first data item
-               dt_bulk_selected: A list of selected items
-               #dt_row_actions: a list of actions (each is a dict)
-               dt_styles: dictionary of styles to be applied to a list of ids
-                          for example:
-                          {"warning" : [1,3,6,7,9],
-                           "alert" : [2,10,13]}
+        Keywod Args:
+            dt_pageLength: The default number of records that will be shown
+            dt_pagination: Enable pagination
+            dt_pagingType: type of pagination, one of:
+                                simple
+                                simple_numbers
+                                full
+                                full_numbers (default)
+                           http://datatables.net/reference/option/pagingType
+            dt_searching: Enable or disable filtering of data.
+            dt_group: The colum that is used to group the data
+            dt_ajax_url: The URL to be used for the Ajax call
+            dt_action_col: The column where the action buttons will be placed
+            dt_bulk_actions: list of labels for the bulk actions.
+            dt_bulk_col: The column in which the checkboxes will appear,
+                         by default it will be the column immediately
+                         before the first data item
+            dt_bulk_selected: A list of selected items
+            #dt_row_actions: a list of actions (each is a dict)
+            dt_styles: dictionary of styles to be applied to a list of ids
+                       for example:
+                       {"warning" : [1,3,6,7,9],
+                        "alert" : [2,10,13]}
+
+        Returns:
+            dict of attributes which can be passed into S3DataTable.html()
     """
 
     s3 = current.response.s3
@@ -7560,8 +7576,6 @@ def json2list(jsonstr):
 def survey_T(phrase, langDict):
     """
         Function to translate a phrase using the dictionary passed in
-
-        @todo: parameter description
     """
 
     if phrase in langDict and langDict[phrase] != "":

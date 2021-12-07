@@ -21,10 +21,12 @@ def update_check(settings):
     """
         Check whether the dependencies are sufficient to run Eden
 
-        @ToDo: Load deployment_settings so that we can configure the update_check
-               - need to rework so that 000_config.py is parsed 1st
+        Args:
+            settings: the deployment_settings
 
-        @param settings: the deployment_settings
+        TODO:
+            Load deployment_settings so that we can configure the update_check
+            - need to rework so that 000_config.py is parsed 1st
     """
 
     # Get Web2py environment into our globals.

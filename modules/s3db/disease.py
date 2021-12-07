@@ -298,7 +298,8 @@ class DiseaseDataModel(S3Model):
         """
             Disease import update detection
 
-            @param item: the import item
+            Args:
+                item: the import item
         """
 
         data = item.data
@@ -1425,8 +1426,9 @@ class CaseTrackingModel(S3Model):
         """
             Find the case record for a person for a disease
 
-            @param person_id: the person record ID
-            @param disease_id: the disease record ID
+            Args:
+                person_id: the person record ID
+                disease_id: the disease record ID
         """
 
         ctable = current.s3db.disease_case
@@ -1470,7 +1472,8 @@ class CaseTrackingModel(S3Model):
         """
             Case import update detection
 
-            @param item: the import item
+            Args:
+                item: the import item
         """
 
         data = item.data
@@ -1629,7 +1632,6 @@ class CaseTrackingModel(S3Model):
 class disease_CaseRepresent(S3Represent):
 
     def __init__(self):
-        """ Constructor """
 
         super(disease_CaseRepresent, self).__init__(lookup = "disease_case")
 
@@ -1638,9 +1640,10 @@ class disease_CaseRepresent(S3Represent):
         """
             Custom rows lookup
 
-            @param key: the key Field
-            @param values: the values
-            @param fields: unused (retained for API compatibility)
+            Args:
+                key: the key Field
+                values: the values
+                fields: unused (retained for API compatibility)
         """
 
         s3db = current.s3db
@@ -1662,7 +1665,8 @@ class disease_CaseRepresent(S3Represent):
                                         dtable.acronym,
                                         ptable.first_name,
                                         ptable.last_name,
-                                        left = left)
+                                        left = left,
+                                        )
         self.queries += 1
         return rows
 
@@ -1671,7 +1675,8 @@ class disease_CaseRepresent(S3Represent):
         """
             Represent a row
 
-            @param row: the Row
+            Args:
+                row: the Row
         """
 
         try:
@@ -2661,10 +2666,11 @@ def disease_stats_update_location_aggregates(location_id,
         Calculates the disease_stats_aggregate for a specific parameter at a
         specific location over the range of dates.
 
-        @param location_id: location to aggregate at
-        @param children: locations to aggregate from
-        @param parameter_id: arameter to aggregate
-        @param dates: dates to aggregate for (as JSON string)
+        Args:
+            location_id: location to aggregate at
+            children: locations to aggregate from
+            parameter_id: arameter to aggregate
+            dates: dates to aggregate for (as JSON string)
     """
 
     db = current.db

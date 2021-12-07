@@ -46,8 +46,9 @@ class HRSignatureList(S3Method):
         """
             Page-render entry point for REST interface.
 
-            @param r: the S3Request instance
-            @param attr: controller attributes
+            Args:
+                r: the S3Request instance
+                attr: controller attributes
         """
 
         output = {}
@@ -67,11 +68,13 @@ class HRSignatureList(S3Method):
         """
             Extract the HR records
 
-            @param resource: the hrm_human_resource resource
+            Args:
+                resource: the hrm_human_resource resource
 
-            @returns: tuple (data, pictures), where
-                      - data is a S3ResourceData instance
-                      - pictures is a dict {pe_id: filepath}
+            Returns:
+                tuple (data, pictures), where
+                    - data is a S3ResourceData instance
+                    - pictures is a dict {pe_id: filepath}
         """
 
         db = current.db
@@ -127,9 +130,11 @@ class HRSignatureList(S3Method):
         """
             Identify the report organisation
 
-            @param r: the S3Request
+            Args:
+                r: the S3Request
 
-            @returns: a tuple (organisation_id, label)
+            Returns:
+                tuple (organisation_id, label)
         """
 
         db = current.db
@@ -190,9 +195,11 @@ class HRSignatureList(S3Method):
         """
             Identify the report programme
 
-            @param r: the S3Request
+            Args:
+                r: the S3Request
 
-            @returns: a tuple (programme_id, label)
+            Returns:
+                tuple (programme_id, label)
         """
 
         programme_id, label = None, None
@@ -221,8 +228,9 @@ class HRSignatureList(S3Method):
         """
             Generate the PDF
 
-            @param r: the S3Request instance
-            @param attr: controller attributes
+            Args:
+                r: the S3Request instance
+                attr: controller attributes
         """
 
         T = current.T

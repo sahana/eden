@@ -834,9 +834,11 @@ class SyncDatasetModel(S3Model):
         """
             File representation
 
-            @param filename: the stored file name (field value)
+            Args:
+                filename: the stored file name (field value)
 
-            @return: a link to download the file
+            Returns:
+                A (link to download the file)
         """
 
         if filename:
@@ -1457,15 +1459,16 @@ def sync_job_reset(r, **attr):
                 S3Task.reset(job_id)
                 current.session.confirmation = current.T("Job reactivated")
     r.component_id = None
-    redirect(r.url(method=""))
+    redirect(r.url(method = ""))
 
 # =============================================================================
 def sync_now(r, **attr):
     """
         Manual synchronization of a repository
 
-        @param r: the S3Request
-        @param attr: controller options for the request
+        Args:
+            r: the S3Request
+            attr: controller options for the request
     """
 
     T = current.T
@@ -1540,10 +1543,12 @@ class sync_CreateArchive(S3Method):
         """
             Entry point for REST controller
 
-            @param r: the S3Request
-            @param attr: controller parameters
+            Args:
+                r: the S3Request
+                attr: controller parameters
 
-            @todo: perform archive creation async?
+            TODO:
+                Perform archive creation async?
         """
 
         T = current.T
@@ -1581,10 +1586,12 @@ class sync_CreateArchive(S3Method):
         """
             Simple UI form to trigger POST method
 
-            @param r: the S3Request embedding the form
-            @param row: the data set Row
+            Args:
+                r: the S3Request embedding the form
+                row: the data set Row
 
-            @todo: if archive is currently being built (async),
+            TODO:
+                If archive is currently being built (async),
                    then hide the button (provide a message instead?)
         """
 

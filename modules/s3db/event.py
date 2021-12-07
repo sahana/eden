@@ -920,9 +920,11 @@ class EventModel(S3Model):
 
             Requires "start_date" to be in extra_fields
 
-            @param row: the Row
+            Args:
+                row: the Row
 
-            @ToDo: Extend this to show multiple years if open for multiple?
+            TODO:
+                Extend this to show multiple years if open for multiple?
         """
 
         try:
@@ -5038,8 +5040,9 @@ class event_ActionPlan(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "incident" and \
@@ -5282,8 +5285,9 @@ class event_ScenarioActionPlan(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.name == "scenario" and \
@@ -5306,27 +5310,29 @@ class event_ScenarioActionPlan(S3Method):
                         deletable = True
                     if editable:
                         actions = [{"label": T("Open"),
-                                    "url": r.url(component=component,
-                                                 component_id="[id]",
-                                                 method="update.popup",
-                                                 vars={"refresh": list_id}),
+                                    "url": r.url(component = component,
+                                                 component_id = "[id]",
+                                                 method = "update.popup",
+                                                 vars = {"refresh": list_id},
+                                                 ),
                                     "_class": "action-btn edit s3_modal",
                                     },
                                    ]
                     else:
                         actions = [{"label": T("Open"),
-                                    "url": r.url(component=component,
-                                                 component_id="[id]",
-                                                 method="read.popup",
-                                                 vars={"refresh": list_id}),
+                                    "url": r.url(component = component,
+                                                 component_id = "[id]",
+                                                 method = "read.popup",
+                                                 vars = {"refresh": list_id},
+                                                 ),
                                     "_class": "action-btn edit s3_modal",
                                     },
                                    ]
                     if deletable:
                         actions.append({"label": T("Delete"),
-                                        "_ajaxurl": r.url(component=component,
-                                                          component_id="[id]",
-                                                          method="delete.json",
+                                        "_ajaxurl": r.url(component = component,
+                                                          component_id = "[id]",
+                                                          method = "delete.json",
                                                           ),
                                         "_class": "action-btn delete-btn-ajax dt-ajax-delete",
                                         })
@@ -5343,33 +5349,33 @@ class event_ScenarioActionPlan(S3Method):
                         deletable = True
                     if editable:
                         actions = [{"label": T("Open"),
-                                    "url": URL(c="project",
-                                               f="task",
-                                               args="update.popup",
-                                               vars={"scenario.id": "[id]",
-                                                     "refresh": list_id,
-                                                     },
+                                    "url": URL(c = "project",
+                                               f = "task",
+                                               args = "update.popup",
+                                               vars = {"scenario.id": "[id]",
+                                                       "refresh": list_id,
+                                                       },
                                                ),
                                     "_class": "action-btn edit s3_modal",
                                     },
                                    ]
                     else:
                         actions = [{"label": T("Open"),
-                                    "url": URL(c="project",
-                                               f="task",
-                                               args="read.popup",
-                                               vars={"scenario.id": "[id]",
-                                                     "refresh": list_id,
-                                                     },
+                                    "url": URL(c = "project",
+                                               f = "task",
+                                               args = "read.popup",
+                                               vars = {"scenario.id": "[id]",
+                                                       "refresh": list_id,
+                                                       },
                                                ),
                                     "_class": "action-btn edit s3_modal",
                                     },
                                    ]
                     if deletable:
                         actions.append({"label": T("Delete"),
-                                        "_ajaxurl": r.url(component="scenario_task",
-                                                          component_id="[id]",
-                                                          method="delete.json",
+                                        "_ajaxurl": r.url(component = "scenario_task",
+                                                          component_id = "[id]",
+                                                          method = "delete.json",
                                                           ),
                                         "_class": "action-btn delete-btn-ajax dt-ajax-delete",
                                         })
@@ -5482,7 +5488,9 @@ class event_ScenarioActionPlan(S3Method):
                 # Maintain normal rheader for consistency
                 rheader = attr["rheader"]
                 profile_header = TAG[""](H2(response.s3.crud_strings["event_scenario"].title_display),
-                                         DIV(rheader(r), _id="rheader"),
+                                         DIV(rheader(r),
+                                             _id = "rheader",
+                                             ),
                                          )
             else:
                 profile_header = None
@@ -5518,8 +5526,9 @@ class event_ApplyScenario(S3Method):
         """
             Entry point for REST API
 
-            @param r: the S3Request
-            @param attr: controller arguments
+            Args:
+                r: the S3Request
+                attr: controller arguments
         """
 
         if r.http != "POST":
@@ -5637,8 +5646,9 @@ class event_EventAssignMethod(S3Method):
                  next_tab = None,
                  ):
         """
-            @param component: the Component in which to create records
-            @param next_tab: the component/method to redirect to after assigning
+            Args:
+                component: the Component in which to create records
+                next_tab: the component/method to redirect to after assigning
         """
 
         super(event_EventAssignMethod, self).__init__()
@@ -5652,10 +5662,9 @@ class event_EventAssignMethod(S3Method):
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
-            Apply method.
-
-            @param r: the S3Request
-            @param attr: controller options for this request
+            Args:
+                r: the S3Request
+                attr: controller options for this request
         """
 
         if self.component:
@@ -6055,8 +6064,9 @@ class event_IncidentAssignMethod(S3Method):
                  next_tab = None,
                  ):
         """
-            @param component: the Component in which to create records
-            @param next_tab: the component/method to redirect to after assigning
+            Args:
+                component: the Component in which to create records
+                next_tab: the component/method to redirect to after assigning
         """
 
         super(event_IncidentAssignMethod, self).__init__()
@@ -6071,10 +6081,9 @@ class event_IncidentAssignMethod(S3Method):
 
     def apply_method(self, r, **attr):
         """
-            Apply method.
-
-            @param r: the S3Request
-            @param attr: controller options for this request
+            Args:
+                r: the S3Request
+                attr: controller options for this request
         """
 
         try:
@@ -6451,7 +6460,9 @@ def event_notification_dispatcher(r, **attr):
     """
         Send a Dispatch notice from an Incident Report
             - this will be formatted as an OpenGeoSMS
-        @ToDo: Use POST not GET
+
+        TODO:
+            Use POST not GET
     """
 
     if r.representation == "html" and \
@@ -6570,11 +6581,12 @@ def event_event_list_layout(list_id, item_id, resource, rfields, record,
     """
         Default dataList item renderer for Incidents on Profile pages
 
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
+        Args:
+            list_id: the HTML ID of the list
+            item_id: the HTML ID of the item
+            resource: the S3Resource to render
+            rfields: the S3ResourceFields to render
+            record: the record as dict
     """
 
     record_id = record["event_event.id"]
@@ -6664,11 +6676,12 @@ def event_incident_list_layout(list_id, item_id, resource, rfields, record,
     """
         Default dataList item renderer for Incidents on Profile pages
 
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
+        Args:
+            list_id: the HTML ID of the list
+            item_id: the HTML ID of the item
+            resource: the S3Resource to render
+            rfields: the S3ResourceFields to render
+            record: the record as dict
     """
 
     raw = record._row
@@ -6782,11 +6795,12 @@ def event_resource_list_layout(list_id, item_id, resource, rfields, record):
     """
         Default dataList item renderer for Resources on Profile pages
 
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
+        Args:
+            list_id: the HTML ID of the list
+            item_id: the HTML ID of the item
+            resource: the S3Resource to render
+            rfields: the S3ResourceFields to render
+            record: the record as dict
     """
 
     raw = record._row

@@ -5031,9 +5031,6 @@ class Storage2(Storage):
 class setup_DeploymentRepresent(S3Represent):
 
     def __init__(self):
-        """
-            Constructor
-        """
 
         super(setup_DeploymentRepresent, self).__init__(lookup = "setup_deployment",
                                                         )
@@ -5043,9 +5040,10 @@ class setup_DeploymentRepresent(S3Represent):
         """
             Custom look-up of rows
 
-            @param key: the key field
-            @param values: the values to look up
-            @param fields: unused (retained for API compatibility)
+            Args:
+                key: the key field
+                values: the values to look up
+                fields: unused (retained for API compatibility)
         """
 
         dtable = self.table
@@ -5071,7 +5069,8 @@ class setup_DeploymentRepresent(S3Represent):
         """
             Represent a row
 
-            @param row: the Row
+            Args:
+                row: the Row
         """
 
         if not hasattr(row, "setup_instance"):
@@ -5083,9 +5082,6 @@ class setup_DeploymentRepresent(S3Represent):
 class setup_MonitorTaskRepresent(S3Represent):
 
     def __init__(self):
-        """
-            Constructor
-        """
 
         super(setup_MonitorTaskRepresent, self).__init__(lookup = "setup_monitor_task",
                                                          )
@@ -5095,9 +5091,10 @@ class setup_MonitorTaskRepresent(S3Represent):
         """
             Custom look-up of rows
 
-            @param key: the key field
-            @param values: the values to look up
-            @param fields: unused (retained for API compatibility)
+            Args:
+                key: the key field
+                values: the values to look up
+                fields: unused (retained for API compatibility)
         """
 
         db = current.db
@@ -5130,7 +5127,8 @@ class setup_MonitorTaskRepresent(S3Represent):
         """
             Represent a row
 
-            @param row: the Row
+            Args:
+                row: the Row
         """
 
         #return "%s (%s): %s" % (row["setup_server.name"],

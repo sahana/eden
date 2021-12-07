@@ -42,9 +42,9 @@ __all__ = ("CAPAlertModel",
            "cap_expirydate",
            "cap_sendername",
            "cap_ImportAlert",
-           "cap_AssignArea",
-           "cap_AreaRepresent",
-           "cap_CloneAlert",
+           #"cap_AssignArea",
+           #"cap_AreaRepresent",
+           #"cap_CloneAlert",
            "cap_AlertProfileWidget",
            )
 
@@ -852,7 +852,8 @@ $.filterOptionsS3({
         """
             Generate a source designation for a new (internal) alert
 
-            @returns: the message source designation as string
+            Returns:
+                message source designation as string
         """
         return "%s@%s" % (current.xml.domain,
                           current.deployment_settings.get_base_public_url(),
@@ -864,7 +865,8 @@ $.filterOptionsS3({
         """
             Validate an alert form
 
-            @param form: the FORM
+            Args:
+                form: the FORM
         """
 
         T = current.T
@@ -905,7 +907,8 @@ $.filterOptionsS3({
             Onaccept-routine for alerts:
                 - automatically approve if template
 
-            @param form: the FORM
+            Args:
+                form: the FORM
         """
 
         form_vars = form.vars
@@ -914,7 +917,7 @@ $.filterOptionsS3({
             user = current.auth.user
             if user:
                 table = current.s3db.cap_alert
-                current.db(table.id == form_vars.id).update(approved_by=user.id)
+                current.db(table.id == form_vars.id).update(approved_by = user.id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -925,9 +928,11 @@ $.filterOptionsS3({
                 - notify the record owner of the approval
                 - create history entry for the approved record
 
-            @param record: the alert record
+            Args:
+                record: the alert record
 
-            TODO set approved_on even when approval is not required
+            TODO:
+                Set approved_on even when approval is not required
                  (we want to allow auto-approval for editors)
         """
 
@@ -972,7 +977,7 @@ $.filterOptionsS3({
                                           )
 
             # Record the approved alert in alert history
-            clone(current.request, record)
+            cap_CloneAlert.clone(current.request, record)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -980,12 +985,15 @@ $.filterOptionsS3({
         """
             Represent an alert template concisely
 
-            @param alert_id: the alert record ID
-            @param row: the alert record (if already loaded)
+            Args:
+                alert_id: the alert record ID
+                row: the alert record (if already loaded)
 
-            @returns: a string representation for the alert ID
+            Returns:
+                string representation for the alert ID
 
-            TODO make S3Represent at module level
+            TODO:
+                Make S3Represent at module level
         """
 
         if row:
@@ -1410,15 +1418,6 @@ $.filterOptionsS3({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def defaults():
-        """
-            Return safe defaults in case the model has been deactivated.
-        """
-
-        return None
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def info_onvalidation(form):
         """
             Form validation for info-segments:
@@ -1426,7 +1425,8 @@ $.filterOptionsS3({
                 - for actual alerts: make sure urgency, severity, certainty
                   and category have been specified
 
-            @param form: the FORM
+            Args:
+                form: the FORM
         """
 
         T = current.T
@@ -1438,7 +1438,7 @@ $.filterOptionsS3({
                 (itable.language == form.vars.language) & \
                 (itable.id != form.request_vars.id)
         other_info = current.db(query).select(itable.id,
-                                              limitby=(0, 1),
+                                              limitby = (0, 1),
                                               ).first()
 
         if other_info:
@@ -1476,7 +1476,8 @@ $.filterOptionsS3({
                 - sanitize and complete input data
                 - sync all info-segments of the same alert
 
-            @param form: the FORM
+            Args:
+                form: the FORM
         """
 
         if "vars" in form:
@@ -1595,7 +1596,8 @@ $.filterOptionsS3({
         """
             Duplicate detection for info-segments
 
-            @param item: the S3ImportItem
+            Args:
+                item: the S3ImportItem
         """
 
         data = item.data
@@ -1621,7 +1623,8 @@ $.filterOptionsS3({
             Form validation for info_parameter
                 - currently unused (TODO: document why)
 
-            @param form: the FORM
+            Args:
+                form: the FORM
         """
 
         form_vars = form.vars
@@ -1641,7 +1644,8 @@ $.filterOptionsS3({
             Onaccept-routine of info parameters
                 - inherit alert_id from info segment
 
-            @param form: the FORM
+            Args:
+                form: the FORM
         """
 
         form_vars = form.vars
@@ -1686,10 +1690,11 @@ $.filterOptionsS3({
         """
             Sanitize malformed JSON for key-value fields
 
-            @param string: the JSON string
-            @returns: the sanitized JSON string
+            Args:
+                string: the JSON string
 
-            TODO unclear why this is needed? => document, or remove?
+            Returns:
+                sanitized JSON string
         """
 
         if string == "||":
@@ -2076,7 +2081,8 @@ class CAPAreaModel(S3Model):
         """
             Validate an area form
 
-            @param form: the Form
+            Args:
+                form: the Form
         """
 
         T = current.T
@@ -2098,7 +2104,8 @@ class CAPAreaModel(S3Model):
             Onaccept-routine for area segments
                 - inherit alert_id from info segment if not set in form
 
-            @param form: the FORM
+            Args:
+                form: the FORM
         """
 
         form_vars = form.vars
@@ -2130,7 +2137,8 @@ class CAPAreaModel(S3Model):
         """
             Detect an area duplicate
 
-            @param item: the S3ImportItem
+            Args:
+                item: the S3ImportItem
         """
 
         data = item.data
@@ -2503,7 +2511,8 @@ class CAPResourceModel(S3Model):
                 - Derived from IS_PROCESSED_IMAGE with extras:
                 - Determine MIME type and file size of uploaded image
 
-            @param form: the FORM
+            Args:
+                form: the FORM
         """
 
         if current.response.s3.bulk:
@@ -2588,7 +2597,8 @@ class CAPResourceModel(S3Model):
             Onaccept-routine for resources
                 - inherit alert_id from info segment if not set in form
 
-            @param form: the FORM
+            Args:
+                form: the FORM
         """
 
         form_vars = form.vars
@@ -2789,7 +2799,8 @@ class CAPWarningPriorityModel(S3Model):
                 - check for duplicates
                 - currently unused (TODO: document why)
 
-            @param form: the FORM
+            Args:
+                form: the FORM
         """
 
         form_vars = form.vars
@@ -2864,9 +2875,11 @@ class CAPWarningPriorityModel(S3Model):
         """
             Represent a hex color code as a colored DIV
 
-            @param color_code: the color code
+            Args:
+                color_code: the color code
 
-            @returns: the representation XML
+            Returns:
+                The representation XML
         """
 
         if not color_code:
@@ -2879,7 +2892,6 @@ class CAPWarningPriorityModel(S3Model):
 
 # =============================================================================
 class CAPHistoryModel(S3Model):
-    """ TODO docstring (what is this used for?) """
 
     names = ("cap_alert_history",
              "cap_info_history",
@@ -3967,24 +3979,17 @@ class CAPMessageModel(S3Model):
         #
         return None
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def defaults():
-        """
-            Return safe defaults in case the model has been deactivated.
-        """
-
-        return None
-
 # =============================================================================
 def list_string_represent(value, fmt=lambda v: v):
     """
         Represent a list:string field value as comma-separated list
 
-        @param value: the field value
-        @param fmt: callable to format each list element (optional)
+        Args:
+            value: the field value
+            fmt: callable to format each list element (optional)
 
-        @returns: the comma-separated list as string
+        Returns:
+            comma-separated list as string
     """
 
     if isinstance(value, list):
@@ -4076,9 +4081,11 @@ def cap_alert_is_template(alert_id):
     """
         Check whether a cap_alert is a template
 
-        @param alert_id: the alert record ID
+        Args:
+            alert_id: the alert record ID
 
-        @returns: True|False whether the alert is a template
+        Returns:
+            True|False whether the alert is a template
     """
 
     if not alert_id:
@@ -4447,11 +4454,12 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
     """
         Default dataList item renderer for CAP Alerts on the Home page.
 
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
+        Args:
+            list_id: the HTML ID of the list
+            item_id: the HTML ID of the item
+            resource: the S3Resource to render
+            rfields: the S3ResourceFields to render
+            record: the record as dict
     """
 
     record_id = record["cap_alert.id"]
@@ -4597,9 +4605,10 @@ class cap_AreaRepresent(S3Represent):
             Custom lookup method for area Rows; to look up local name if
             required.
 
-            @param key: unused (retained for API compatibility)
-            @param values: the cap_area IDs
-            @param fields: unused (retained for API compatibility)
+            Args:
+                key: unused (retained for API compatibility)
+                values: the cap_area IDs
+                fields: unused (retained for API compatibility)
         """
 
         table = self.table
@@ -4627,7 +4636,8 @@ class cap_AreaRepresent(S3Represent):
         """
             Represent a single Row
 
-            @param row: the cap_area Row
+            Args:
+                row: the cap_area Row
         """
 
         name = row["cap_area.name"]
@@ -4651,8 +4661,9 @@ class cap_ImportAlert(S3Method):
         """
             Apply method.
 
-            @param r: the S3Request
-            @param attr: controller options for this request
+            Args:
+                r: the S3Request
+                attr: controller options for this request
         """
 
         # Requires permission to create alerts
@@ -4756,11 +4767,14 @@ class cap_ImportAlert(S3Method):
         """
             Accept the import-form
 
-            @param resource: the target import resource
-            @param form: the FORM
-            @returns: tuple (error, msg)
-                      error - error message (if an error occured)
-                      msg - confirmation message of the import
+            Args:
+                resource: the target import resource
+                form: the FORM
+
+            Returns:
+                tuple (error, msg)
+                    error - error message (if an error occured)
+                    msg - confirmation message of the import
         """
 
         formvars_get = form.vars.get
@@ -4807,14 +4821,16 @@ class cap_ImportAlert(S3Method):
         """
             Import a CAP-XML element tree into a cap_alert resource
 
-            @param tree: the ElementTree
-            @param version: the detected CAP version (see parse_cap)
-            @param resource: the cap_alert resource to import to,
-                             will be instantiated if not passed in
-            @param url: the CAP-XML source URL
-            @param ignore_errors: skip invalid cap_alert records
+            Args:
+                tree: the ElementTree
+                version: the detected CAP version (see parse_cap)
+                resource: the cap_alert resource to import to,
+                          will be instantiated if not passed in
+                url: the CAP-XML source URL
+                ignore_errors: skip invalid cap_alert records
 
-            TODO ignore_errors gives no benefit because it means to
+            TODO:
+                ignore_errors gives no benefit because it means to
                  skip invalid master records, but a CAP-XML source
                  can only contain one master record anyway - so the
                  outcome would be the same
@@ -4876,12 +4892,14 @@ class cap_ImportAlert(S3Method):
         """
             Parse a CAP-XML source and detect the CAP version
 
-            @param source: the CAP-XML source
+            Args:
+                source: the CAP-XML source
 
-            @returns: tuple (tree, version, error)
-                      - tree    = ElementTree of the CAP source
-                      - version = the detected CAP version
-                      - error   = error message if parsing failed, else None
+            Returns:
+                tuple (tree, version, error)
+                    - tree    = ElementTree of the CAP source
+                    - version = the detected CAP version
+                    - error   = error message if parsing failed, else None
         """
 
         version = error = None
@@ -4915,27 +4933,28 @@ class cap_ImportAlert(S3Method):
     # -------------------------------------------------------------------------
     @staticmethod
     def opener(url,
-               headers=None,
-               username=None,
-               password=None,
-               preemptive_auth=False,
-               proxy=None,
+               headers = None,
+               username = None,
+               password = None,
+               preemptive_auth = False,
+               proxy = None,
                ):
         """
             Configure a HTTP opener to fetch CAP messages
 
-            @param url: the target URL
-            @param headers: HTTP request headers, list of tuples (header, value)
-            @param username: user name for auth
-            @param password: password for auth
-            @param preemptive_auth: send credentials without waiting for a
-                                    HTTP401 challenge
-            @param proxy: proxy URL (if required)
+            Args:
+                url: the target URL
+                headers: HTTP request headers, list of tuples (header, value)
+                username: user name for auth
+                password: password for auth
+                preemptive_auth: send credentials without waiting for a
+                                 HTTP401 challenge
+                proxy: proxy URL (if required)
 
-            @returns: an OpenerDirector instance with proxy and
-                      auth handlers installed
+            Returns:
+                OpenerDirector instance with proxy and auth handlers installed
 
-            @example:
+            Example:
                 url = "http://example.com/capfile.xml"
                 opener = self._opener(url, username="user", password="password")
                 content = opener.open(url)
@@ -4994,9 +5013,9 @@ class cap_AssignArea(S3Method):
 
     def apply_method(self, r, **attr):
         """
-            Apply method.
-            @param r: the S3Request
-            @param attr: controller options for this request
+            Args:
+                r: the S3Request
+                attr: controller options for this request
         """
 
         if not r.record:
@@ -5224,10 +5243,12 @@ class cap_AssignArea(S3Method):
             Add a new area to an alert from a template area including
             location links and tags
 
-            @param template_area_id: the template cap_area record ID
-            @param alert_id: the record ID of the alert
+            Args:
+                template_area_id: the template cap_area record ID
+                alert_id: the record ID of the alert
 
-            @returns: the new area record ID
+            Returns:
+                new area record ID
         """
 
         db = current.db
@@ -5322,386 +5343,380 @@ class cap_CloneAlert(S3Method):
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
-            Apply method
-
-            @param r: the S3Request
-            @param attr: controller options for this request
+            Args:
+                r: the S3Request
+                attr: controller options for this request
         """
 
         output = {}
         if r.http == "POST":
             if r.method == "clone":
-                output = clone(r, **attr)
+                output = self.clone(r, **attr)
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
         return output
 
-# -----------------------------------------------------------------------------
-def clone(r, record=None, **attr):
-    """
-        Clone the cap_alert
+    # -----------------------------------------------------------------------------
+    @classmethod
+    def clone(cls, r, record=None, **attr):
+        """
+            Clone the cap_alert
 
-        @param r: the S3Request instance
-        @param record: the record row
-        @param attr: controller attributes
-    """
-    # TODO make a class method of cap_CloneAlert
+            Args:
+                r: the S3Request instance
+                record: the record row
+                attr: controller attributes
+        """
+        if record and not r.env.request_method == "POST":
+            current.log.error(current.ERROR.BAD_METHOD)
+            return
 
-    if record and not r.env.request_method == "POST":
-        current.log.error(current.ERROR.BAD_METHOD)
-        return
+        # Get the alert ID
+        alert_id = r.id
+        if not alert_id and record:
+            alert_id = record.id
 
-    # Get the alert ID
-    alert_id = r.id
-    if not alert_id and record:
-        alert_id = record.id
+        if not alert_id:
+            # Must be called for a particular alert
+            if record:
+                current.log.error(current.ERROR.BAD_RECORD)
+            else:
+                r.error(404, current.ERROR.BAD_RECORD)
 
-    if not alert_id:
-        # Must be called for a particular alert
+        s3db = current.s3db
+        alert_table = s3db.cap_alert
+        # Get the person ID
+        auth = current.auth
+        person_id = auth.s3_logged_in_person()
+        if not person_id or not auth.s3_has_permission("create", alert_table):
+            auth.permission.fail()
+
+        msg_type_options = ["Alert", "Update", "Cancel", "Error", "AllClear"]
+        msg_type = current.request._get_vars["msg_type"]
+
+        if msg_type and msg_type not in msg_type_options:
+            r.error(400, current.ERROR.BAD_REQUEST)
+
+        # Start of clone
+        db = current.db
+        alert_history_table = s3db.cap_alert_history
+        info_table = s3db.cap_info
+        area_table = s3db.cap_area
+        location_table = s3db.cap_area_location
+        tag_table = s3db.cap_area_tag
+        resource_table = s3db.cap_resource
+        unwanted_fields = ["id", "doc_id"]
+        unwanted_fields.extend(s3_all_meta_field_names())
         if record:
-            current.log.error(current.ERROR.BAD_RECORD)
+            unwanted_fields = ["id", "alert_id", "info_id", "is_template", "doc_id"]
+        unwanted_fields = set(unwanted_fields)
+        accessible_query = auth.s3_accessible_query
+        has_permission = auth.s3_has_permission
+        audit = current.audit
+        set_record_owner = auth.s3_set_record_owner
+        onaccept = s3db.onaccept
+
+        # Copy the alert segment
+        alert_fields = [alert_table[f] for f in alert_table.fields
+                        if f not in unwanted_fields]
+        alert_query = (alert_table.id == alert_id) & \
+                       accessible_query("read", alert_table)
+        alert_row = db(alert_query).select(*alert_fields, limitby=(0, 1)).first()
+        alert_row_clone = alert_row.as_dict()
+        if record:
+            # Alert History use-case
+            alert_row_clone["event_type"] = alert_table.event_type_id.represent(alert_row_clone["event_type_id"])
+            del alert_row_clone["event_type_id"]
+            del alert_row_clone["template_id"]
+            del alert_row_clone["template_title"]
+            del alert_row_clone["template_settings"]
+            del alert_row_clone["external"]
+
+            new_alert_id = alert_history_table.insert(**alert_row_clone)
+            # Post-process create
+            alert_row_clone["id"] = new_alert_id
+            audit("create", "cap", "alert_history", record=new_alert_id)
+            set_record_owner(alert_history_table, new_alert_id)
         else:
-            r.error(404, current.ERROR.BAD_RECORD)
+            # Change of msg_type use-case or relay alert
+            referenced_reference = alert_row.reference
+            references = []
+            if referenced_reference:
+                reference_splits = referenced_reference.split(",")
+                reference_query_ = (alert_table.deleted == False) & \
+                                   (alert_table.is_template != True) & \
+                                   (alert_table.external != True)
+                for split in reference_splits:
+                    reference_query = reference_query_ & (alert_table.identifier == split)
+                    reference_row = db(reference_query).select(alert_table.sender,
+                                                               alert_table.sent,
+                                                               limitby = (0, 1),
+                                                               ).first()
+                    if reference_row:
+                        references.append(("%s,%s,%s") % (reference_row.sender,
+                                                          split,
+                                  s3_str(s3_utc(reference_row.sent)).replace(" ", "T")))
 
-    s3db = current.s3db
-    alert_table = s3db.cap_alert
-    # Get the person ID
-    auth = current.auth
-    person_id = auth.s3_logged_in_person()
-    if not person_id or not auth.s3_has_permission("create", alert_table):
-        auth.permission.fail()
+            references.append(("%s,%s,%s") % (alert_row.sender,
+                                              alert_row.identifier,
+                                    s3_str(s3_utc(alert_row.sent)).replace(" ", "T")))
+            del alert_row_clone["identifier"]
+            alert_row_clone["msg_type"] = msg_type
+            alert_row_clone["sent"] = current.request.utcnow
+            alert_row_clone["external"] = False
+            alert_row_clone["approved_on"] = None
+            alert_row_clone["reference"] = " ".join(references)
+            try:
+                user_email = auth.user.email
+            except AttributeError:
+                user_email = ""
+            alert_row_clone["sender"] = "%s" % user_email
 
-    msg_type_options = ["Alert", "Update", "Cancel", "Error", "AllClear"]
-    msg_type = current.request._get_vars["msg_type"]
+            new_alert_id = alert_table.insert(**alert_row_clone)
+            # Post-process create
+            alert_row_clone["id"] = new_alert_id
+            audit("create", "cap", "alert", record=new_alert_id)
+            set_record_owner(alert_table, new_alert_id)
+            onaccept(alert_table, alert_row_clone)
 
-    if msg_type and msg_type not in msg_type_options:
-        r.error(400, current.ERROR.BAD_REQUEST)
-
-    # Start of clone
-    db = current.db
-    alert_history_table = s3db.cap_alert_history
-    info_table = s3db.cap_info
-    area_table = s3db.cap_area
-    location_table = s3db.cap_area_location
-    tag_table = s3db.cap_area_tag
-    resource_table = s3db.cap_resource
-    unwanted_fields = ["id", "doc_id"]
-    unwanted_fields.extend(s3_all_meta_field_names())
-    if record:
-        unwanted_fields = ["id", "alert_id", "info_id", "is_template", "doc_id"]
-    unwanted_fields = set(unwanted_fields)
-    accessible_query = auth.s3_accessible_query
-    has_permission = auth.s3_has_permission
-    audit = current.audit
-    set_record_owner = auth.s3_set_record_owner
-    onaccept = s3db.onaccept
-
-    # Copy the alert segment
-    alert_fields = [alert_table[f] for f in alert_table.fields
-                    if f not in unwanted_fields]
-    alert_query = (alert_table.id == alert_id) & \
-                   accessible_query("read", alert_table)
-    alert_row = db(alert_query).select(*alert_fields, limitby=(0, 1)).first()
-    alert_row_clone = alert_row.as_dict()
-    if record:
-        # Alert History use-case
-        alert_row_clone["event_type"] = alert_table.event_type_id.represent(alert_row_clone["event_type_id"])
-        del alert_row_clone["event_type_id"]
-        del alert_row_clone["template_id"]
-        del alert_row_clone["template_title"]
-        del alert_row_clone["template_settings"]
-        del alert_row_clone["external"]
-
-        new_alert_id = alert_history_table.insert(**alert_row_clone)
-        # Post-process create
-        alert_row_clone["id"] = new_alert_id
-        audit("create", "cap", "alert_history", record=new_alert_id)
-        set_record_owner(alert_history_table, new_alert_id)
-    else:
-        # Change of msg_type use-case or relay alert
-        referenced_reference = alert_row.reference
-        references = []
-        if referenced_reference:
-            reference_splits = referenced_reference.split(",")
-            reference_query_ = (alert_table.deleted == False) & \
-                               (alert_table.is_template != True) & \
-                               (alert_table.external != True)
-            for split in reference_splits:
-                reference_query = reference_query_ & (alert_table.identifier == split)
-                reference_row = db(reference_query).select(alert_table.sender,
-                                                           alert_table.sent,
-                                                           limitby = (0, 1),
-                                                           ).first()
-                if reference_row:
-                    references.append(("%s,%s,%s") % (reference_row.sender,
-                                                      split,
-                              s3_str(s3_utc(reference_row.sent)).replace(" ", "T")))
-
-        references.append(("%s,%s,%s") % (alert_row.sender,
-                                          alert_row.identifier,
-                                s3_str(s3_utc(alert_row.sent)).replace(" ", "T")))
-        del alert_row_clone["identifier"]
-        alert_row_clone["msg_type"] = msg_type
-        alert_row_clone["sent"] = current.request.utcnow
-        alert_row_clone["external"] = False
-        alert_row_clone["approved_on"] = None
-        alert_row_clone["reference"] = " ".join(references)
-        try:
-            user_email = auth.user.email
-        except AttributeError:
-            user_email = ""
-        alert_row_clone["sender"] = "%s" % user_email
-
-        new_alert_id = alert_table.insert(**alert_row_clone)
-        # Post-process create
-        alert_row_clone["id"] = new_alert_id
-        audit("create", "cap", "alert", record=new_alert_id)
-        set_record_owner(alert_table, new_alert_id)
-        onaccept(alert_table, alert_row_clone)
-
-    if has_permission("create", info_table):
-        # Copy the info segment
-        info_history_table = s3db.cap_info_history
-        unwanted_fields_ = list(unwanted_fields)
-        unwanted_fields_.remove("id")
-        info_fields = [info_table[f] for f in info_table.fields
-                       if f not in unwanted_fields_]
-        info_query = (info_table.alert_id == alert_id) &\
-                      accessible_query("read", info_table)
-        info_rows = db(info_query).select(*info_fields)
-        if len(info_rows):
-            info_parameter_table = s3db.cap_info_parameter
-            info_parameter_history_table = s3db.cap_info_parameter_history
-            info_parameter_table_insert = info_parameter_table.insert
-            info_parameter_history_table_insert = info_parameter_history_table.insert
-            info_parameter_accessible = accessible_query("read", info_parameter_table)
-            info_parameter_fields = [info_parameter_table[f] for f in info_parameter_table.fields
-                                     if f not in unwanted_fields]
-            info_parameter_query_ = (info_parameter_table.alert_id == alert_id)
-            for info_row in info_rows:
-                info_id = info_row.id
-                info_row_clone = info_row.as_dict()
-                del info_row_clone["id"]
-                if msg_type and msg_type == "AllClear":
-                    info_row_clone["response_type"] = "AllClear"
-                if record:
-                    # Info History use-case
-                    del info_row_clone["template_info_id"]
-                    del info_row_clone["template_settings"]
-                    del info_row_clone["event_type_id"]
-                    info_row_clone["priority"] = info_table.priority.represent(info_row_clone["priority"])
-                    info_row_clone["alert_history_id"] = new_alert_id
-                    new_info_id = info_history_table.insert(**info_row_clone)
-                    # Post-process create
-                    info_row_clone["id"] = new_info_id
-                    audit("create", "cap", "info_history", record=new_info_id)
-                    set_record_owner(info_history_table, new_info_id)
-                else:
-                    # Change of msg_type use-case
-                    info_row_clone["alert_id"] = new_alert_id
-                    new_info_id = info_table.insert(**info_row_clone)
-                    # Post-process create
-                    info_row_clone["id"] = new_info_id
-                    audit("create", "cap", "info", record=new_info_id)
-                    set_record_owner(info_table, new_info_id)
-                    onaccept(info_table, info_row_clone)
-
-                # Copy the info parameters
-                info_parameter_query = info_parameter_query_ & \
-                                       (info_parameter_table.info_id == info_id) & \
-                                       info_parameter_accessible
-                info_parameter_rows = db(info_parameter_query).select(*info_parameter_fields)
-                for info_parameter_row in info_parameter_rows:
-                    info_parameter_row_clone = info_parameter_row.as_dict()
+        if has_permission("create", info_table):
+            # Copy the info segment
+            info_history_table = s3db.cap_info_history
+            unwanted_fields_ = list(unwanted_fields)
+            unwanted_fields_.remove("id")
+            info_fields = [info_table[f] for f in info_table.fields
+                           if f not in unwanted_fields_]
+            info_query = (info_table.alert_id == alert_id) &\
+                          accessible_query("read", info_table)
+            info_rows = db(info_query).select(*info_fields)
+            if len(info_rows):
+                info_parameter_table = s3db.cap_info_parameter
+                info_parameter_history_table = s3db.cap_info_parameter_history
+                info_parameter_table_insert = info_parameter_table.insert
+                info_parameter_history_table_insert = info_parameter_history_table.insert
+                info_parameter_accessible = accessible_query("read", info_parameter_table)
+                info_parameter_fields = [info_parameter_table[f] for f in info_parameter_table.fields
+                                         if f not in unwanted_fields]
+                info_parameter_query_ = (info_parameter_table.alert_id == alert_id)
+                for info_row in info_rows:
+                    info_id = info_row.id
+                    info_row_clone = info_row.as_dict()
+                    del info_row_clone["id"]
+                    if msg_type and msg_type == "AllClear":
+                        info_row_clone["response_type"] = "AllClear"
                     if record:
-                        # History table use-case
-                        info_parameter_row_clone["alert_history_id"] = new_alert_id
-                        info_parameter_row_clone["info_history_id"] = new_info_id
-                        new_info_parameter_id = info_parameter_history_table_insert(**info_parameter_row_clone)
+                        # Info History use-case
+                        del info_row_clone["template_info_id"]
+                        del info_row_clone["template_settings"]
+                        del info_row_clone["event_type_id"]
+                        info_row_clone["priority"] = info_table.priority.represent(info_row_clone["priority"])
+                        info_row_clone["alert_history_id"] = new_alert_id
+                        new_info_id = info_history_table.insert(**info_row_clone)
                         # Post-process create
-                        info_parameter_row_clone["id"] = new_info_parameter_id
-                        audit("create", "cap", "info_parameter_history",
-                              record=new_info_parameter_id)
-                        set_record_owner(info_parameter_history_table, new_info_parameter_id)
+                        info_row_clone["id"] = new_info_id
+                        audit("create", "cap", "info_history", record=new_info_id)
+                        set_record_owner(info_history_table, new_info_id)
                     else:
                         # Change of msg_type use-case
-                        info_parameter_row_clone.update(alert_id = new_alert_id,
-                                                        info_id = new_info_id)
-                        new_info_parameter_id = info_parameter_table_insert(**info_parameter_row_clone)
+                        info_row_clone["alert_id"] = new_alert_id
+                        new_info_id = info_table.insert(**info_row_clone)
                         # Post-process create
-                        info_parameter_row_clone["id"] = new_info_parameter_id
-                        audit("create", "cap", "info_parameter",
-                              record=new_info_parameter_id)
-                        set_record_owner(info_parameter_table, new_info_parameter_id)
-                        onaccept(info_parameter_table, info_parameter_row_clone)
+                        info_row_clone["id"] = new_info_id
+                        audit("create", "cap", "info", record=new_info_id)
+                        set_record_owner(info_table, new_info_id)
+                        onaccept(info_table, info_row_clone)
 
-    if has_permission("create", area_table):
-        # Copy the area segment
-        area_fields = [area_table[f] for f in area_table.fields
-                       if f not in unwanted_fields_]
-        area_query = (area_table.alert_id == alert_id) & \
-                     accessible_query("read", area_table)
-        area_rows = db(area_query).select(*area_fields)
-        if len(area_rows):
-            gtable = s3db.gis_location
-            area_history_table = s3db.cap_area_history
-            location_history_table = s3db.cap_area_location_history
-            tag_history_table = s3db.cap_area_tag_history
-            onvalidation = s3db.onvalidation
-            area_table_insert = area_table.insert
+                    # Copy the info parameters
+                    info_parameter_query = info_parameter_query_ & \
+                                           (info_parameter_table.info_id == info_id) & \
+                                           info_parameter_accessible
+                    info_parameter_rows = db(info_parameter_query).select(*info_parameter_fields)
+                    for info_parameter_row in info_parameter_rows:
+                        info_parameter_row_clone = info_parameter_row.as_dict()
+                        if record:
+                            # History table use-case
+                            info_parameter_row_clone["alert_history_id"] = new_alert_id
+                            info_parameter_row_clone["info_history_id"] = new_info_id
+                            new_info_parameter_id = info_parameter_history_table_insert(**info_parameter_row_clone)
+                            # Post-process create
+                            info_parameter_row_clone["id"] = new_info_parameter_id
+                            audit("create", "cap", "info_parameter_history",
+                                  record=new_info_parameter_id)
+                            set_record_owner(info_parameter_history_table, new_info_parameter_id)
+                        else:
+                            # Change of msg_type use-case
+                            info_parameter_row_clone.update(alert_id = new_alert_id,
+                                                            info_id = new_info_id)
+                            new_info_parameter_id = info_parameter_table_insert(**info_parameter_row_clone)
+                            # Post-process create
+                            info_parameter_row_clone["id"] = new_info_parameter_id
+                            audit("create", "cap", "info_parameter",
+                                  record=new_info_parameter_id)
+                            set_record_owner(info_parameter_table, new_info_parameter_id)
+                            onaccept(info_parameter_table, info_parameter_row_clone)
 
-            location_table_insert = location_table.insert
-            location_accessible = accessible_query("read", location_table)
-            location_fields = [location_table[f] for f in location_table.fields
+        if has_permission("create", area_table):
+            # Copy the area segment
+            area_fields = [area_table[f] for f in area_table.fields
+                           if f not in unwanted_fields_]
+            area_query = (area_table.alert_id == alert_id) & \
+                         accessible_query("read", area_table)
+            area_rows = db(area_query).select(*area_fields)
+            if len(area_rows):
+                gtable = s3db.gis_location
+                area_history_table = s3db.cap_area_history
+                location_history_table = s3db.cap_area_location_history
+                tag_history_table = s3db.cap_area_tag_history
+                onvalidation = s3db.onvalidation
+                area_table_insert = area_table.insert
+
+                location_table_insert = location_table.insert
+                location_accessible = accessible_query("read", location_table)
+                location_fields = [location_table[f] for f in location_table.fields
+                                   if f not in unwanted_fields]
+
+                tag_table_insert = tag_table.insert
+                tag_accessible = accessible_query("read", tag_table)
+                tag_fields = [tag_table[f] for f in tag_table.fields
+                              if f not in unwanted_fields]
+
+                for area_row in area_rows:
+                    area_id = area_row.id
+                    area_row_clone = area_row.as_dict()
+                    del area_row_clone["id"]
+                    if record:
+                        # History table use-case
+                        del area_row_clone["template_area_id"]
+                        del area_row_clone["event_type_id"]
+                        #del area_row_clone["priority"]
+                        area_row_clone["alert_history_id"] = new_alert_id
+                        new_area_id = area_history_table.insert(**area_row_clone)
+                        # Post-process create
+                        area_row_clone["id"] = new_area_id
+                        audit("create", "cap", "area_history", record=new_area_id)
+                        set_record_owner(area_history_table, new_area_id)
+                    else:
+                        # Update/Error/Relay/All Clear use-case
+                        area_row_clone["alert_id"] = new_alert_id
+
+                        new_area_id = area_table_insert(**area_row_clone)
+                        # Post-process create
+                        area_row_clone["id"] = new_area_id
+                        audit("create", "cap", "area", record=new_area_id)
+                        set_record_owner(area_table, new_area_id)
+                        onaccept(area_table, area_row_clone)
+
+                    # Copy the area_location
+                    location_query = (location_table.area_id == area_id) &\
+                                     location_accessible
+                    location_rows = db(location_query).\
+                                        select(*location_fields)
+                    for location_row in location_rows:
+                        location_row_clone = location_row.as_dict()
+                        if record:
+                            # History table use-case
+                            del location_row_clone["area_id"]
+                            location_row_clone["alert_history_id"] = new_alert_id
+                            location_row_clone["area_history_id"] = new_area_id
+                            grow = db(gtable.id == location_row_clone["location_id"]).\
+                                    select(gtable.wkt, limitby=(0, 1)).first()
+                            if grow:
+                                location_row_clone["location_wkt"] = grow.wkt
+                            del location_row_clone["location_id"]
+                            new_location_id = location_history_table.insert(**location_row_clone)
+                            # Post-process create
+                            location_row_clone["id"] = new_location_id
+                            audit("create", "cap", "area_location_history",
+                                  record=new_location_id)
+                            set_record_owner(location_history_table, new_location_id)
+                        else:
+                            # Update/Error/Relay/All Clear use-case
+                            location_row_clone.update(alert_id = new_alert_id,
+                                                      area_id = new_area_id)
+                            onvalidation(gtable, location_row_clone)
+                            new_location_id = location_table_insert(**location_row_clone)
+                            # Post-process create
+                            location_row_clone["id"] = new_location_id
+                            audit("create", "cap", "area_location",
+                                  record=new_location_id)
+                            set_record_owner(location_table, new_location_id)
+                            onaccept(location_table, location_row_clone)
+
+                    # Copy the area_tag
+                    tag_query = (tag_table.area_id == area_id) &\
+                                tag_accessible
+                    tag_rows = db(tag_query).select(*tag_fields)
+                    for tag_row in tag_rows:
+                        tag_row_clone = tag_row.as_dict()
+                        if record:
+                            # History table use-case
+                            del tag_row_clone["area_id"]
+                            tag_row_clone["alert_history_id"] = new_alert_id
+                            tag_row_clone["area_history_id"] = new_area_id
+
+                            new_tag_id = tag_history_table.insert(**tag_row_clone)
+                            # Post-process create
+                            tag_row_clone["id"] = new_tag_id
+                            audit("create", "cap", "area_tag_history", record=new_tag_id)
+                            set_record_owner(tag_history_table, new_tag_id)
+                        else:
+                            # Update/Error/Relay/All Clear use-case
+                            tag_row_clone.update(alert_id = new_alert_id,
+                                                 area_id = new_area_id)
+
+                            new_tag_id = tag_table_insert(**tag_row_clone)
+                            # Post-process create
+                            tag_row_clone["id"] = new_tag_id
+                            audit("create", "cap", "area_tag", record=new_tag_id)
+                            set_record_owner(tag_table, new_tag_id)
+                            # Don't do onaccept as geocodes may create locations, so duplicates
+                            # as Locations are cloned anyway
+                            #onaccept(tag_table, tag_row_clone)
+        if has_permission("create", resource_table):
+            # Copy the resource segment
+            resource_fields = [resource_table[f] for f in resource_table.fields
                                if f not in unwanted_fields]
-
-            tag_table_insert = tag_table.insert
-            tag_accessible = accessible_query("read", tag_table)
-            tag_fields = [tag_table[f] for f in tag_table.fields
-                          if f not in unwanted_fields]
-
-            for area_row in area_rows:
-                area_id = area_row.id
-                area_row_clone = area_row.as_dict()
-                del area_row_clone["id"]
-                if record:
-                    # History table use-case
-                    del area_row_clone["template_area_id"]
-                    del area_row_clone["event_type_id"]
-                    #del area_row_clone["priority"]
-                    area_row_clone["alert_history_id"] = new_alert_id
-                    new_area_id = area_history_table.insert(**area_row_clone)
-                    # Post-process create
-                    area_row_clone["id"] = new_area_id
-                    audit("create", "cap", "area_history", record=new_area_id)
-                    set_record_owner(area_history_table, new_area_id)
-                else:
-                    # Update/Error/Relay/All Clear use-case
-                    area_row_clone["alert_id"] = new_alert_id
-
-                    new_area_id = area_table_insert(**area_row_clone)
-                    # Post-process create
-                    area_row_clone["id"] = new_area_id
-                    audit("create", "cap", "area", record=new_area_id)
-                    set_record_owner(area_table, new_area_id)
-                    onaccept(area_table, area_row_clone)
-
-                # Copy the area_location
-                location_query = (location_table.area_id == area_id) &\
-                                 location_accessible
-                location_rows = db(location_query).\
-                                    select(*location_fields)
-                for location_row in location_rows:
-                    location_row_clone = location_row.as_dict()
+            resource_query = (resource_table.alert_id == alert_id) &\
+                             accessible_query("read", resource_table)
+            resource_rows = db(resource_query).select(*resource_fields)
+            if len(resource_rows):
+                resource_history_table = s3db.cap_resource_history
+                resource_table_insert = resource_table.insert
+                update_super = s3db.update_super
+                for resource_row in resource_rows:
+                    resource_row_clone = resource_row.as_dict()
+                    mime_type = resource_row_clone["mime_type"]
                     if record:
-                        # History table use-case
-                        del location_row_clone["area_id"]
-                        location_row_clone["alert_history_id"] = new_alert_id
-                        location_row_clone["area_history_id"] = new_area_id
-                        grow = db(gtable.id == location_row_clone["location_id"]).\
-                                select(gtable.wkt, limitby=(0, 1)).first()
-                        if grow:
-                            location_row_clone["location_wkt"] = grow.wkt
-                        del location_row_clone["location_id"]
-                        new_location_id = location_history_table.insert(**location_row_clone)
+                        # History Table use-case
+                        resource_row_clone["alert_history_id"] = new_alert_id
+                        rid = resource_history_table.insert(**resource_row_clone)
+                        resource_row_clone["id"] = rid
                         # Post-process create
-                        location_row_clone["id"] = new_location_id
-                        audit("create", "cap", "area_location_history",
-                              record=new_location_id)
-                        set_record_owner(location_history_table, new_location_id)
-                    else:
+                        audit("create", "cap", "resource_history", record=rid)
+                        set_record_owner(resource_history_table, rid)
+                    elif mime_type and mime_type != "cap":
                         # Update/Error/Relay/All Clear use-case
-                        location_row_clone.update(alert_id = new_alert_id,
-                                                  area_id = new_area_id)
-                        onvalidation(gtable, location_row_clone)
-                        new_location_id = location_table_insert(**location_row_clone)
+                        resource_row_clone["alert_id"] = new_alert_id
+                        rid = resource_table_insert(**resource_row_clone)
+                        resource_row_clone["id"] = rid
                         # Post-process create
-                        location_row_clone["id"] = new_location_id
-                        audit("create", "cap", "area_location",
-                              record=new_location_id)
-                        set_record_owner(location_table, new_location_id)
-                        onaccept(location_table, location_row_clone)
+                        audit("create", "cap", "resource", record=rid)
+                        update_super(resource_table, resource_row_clone)
+                        set_record_owner(resource_table, rid)
+                        onaccept(resource_table, resource_row_clone)
 
-                # Copy the area_tag
-                tag_query = (tag_table.area_id == area_id) &\
-                            tag_accessible
-                tag_rows = db(tag_query).select(*tag_fields)
-                for tag_row in tag_rows:
-                    tag_row_clone = tag_row.as_dict()
-                    if record:
-                        # History table use-case
-                        del tag_row_clone["area_id"]
-                        tag_row_clone["alert_history_id"] = new_alert_id
-                        tag_row_clone["area_history_id"] = new_area_id
-
-                        new_tag_id = tag_history_table.insert(**tag_row_clone)
-                        # Post-process create
-                        tag_row_clone["id"] = new_tag_id
-                        audit("create", "cap", "area_tag_history", record=new_tag_id)
-                        set_record_owner(tag_history_table, new_tag_id)
-                    else:
-                        # Update/Error/Relay/All Clear use-case
-                        tag_row_clone.update(alert_id = new_alert_id,
-                                             area_id = new_area_id)
-
-                        new_tag_id = tag_table_insert(**tag_row_clone)
-                        # Post-process create
-                        tag_row_clone["id"] = new_tag_id
-                        audit("create", "cap", "area_tag", record=new_tag_id)
-                        set_record_owner(tag_table, new_tag_id)
-                        # Don't do onaccept as geocodes may create locations, so duplicates
-                        # as Locations are cloned anyway
-                        #onaccept(tag_table, tag_row_clone)
-    if has_permission("create", resource_table):
-        # Copy the resource segment
-        resource_fields = [resource_table[f] for f in resource_table.fields
-                           if f not in unwanted_fields]
-        resource_query = (resource_table.alert_id == alert_id) &\
-                         accessible_query("read", resource_table)
-        resource_rows = db(resource_query).select(*resource_fields)
-        if len(resource_rows):
-            resource_history_table = s3db.cap_resource_history
-            resource_table_insert = resource_table.insert
-            update_super = s3db.update_super
-            for resource_row in resource_rows:
-                resource_row_clone = resource_row.as_dict()
-                mime_type = resource_row_clone["mime_type"]
-                if record:
-                    # History Table use-case
-                    resource_row_clone["alert_history_id"] = new_alert_id
-                    rid = resource_history_table.insert(**resource_row_clone)
-                    resource_row_clone["id"] = rid
-                    # Post-process create
-                    audit("create", "cap", "resource_history", record=rid)
-                    set_record_owner(resource_history_table, rid)
-                elif mime_type and mime_type != "cap":
-                    # Update/Error/Relay/All Clear use-case
-                    resource_row_clone["alert_id"] = new_alert_id
-                    rid = resource_table_insert(**resource_row_clone)
-                    resource_row_clone["id"] = rid
-                    # Post-process create
-                    audit("create", "cap", "resource", record=rid)
-                    update_super(resource_table, resource_row_clone)
-                    set_record_owner(resource_table, rid)
-                    onaccept(resource_table, resource_row_clone)
-
-
-    if not record:
-        output = current.xml.json_message(message=new_alert_id)
-        current.response.headers["Content-Type"] = "application/json"
-        return output
-    return
+        if not record:
+            output = current.xml.json_message(message=new_alert_id)
+            current.response.headers["Content-Type"] = "application/json"
+            return output
 
 # -----------------------------------------------------------------------------
 class cap_AlertProfileWidget:
     """ Custom profile widget builder """
 
     def __init__(self, title, label=None, value=None):
-        """
-            TODO docstring
-        """
 
         self.title = title
         self.label = label
@@ -5712,9 +5727,8 @@ class cap_AlertProfileWidget:
         """
             Widget builder
 
-            @param f: the calling function
-
-            TODO: explain return value and use as decorator
+            Args:
+                f: the calling function
         """
 
         def widget(r, **attr):
@@ -5727,22 +5741,22 @@ class cap_AlertProfileWidget:
                 T = current.T
                 if label and value:
                     title_ = DIV(SPAN("%s " % T(title),
-                                      _class="cap-value upper"
+                                      _class = "cap-value upper",
                                       ),
                                  SPAN("%s :: " % T(label),
-                                      _class="cap-label upper"
+                                      _class = "cap-label upper",
                                       ),
                                  SPAN(value,
-                                      _class="cap-strong"
+                                      _class = "cap-strong",
                                       ),
                                  )
                 else:
                     title_ = DIV(SPAN(T(title),
-                                      _class="cap-value upper"),
+                                      _class = "cap-value upper"),
                                  )
 
                 header = TAG[""](title_,
-                                 DIV(_class="underline"),
+                                 DIV(_class = "underline"),
                                  )
                 output = DIV(header, *components)
             else:
@@ -5763,14 +5777,16 @@ class cap_AlertProfileWidget:
                   ):
         """
             Component builder
-            @param label: name for the component label
-            @param value: value for the component
-            @param represent: representation used for the value
-            @param uppercase: whether to display label in upper case
-            @param strong: whether to display with strong color
-            @param hide_empty: whether to hide empty records
-            @param headline: is headline?
-            @param resource_segment: belongs to resource segment?
+
+            Args:
+                label: name for the component label
+                value: value for the component
+                represent: representation used for the value
+                uppercase: whether to display label in upper case
+                strong: whether to display with strong color
+                hide_empty: whether to hide empty records
+                headline: is headline?
+                resource_segment: belongs to resource segment?
         """
 
         if not value and hide_empty:

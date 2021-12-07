@@ -59,10 +59,9 @@ class FaceBookAccount(OAuthAccount):
     # -------------------------------------------------------------------------
     def __init__(self, channel):
         """
-            Constructor
-
-            @param channel: Facebook channel (Row) with API credentials:
-                            {app_id=clientID, app_secret=clientSecret}
+            Args:
+                channel: Facebook channel (Row) with API credentials:
+                         {app_id=clientID, app_secret=clientSecret}
         """
 
         from facebook import GraphAPI, GraphAPIError
@@ -209,10 +208,9 @@ class GooglePlusAccount(OAuthAccount):
     # -------------------------------------------------------------------------
     def __init__(self, channel):
         """
-            Constructor
-
-            @param channel: dict with Google API credentials:
-                            {id=clientID, secret=clientSecret}
+            Args:
+                channel: dict with Google API credentials:
+                         {id=clientID, secret=clientSecret}
         """
 
         settings = current.deployment_settings
@@ -411,8 +409,11 @@ class GooglePlusAccount(OAuthAccount):
         """
             Get the user info from the API
 
-            @param token: the current access token
-            @return: user info (dict)
+            Args:
+                token: the current access token
+
+            Returns:
+                user info (dict)
         """
 
         api_response = urlopen("%s?access_token=%s" % (cls.API_URL, token))
@@ -438,10 +439,9 @@ class HumanitarianIDAccount(OAuthAccount):
     # -------------------------------------------------------------------------
     def __init__(self, channel):
         """
-            Constructor
-
-            @param channel: dict with Humanitarian.ID API credentials:
-                            {id=clientID, secret=clientSecret}
+            Args:
+                channel: dict with Humanitarian.ID API credentials:
+                         {id=clientID, secret=clientSecret}
         """
 
         request = current.request
@@ -618,8 +618,11 @@ class HumanitarianIDAccount(OAuthAccount):
         """
             Get the user info from the API
 
-            @param token: the current access token
-            @return: user info (dict)
+            Args:
+                token: the current access token
+
+            Returns:
+                user info (dict)
         """
 
         api_response = urlopen("%s?access_token=%s" % (cls.API_URL, token))
@@ -639,15 +642,14 @@ class OpenIDConnectAccount(OAuthAccount):
 
     def __init__(self, channel):
         """
-            Constructor
-
-            @param channel: dict with OpenID Connect API parameters:
-                                {"auth_url": authURL,
-                                 "token_url": tokenURL,
-                                 "userinfo_url": userinfoURL,
-                                 "id": clientID,
-                                 "secret": clientSecret,
-                                 }
+            Args:
+                channel: dict with OpenID Connect API parameters:
+                            {"auth_url": authURL,
+                             "token_url": tokenURL,
+                             "userinfo_url": userinfoURL,
+                             "id": clientID,
+                             "secret": clientSecret,
+                             }
         """
 
         request = current.request
@@ -833,8 +835,11 @@ class OpenIDConnectAccount(OAuthAccount):
         """
             Get the user info from the API
 
-            @param token: the current access token
-            @return: user info (dict)
+            Args:
+                token: the current access token
+
+            Returns:
+                user info (dict)
         """
 
         req = urllib2.Request(url=self.userinfo_url)

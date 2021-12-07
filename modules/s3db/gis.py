@@ -731,23 +731,25 @@ class LocationModel(S3Model):
     @staticmethod
     def gis_location_duplicate(item):
         """
-          This callback will be called when importing location records it will look
-          to see if the record being imported is a duplicate.
+            This callback will be called when importing location records it will look
+            to see if the record being imported is a duplicate.
 
-          @param item: An S3ImportItem object which includes all the details
-                       of the record being imported
+            Args:
+                item: An S3ImportItem object which includes all the details
+                      of the record being imported
 
-          If the record is a duplicate then it will set the item method to update
+            If the record is a duplicate then it will set the item method to update
 
-          Rules for finding a duplicate:
-           - If there is no level, then deduplicate based on the address
-           - Look for a record with the same name, ignoring case
-           - If no match, also check name_l10n
-           - If parent exists in the import, the same parent
-           - If start_date exists in the import, the same start_date
-           - If end_date exists in the import, the same end_date
+            Rules for finding a duplicate:
+            - If there is no level, then deduplicate based on the address
+            - Look for a record with the same name, ignoring case
+            - If no match, also check name_l10n
+            - If parent exists in the import, the same parent
+            - If start_date exists in the import, the same start_date
+            - If end_date exists in the import, the same end_date
 
-            @ToDo: Check soundex? (only good in English)
+            TODO:
+                Check soundex? (only good in English)
                    http://eden.sahanafoundation.org/ticket/481
                    - make a deployment_setting for relevant function?
         """
@@ -943,8 +945,9 @@ class LocationModel(S3Model):
             JSON search method for S3LocationAutocompleteWidget
             - adds hierarchy support
 
-            @param r: the S3Request
-            @param attr: request attributes
+            Args:
+                r: the S3Request
+                attr: request attributes
         """
 
         output = None
@@ -2426,7 +2429,9 @@ class gis_MarkerRepresent(S3Represent):
     def represent_row(self, row):
         """
             Represent a Row
-            @param row: The Row
+
+            Args:
+                row: The Row
         """
         represent = DIV(IMG(_src = URL(c="static", f="img",
                                        args = ["markers", row.image],
@@ -5194,10 +5199,12 @@ def gis_hierarchy_editable(level, location_id):
     """
         Returns the edit_<level> value from the parent country hierarchy.
 
-        Used by gis_location_onvalidation()
+        Args:
+            id: the id of the location or an ancestor - used to find
+                the ancestor country location.
 
-        @param id: the id of the location or an ancestor - used to find
-                   the ancestor country location.
+        Used by:
+            gis_location_onvalidation()
     """
 
     country = current.gis.get_parent_country(location_id)
@@ -5456,9 +5463,10 @@ class gis_LocationRepresent(S3Represent):
         """
             Represent a (key, value) as hypertext link.
 
-            @param k: the key
-            @param v: the representation of the key
-            @param row: the row with this key (unused here)
+            Args:
+                k: the key
+                v: the representation of the key
+                row: the row with this key (unused here)
         """
 
         if k is None:
@@ -5534,7 +5542,8 @@ class gis_LocationRepresent(S3Represent):
             key and fields are not used, but are kept for API
             compatiblity reasons.
 
-            @param values: the gis_location IDs
+            Args:
+                values: the gis_location IDs
         """
 
         db = current.db
@@ -5649,7 +5658,8 @@ class gis_LocationRepresent(S3Represent):
             - assumes that Path & Lx have been populated correctly by
               gis.update_location_tree()
 
-            @param row: the gis_location Row
+            Args:
+                row: the gis_location Row
         """
 
         sep = self.sep

@@ -323,7 +323,8 @@ class S3Config(Storage):
 
             Configurations will be imported and executed in order of appearance
 
-            @param config: name of the config-module
+            Args:
+                config: name of the config-module
         """
 
         names = self.get_template()
@@ -6231,9 +6232,10 @@ class S3Config(Storage):
             Lazy pattern:
                 return self.__lazy(subset, key, default)
 
-            @param subset: the name of the subset of settings (typically the module)
-            @param key: the setting name
-            @param default: the default value
+            Args:
+                subset: the name of the subset of settings (typically the module)
+                key: the setting name
+                default: the default value
         """
 
         setting = self[subset].get(key, default)

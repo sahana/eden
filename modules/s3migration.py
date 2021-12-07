@@ -168,20 +168,21 @@ class S3Migration(object):
         """
             Preparation before migration
 
-            @param moves     : List of dicts {tablename: [(fieldname, new_tablename, link_fieldname)]} to move a field from 1 table to another
-                              - fieldname can be a tuple if the fieldname changes: (fieldname, new_fieldname)
-            @param news      : List of dicts {new_tablename: {'lookup_field': '',
-                                                              'tables': [tablename: [fieldname]],
-                                                              'supers': [tablename: [fieldname]],
-                                                              } to create new records from 1 or more old tables (inc all instances of an SE)
-                              - fieldname can be a tuple if the fieldname changes: (fieldname, new_fieldname)
-            @param ondeletes : List of tuples [(tablename, fieldname, reftable, ondelete)] to have the ondelete modified to
-            @param strbools  : List of tuples [(tablename, fieldname)] to convert from string/integer to bools
-            @param strints   : List of tuples [(tablename, fieldname)] to convert from string to integer
-            @param add_notnulls     : List of tuples [(tablename, fieldname)] to add notnull to
-            @param remove_foreigns  : List of tuples (tablename, fieldname) to have the foreign keys removed
-                                      - if tablename == "all" then all tables are checked
-            @param remove_uniques   : List of tuples [(tablename, fieldname)] to have the unique indices removed,
+            Args:
+                moves: List of dicts {tablename: [(fieldname, new_tablename, link_fieldname)]} to move a field from 1 table to another
+                       - fieldname can be a tuple if the fieldname changes: (fieldname, new_fieldname)
+                news: List of dicts {new_tablename: {'lookup_field': '',
+                                                     'tables': [tablename: [fieldname]],
+                                                     'supers': [tablename: [fieldname]],
+                                                     } to create new records from 1 or more old tables (inc all instances of an SE)
+                      - fieldname can be a tuple if the fieldname changes: (fieldname, new_fieldname)
+                ondeletes: List of tuples [(tablename, fieldname, reftable, ondelete)] to have the ondelete modified to
+                strbools: List of tuples [(tablename, fieldname)] to convert from string/integer to bools
+                strints: List of tuples [(tablename, fieldname)] to convert from string to integer
+                add_notnulls: List of tuples [(tablename, fieldname)] to add notnull to
+                remove_foreigns: List of tuples (tablename, fieldname) to have the foreign keys removed
+                                 - if tablename == "all" then all tables are checked
+                remove_uniques: List of tuples [(tablename, fieldname)] to have the unique indices removed,
         """
 
         # Backup current database
@@ -529,23 +530,24 @@ class S3Migration(object):
         current.db.commit()
 
     # -------------------------------------------------------------------------
-    def post(self, moves=None,
-                   news=None,
-                   strbools=None,
-                   strints=None,
+    def post(self, moves = None,
+                   news = None,
+                   strbools = None,
+                   strints = None,
                    ):
         """
             Cleanup after migration
 
-            @param moves     : List of dicts {tablename: [(fieldname, new_tablename, link_fieldname)]} to move a field from 1 table to another
-                              - fieldname can be a tuple if the fieldname changes: (fieldname, new_fieldname)
-            @param news      : List of dicts {new_tablename: {'lookup_field': '',
-                                                              'tables': [tablename: [fieldname]],
-                                                              'supers': [tablename: [fieldname]],
-                                                              } to create new records from 1 or more old tables (inc all instances of an SE)
-                              - fieldname can be a tuple if the fieldname changes: (fieldname, new_fieldname)
-            @param strbools : List of tuples [(tablename, fieldname)] to convert from string/integer to bools
-            @param strints  : List of tuples [(tablename, fieldname)] to convert from string to integer
+            Args:
+                moves: List of dicts {tablename: [(fieldname, new_tablename, link_fieldname)]} to move a field from 1 table to another
+                       - fieldname can be a tuple if the fieldname changes: (fieldname, new_fieldname)
+                news: List of dicts {new_tablename: {'lookup_field': '',
+                                                     'tables': [tablename: [fieldname]],
+                                                     'supers': [tablename: [fieldname]],
+                                                     } to create new records from 1 or more old tables (inc all instances of an SE)
+                      - fieldname can be a tuple if the fieldname changes: (fieldname, new_fieldname)
+                strbools: List of tuples [(tablename, fieldname)] to convert from string/integer to bools
+                strints: List of tuples [(tablename, fieldname)] to convert from string to integer
         """
 
         db = self.db
@@ -1021,7 +1023,7 @@ class S3Migration(object):
         db.tables.remove(tablename)
         db.define_table(tablename, *fields,
                         # Rebuild the .table file from this definition
-                        fake_migrate=True)
+                        fake_migrate = True)
 
     # =========================================================================
     # OLD CODE below here
@@ -1031,15 +1033,17 @@ class S3Migration(object):
                      tablename,
                      fieldname_old,
                      fieldname_new,
-                     attributes_to_copy=None):
+                     attributes_to_copy = None,
+                     ):
         """
             Rename a field, while keeping the other properties of the field the same.
             If there are some indexes on that table, these will be recreated and other constraints will remain unchanged too.
 
-            @param tablename          : name of the table in which the field is renamed
-            @param fieldname_old      : name of the original field before renaming
-            @param fieldname_new      : name of the field after renaming
-            @param attributes_to_copy : list of attributes which need to be copied from the old_field to the new_field (needed only in sqlite)
+            Args:
+                tablename: name of the table in which the field is renamed
+                fieldname_old: name of the original field before renaming
+                fieldname_new: name of the field after renaming
+                attributes_to_copy: list of attributes which need to be copied from the old_field to the new_field (needed only in sqlite)
         """
 
         db = self.db
@@ -1079,13 +1083,15 @@ class S3Migration(object):
     # -------------------------------------------------------------------------
     def rename_table(self,
                      tablename_old,
-                     tablename_new):
+                     tablename_new,
+                     ):
         """
             Rename a table.
             If any fields reference that table, they will be handled too.
 
-            @param tablename_old : name of the original table before renaming
-            @param tablename_new : name of the table after renaming
+            Args:
+                tablename_old: name of the original table before renaming
+                tablename_new: name of the table after renaming
         """
 
         try:
@@ -1102,7 +1108,8 @@ class S3Migration(object):
                                 new_list_field,
                                 list_field_name,
                                 table_old_id_field,
-                                tablename_old):
+                                tablename_old,
+                                ):
         """
             This method handles the migration in which a new table with a column for the
             values they'll get from the list field is made and maybe some empty columns to be filled in later.
@@ -1110,11 +1117,12 @@ class S3Migration(object):
             Then for each value in the list field for each record in the original table,
             they create one record in the new table that points back to the original record.
 
-            @param tablename_new      : name of the new table to which the list field needs to migrated
-            @param new_list_field     : name of the field in the new table which will hold the content of the list field
-            @param list_field_name    : name of the list field in the original table
-            @param table_old_id_field : name of the id field in the original table
-            @param tablename_old      : name of the original table
+            Args:
+                tablename_new      : name of the new table to which the list field needs to migrated
+                new_list_field     : name of the field in the new table which will hold the content of the list field
+                list_field_name    : name of the list field in the original table
+                table_old_id_field : name of the id field in the original table
+                tablename_old      : name of the original table
         """
 
         self._create_new_table(tablename_new, new_list_field, list_field_name,
@@ -1127,14 +1135,16 @@ class S3Migration(object):
                                 tablename,
                                 field_to_update,
                                 mapping_function,
-                                list_of_tables=None):
+                                list_of_tables = None,
+                                ):
         """
             Add values to a new field according to the mappings given through the mapping_function
 
-            @param tablename        : name of the original table in which the new unique field id added
-            @param field_to_update  : name of the field to be updated according to the mapping
-            @param mapping_function : class instance containing the mapping functions
-            @param list_of_tables   : list of tables which the table references
+            Args:
+                tablename        : name of the original table in which the new unique field id added
+                field_to_update  : name of the field to be updated according to the mapping
+                mapping_function : class instance containing the mapping functions
+                list_of_tables   : list of tables which the table references
         """
 
         db = self.db
@@ -1147,15 +1157,17 @@ class S3Migration(object):
     def update_field_by_mapping(db,
                                 tablename,
                                 field_to_update,
-                                mapping_function):
+                                mapping_function,
+                                ):
         """
             Update the values of an existing field according to the mappings given through the mapping_function
             - currently unused
 
-            @param db               : database instance
-            @param tablename        : name of the original table in which the new unique field id added
-            @param field_to_update  : name of the field to be updated according to the mapping
-            @param mapping_function : class instance containing the mapping functions
+            Args:
+                db               : database instance
+                tablename        : name of the original table in which the new unique field id added
+                field_to_update  : name of the field to be updated according to the mapping
+                mapping_function : class instance containing the mapping functions
         """
 
         fields = mapping_function.fields(db)
@@ -1205,16 +1217,18 @@ class S3Migration(object):
                           new_list_field,
                           list_field_name,
                           table_old_id_field,
-                          tablename_old):
+                          tablename_old,
+                          ):
         """
             This function creates the new table which is used in the list_field_to_reference migration.
             That new table has a foreign key reference back to the original table.
 
-            @param tablename          : name of the new table to which the list field needs to migrated
-            @param new_list_field     : name of the field in the new table which will hold the content of the list field
-            @param list_field_name    : name of the list field in the original table
-            @param table_old_id_field : name of the id field in the original table
-            @param tablename_old      : name of the original table
+            Args:
+                tablename          : name of the new table to which the list field needs to migrated
+                new_list_field     : name of the field in the new table which will hold the content of the list field
+                list_field_name    : name of the list field in the original table
+                table_old_id_field : name of the id field in the original table
+                tablename_old      : name of the original table
         """
 
         db = self.db
@@ -1224,7 +1238,8 @@ class S3Migration(object):
                              "reference %s" % tablename_old)
         db.define_table(tablename_new,
                         new_id_field,
-                        new_field)
+                        new_field,
+                        )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1232,17 +1247,19 @@ class S3Migration(object):
                             new_list_field,
                             list_field_name,
                             table_old_id_field,
-                            tablename_old):
+                            tablename_old,
+                            ):
         """
             This function is used in the list_field_to_reference migration.
             For each value in the list field for each record in the original table,
             they create one record in the new table that points back to the original record.
 
-            @param tablename_new      : name of the new table to which the list field needs to migrated
-            @param new_list_field     : name of the field in the new table which will hold the content of the list field
-            @param list_field_name    : name of the list field in the original table
-            @param table_old_id_field : name of the id field in the original table
-            @param tablename_old      : name of the original table
+            Args:
+                tablename_new      : name of the new table to which the list field needs to migrated
+                new_list_field     : name of the field in the new table which will hold the content of the list field
+                list_field_name    : name of the list field in the original table
+                table_old_id_field : name of the id field in the original table
+                tablename_old      : name of the original table
         """
 
         db = current.db
@@ -1263,12 +1280,14 @@ class S3Migration(object):
                             tablename,
                             fieldname_old,
                             fieldname_new,
-                            attributes_to_copy):
+                            attributes_to_copy,
+                            ):
         """
             Add a field in table mentioned while renaming a field.
             The renamed field is added separately to the table with the same properties as the original field.
 
-            @param db : database instance
+            Args:
+                db: database instance
         """
 
         table = db[tablename]
@@ -1285,7 +1304,8 @@ class S3Migration(object):
         db.define_table(tablename,
                         table, # Table to inherit from
                         field_new,
-                        primarykey=primarykey)
+                        primarykey = primarykey,
+                        )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1293,7 +1313,8 @@ class S3Migration(object):
         """
             Copy all the values from old_field into new_field
 
-            @param db : database instance
+            Args:
+                db: database instance
         """
 
         dict_update = {}
@@ -1326,7 +1347,8 @@ class S3Migration(object):
             This function adds a new _unique_ field into the table, while keeping all the rest of
             the properties of the table unchanged
 
-            @param db : database instance
+            Args:
+                db: database instance
         """
 
         new_field = Field(new_unique_field, "integer")
@@ -1338,12 +1360,13 @@ class S3Migration(object):
         db.define_table(tablename,
                         table, # Table to inherit from
                         new_field,
-                        primarykey=primarykey)
+                        primarykey = primarykey)
 
     # -------------------------------------------------------------------------
     def _add_tables_temp_db(self,
                             temp_db,
-                            list_of_tables):
+                            list_of_tables,
+                            ):
         """
             This field adds tables to the temp_db from the global db
             these might be used for the running queries or validating values.
