@@ -33,7 +33,7 @@ __all__ = ("BudgetModel",
            "BudgetItemModel",
            "BudgetStaffModel",
            "budget_rheader",
-           "budget_CostItemRepresent",
+           #"budget_CostItemRepresent",
            )
 
 from gluon import *
@@ -61,12 +61,12 @@ class BudgetModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Budget Entity (super-entity for resources that can have a budget)
-        entity_types = Storage(event_incident = T("Incident"),
-                               #org_organisation = T("Organization"),
-                               #org_site = T("Facility"),
-                               #pr_group = T("Team"),
-                               project_project = T("Project"),
-                               )
+        entity_types = {"event_incident": T("Incident"),
+                        #"org_organisation": T("Organization"),
+                        #"org_site": T("Facility"),
+                        #"pr_group": T("Team"),
+                        "project_project": T("Project"),
+                        }
 
         tablename = "budget_entity"
         self.super_entity(tablename, "budget_entity_id", entity_types,
@@ -106,8 +106,8 @@ class BudgetModel(S3Model):
         monitoring_opts = {1: NONE,
                            #2: T("Annually"),
                            3: T("Monthly"),
-                           #3: T("Weekly"),
-                           #3: T("Daily"),
+                           #4: T("Weekly"),
+                           #5: T("Daily"),
                            }
 
         tablename = "budget_budget"
@@ -173,7 +173,7 @@ class BudgetModel(S3Model):
             msg_record_modified = T("Budget updated"),
             msg_record_deleted = T("Budget deleted"),
             msg_list_empty = T("No Budgets currently registered"),
-        )
+            )
 
         # Represent
         #budget_budget_represent = S3Represent(lookup = tablename,
@@ -247,13 +247,13 @@ class BudgetAllocationModel(S3Model):
         # ---------------------------------------------------------------------
         # Budget allocatable (super-entity for resource assignments that
         # can be linked to a budget)
-        entity_types = Storage(event_asset = T("Event Asset"),
-                               event_human_resource = T("Event Human Resource"),
-                               event_site = T("Event Facility"),
-                               #project_asset = T("Project Asset"),
-                               project_human_resource_project = T("Project Human Resource"),
-                               #project_site = T("Project Facility"),
-                               )
+        entity_types = {"event_asset": T("Event Asset"),
+                        "event_human_resource": T("Event Human Resource"),
+                        "event_site": T("Event Facility"),
+                        #"project_asset": T("Project Asset"),
+                        "project_human_resource_project": T("Project Human Resource"),
+                        #"project_site": T("Project Facility"),
+                        }
 
         tablename = "budget_cost_item"
         self.super_entity(tablename, "cost_item_id", entity_types)
@@ -281,7 +281,7 @@ class BudgetAllocationModel(S3Model):
                           super_link("cost_item_id", "budget_cost_item",
                                      readable = True,
                                      writable = True,
-                                     represent = self.budget_CostItemRepresent(),
+                                     represent = budget_CostItemRepresent(),
                                      ),
                           s3_datetime("start_date",
                                       label = T("Start Date"),
@@ -323,14 +323,6 @@ class BudgetAllocationModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return None
-
-    # -------------------------------------------------------------------------
-    def defaults(self):
-        """
-            Safe defaults for model-global names in case module is disabled
-        """
-
         return None
 
     # -------------------------------------------------------------------------
@@ -598,7 +590,8 @@ class BudgetItemModel(S3Model):
         Kits and Items can be grouped together as Bundles
         This & BudgetStaffModel are based on a WFP Budgetting tool
 
-        @ToDo: Integrate with Supply Items
+        TODO:
+            Integrate with Supply Items
     """
 
     names = ("budget_parameter",
@@ -753,7 +746,7 @@ class BudgetItemModel(S3Model):
             msg_record_modified = T("Item updated"),
             msg_record_deleted = T("Item deleted"),
             msg_list_empty = T("No Items currently registered"),
-        )
+            )
 
         # Represent
         budget_item_represent = S3Represent(lookup = tablename,
@@ -835,7 +828,7 @@ class BudgetItemModel(S3Model):
             msg_record_modified = T("Kit updated"),
             msg_record_deleted = T("Kit deleted"),
             msg_list_empty = T("No Kits currently registered"),
-        )
+            )
 
         # Represent
         budget_kit_represent = S3Represent(lookup = tablename,
@@ -933,7 +926,7 @@ class BudgetItemModel(S3Model):
             msg_record_modified = T("Bundle updated"),
             msg_record_deleted = T("Bundle deleted"),
             msg_list_empty = T("No Bundles currently registered"),
-        )
+            )
 
         # Configuration
         configure(tablename,
@@ -1011,7 +1004,7 @@ class BudgetItemModel(S3Model):
             msg_record_modified = T("Kit updated"),
             msg_record_deleted = T("Kit removed"),
             msg_list_empty = T("No Kits currently registered in this bundle"),
-        )
+            )
 
         # Configuration
         configure(tablename,
@@ -1055,7 +1048,7 @@ class BudgetItemModel(S3Model):
             msg_record_modified = T("Item updated"),
             msg_record_deleted = T("Item removed"),
             msg_list_empty = T("No Items currently registered in this bundle"),
-        )
+            )
 
         # Configuration
         configure(tablename,
@@ -1096,7 +1089,7 @@ class BudgetItemModel(S3Model):
             msg_record_modified = T("Bundle updated"),
             msg_record_deleted = T("Bundle removed"),
             msg_list_empty = T("No Bundles currently registered in this Budget"),
-        )
+            )
 
         # Configuration
         configure(tablename,
@@ -1107,10 +1100,11 @@ class BudgetItemModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {#"budget_kit_id": budget_kit_id,
-                #"budget_item_id": budget_item_id,
-                #"budget_bundle_id": bundle_id,
-                }
+        #return {#"budget_kit_id": budget_kit_id,
+        #        #"budget_item_id": budget_item_id,
+        #        #"budget_bundle_id": bundle_id,
+        #        }
+        return None
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -1120,10 +1114,11 @@ class BudgetItemModel(S3Model):
 
         #dummy = S3ReusableField.dummy
 
-        return {#"budget_kit_id": dummy("kit_id"),
-                #"budget_item_id": dummy("item_id"),
-                #"budget_bundle_id": dummy("bundle_id"),
-                }
+        #return {#"budget_kit_id": dummy("kit_id"),
+        #        #"budget_item_id": dummy("item_id"),
+        #        #"budget_bundle_id": dummy("bundle_id"),
+        #        }
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1373,7 +1368,8 @@ class BudgetStaffModel(S3Model):
         Model for Budgeting Staff
         This & BudgetItemModel are based on a WFP Budgetting tool
 
-        @ToDo: Integrate with HRM & GIS?
+        TODO:
+            Integrate with HRM & GIS?
     """
 
     names = ("budget_location",
@@ -1433,7 +1429,7 @@ class BudgetStaffModel(S3Model):
             msg_record_modified = T("Location updated"),
             msg_record_deleted = T("Location deleted"),
             msg_list_empty = T("No Locations currently registered"),
-        )
+            )
 
         # Represent
         budget_location_represent = S3Represent(lookup = tablename,
@@ -1507,7 +1503,7 @@ class BudgetStaffModel(S3Model):
             msg_record_modified = T("Staff Type updated"),
             msg_record_deleted = T("Staff Type deleted"),
             msg_list_empty = T("No Staff Types currently registered"),
-        )
+            )
 
         # Represent
         budget_staff_represent = S3Represent(lookup = tablename)
@@ -1564,9 +1560,10 @@ class BudgetStaffModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {#"budget_staff_id": budget_staff_id,
-                #"budget_location_id": budget_location_id,
-                }
+        #return {#"budget_staff_id": budget_staff_id,
+        #        #"budget_location_id": budget_location_id,
+        #        }
+        return None
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -1576,9 +1573,10 @@ class BudgetStaffModel(S3Model):
 
         #dummy = S3ReusableField.dummy
 
-        return {#"budget_staff_id": dummy("staff_id"),
-                #"budget_location_id": dummy("location_id"),
-                }
+        #return {#"budget_staff_id": dummy("staff_id"),
+        #        #"budget_location_id": dummy("location_id"),
+        #        }
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1678,10 +1676,11 @@ class budget_CostItemRepresent(S3Represent):
                                                        show_link = show_link,
                                                        )
 
-        s3db = current.s3db
+        from .asset import asset_AssetRepresent
+        from .org import org_SiteRepresent
         self.represent = {
-            "asset_id": s3db.asset_AssetRepresent(show_link = False),
-            "site_id": s3db.org_SiteRepresent(show_link = False),
+            "asset_id": asset_AssetRepresent(show_link = False),
+            "site_id": org_SiteRepresent(show_link = False),
             "job_title_id": S3Represent(lookup = "hrm_job_title",
                                         translate = True,
                                         ),
@@ -1702,9 +1701,9 @@ class budget_CostItemRepresent(S3Represent):
         s3db = current.s3db
 
         instance_fields = {
-            "event_asset": ["incident_id", "asset_id"],
-            "event_site": ["incident_id", "site_id"],
-            "event_human_resource": ["incident_id", "job_title_id"],
+            "event_asset": ("incident_id", "asset_id"),
+            "event_site": ("incident_id", "site_id"),
+            "event_human_resource": ("incident_id", "job_title_id"),
         }
 
         # Get all super-entity rows

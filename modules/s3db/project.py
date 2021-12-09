@@ -110,18 +110,19 @@ class ProjectModel(S3Model):
     """
         Project Model
 
-        Note: This module can be extended by 2 different modes:
-         - '3w':   "Who's doing What Where"
-                    suitable for use by multinational organisations tracking
-                    projects at a high level
-            - sub-mode 'drr':   Disaster Risk Reduction extensions
-         - 'task':  Suitable for use by a smaller organsiation tracking tasks
-                    within projects
+        Note:
+            This module can be extended by 2 different modes:
+             - '3w':   "Who's doing What Where"
+                        suitable for use by multinational organisations tracking
+                        projects at a high level
+                - sub-mode 'drr':   Disaster Risk Reduction extensions
+             - 'task':  Suitable for use by a smaller organisation tracking tasks
+                        within projects
 
-        There are also a number of other deployment_settings to control behaviour
+            There are also a number of other deployment_settings to control behaviour
 
-        This class contains the tables common to all uses
-        There are additional tables in other Models
+            This class contains the tables common to all uses
+            There are additional tables in other Models
     """
 
     names = ("project_project",
@@ -2261,7 +2262,8 @@ class ProjectAnnualBudgetModel(S3Model):
 
         This model holds the annual budget entries for projects
 
-        @ToDo: Replace with Budget module
+        TODO:
+            Replace with Budget module
     """
 
     names = ("project_annual_budget",)

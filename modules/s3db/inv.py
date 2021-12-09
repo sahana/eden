@@ -1568,10 +1568,12 @@ class InventoryAdjustModel(S3Model):
 
             for row in bins:
                 bin_record = row.inv_inv_item_bin
-                adj_bin_table.insert(adj_item_id = adj_item_id,
-                                     layout_id = bin_record.layout_id,
-                                     quantity = bin_record.quantity,
-                                     )
+                layout_id = bin_record.layout_id
+                if layout_id:
+                    adj_bin_table.insert(adj_item_id = adj_item_id,
+                                         layout_id = layout_id,
+                                         quantity = bin_record.quantity,
+                                         )
 
 # =============================================================================
 class InventoryCommitModel(S3Model):
@@ -3237,7 +3239,8 @@ class InventoryRequisitionModel(S3Model):
 
         In the future, this may be used for fulfilling Inventory Requisitions raised via req_requisition
 
-        @ToDo: crud_form & list_fields for settings.inv.req_project
+        TODO
+            crud_form & list_fields for settings.inv.req_project
     """
 
     names = ("inv_req",
@@ -4623,7 +4626,8 @@ class InventoryRequisitionShipmentModel(S3Model):
         By default, this link is neither a proper RDBMS link, nor M2M,
         but rather a single freetext field containing the req_ref
 
-        Used by: RMS
+        Used by:
+            RMS
     """
 
     names = ("inv_send_req",
@@ -11077,9 +11081,7 @@ def inv_req_controller(template = False):
             pass
 
         elif r.representation == "geojson":
-            # Default anyway
-            # from s3db.inv import inv_ReqRefRepresent
-            #table.req_ref.represent = inv_ReqRefRepresent()
+            table.req_ref.represent = inv_ReqRefRepresent()
             # Load these models now as they'll be needed when we encode
             mtable = s3db.gis_marker
             s3db.configure("inv_req",
@@ -12694,8 +12696,9 @@ def inv_req_pick_list(r, **attr):
 
         Currently this is exported in XLS format
 
-        @ToDo: Provide an on-screen version
-        @ToDo: Optimise Picking Route (as per Figure 3 in the above link)
+        TODO:
+            Provide an on-screen version
+            Optimise Picking Route (as per Figure 3 in the above link)
     """
 
     req_id = r.id
@@ -13219,8 +13222,13 @@ def inv_req_rheader(r, check_page=False):
         table = r.table
 
         if settings.get_inv_use_req_number() and not is_template:
+            represent = table.req_ref.represent
+            if not represent:
+                represent = inv_ReqRefRepresent(show_link = True)
             headerTR = TR(TH("%s: " % table.req_ref.label),
-                          TD(table.req_ref.represent(record.req_ref, show_link=True))
+                          TD(represent(record.req_ref,
+                                       show_link = True,
+                                       ))
                           )
         else:
             headerTR = TR(TD(settings.get_inv_req_form_name(),
@@ -18239,6 +18247,127 @@ class inv_ReqRefRepresent(S3Represent):
                                                   show_link = show_link,
                                                   )
 
+    
+
+    # -------------------------------------------------------------------------
+    def _lookup(self, values, rows=None):
+        """
+            Lazy lookup values.
+
+            Args:
+                values: list of values to lookup
+                rows: rows referenced by values (if values are foreign keys)
+                      optional
+
+            Modified from super to NOT int values (otherwise req_refs like '00001' fail!)
+        """
+
+        theset = self.theset
+
+        keys = {}
+        items = {}
+        lookup = {}
+
+        # Check whether values are already in theset
+        table = self.table
+        for _v in values:
+            v = _v
+            keys[v] = _v
+            if v is None:
+                items[_v] = self.none
+            elif v in theset:
+                items[_v] = theset[v]
+            else:
+                lookup[v] = True
+
+        if table is None or not lookup:
+            return items
+
+        if table and self.hierarchy:
+            # Does the lookup table have a hierarchy?
+            from .s3hierarchy import S3Hierarchy
+            h = S3Hierarchy(table._tablename)
+            if h.config:
+                def lookup_parent(node_id):
+                    parent = h.parent(node_id)
+                    if parent and \
+                       parent not in theset and \
+                       parent not in lookup:
+                        lookup[parent] = False
+                        lookup_parent(parent)
+                    return
+                for node_id in list(lookup.keys()):
+                    lookup_parent(node_id)
+            else:
+                h = None
+        else:
+            h = None
+
+        # Get the primary key
+        pkey = self.key
+        ogetattr = object.__getattribute__
+        try:
+            key = ogetattr(table, pkey)
+        except AttributeError:
+            return items
+
+        # Use the given rows to lookup the values
+        pop = lookup.pop
+        represent_row = self.represent_row
+        represent_path = self._represent_path
+        if rows and not self.custom_lookup:
+            rows_ = dict((row[key], row) for row in rows)
+            self.rows.update(rows_)
+            for row in rows:
+                k = row[key]
+                if k not in theset:
+                    if h:
+                        theset[k] = represent_path(k,
+                                                   row,
+                                                   rows = rows_,
+                                                   hierarchy = h,
+                                                   )
+                    else:
+                        theset[k] = represent_row(row)
+                if pop(k, None):
+                    items[keys.get(k, k)] = theset[k]
+
+        # Retrieve additional rows as needed
+        if lookup:
+            if not self.custom_lookup:
+                try:
+                    # Need for speed: assume all fields are in table
+                    fields = [ogetattr(table, f) for f in self.fields]
+                except AttributeError:
+                    # Ok - they are not: provide debug output and filter fields
+                    current.log.error(sys.exc_info()[1])
+                    fields = [ogetattr(table, f)
+                              for f in self.fields if hasattr(table, f)]
+            else:
+                fields = []
+            rows = self.lookup_rows(key, list(lookup.keys()), fields=fields)
+            rows = {row[key]: row for row in rows}
+            self.rows.update(rows)
+            if h:
+                for k, row in rows.items():
+                    if lookup.pop(k, None):
+                        items[keys.get(k, k)] = represent_path(k,
+                                                               row,
+                                                               rows = rows,
+                                                               hierarchy = h,
+                                                               )
+            else:
+                for k, row in rows.items():
+                    lookup.pop(k, None)
+                    items[keys.get(k, k)] = theset[k] = represent_row(row)
+
+        # Anything left gets set to default
+        if lookup:
+            for k in lookup:
+                items[keys.get(k, k)] = self.default
+
+        return items
+
     # -------------------------------------------------------------------------
     def lookup_rows(self, key, values, fields=None):
         """
@@ -18251,9 +18380,9 @@ class inv_ReqRefRepresent(S3Represent):
                 fields: the fields to retrieve
         """
 
-        fields = ["id",
+        fields = ("id",
                   "req_ref",
-                  ]
+                  )
 
         if len(values) == 1:
             query = (key == values[0])
@@ -18282,7 +18411,7 @@ class inv_ReqRefRepresent(S3Represent):
         """
 
         if self.linkto:
-            k = s3_str(row.id)
+            k = str(row.id)
             _href = self.linkto.replace("[id]", k) \
                                .replace("%5Bid%5D", k)
             
@@ -18290,7 +18419,9 @@ class inv_ReqRefRepresent(S3Represent):
                 _href = "%s/%s" % (_href,
                                    "form",
                                    )
-            return A(v, _href=_href)
+            return A(v,
+                     _href = _href,
+                     )
         else:
             return v
 

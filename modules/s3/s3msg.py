@@ -407,7 +407,7 @@ class S3Msg:
 
             table = s3db.msg_email
             _id = table.insert(body = message,
-                               subject = subject,
+                               subject = subject[:78],  # RFC 2822
                                from_address = from_address,
                                #to_address = pe_id,
                                inbound = False,
@@ -476,7 +476,8 @@ class S3Msg:
 
         # Process OutBox async
         current.s3task.run_async("msg_process_outbox",
-                                 args = [contact_method])
+                                 args = [contact_method],
+                                 )
 
         # Perform post process after message sending
         postp = current.deployment_settings.get_msg_send_postprocess()
@@ -2888,7 +2889,8 @@ class S3Compose(S3CRUD):
         if current.msg.send_by_pe_id(recipients,
                                      post_vars.subject,
                                      post_vars.body,
-                                     contact_method):
+                                     contact_method,
+                                     ):
             current.session.confirmation = current.T("Check outbox for the message status")
             redirect(self.url)
         else:

@@ -285,7 +285,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                       "logs_manager",
                                       )):
             return M(c="inv")(
-                        M("Stock Management",link=False)(
+                        M("Stock Management", f="inv_item", m="summary")(
+                            M("Warehouses", f="warehouse",
+                              restrict=["ORG_ADMIN",
+                                        "logs_manager"]),
+                            M("Inventory", f="inv_item", m="summary"),
                             M("Stock Adjustments", f="adj"),
                             M("Kitting", f="kitting"),
                             #M("Receive a new shipment", f="recv", m="create"),
@@ -296,7 +300,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                         M("Purchases", f="order_item",
                           restrict=["ORG_ADMIN",
-                                    "logs_manager"]),
+                                    "logs_manager",
+                                    ]),
                         M("Requests", f="req")(
                             #M("My Requests",
                             #  vars = {"mine": 1},
@@ -307,7 +312,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Parameters", link=False,
                           restrict=["ORG_ADMIN",
                                     "logs_manager"])(
-                            M("Warehouses", f="warehouse"),
                             M("Projects", f="project"),
                             M("Catalogs", c="supply", f="catalog"),
                             M("Item Categories", c="supply", f="item_category"),
@@ -318,7 +322,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             M("Packages", f="package"),
                             M("Stock limit", f="minimum"),
                         ),
-                        M("Reports", link=False)(
+                        M("Reports", f="index")(
                             M("Inventory", f="inv_item", m="summary"),
                             M("Donor Report", f="inv_item", m="report",
                               vars = {"rows": "item_id",

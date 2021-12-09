@@ -56,6 +56,7 @@ def config(settings):
 
     # Uncomment to show a default cancel button in standalone create/update forms
     settings.ui.default_cancel_button = True
+    settings.ui.update_label = "Modify"
     # Limit Export Formats
     settings.ui.export_formats = ("xls",
                                   "pdf",
@@ -4258,7 +4259,7 @@ Thank you"""
             #session_s3 = session.s3
             ui_language = session.s3.language
 
-            subject_T = T("%(item)s replenishment needed in %(site)s Warehouse. %(quantity)s remaining")
+            subject_T = T("%(item)s replenishment needed in %(site)s Warehouse")
             message_T = T("%(item)s replenishment needed in %(site)s Warehouse. %(quantity)s remaining. Please review at: %(url)s")
             alert_T = T("%(item)s replenishment needed in %(site)s Warehouse. %(quantity)s remaining")
 
@@ -4272,9 +4273,8 @@ Thank you"""
                 for language in languages:
                     T.force(language)
                     #session_s3.language = language # for date_represent
-                    subject = s3_str(subject_T) % {"item": item,
-                                                   "site": warehouse_name,
-                                                   "quantity": quantity,
+                    subject = s3_str(subject_T) % {"item": item[:30],
+                                                   "site": warehouse_name
                                                    }
                     message = s3_str(message_T) % {"item": item,
                                                    "site": warehouse_name,
