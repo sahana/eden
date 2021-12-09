@@ -9002,23 +9002,48 @@ def inv_recv_controller():
         if r.component:
             component_name = r.component_name
             if component_name == "document":
+                s3.crud_strings["doc_document"].label_create = T("File Signed Document")
+
                 # Simplify a little
                 table = s3db.doc_document
                 table.file.required = True
-                table.url.readable = table.url.writable = False
-                table.date.readable = table.date.writable = False
+                #table.url.readable = table.url.writable = False
+                #table.date.readable = table.date.writable = False
+
+                GRN = settings.get_inv_recv_form_name()
+                field = table.name
+                field.label = T("Type")
+                document_type_opts = {"REQ": settings.get_inv_req_form_name(),
+                                      "GRN": GRN,
+                                      "WB": settings.get_inv_send_form_name(),
+                                      }
+                field.default = "GRN"
+                field.requires = IS_IN_SET(document_type_opts)
+                field.represent = s3_options_represent(document_type_opts)
 
                 # Add button to print the GRN
                 # - needed for Wizard, but generalised for consistency
-                table.name.comment = A(ICON("print"),
-                                       " ",
-                                       settings.get_inv_recv_shortname(),
-                                       _href = URL(args = [record.id,
-                                                           "form",
-                                                           ]
-                                                   ),
-                                       _class = "action-btn",
-                                       )
+                button = DIV(P(T("Print and Upload the signed %(grn)s:") % {"grn": GRN}),
+                             A(ICON("print"),
+                               " ",
+                               settings.get_inv_recv_shortname(),
+                               _href = URL(args = [record.id,
+                                                   "form",
+                                                   ]
+                                         ),
+                               _class = "action-btn",
+                               ),
+                            )
+
+                crud_form = S3SQLCustomForm(S3SQLInlineWidget(button),
+                                            "name",
+                                            "file",
+                                            "comments",
+                                            )
+
+                s3db.configure("doc_document",
+                               crud_form = crud_form,
+                               )
 
             elif component_name == "track_item":
 
@@ -14268,23 +14293,48 @@ def inv_send_controller():
         if r.component:
             cname = r.component_name
             if cname == "document":
+                s3.crud_strings["doc_document"].label_create = T("File Signed Document")
+
                 # Simplify a little
                 table = s3db.doc_document
                 table.file.required = True
-                table.url.readable = table.url.writable = False
-                table.date.readable = table.date.writable = False
+                #table.url.readable = table.url.writable = False
+                #table.date.readable = table.date.writable = False
+
+                WAYBILL = settings.get_inv_send_form_name()
+                field = table.name
+                field.label = T("Type")
+                document_type_opts = {"PL": T("Picking List"),
+                                      "REQ": settings.get_inv_req_form_name(),
+                                      "WB": WAYBILL,
+                                      }
+                field.default = "WB"
+                field.requires = IS_IN_SET(document_type_opts)
+                field.represent = s3_options_represent(document_type_opts)
 
                 # Add button to print the WB
                 # - needed for Wizard, but generalised for consistency
-                table.name.comment = A(ICON("print"),
-                                       " ",
-                                       settings.get_inv_send_shortname(),
-                                       _href = URL(args = [record.id,
-                                                           "form",
-                                                           ]
-                                                   ),
-                                       _class = "action-btn",
-                                       )
+                button = DIV(P(T("Print and Upload the signed %(waybill)s:") % {"waybill": WAYBILL}),
+                             A(ICON("print"),
+                               " ",
+                               settings.get_inv_send_shortname(),
+                               _href = URL(args = [record.id,
+                                                   "form",
+                                                   ]
+                                         ),
+                               _class = "action-btn",
+                               ),
+                            )
+
+                crud_form = S3SQLCustomForm(S3SQLInlineWidget(button),
+                                            "name",
+                                            "file",
+                                            "comments",
+                                            )
+
+                s3db.configure("doc_document",
+                               crud_form = crud_form,
+                               )
 
             elif cname == "send_package":
 

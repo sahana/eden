@@ -3932,19 +3932,7 @@ Thank you"""
             else:
                 result = True
 
-            if r.component_name == "document":
-                s3.crud_strings["doc_document"].label_create = T("File Signed Document")
-                field = current.s3db.doc_document.name
-                field.label = T("Type")
-                document_type_opts = {"REQ": T("Requisition"),
-                                      "GRN": T("GRN"),
-                                      "WB": T("Waybill"),
-                                      }
-                from s3 import s3_options_represent
-                field.requires = IS_IN_SET(document_type_opts)
-                field.represent = s3_options_represent(document_type_opts)
-
-            elif r.get_vars.get("incoming"):
+            if r.get_vars.get("incoming"):
                 s3.crud_strings.inv_recv.title_list = T("Incoming Shipments")
                 # Filter to just Shipments able to be Received
                 #    SHIP_STATUS_IN_PROCESS = 0
@@ -4119,20 +4107,7 @@ Thank you"""
             else:
                 result = True
 
-            if r.component_name == "document":
-                s3.crud_strings["doc_document"].label_create = T("File Signed Document")
-                field = current.s3db.doc_document.name
-                field.label = T("Type")
-                document_type_opts = {"PL": T("Picking List"),
-                                      "REQ": T("Requisition"),
-                                      "WB": T("Waybill"),
-                                      }
-                #from gluon import IS_IN_SET
-                from s3 import s3_options_represent
-                field.requires = IS_IN_SET(document_type_opts)
-                field.represent = s3_options_represent(document_type_opts)
-
-            elif r.get_vars.get("draft"):
+            if r.get_vars.get("draft"):
                 s3.crud_strings.inv_recv.title_list = T("Outbound Shipments")
                 # Filter to just Shipments able to be Received
                 #    SHIP_STATUS_IN_PROCESS = 0
