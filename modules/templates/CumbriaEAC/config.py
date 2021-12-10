@@ -680,7 +680,7 @@ def config(settings):
         # Log
         settings.security.audit_write = True
         from s3 import S3Audit
-        S3Audit().__init__()
+        S3Audit()
         s3db.s3_audit.insert(timestmp = r.utcnow,
                              user_id = current.auth.user.id,
                              method = "Data Anonymise",
@@ -827,7 +827,7 @@ def config(settings):
 
         # Global Log
         settings.security.audit_write = True
-        S3Audit().__init__()
+        S3Audit()
         s3db.s3_audit.insert(timestmp = r.utcnow,
                              user_id = current.auth.user.id,
                              method = "Data Export",
@@ -1727,7 +1727,7 @@ def config(settings):
                             # Log in Global Log
                             settings.security.audit_write = True
                             from s3 import S3Audit
-                            S3Audit().__init__()
+                            S3Audit()
                             s3db.s3_audit.insert(timestmp = r.utcnow,
                                                  user_id = auth.user.id,
                                                  method = "Data Export",
@@ -1803,7 +1803,7 @@ def config(settings):
                             # Log in Global Log
                             settings.security.audit_write = True
                             from s3 import S3Audit
-                            S3Audit().__init__()
+                            S3Audit()
                             s3db.s3_audit.insert(timestmp = r.utcnow,
                                                  user_id = auth.user.id,
                                                  method = "Data Export",
@@ -1915,7 +1915,7 @@ def config(settings):
                             # Log in Global Log
                             settings.security.audit_write = True
                             from s3 import S3Audit
-                            S3Audit().__init__()
+                            S3Audit()
                             s3db.s3_audit.insert(timestmp = r.utcnow,
                                                  user_id = auth.user.id,
                                                  method = "Data Export",
@@ -1982,23 +1982,24 @@ def config(settings):
 
                 # Normal Action Buttons
                 s3_action_buttons(r,
-                                      read_url = URL(c = "cr",
-                                                     f = "shelter",
-                                                     args = [shelter_id,
-                                                             "human_resource_site",
-                                                             "[id]",
-                                                             "redirect",
-                                                             ],
-                                                     ),
-                                      update_url = URL(c = "cr",
-                                                       f = "shelter",
-                                                       args = [shelter_id,
-                                                               "human_resource_site",
-                                                               "[id]",
-                                                               "redirect",
-                                                               ],
-                                                       ),
-                                      deletable = False)
+                                  read_url = URL(c = "cr",
+                                                 f = "shelter",
+                                                 args = [shelter_id,
+                                                         "human_resource_site",
+                                                         "[id]",
+                                                         "redirect",
+                                                         ],
+                                                 ),
+                                  update_url = URL(c = "cr",
+                                                   f = "shelter",
+                                                   args = [shelter_id,
+                                                           "human_resource_site",
+                                                           "[id]",
+                                                           "redirect",
+                                                           ],
+                                                   ),
+                                  deletable = False,
+                                  )
 
                 # Custom Action Buttons
                 s3.actions += [{"label": s3_str(T("Check-Out")),
@@ -2539,7 +2540,7 @@ def config(settings):
                     # Log
                     settings.security.audit_write = True
                     from s3 import S3Audit
-                    S3Audit().__init__()
+                    S3Audit()
                     current.s3db.s3_audit.insert(timestmp = r.utcnow,
                                                  user_id = auth.user.id,
                                                  method = "Data Export",
@@ -3320,7 +3321,7 @@ def config(settings):
                     # Log
                     settings.security.audit_write = True
                     from s3 import S3Audit
-                    S3Audit().__init__()
+                    S3Audit()
                     s3db.s3_audit.insert(timestmp = r.utcnow,
                                          user_id = auth.user.id,
                                          method = "Data Export",

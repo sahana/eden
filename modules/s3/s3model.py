@@ -421,14 +421,23 @@ class S3Model:
                 if type(models.__dict__[name]).__name__ == "module":
                     cls.load(name)
 
-        # Define importer tables
+        db = current.db
+
+        # Define Audit table
+        if "s3_audit" not in db:
+            settings.security.audit_write = True
+            from .s3aaa import S3Audit
+            S3Audit()
+            settings.security.audit_write = False
+
+        # Define Importer tables
         from .s3import import S3Importer, S3ImportJob
         S3Importer.define_upload_table()
         S3ImportJob.define_job_table()
         S3ImportJob.define_item_table()
 
         # Define Scheduler tables
-        # - already done during Scheduler().init() run during S3Task().init() in models/tasks.py
+        # - already done during Scheduler.init() run during S3Task.init() in models/tasks.py
         #current.s3task.scheduler.define_tables(current.db,
         #                                       migrate = settings.get_base_migrate())
 
@@ -436,18 +445,18 @@ class S3Model:
         if settings.get_base_session_db():
             # Copied from https://github.com/web2py/web2py/blob/master/gluon/globals.py#L895
             # Not DRY, but no easy way to make it so
-            current.db.define_table("web2py_session",
-                                    Field("locked", "boolean",
-                                          default = False,
-                                          ),
-                                    Field("client_ip", length=64),
-                                    Field("created_datetime", "datetime",
-                                          default = current.request.now,
-                                          ),
-                                    Field("modified_datetime", "datetime"),
-                                    Field("unique_key", length=64),
-                                    Field("session_data", "blob"),
-                                    )
+            db.define_table("web2py_session",
+                            Field("locked", "boolean",
+                                  default = False,
+                                  ),
+                            Field("client_ip", length=64),
+                            Field("created_datetime", "datetime",
+                                  default = current.request.now,
+                                  ),
+                            Field("modified_datetime", "datetime"),
+                            Field("unique_key", length=64),
+                            Field("session_data", "blob"),
+                            )
 
         # Don't do this again within the current request cycle
         s3.load_all_models = False
