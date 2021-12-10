@@ -1125,6 +1125,7 @@ def time():
                 from s3db.project import project_task_active_statuses
                 query &= (ttable.status.belongs(project_task_active_statuses))
             dbset = db(query)
+            from s3 import IS_ONE_OF
             from s3db.project import project_TaskRepresent
             table.task_id.requires = IS_ONE_OF(dbset, "project_task.id",
                                                project_TaskRepresent(show_project = True),
