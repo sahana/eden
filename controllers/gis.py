@@ -1244,10 +1244,9 @@ def config():
                     # Existing records don't need to change the layer pointed to (confusing UI & adds validation overheads)
                     ltable.layer_id.writable = False
                     # Hide irrelevant fields
-                    query = (table.layer_id == r.component_id)
-                    instance_type = db(query).select(table.instance_type,
-                                                     limitby = (0, 1),
-                                                     ).first().instance_type
+                    instance_type = db(table.layer_id == r.component_id).select(table.instance_type,
+                                                                                limitby = (0, 1),
+                                                                                ).first().instance_type
                     if instance_type in ("gis_layer_coordinate",
                                          "gis_layer_georss",
                                          "gis_layer_gpx",
@@ -1271,13 +1270,14 @@ def config():
                 else:
                     # Only show Layers not yet in this config
                     # Find the records which are used
-                    query = (ltable.layer_id == table.layer_id) & \
+                    f = ltable.layer_id
+                    query = (f == table.layer_id) & \
                             (ltable.config_id == r.id)
                     rows = db(query).select(table.layer_id)
                     # Filter them out
-                    ltable.layer_id.requires.set_filter(not_filterby = "layer_id",
-                                                        not_filter_opts = [row.layer_id for row in rows],
-                                                        )
+                    f.requires.set_filter(not_filterby = "layer_id",
+                                          not_filter_opts = [row.layer_id for row in rows],
+                                          )
 
         return True
     s3.prep = prep

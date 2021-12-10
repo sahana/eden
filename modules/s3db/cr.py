@@ -150,21 +150,29 @@ class ShelterModel(S3Model):
         # -------------------------------------------------------------------------
         # Shelters
         #
+        if settings.get_cr_shelter_code_unique():
+            code_requires = IS_EMPTY_OR([IS_LENGTH(10),
+                                         IS_NOT_IN_DB(db, "cr_shelter.code"),
+                                         ])
+        else:
+            code_requires = IS_LENGTH(10)
+
         tablename = "cr_shelter"
         define_table(tablename,
                      super_link("doc_id", "doc_entity"),
                      super_link("pe_id", "pr_pentity"),
                      super_link("site_id", "org_site"),
-                     # @ToDo: code_requires
-                     #Field("code", length=10, # Mayon compatibility
-                     #      label=T("Code")
-                     #      ),
                      Field("name", notnull=True,
                            length=64,            # Mayon compatibility
                            label = T("Shelter Name"),
                            requires = [IS_NOT_EMPTY(),
                                        IS_LENGTH(64),
                                        ],
+                           ),
+                     Field("code", length=10, # Mayon compatibility
+                           label = T("Code"),
+                           represent = lambda v: v or NONE,
+                           requires = code_requires,
                            ),
                      self.org_organisation_id(requires = self.org_organisation_requires(updateable = True),
                                               ),

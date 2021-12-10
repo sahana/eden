@@ -2587,6 +2587,7 @@ class LayerEntityModel(S3Model):
         define_table(tablename,
                      # Component not Instance
                      super_link("layer_id", "gis_layer_entity",
+                                empty = False,
                                 label = T("Layer"),
                                 instance_types = layer_types,
                                 represent = gis_layer_represent,

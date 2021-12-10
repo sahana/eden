@@ -253,13 +253,14 @@ class S3Importer(S3Method):
 
         # If we have an upload ID, then get upload and import job
         self.upload_id = upload_id
-        query = (self.upload_table.id == upload_id)
-        self.upload_job = current.db(query).select(limitby = (0, 1),
-                                                   ).first()
-        if self.upload_job:
-            self.job_id = self.upload_job.job_id
+        upload_job = current.db(self.upload_table.id == upload_id).select(limitby = (0, 1),
+                                                                          ).first()
+        if upload_job:
+            self.job_id = upload_job.job_id
+            self.upload_job = upload_job
         else:
             self.job_id = None
+            self.upload_job = None
 
         # Experimental uploading via ajax - added for vulnerability
         # Part of the problem with this is that it works directly with the
@@ -271,25 +272,27 @@ class S3Importer(S3Method):
         if r.http == "GET":
             if source != None:
                 self.commit(source, transform)
-                output = self.upload(r, **attr)
+
             if upload_id != None:
-                output = self.display_job(upload_id)
+                return self.display_job(upload_id)
+
             else:
-                output = self.upload(r, **attr)
+                return self.upload(r, **attr)
+
         elif r.http == "POST":
             if items != None:
                 # 2nd phase
-                output = self.commit_items(upload_id, items)
+                return self.commit_items(upload_id, items)
+
             else:
                 # 1st or only phase
-                output = self.generate_job(r, **attr)
+                return self.generate_job(r, **attr)
+
         elif r.http == "DELETE":
             if upload_id != None:
-                output = self.delete_job(upload_id)
-        else:
-            r.error(405, current.ERROR.BAD_METHOD)
+                return self.delete_job(upload_id)
 
-        return output
+        r.error(405, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     def upload(self, r, **attr):
@@ -869,7 +872,7 @@ class S3Importer(S3Method):
                                   c = controller,
                                   f = function,
                                   args = ["import"],
-                                  vars = {"job":"[id]"},
+                                  vars = {"job": "[id]"},
                                   ),
                        "_class": "action-btn",
                        },
@@ -879,7 +882,7 @@ class S3Importer(S3Method):
                                   c = controller,
                                   f = function,
                                   args = ["import"],
-                                  vars = {"job":"[id]"},
+                                  vars = {"job": "[id]"},
                                   ),
                        "_class": "action-btn",
                        },
@@ -888,19 +891,19 @@ class S3Importer(S3Method):
                                   c = controller,
                                   f = function,
                                   args = ["import"],
-                                  vars = {"job":"[id]",
-                                          "delete":"True"
+                                  vars = {"job": "[id]",
+                                          "delete": "True"
                                          }
                                   ),
                        "_class": "delete-btn",
                        },
                       ]
         # Display an Error if no job is attached with this record
-        query = (table.status == 1) # Pending
-        rows = db(query).select(table.id)
+        # Pending
+        rows = db(table.status == 1).select(table.id)
         s3.dataTableStyleAlert = [str(row.id) for row in rows]
-        query = (table.status == 2) # in error
-        rows = db(query).select(table.id)
+        # Error
+        rows = db(table.status == 2).select(table.id)
         s3.dataTableStyleWarning = [str(row.id) for row in rows]
 
         return output

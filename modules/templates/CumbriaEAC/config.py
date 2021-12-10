@@ -275,7 +275,8 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Shelters
-    # Uncomment to use a dynamic population estimation by calculations based on registrations
+    settings.cr.shelter_code_unique = True
+    # Use a dynamic population estimation by calculations based on registrations
     settings.cr.shelter_population_dynamic = True
 
     cr_shelter_status_opts = {1 : T("Closed"), # Nominated Centres
@@ -1398,6 +1399,7 @@ def config(settings):
                         )
 
         crud_form = S3SQLCustomForm("name",
+                                    "code",
                                     "shelter_details.status",
                                     "shelter_service_shelter.service_id",
                                     "shelter_type_id",
@@ -2128,7 +2130,11 @@ def config(settings):
             db(query).delete()
 
             # Set this shelter into the session
-            current.session.s3.shelter_id = form_vars_get("id")
+            stable = s3db.cr_shelter
+            shelter = db(stable.site_id == site_id).select(stable.id,
+                                                           limitby = (0, 1),
+                                                           ).first()
+            current.session.s3.shelter_id = shelter.id
 
             return
 
@@ -2270,19 +2276,30 @@ def config(settings):
                 # Nothing we can do
                 return
 
+        db = current.db
         s3db = current.s3db
 
         # Lookup Site ID
         table = s3db.cr_shelter_registration
-        registration = current.db(table.id == registration_id).select(table.site_id,
-                                                                      limitby = (0, 1),
-                                                                      ).first()
+        registration = db(table.id == registration_id).select(table.site_id,
+                                                              limitby = (0, 1),
+                                                              ).first()
+
+        # Lookup Spreadsheet Name
+        table = s3db.s3_import_upload
+        spreadsheet = db(table.id == current.request.post_vars.get("job")).select(table.filename,
+                                                                                  limitby = (0, 1),
+                                                                                  ).first()
+        try:
+            filename = spreadsheet.filename
+        except AttributeError:
+            filename = ""
 
         # Add Event Log Entry
         s3db.org_site_event.insert(site_id = registration.site_id,
                                    event = 6, # Data Import
                                    date = current.request.utcnow,
-                                   comments = "Spreadsheet Import",
+                                   comments = "Spreadsheet Import: %s" % filename,
                                    )
 
     # -----------------------------------------------------------------------------
@@ -2292,41 +2309,40 @@ def config(settings):
         s3 = current.response.s3
 
         # Import pre-process
-        def import_prep(data):
+        def import_prep(tree):
             """
                 Checks out all existing clients of the shelter
                 before processing a new data import
             """
-            if s3.import_replace:
-                resource, tree = data
-                if tree is not None:
-                    xml = current.xml
-                    tag = xml.TAG
-                    att = xml.ATTRIBUTE
+            if s3.import_replace and \
+               tree is not None:
+                xml = current.xml
+                tag = xml.TAG
+                att = xml.ATTRIBUTE
 
-                    root = tree.getroot()
-                    expr = "/%s/%s[@%s='cr_shelter']/%s[@%s='name']" % \
-                           (tag.root, tag.resource, att.name, tag.data, att.field)
-                    shelters = root.xpath(expr)
-                    for shelter in shelters:
-                        shelter_name = shelter.get("value", None) or shelter.text
-                        if shelter_name:
-                            try:
-                                shelter_name = json.loads(xml.xml_decode(shelter_name))
-                            except:
-                                pass
-                        if shelter_name:
-                            # Check-out all clients
-                            db = current.db
-                            rtable = s3db.cr_shelter_registration
-                            stable = s3db.cr_shelter
-                            query = (stable.name == shelter_name) & \
-                                    (rtable.site_id == stable.site_id) & \
-                                    (rtable.registration_status == 2)
-                            rows = db(query).select(rtable.id)
-                            db(rtable.id.belongs([row.id for row in rows])).update(registration_status = 3,# Checked-Out
-                                                                                   check_out_date = current.request.utcnow,
-                                                                                   )
+                root = tree.getroot()
+                expr = "/%s/%s[@%s='cr_shelter']/%s[@%s='name']" % \
+                       (tag.root, tag.resource, att.name, tag.data, att.field)
+                shelters = root.xpath(expr)
+                for shelter in shelters:
+                    shelter_name = shelter.get("value", None) or shelter.text
+                    if shelter_name:
+                        try:
+                            shelter_name = json.loads(xml.xml_decode(shelter_name))
+                        except:
+                            pass
+                    if shelter_name:
+                        # Check-out all clients
+                        db = current.db
+                        rtable = s3db.cr_shelter_registration
+                        stable = s3db.cr_shelter
+                        query = (stable.name == shelter_name) & \
+                                (rtable.site_id == stable.site_id) & \
+                                (rtable.registration_status == 2)
+                        rows = db(query).select(rtable.id)
+                        db(rtable.id.belongs([row.id for row in rows])).update(registration_status = 3,# Checked-Out
+                                                                               check_out_date = current.request.utcnow,
+                                                                               )
 
         s3.import_prep = import_prep
 

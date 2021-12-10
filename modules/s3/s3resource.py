@@ -1803,19 +1803,24 @@ class S3Resource:
                 #    current.log.error(error)
                 #    raise RuntimeError
 
-            return xml.json_message(message=self.error, tree=tree,
+            return xml.json_message(message = self.error,
+                                    tree = tree,
                                     **import_info)
 
         elif success and hasattr(success, "job_id"):
             # 1st phase of 2-phase import
             # NB import_info is meaningless here as IDs have been rolled-back
             self.job = success
-            return xml.json_message(message=self.error, tree=tree,
+            return xml.json_message(message = self.error,
+                                    tree = tree,
                                     **import_info)
 
         # Failure
-        return xml.json_message(False, 400,
-                                message=self.error, tree=tree)
+        return xml.json_message(False,
+                                400,
+                                message = self.error,
+                                tree = tree,
+                                )
 
     # -------------------------------------------------------------------------
     def import_tree(self, record_id, tree,
