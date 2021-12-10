@@ -25,10 +25,12 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    TODO:
+        Remove all interactive error reporting out of the _private methods,
+        and raise exceptions instead.
 """
 
-# @todo: remove all interactive error reporting out of the _private methods,
-#        and raise exceptions instead.
 __all__ = ("S3Importer",
            "S3ImportJob",
            "S3ImportItem",
@@ -4361,14 +4363,6 @@ class S3BulkImporter:
                                         "templates",
                                         csvPath,
                                         )
-                    # @todo: deprecate this block once migration completed
-                    if not os.path.exists(path):
-                        # Non-standard location (legacy template)?
-                        path = os.path.join(folder,
-                                            "private",
-                                            "templates",
-                                            csvPath,
-                                            )
                 csv = os.path.join(path, csvFile)
 
             xslFileName = details[3].strip('" ')
@@ -4418,14 +4412,6 @@ class S3BulkImporter:
                                         "templates",
                                         subfolder,
                                         )
-                    # @todo: deprecate this block once migration completed
-                    if not os.path.exists(path):
-                        # Non-standard location (legacy template)?
-                        path = os.path.join(current.request.folder,
-                                            "private",
-                                            "templates",
-                                            subfolder,
-                                            )
                 filepath = os.path.join(path, filename)
 
         if len(details) >= 4:
