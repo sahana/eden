@@ -69,7 +69,7 @@ class DeploymentOrganisationModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class DeploymentModel(S3Model):
@@ -1092,7 +1092,7 @@ class DeploymentAlertModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod

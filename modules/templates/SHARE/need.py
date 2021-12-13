@@ -270,7 +270,7 @@ class NeedsActivityModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class NeedsContactModel(S3Model):
@@ -309,7 +309,7 @@ class NeedsContactModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class NeedsEventModel(S3Model):
@@ -363,7 +363,7 @@ class NeedsEventModel(S3Model):
         #    msg_list_empty = T("No Needs currently registered in this Event"))
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
         
 # =============================================================================
 class NeedsItemsModel(S3Model):
@@ -462,7 +462,7 @@ $.filterOptionsS3({
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class NeedsLineModel(S3Model):
@@ -688,7 +688,7 @@ class NeedsOrganisationModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class NeedsResponseModel(S3Model):
@@ -841,7 +841,7 @@ class NeedsResponseEventModel(S3Model):
         #    msg_list_empty = T("No Activity Groups currently registered in this Event"))
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class NeedsResponseLineModel(S3Model):
@@ -956,7 +956,7 @@ $.filterOptionsS3({
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class NeedsResponseOrganisationModel(S3Model):
@@ -1012,7 +1012,7 @@ class NeedsResponseOrganisationModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class NeedsTagModel(S3Model):
@@ -1062,7 +1062,7 @@ class NeedsTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 def need_rheader(r, check_page=False):

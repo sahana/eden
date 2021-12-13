@@ -315,7 +315,7 @@ class S3SocialTenureDomainModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class S3InformalSettlementModel(S3Model):
@@ -430,7 +430,7 @@ class S3InformalSettlementModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class S3LocalGovernmentModel(S3Model):
@@ -793,7 +793,7 @@ class S3LocalGovernmentModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class S3RuralAgricultureModel(S3Model):
@@ -1136,7 +1136,7 @@ class S3RuralAgricultureModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 def stdm_rheader(r):

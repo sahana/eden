@@ -1322,7 +1322,7 @@ class DVRNotesModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class DVRReferralModel(S3Model):
@@ -1912,14 +1912,7 @@ class DVRResponseModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def defaults():
-        """ Safe defaults for names in case the module is disabled """
-
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3573,14 +3566,7 @@ class DVRCaseEffortModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def defaults():
-        """ Safe defaults for names in case the module is disabled """
-
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4278,7 +4264,7 @@ class DVRHouseholdMembersModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class DVRCaseEconomyInformationModel(S3Model):
@@ -4495,14 +4481,7 @@ class DVRCaseEconomyInformationModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def defaults():
-        """ Safe defaults for names in case the module is disabled """
-
-        return {}
+        return None
 
 # =============================================================================
 class DVRLegalStatusModel(S3Model):
@@ -4659,14 +4638,7 @@ class DVRLegalStatusModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def defaults():
-        """ Safe defaults for names in case the module is disabled """
-
-        return {}
+        return None
 
 # =============================================================================
 class DVRCaseAllowanceModel(S3Model):
@@ -5180,14 +5152,7 @@ class DVRCaseEventModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def defaults():
-        """ Safe defaults for names in case the module is disabled """
-
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5528,7 +5493,7 @@ class DVRCaseEvaluationModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        return {}
+        return None
 
 # =============================================================================
 class DVRVulnerabilityModel(S3Model):
@@ -5665,7 +5630,7 @@ class DVRVulnerabilityModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class DVRActivityFundingModel(S3Model):
@@ -5726,7 +5691,7 @@ class DVRActivityFundingModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class DVRServiceContactModel(S3Model):
@@ -5853,14 +5818,7 @@ class DVRServiceContactModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def defaults():
-        """ Safe defaults for names in case the module is disabled """
-
-        return {}
+        return None
 
 # =============================================================================
 class DVRSiteActivityModel(S3Model):
@@ -5968,14 +5926,7 @@ class DVRSiteActivityModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def defaults():
-        """ Safe defaults for names in case the module is disabled """
-
-        return {}
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod

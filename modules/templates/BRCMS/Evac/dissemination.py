@@ -101,7 +101,7 @@ class CaseActivityTaskModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class CaseActivityRouteModel(S3Model):
@@ -129,7 +129,7 @@ class CaseActivityRouteModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class DisseminationFinBrokerModel(S3Model):
@@ -155,7 +155,7 @@ class DisseminationFinBrokerModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class DisseminationIncidentReportModel(S3Model):
@@ -181,7 +181,7 @@ class DisseminationIncidentReportModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class DisseminationInvItemModel(S3Model):
@@ -207,7 +207,7 @@ class DisseminationInvItemModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class DisseminationMedContactModel(S3Model):
@@ -233,7 +233,7 @@ class DisseminationMedContactModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class DisseminationSecurityCheckpointModel(S3Model):
@@ -259,7 +259,7 @@ class DisseminationSecurityCheckpointModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class DisseminationSecurityZoneModel(S3Model):
@@ -285,7 +285,7 @@ class DisseminationSecurityZoneModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class DisseminationSiteModel(S3Model):
@@ -309,7 +309,7 @@ class DisseminationSiteModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 class DisseminationTransportFlightModel(S3Model):
@@ -335,7 +335,7 @@ class DisseminationTransportFlightModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return None
 
 # =============================================================================
 def disseminate(form):
