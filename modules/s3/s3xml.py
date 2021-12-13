@@ -2,7 +2,7 @@
 
 """ S3XML Toolkit
 
-    @see: U{B{I{S3XRC}} <http://eden.sahanafoundation.org/wiki/S3XRC>}
+    @see: U{B{I{S3XML}} <http://eden.sahanafoundation.org/wiki/S3/S3XML>}
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
     @requires: U{B{I{lxml}} <http://codespeak.net/lxml>}

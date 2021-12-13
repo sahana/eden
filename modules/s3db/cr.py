@@ -2478,7 +2478,7 @@ def cr_update_shelter_population(site_id):
 
     dtable = s3db.cr_shelter_details
 
-    # Get the shelter record
+    # Get the details record
     record = db(dtable.site_id == site_id).select(dtable.id,
                                                   dtable.capacity_day,
                                                   dtable.capacity_night,
@@ -2486,6 +2486,7 @@ def cr_update_shelter_population(site_id):
                                                   ).first()
 
     if not record:
+        # Create one
         dtable.insert(site_id = site_id)
         record = db(dtable.site_id == site_id).select(dtable.id,
                                                       dtable.capacity_day,

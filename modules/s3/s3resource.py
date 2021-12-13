@@ -1840,8 +1840,8 @@ class S3Resource:
             Args:
                 record_id: record ID or list of record IDs to update
                 tree: the element tree
-                ignore_errors: continue at errors (=skip invalid elements)
                 job_id: restore a job from the job table (ID or UID)
+                ignore_errors: continue at errors (=skip invalid elements)
                 delete_job: delete the import job from the job table
                 commit_job: commit the job (default)
 
@@ -1985,7 +1985,8 @@ class S3Resource:
                                      update_policy = update_policy,
                                      conflict_policy = conflict_policy,
                                      last_sync = last_sync,
-                                     onconflict = onconflict)
+                                     onconflict = onconflict,
+                                     )
             add_item = import_job.add_item
             exposed_aliases = self.components.exposed_aliases
             for element in elements:
