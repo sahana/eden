@@ -10827,6 +10827,7 @@ class ProjectTaskModel(S3Model):
     """
 
     names = ("project_milestone",
+             "project_milestone_id",
              "project_task",
              "project_task_id",
              "project_role",
@@ -11669,7 +11670,8 @@ class ProjectTaskModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {"project_task_id": task_id,
+        return {"project_milestone_id": milestone_id,
+                "project_task_id": task_id,
                 }
 
     # -------------------------------------------------------------------------
@@ -11677,7 +11679,10 @@ class ProjectTaskModel(S3Model):
     def defaults():
         """ Safe defaults for model-global names if module is disabled """
 
-        return {"project_task_id": S3ReusableField.dummy("task_id"),
+        dummy = S3ReusableField.dummy
+
+        return {"project_milestone_id": dummy("milestone_id"),
+                "project_task_id": dummy("task_id"),
                 }
 
     # -------------------------------------------------------------------------
