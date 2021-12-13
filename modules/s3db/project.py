@@ -11414,14 +11414,13 @@ class ProjectTaskModel(S3Model):
                      task_id(empty = False,
                              ondelete = "CASCADE",
                              ),
-                     project_id(
-                        empty = False,
-                        ondelete = "CASCADE",
-                        # Override requires so that update access to the projects isn't required
-                        requires = IS_ONE_OF(db, "project_project.id",
-                                             self.project_project_represent,
-                                             )
-                        ),
+                     project_id(empty = False,
+                                ondelete = "CASCADE",
+                                # Override requires so that update access to the projects isn't required
+                                requires = IS_ONE_OF(db, "project_project.id",
+                                                     self.project_project_represent,
+                                                     )
+                                ),
                       *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -11556,17 +11555,16 @@ class ProjectTaskModel(S3Model):
         #
         tablename = "project_time"
         define_table(tablename,
-                     task_id(
-                       requires = IS_ONE_OF(db, "project_task.id",
-                                            project_task_represent_w_project,
-                                            ),
-                     ),
+                     task_id(requires = IS_ONE_OF(db, "project_task.id",
+                                                  project_task_represent_w_project,
+                                                  ),
+                             ),
                      self.pr_person_id(default = auth.s3_logged_in_person(),
                                        widget = SQLFORM.widgets.options.widget
                                        ),
-                     s3_datetime(default="now",
-                                 past=8760, # Hours, so 1 year
-                                 future=0
+                     s3_datetime(default = "now",
+                                 past = 8760, # Hours, so 1 year
+                                 future = 0
                                  ),
                      Field("hours", "double",
                            label = T("Effort (Hours)"),

@@ -128,18 +128,18 @@ class StatsDataModel(S3Model):
         # ---------------------------------------------------------------------
         # Super entity: stats_data
         #
-        sd_types = Storage(disease_stats_data = T("Disease Data"),
-                           org_resource = T("Organization Resource"),
-                           project_beneficiary = T("Project Beneficiary"),
-                           project_campaign_response_summary = T("Project Campaign Response Summary"),
-                           #project_indicator_data = T("Project Indicator Data"),
-                           stats_demographic_data = T("Demographic Data"),
-                           stats_impact = T("Impact"),
-                           supply_distribution = T("Distribution"),
-                           vulnerability_data = T("Vulnerability Data"),
-                           #survey_answer = T("Survey Answer"),
-                           #climate_data = T("Climate Data"),
-                           )
+        sd_types = {"disease_stats_data": T("Disease Data"),
+                    "org_resource": T("Organization Resource"),
+                    "project_beneficiary": T("Project Beneficiary"),
+                    "project_campaign_response_summary": T("Project Campaign Response Summary"),
+                    #"project_indicator_data": T("Project Indicator Data"),
+                    "stats_demographic_data": T("Demographic Data"),
+                    "stats_impact": T("Impact"),
+                    "supply_distribution": T("Distribution"),
+                    "vulnerability_data": T("Vulnerability Data"),
+                    #"survey_answer": T("Survey Answer"),
+                    #"climate_data": T("Climate Data"),
+                    }
 
         accuracy_opts = {1 : T("Official Measurement"),
                          2 : T("Measurement"),
@@ -201,12 +201,12 @@ class StatsSourceModel(S3Model):
         # ---------------------------------------------------------------------
         # Stats Source Super-Entity
         #
-        source_types = Storage(doc_document = T("Document"),
-                               #org_organisation = T("Organization"),
-                               #pr_person = T("Person"),
-                               #flood_gauge = T("Flood Gauge"),
-                               #survey_series = T("Survey")
-                               )
+        source_types = {"doc_document": T("Document"),
+                        #"org_organisation": T("Organization"),
+                        #"pr_person": T("Person"),
+                        #"flood_gauge": T("Flood Gauge"),
+                        #"survey_series": T("Survey")
+                        }
 
         tablename = "stats_source"
         self.super_entity(tablename, "source_id", source_types,
@@ -262,7 +262,8 @@ class StatsDemographicModel(S3Model):
     """
         Baseline Demographics
 
-        @ToDo: Don't aggregate data for locations which don't exist in time window
+        TODO:
+            Don't aggregate data for locations which don't exist in time window
     """
 
     names = ("stats_demographic",
@@ -329,7 +330,8 @@ class StatsDemographicModel(S3Model):
             msg_record_created = T("Demographic added"),
             msg_record_modified = T("Demographic updated"),
             msg_record_deleted = T("Demographic deleted"),
-            msg_list_empty = T("No demographics currently defined"))
+            msg_list_empty = T("No demographics currently defined"),
+            )
 
         configure(tablename,
                   deduplicate = S3Duplicate(),
@@ -645,11 +647,9 @@ def stats_demographic_data_controller():
     else:
         rheader = None
 
-    output = current.rest_controller("stats", "demographic_data",
-                                     rheader = rheader,
-                                     )
-
-    return output
+    return current.rest_controller("stats", "demographic_data",
+                                   rheader = rheader,
+                                   )
 
 # =============================================================================
 class StatsImpactModel(S3Model):
