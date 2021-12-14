@@ -73,6 +73,7 @@ __all__ = (# Person Entities
            "pr_PersonRepresentContact",
            "pr_person_comment",
            "pr_image_library_represent",
+           "pr_image_size",
            "pr_url_represent",
            "pr_rheader",
 
@@ -6644,7 +6645,6 @@ class ImageLibraryModel(S3Model):
     """
 
     names = ("pr_image_library",
-             "pr_image_size",
              "pr_image_delete_all",
              )
 
@@ -6675,27 +6675,8 @@ class ImageLibraryModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {"pr_image_size": self.pr_image_size,
-                "pr_image_delete_all": self.pr_image_delete_all,
+        return {"pr_image_delete_all": self.pr_image_delete_all,
                 }
-
-    # -----------------------------------------------------------------------------
-    @staticmethod
-    def pr_image_size(image_name, size):
-        """
-            Used by s3_avatar_represent()
-        """
-
-        db = current.db
-        table = db.pr_image_library
-        image = db(table.new_name == image_name).select(table.actual_height,
-                                                        table.actual_width,
-                                                        limitby = (0, 1),
-                                                        ).first()
-        if image:
-            return (image.actual_width, image.actual_height)
-        else:
-            return size
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -7933,7 +7914,24 @@ def pr_image_library_represent(image_name, format=None, size=None):
     else:
         return image_name
 
-# ---------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+def pr_image_size(image_name, size):
+    """
+        Used by s3_avatar_represent()
+    """
+
+    db = current.db
+    table = db.pr_image_library
+    image = db(table.new_name == image_name).select(table.actual_height,
+                                                    table.actual_width,
+                                                    limitby = (0, 1),
+                                                    ).first()
+    if image:
+        return (image.actual_width, image.actual_height)
+    else:
+        return size
+
+# =============================================================================
 def pr_url_represent(url):
     """ Representation """
 
