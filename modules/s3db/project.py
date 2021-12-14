@@ -12254,10 +12254,12 @@ class ProjectTaskTimeModel(S3Model):
         """ When Time is logged, update the Task & Activity """
 
         db = current.db
+        s3db = current.s3db
+
         titable = db.project_time
         ttable = db.project_task
-        atable = db.project_activity
-        tatable = db.project_task_activity
+        atable = s3db.project_activity
+        tatable = s3db.project_task_activity
 
         # Find the Task
         task_id = form.vars.task_id
