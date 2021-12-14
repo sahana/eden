@@ -1131,8 +1131,7 @@ def time():
             table.task_id.requires = IS_ONE_OF(dbset, "project_task.id",
                                                project_TaskRepresent(show_project = True),
                                                )
-        list_fields = ["id",
-                       "date",
+        list_fields = ["date",
                        "hours",
                        (T("Project"), "task_id$task_project.project_id"),
                        (T("Activity"), "task_id$task_activity.activity_id"),
@@ -1141,7 +1140,7 @@ def time():
                        ]
         if settings.get_project_milestones():
             # Use the field in this format to get the custom represent
-            list_fields.insert(5, (T("Milestone"), "task_id$task_milestone.milestone_id"))
+            list_fields.insert(4, (T("Milestone"), "task_id$task_milestone.milestone_id"))
 
         s3db.configure("project_time",
                        list_fields = list_fields,
@@ -1160,7 +1159,7 @@ def time():
         # Filter to the specified number of months
         months = int(get_vars.get("month", 1))
         now = request.utcnow
-        month = datetime.timedelta(weeks=4)
+        month = datetime.timedelta(weeks = 4)
         delta = month * months
         s3.filter = (table.date > (now - delta))
 

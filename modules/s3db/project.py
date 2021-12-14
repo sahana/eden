@@ -12576,7 +12576,8 @@ class project_TaskRepresent(S3Represent):
     def __init__(self,
                  show_link = False,
                  show_project = False,
-                 project_first = True):
+                 project_first = True,
+                 ):
         """
             Args:
                 show_link: render representation as link to the task
@@ -12586,6 +12587,7 @@ class project_TaskRepresent(S3Represent):
 
         task_url = URL(c="project", f="task",
                        args = ["[id]"],
+                       extension = None,
                        )
 
         super(project_TaskRepresent, self).__init__(lookup = "project_task",
