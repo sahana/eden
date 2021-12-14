@@ -47,6 +47,7 @@ __all__ = ("ProjectModel",
            "ProjectL10nModel",
            "ProjectLocationModel",
            "ProjectMasterKeyModel",
+           "ProjectMilestoneModel",
            "ProjectOrganisationModel",
            "ProjectPlanningModel",
            "ProjectProgrammeModel",
@@ -60,9 +61,14 @@ __all__ = ("ProjectModel",
            "ProjectDRRPPModel",
            "ProjectTargetModel",
            "ProjectTaskModel",
+           "ProjectTaskActivityModel",
+           "ProjectTaskCommentModel",
            "ProjectTaskForumModel",
            "ProjectTaskHRMModel",
+           "ProjectTaskMilestoneModel",
+           "ProjectTaskProjectModel",
            "ProjectTaskTagModel",
+           "ProjectTaskTimeModel",
            "ProjectWindowModel",
            "project_ActivityRepresent",
            "project_activity_year_options",
@@ -4148,6 +4154,94 @@ class ProjectMasterKeyModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return None
+
+# =============================================================================
+class ProjectMilestoneModel(S3Model):
+    """
+        Project Milestones Model
+    """
+
+    names = ("project_milestone",
+             "project_milestone_id",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        # ---------------------------------------------------------------------
+        # Project Milestone
+        #
+        tablename = "project_milestone"
+        self.define_table(tablename,
+                          # Stage Report
+                          self.super_link("doc_id", "doc_entity"),
+                          self.project_project_id(),
+                          Field("name",
+                                label = T("Short Description"),
+                                requires = IS_NOT_EMPTY()
+                                ),
+                          s3_date(),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_MILESTONE = T("Create Milestone")
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = ADD_MILESTONE,
+            title_display = T("Milestone Details"),
+            title_list = T("Milestones"),
+            title_update = T("Edit Milestone"),
+            #title_upload = T("Import Milestones"),
+            label_list_button = T("List Milestones"),
+            msg_record_created = T("Milestone Added"),
+            msg_record_modified = T("Milestone Updated"),
+            msg_record_deleted = T("Milestone Deleted"),
+            msg_list_empty = T("No Milestones Found"),
+            )
+
+        # Reusable Field
+        represent = S3Represent(lookup = tablename,
+                                fields = ["name", "date"],
+                                labels = "%(name)s: %(date)s",
+                                )
+        milestone_id = S3ReusableField("milestone_id", "reference %s" % tablename,
+                                       label = T("Milestone"),
+                                       ondelete = "RESTRICT",
+                                       represent = represent,
+                                       requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "project_milestone.id",
+                                                              represent,
+                                                              )),
+                                       sortby = "name",
+                                       comment = S3PopupLink(c = "project",
+                                                             f = "milestone",
+                                                             title = ADD_MILESTONE,
+                                                             tooltip = T("A project milestone marks a significant date in the calendar which shows that progress towards the overall objective is being made."),
+                                                             ),
+                                       )
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("name",),
+                                                 secondary = ("project_id",),
+                                                 ),
+                       orderby = "project_milestone.date",
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"project_milestone_id": milestone_id,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for model-global names if module is disabled """
+
+        return {"project_milestone_id": S3ReusableField.dummy("milestone_id"),
+                }
 
 # =============================================================================
 class ProjectOrganisationModel(S3Model):
@@ -10821,22 +10915,10 @@ class ProjectTargetModel(S3Model):
 class ProjectTaskModel(S3Model):
     """
         Project Task Model
-
-        This class holds the tables used for a Person or Organisation to manage
-        their Tasks in detail.
     """
 
-    names = ("project_milestone",
-             "project_milestone_id",
-             "project_task",
+    names = ("project_task",
              "project_task_id",
-             "project_role",
-             "project_member",
-             "project_time",
-             "project_comment",
-             "project_task_project",
-             "project_task_activity",
-             "project_task_milestone",
              )
 
     def model(self):
@@ -10844,77 +10926,10 @@ class ProjectTaskModel(S3Model):
         T = current.T
         db = current.db
         auth = current.auth
-        request = current.request
         s3 = current.response.s3
         settings = current.deployment_settings
 
-        project_id = self.project_project_id
-
-        add_components = self.add_components
-        configure = self.configure
-        crud_strings = s3.crud_strings
-        define_table = self.define_table
         set_method = self.set_method
-        super_link = self.super_link
-
-        # ---------------------------------------------------------------------
-        # Project Milestone
-        #
-        tablename = "project_milestone"
-        define_table(tablename,
-                     # Stage Report
-                     super_link("doc_id", "doc_entity"),
-                     project_id(),
-                     Field("name",
-                           label = T("Short Description"),
-                           requires = IS_NOT_EMPTY()
-                           ),
-                     s3_date(),
-                     s3_comments(),
-                     *s3_meta_fields())
-
-        # CRUD Strings
-        ADD_MILESTONE = T("Create Milestone")
-        crud_strings[tablename] = Storage(
-            label_create = ADD_MILESTONE,
-            title_display = T("Milestone Details"),
-            title_list = T("Milestones"),
-            title_update = T("Edit Milestone"),
-            #title_upload = T("Import Milestones"),
-            label_list_button = T("List Milestones"),
-            msg_record_created = T("Milestone Added"),
-            msg_record_modified = T("Milestone Updated"),
-            msg_record_deleted = T("Milestone Deleted"),
-            msg_list_empty = T("No Milestones Found"),
-            )
-
-        # Reusable Field
-        represent = S3Represent(lookup = tablename,
-                                fields = ["name", "date"],
-                                labels = "%(name)s: %(date)s",
-                                )
-        milestone_id = S3ReusableField("milestone_id", "reference %s" % tablename,
-                                       label = T("Milestone"),
-                                       ondelete = "RESTRICT",
-                                       represent = represent,
-                                       requires = IS_EMPTY_OR(
-                                                    IS_ONE_OF(db, "project_milestone.id",
-                                                              represent,
-                                                              )),
-                                       sortby = "name",
-                                       comment = S3PopupLink(c = "project",
-                                                             f = "milestone",
-                                                             title = ADD_MILESTONE,
-                                                             tooltip = T("A project milestone marks a significant date in the calendar which shows that progress towards the overall objective is being made."),
-                                                             ),
-                                       )
-
-        configure(tablename,
-                  deduplicate = S3Duplicate(primary = ("name",),
-                                            secondary = ("project_id",),
-                                            ),
-                  orderby = "project_milestone.date",
-                  )
 
         # ---------------------------------------------------------------------
         # Tasks
@@ -10936,133 +10951,133 @@ class ProjectTaskModel(S3Model):
         staff = auth.is_logged_in()
 
         tablename = "project_task"
-        define_table(tablename,
-                     super_link("doc_id", "doc_entity"),
-                     Field("template", "boolean",
-                           default = False,
-                           readable = False,
-                           writable = False,
-                           ),
-                     Field("name", length=100, notnull=True,
-                           label = T("Short Description"),
-                           requires = [IS_NOT_EMPTY(),
-                                       IS_LENGTH(100),
-                                       ]
-                           ),
-                     Field("description", "text",
-                           label = T("Detailed Description"),
-                           comment = DIV(_class = "tooltip",
-                                         _title = "%s|%s" % (T("Detailed Description"),
-                                                             T("Please provide as much detail as you can, including any URL(s) for more information."),
-                                                             ),
-                                         ),
-                           ),
-                     self.org_site_id(),
-                     self.gis_location_id(
-                            # Can be enabled & labelled within a Template as-required
-                            #label = T("Deployment Location"),
-                            readable = False,
-                            writable = False
-                            ),
-                     Field("source",
-                           label = T("Source"),
-                           ),
-                     # Was used for Wrike integration in MCOP
-                     #Field("source_url",
-                     #      label = T("Source Link"),
-                     #      represent = s3_url_represent,
-                     #      requires = IS_EMPTY_OR(IS_URL()),
-                     #      # Can be enabled & labelled within a Template as-required
-                     #      readable = False,
-                     #      writable = False
-                     #      ),
-                     Field("priority", "integer",
-                           default = 3,
-                           label = T("Priority"),
-                           represent = s3_options_represent(project_task_priority_opts),
-                           requires = IS_IN_SET(project_task_priority_opts,
-                                                zero = None),
-                           ),
-                     # FK, not Instance or Component
-                     # Could be a Person, Team or Organisation
-                     # - may have to add rules in the template's customise_project_task_resource to filter the options appropriately
-                     # - permission sets (inc realms) should only be applied to the instances, not the super-entity
-                     Field("pe_id", "reference pr_pentity",
-                           label = T("Assigned to"),
-                           represent = assignee_represent,
-                           requires = IS_EMPTY_OR(
-                                        IS_ONE_OF(db, "pr_pentity.pe_id",
-                                                  assignee_represent,
-                                                  filterby = "instance_type",
-                                                  filter_opts = ("pr_person", "pr_group", "org_organisation"),
-                                                  sort = True,
-                                                  )),
-                           ondelete = "SET NULL",
-                           readable = staff,
-                           writable = staff,
-                           # To use an Autocomplete instead of a dropdown:
-                           #widget = S3PentityAutocompleteWidget(instance_types = ("pr_person",
-                           #                                                       "pr_group",
-                           #                                                       "org_organisation",
-                           #                                                       ))
-                           # If just needing Persons:
-                           #widget = S3PersonAutocompleteWidget(field = "pe_id"),
-                           #comment = DIV(_class = "tooltip",
-                           #              _title = "%s|%s" % (T("Assigned to"),
-                           #                                  current.messages.AUTOCOMPLETE_HELP,
-                           #                                  ),
-                           #              ),
-                           ),
-                     s3_datetime("date_due",
-                                 label = T("Date Due"),
-                                 represent = "date",
-                                 readable = staff,
-                                 writable = staff,
-                                 ),
-                     Field("time_estimated", "double",
-                           label = "%s (%s)" % (T("Time Estimate"),
-                                                T("hours")),
-                           represent = lambda v: NONE if not v else \
-                                IS_FLOAT_AMOUNT.represent(v, precision=2),
-                           requires = IS_EMPTY_OR(
-                                        IS_FLOAT_AMOUNT(0, None)
-                                        ),
-                           readable = staff,
-                           writable = staff,
-                           ),
-                     Field("time_actual", "double",
-                           label = "%s (%s)" % (T("Time Taken"),
-                                                T("hours")),
-                           represent = lambda v: NONE if not v else \
-                                IS_FLOAT_AMOUNT.represent(v, precision=2),
-                           requires = IS_EMPTY_OR(
-                                        IS_FLOAT_AMOUNT(0, None)
-                                        ),
-                           readable = staff,
-                           # This comes from the Time component
-                           writable = False,
-                           ),
-                     Field("status", "integer",
-                           default = 2,
-                           label = T("Status"),
-                           represent = s3_options_represent(project_task_status_opts),
-                           requires = IS_IN_SET(project_task_status_opts,
-                                                zero = None),
-                           readable = staff,
-                           writable = staff,
-                           ),
-                     Field.Method("task_id", self.project_task_task_id),
-                     s3_comments(),
-                     *s3_meta_fields(),
-                     on_define = lambda table: \
-                        [table.created_on.set_attributes(represent = lambda dt: \
-                            S3DateTime.date_represent(dt, utc=True)),
-                         ]
-                     )
+        self.define_table(tablename,
+                          self.super_link("doc_id", "doc_entity"),
+                          Field("template", "boolean",
+                                default = False,
+                                readable = False,
+                                writable = False,
+                                ),
+                          Field("name", length=100, notnull=True,
+                                label = T("Short Description"),
+                                requires = [IS_NOT_EMPTY(),
+                                            IS_LENGTH(100),
+                                            ]
+                                ),
+                          Field("description", "text",
+                                label = T("Detailed Description"),
+                                comment = DIV(_class = "tooltip",
+                                              _title = "%s|%s" % (T("Detailed Description"),
+                                                                  T("Please provide as much detail as you can, including any URL(s) for more information."),
+                                                                  ),
+                                              ),
+                                ),
+                          self.org_site_id(),
+                          self.gis_location_id(# Can be enabled & labelled within a Template as-required
+                                               #label = T("Deployment Location"),
+                                               readable = False,
+                                               writable = False,
+                                               ),
+                          Field("source",
+                                label = T("Source"),
+                                ),
+                          # Was used for Wrike integration in MCOP
+                          #Field("source_url",
+                          #      label = T("Source Link"),
+                          #      represent = s3_url_represent,
+                          #      requires = IS_EMPTY_OR(IS_URL()),
+                          #      # Can be enabled & labelled within a Template as-required
+                          #      readable = False,
+                          #      writable = False
+                          #      ),
+                          Field("priority", "integer",
+                                default = 3,
+                                label = T("Priority"),
+                                represent = s3_options_represent(project_task_priority_opts),
+                                requires = IS_IN_SET(project_task_priority_opts,
+                                                     zero = None),
+                                ),
+                          # FK, not Instance or Component
+                          # Could be a Person, Team or Organisation
+                          # - may have to add rules in the template's customise_project_task_resource to filter the options appropriately
+                          # - permission sets (inc realms) should only be applied to the instances, not the super-entity
+                          Field("pe_id", "reference pr_pentity",
+                                label = T("Assigned to"),
+                                represent = assignee_represent,
+                                requires = IS_EMPTY_OR(
+                                            IS_ONE_OF(db, "pr_pentity.pe_id",
+                                                      assignee_represent,
+                                                      filterby = "instance_type",
+                                                      filter_opts = ("pr_person", "pr_group", "org_organisation"),
+                                                      sort = True,
+                                                      )),
+                                ondelete = "SET NULL",
+                                readable = staff,
+                                writable = staff,
+                                # To use an Autocomplete instead of a dropdown:
+                                #widget = S3PentityAutocompleteWidget(instance_types = ("pr_person",
+                                #                                                       "pr_group",
+                                #                                                       "org_organisation",
+                                #                                                       ))
+                                # If just needing Persons:
+                                #widget = S3PersonAutocompleteWidget(field = "pe_id"),
+                                #comment = DIV(_class = "tooltip",
+                                #              _title = "%s|%s" % (T("Assigned to"),
+                                #                                  current.messages.AUTOCOMPLETE_HELP,
+                                #                                  ),
+                                #              ),
+                                ),
+                          s3_datetime("date_due",
+                                      label = T("Date Due"),
+                                      represent = "date",
+                                      readable = staff,
+                                      writable = staff,
+                                      ),
+                          Field("time_estimated", "double",
+                                label = "%s (%s)" % (T("Time Estimate"),
+                                                     T("hours"),
+                                                     ),
+                                represent = lambda v: NONE if not v else \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                requires = IS_EMPTY_OR(
+                                            IS_FLOAT_AMOUNT(0, None)
+                                            ),
+                                readable = staff,
+                                writable = staff,
+                                ),
+                          Field("time_actual", "double",
+                                label = "%s (%s)" % (T("Time Taken"),
+                                                     T("hours")),
+                                represent = lambda v: NONE if not v else \
+                                     IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                requires = IS_EMPTY_OR(
+                                             IS_FLOAT_AMOUNT(0, None)
+                                             ),
+                                readable = staff,
+                                # This comes from the Time component
+                                writable = False,
+                                ),
+                          Field("status", "integer",
+                                default = 2,
+                                label = T("Status"),
+                                represent = s3_options_represent(project_task_status_opts),
+                                requires = IS_IN_SET(project_task_status_opts,
+                                                     zero = None),
+                                readable = staff,
+                                writable = staff,
+                                ),
+                          Field.Method("task_id", self.project_task_task_id),
+                          s3_comments(),
+                          *s3_meta_fields(),
+                          on_define = lambda table: \
+                            [table.created_on.set_attributes(represent = lambda dt: \
+                                S3DateTime.date_represent(dt, utc=True)),
+                             ]
+                          )
 
         # CRUD Strings
         ADD_TASK = T("Create Task")
-        crud_strings[tablename] = Storage(
+        s3.crud_strings[tablename] = Storage(
             label_create = ADD_TASK,
             title_display = T("Task Details"),
             title_list = T("All Tasks"),
@@ -11076,8 +11091,7 @@ class ProjectTaskModel(S3Model):
             )
 
         # Basic list fields, filter widgets and CRUD fields for tasks
-        list_fields = ["id",
-                       (T("ID"), "task_id"),
+        list_fields = [(T("ID"), "task_id"),
                        "priority",
                        ]
         lappend = list_fields.append
@@ -11118,7 +11132,7 @@ class ProjectTaskModel(S3Model):
         if settings.get_project_activities():
             lappend("task_activity.activity_id")
             fappend(S3OptionsFilter("task_activity.activity_id",
-                                    options = self.project_task_activity_opts,
+                                    options = project_task_activity_opts,
                                     ))
             cappend(S3SQLInlineComponent("task_activity",
                                          label = T("Activity"),
@@ -11155,7 +11169,7 @@ class ProjectTaskModel(S3Model):
             # Use the field in this format to get the custom represent
             lappend("task_milestone.milestone_id")
             fappend(S3OptionsFilter("task_milestone.milestone_id",
-                                    options = self.project_task_milestone_opts,
+                                    options = project_task_milestone_opts,
                                     ))
             cappend(S3SQLInlineComponent("task_milestone",
                                          label = T("Milestone"),
@@ -11262,29 +11276,29 @@ class ProjectTaskModel(S3Model):
                                  )
 
         # Resource Configuration
-        configure(tablename,
-                  context = {"incident": "incident.incident_id",
-                             "location": "location_id",
-                             # Assignee instead?
-                             "organisation": "created_by$organisation_id",
-                             "scenario": "scenario.scenario_id",
-                             },
-                  copyable = True,
-                  #create_next = URL(f="task", args=["[id]"]),
-                  create_onaccept = self.project_task_create_onaccept,
-                  crud_form = crud_form,
-                  extra = "description",
-                  extra_fields = ["id"],
-                  filter_widgets = filter_widgets,
-                  list_fields = list_fields,
-                  list_layout = project_task_list_layout,
-                  onvalidation = self.project_task_onvalidation,
-                  orderby = "project_task.priority,project_task.date_due asc",
-                  realm_entity = self.project_task_realm_entity,
-                  report_options = report_options,
-                  super_entity = "doc_entity",
-                  update_onaccept = self.project_task_update_onaccept,
-                  )
+        self.configure(tablename,
+                       context = {"incident": "incident.incident_id",
+                                  "location": "location_id",
+                                  # Assignee instead?
+                                  "organisation": "created_by$organisation_id",
+                                  "scenario": "scenario.scenario_id",
+                                  },
+                       copyable = True,
+                       #create_next = URL(f="task", args=["[id]"]),
+                       create_onaccept = self.project_task_create_onaccept,
+                       crud_form = crud_form,
+                       extra = "description",
+                       extra_fields = ["id"],
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       list_layout = project_task_list_layout,
+                       onvalidation = self.project_task_onvalidation,
+                       orderby = "project_task.priority,project_task.date_due asc",
+                       realm_entity = self.project_task_realm_entity,
+                       report_options = report_options,
+                       super_entity = "doc_entity",
+                       update_onaccept = self.project_task_update_onaccept,
+                       )
 
         # Reusable field
         represent = project_TaskRepresent(show_link = True)
@@ -11304,9 +11318,6 @@ class ProjectTaskModel(S3Model):
                                                         ),
                                   )
 
-        # Representation with project name, for time log form
-        project_task_represent_w_project = project_TaskRepresent(show_project = True)
-
         # Custom Methods
         set_method("project", "task",
                    method = "share",
@@ -11324,352 +11335,92 @@ class ProjectTaskModel(S3Model):
                    )
 
         # Components
-        add_components(tablename,
-                       # Projects (for imports)
-                       project_project = {"link": "project_task_project",
+        self.add_components(tablename,
+                            # Projects (for imports)
+                            project_project = {"link": "project_task_project",
+                                               "joinby": "task_id",
+                                               "key": "project_id",
+                                               "actuate": "embed",
+                                               "autocomplete": "name",
+                                               "autodelete": False,
+                                               },
+                            # Format for S3SQLInlineComponent
+                            project_task_project = "task_id",
+                            #project_activity_group = "activity_id",
+                            # Activities
+                            project_activity = {"link": "project_task_activity",
+                                                "joinby": "task_id",
+                                                "key": "activity_id",
+                                                "actuate": "embed",
+                                                "autocomplete": "name",
+                                                "autodelete": False,
+                                                },
+                            # Format for S3SQLInlineComponent
+                            project_task_activity = "task_id",
+                            # Incidents
+                            #event_incident = {"link": "event_task",
+                            #                  "joinby": "task_id",
+                            #                  "key": "incident_id",
+                            #                  "actuate": "replace",
+                            #                  },
+                            # Format for InlineComponent & Context
+                            event_task = {"name": "incident",
                                           "joinby": "task_id",
-                                          "key": "project_id",
-                                          "actuate": "embed",
-                                          "autocomplete": "name",
-                                          "autodelete": False,
                                           },
-                       # Format for S3SQLInlineComponent
-                       project_task_project = "task_id",
-                       #project_activity_group = "activity_id",
-                       # Activities
-                       project_activity = {"link": "project_task_activity",
-                                           "joinby": "task_id",
-                                           "key": "activity_id",
-                                           "actuate": "embed",
-                                           "autocomplete": "name",
-                                           "autodelete": False,
-                                           },
-                       # Format for S3SQLInlineComponent
-                       project_task_activity = "task_id",
-                       # Incidents
-                       #event_incident = {"link": "event_task",
-                       #                  "joinby": "task_id",
-                       #                  "key": "incident_id",
-                       #                  "actuate": "replace",
-                       #                  },
-                       # Format for InlineComponent & Context
-                       event_task = {"name": "incident",
-                                     "joinby": "task_id",
-                                     },
-                       event_scenario_task = {"name": "scenario",
-                                              "joinby": "task_id",
-                                              },
-                       # Forums
-                       project_task_forum = "task_id",
-                       # Milestones
-                       project_milestone = {"link": "project_task_milestone",
-                                            "joinby": "task_id",
-                                            "key": "milestone_id",
-                                            "actuate": "embed",
-                                            "autocomplete": "name",
-                                            "autodelete": False,
-                                            },
-                       # Format for S3SQLInlineComponent
-                       project_task_milestone = "task_id",
-                       # Members
-                       project_member = "task_id",
-                       # Job titles
-                       hrm_job_title = {"link": "project_task_job_title",
-                                        "joinby": "task_id",
-                                        "key": "job_title_id",
-                                        "actuate": "embed",
-                                        "autocomplete": "name",
-                                        "autodelete": False,
-                                        },
-                       # Human Resources (assigned)
-                       hrm_human_resource = {"link": "project_task_human_resource",
+                            event_scenario_task = {"name": "scenario",
+                                                   "joinby": "task_id",
+                                                   },
+                            # Forums
+                            project_task_forum = "task_id",
+                            # Milestones
+                            project_milestone = {"link": "project_task_milestone",
+                                                 "joinby": "task_id",
+                                                 "key": "milestone_id",
+                                                 "actuate": "embed",
+                                                 "autocomplete": "name",
+                                                 "autodelete": False,
+                                                 },
+                            # Format for S3SQLInlineComponent
+                            project_task_milestone = "task_id",
+                            # Members
+                            project_member = "task_id",
+                            # Job titles
+                            hrm_job_title = {"link": "project_task_job_title",
                                              "joinby": "task_id",
-                                             "key": "human_resource_id",
+                                             "key": "job_title_id",
                                              "actuate": "embed",
                                              "autocomplete": "name",
-                                             "autodelete": False
+                                             "autodelete": False,
                                              },
-                       # Tags
-                       project_task_tag = {"name": "tag",
-                                           "joinby": "task_id",
-                                           },
-                       # Time
-                       project_time = "task_id",
-                       # Comments (for imports))
-                       project_comment = "task_id",
-                       # Shelter Inspections
-                       cr_shelter_inspection_flag = {"link": "cr_shelter_inspection_task",
-                                                     "joinby": "task_id",
-                                                     "key": "inspection_flag_id",
-                                                     "actuate": "link",
-                                                     "autodelete": False,
-                                                     }
-                       )
-
-        # ---------------------------------------------------------------------
-        # Link Tasks <-> Projects
-        #
-        tablename = "project_task_project"
-        define_table(tablename,
-                     task_id(empty = False,
-                             ondelete = "CASCADE",
-                             ),
-                     project_id(empty = False,
-                                ondelete = "CASCADE",
-                                # Override requires so that update access to the projects isn't required
-                                requires = IS_ONE_OF(db, "project_project.id",
-                                                     self.project_project_represent,
-                                                     )
-                                ),
-                      *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Link task <-> activity
-        #
-        # Tasks <> Activities
-        tablename = "project_task_activity"
-        define_table(tablename,
-                     task_id(empty = False,
-                             ondelete = "CASCADE",
-                             ),
-                     self.project_activity_id(empty = False,
-                                              ondelete = "CASCADE",
-                                              ),
-                     *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Link task <-> milestone
-        #
-        # Tasks <> Milestones
-        tablename = "project_task_milestone"
-        define_table(tablename,
-                     task_id(empty = False,
-                             ondelete = "CASCADE",
-                             ),
-                     milestone_id(empty = False,
-                                  ondelete = "CASCADE",
-                                  ),
-                     *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Project comment
-        #
-        # @ToDo: Attachments?
-        #
-        # Parent field allows us to:
-        #  * easily filter for top-level threads
-        #  * easily filter for next level of threading
-        #  * hook a new reply into the correct location in the hierarchy
-        #
-        tablename = "project_comment"
-        define_table(tablename,
-                     Field("parent", "reference project_comment",
-                           readable = False,
-                           requires = IS_EMPTY_OR(
-                                        IS_ONE_OF(db, "project_comment.id"
-                                       )),
-                           ),
-                     task_id(empty = False,
-                             ondelete = "CASCADE",
-                             ),
-                     Field("body", "text", notnull=True,
-                           label = T("Comment"),
-                           requires = IS_NOT_EMPTY(),
-                           ),
-                     *s3_meta_fields())
-
-        # Resource Configuration
-        configure(tablename,
-                  list_fields = ["id",
-                                 "task_id",
-                                 "created_by",
-                                 "modified_on"
-                                 ],
-                  )
-
-        # ---------------------------------------------------------------------
-        # Project Task Roles
-        # - Users can assign themselves roles while working on tasks
-        #
-        tablename = "project_role"
-        define_table(tablename,
-                     Field("role", length=128, notnull=True, unique=True,
-                           label = T("Role"),
-                           requires = [IS_NOT_EMPTY(),
-                                       IS_LENGTH(128),
-                                       IS_NOT_ONE_OF(db,
-                                                     "project_role.role",
-                                                     ),
-                                       ],
-                           ),
-                     s3_comments(),
-                     *s3_meta_fields())
-        # CRUD Strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Create Role"),
-            title_display = T("Task Role"),
-            title_list = T("Task Roles"),
-            title_update = T("Edit Role"),
-            label_list_button = T("List Roles"),
-            label_delete_button = T("Delete Role"),
-            msg_record_created = T("Role added"),
-            msg_record_modified = T("Role updated"),
-            msg_record_deleted = T("Role deleted"),
-            msg_list_empty = T("No such Role exists"),
-            )
-
-        represent = S3Represent(lookup = tablename,
-                                fields = ["role"],
-                                )
-
-        role_id = S3ReusableField("role_id", "reference %s" % tablename,
-                                  ondelete = "CASCADE",
-                                  requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                                                   "project_role.id",
-                                                                   represent,
-                                                                   )),
-                                  represent = represent,
-                                  )
-
-        # ---------------------------------------------------------------------
-        # Project Members
-        # - Members for tasks in Project
-        #
-        person_id = self.pr_person_id
-        tablename = "project_member"
-
-        define_table(tablename,
-                     person_id(label = T("Member"),
-                               default = auth.s3_logged_in_person(),
-                               widget = SQLFORM.widgets.options.widget,
-                               ),
-                     role_id(label = T("Role")),
-                     task_id(empty = False,
-                             ondelete = "CASCADE",
-                             ),
-                     *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Project Time
-        # - used to Log hours spent on a Task
-        #
-        tablename = "project_time"
-        define_table(tablename,
-                     task_id(requires = IS_ONE_OF(db, "project_task.id",
-                                                  project_task_represent_w_project,
-                                                  ),
-                             ),
-                     self.pr_person_id(default = auth.s3_logged_in_person(),
-                                       widget = SQLFORM.widgets.options.widget
-                                       ),
-                     s3_datetime(default = "now",
-                                 past = 8760, # Hours, so 1 year
-                                 future = 0
-                                 ),
-                     Field("hours", "double",
-                           label = T("Effort (Hours)"),
-                           represent = lambda v: NONE if not v else \
-                                IS_FLOAT_AMOUNT.represent(v, precision=2),
-                           requires = IS_EMPTY_OR(
-                                        IS_FLOAT_AMOUNT(0, None)
-                                        ),
-                           widget = S3HoursWidget(precision = 2,
-                                                  ),
-                           ),
-                     Field.Method("day", project_time_day),
-                     Field.Method("week", project_time_week),
-                     s3_comments(),
-                     *s3_meta_fields())
-
-        # CRUD Strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Log Time Spent"),
-            title_display = T("Logged Time Details"),
-            title_list = T("Logged Time"),
-            title_update = T("Edit Logged Time"),
-            title_upload = T("Import Logged Time data"),
-            title_report = T("Project Time Report"),
-            label_list_button = T("List Logged Time"),
-            msg_record_created = T("Time Logged"),
-            msg_record_modified = T("Time Log Updated"),
-            msg_record_deleted = T("Time Log Deleted"),
-            msg_list_empty = T("No Time Logged"),
-            )
-        if "rows" in request.get_vars and request.get_vars.rows == "project":
-            crud_strings[tablename].title_report = T("Project Time Report")
-
-        list_fields = [(T("Project"), "task_id$task_project.project_id"),
-                       (T("Activity"), "task_id$task_activity.activity_id"),
-                       "task_id",
-                       "person_id",
-                       "date",
-                       "hours",
-                       "comments",
-                       ]
-
-        filter_widgets = [
-            S3OptionsFilter("person_id",
-                            #label = T("Person"),
-                            ),
-            S3OptionsFilter("task_id$task_project.project_id",
-                            #label = T("Project"),
-                            options = project_task_project_opts,
-                            ),
-            S3OptionsFilter("task_id$task_activity.activity_id",
-                            #label = T("Activity"),
-                            options = self.project_task_activity_opts,
-                            hidden = True,
-                            ),
-            S3DateFilter("date",
-                         #label = T("Date"),
-                         hide_time = True,
-                         hidden = True,
-                         ),
-            ]
-
-        if settings.get_project_milestones():
-            # Use the field in this format to get the custom represent
-            list_fields.insert(2, (T("Milestone"), "task_id$task_milestone.milestone_id"))
-            filter_widgets.insert(3, S3OptionsFilter("task_id$task_milestone.milestone_id",
-                                                     #label = T("Milestone"),
-                                                     hidden = True,
-                                                     ))
-
-        report_fields = list_fields + \
-                        [(T("Day"), "day"),
-                         (T("Week"), "week")]
-
-        if settings.get_project_sectors():
-            report_fields.insert(3, (T("Sector"),
-                                     "task_id$task_project.project_id$sector_project.sector_id"))
-            filter_widgets.insert(1, S3OptionsFilter("task_id$task_project.project_id$sector_project.sector_id",
-                                                     #label = T("Sector"),
-                                                     ))
-
-        report_options = Storage(rows = report_fields,
-                                 cols = report_fields,
-                                 fact = report_fields,
-                                 defaults = Storage(
-                                    rows = "task_id$task_project.project_id",
-                                    cols = "person_id",
-                                    fact = "sum(hours)",
-                                    totals = True,
-                                    ),
-                                 )
-
-        configure(tablename,
-                  filter_widgets = filter_widgets,
-                  list_fields = list_fields,
-                  onaccept = self.project_time_onaccept,
-                  report_fields = ["date"],
-                  report_options = report_options,
-                  )
+                            # Human Resources (assigned)
+                            hrm_human_resource = {"link": "project_task_human_resource",
+                                                  "joinby": "task_id",
+                                                  "key": "human_resource_id",
+                                                  "actuate": "embed",
+                                                  "autocomplete": "name",
+                                                  "autodelete": False
+                                                  },
+                            # Tags
+                            project_task_tag = {"name": "tag",
+                                                "joinby": "task_id",
+                                                },
+                            # Time
+                            project_time = "task_id",
+                            # Comments (for imports))
+                            project_comment = "task_id",
+                            # Shelter Inspections
+                            cr_shelter_inspection_flag = {"link": "cr_shelter_inspection_task",
+                                                          "joinby": "task_id",
+                                                          "key": "inspection_flag_id",
+                                                          "actuate": "link",
+                                                          "autodelete": False,
+                                                          }
+                            )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {"project_milestone_id": milestone_id,
-                "project_task_id": task_id,
+        return {"project_task_id": task_id,
                 }
 
     # -------------------------------------------------------------------------
@@ -11677,10 +11428,7 @@ class ProjectTaskModel(S3Model):
     def defaults():
         """ Safe defaults for model-global names if module is disabled """
 
-        dummy = S3ReusableField.dummy
-
-        return {"project_milestone_id": dummy("milestone_id"),
-                "project_task_id": dummy("task_id"),
+        return {"project_task_id": S3ReusableField.dummy("task_id"),
                 }
 
     # -------------------------------------------------------------------------
@@ -11694,42 +11442,6 @@ class ProjectTaskModel(S3Model):
             return row.id
         except AttributeError:
             return None
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_task_activity_opts():
-        """
-            Provide the options for the Activity search filter
-            - all Activities with Tasks
-        """
-
-        db = current.db
-        atable = db.project_activity
-        ttable = db.project_task
-        ltable = db.project_task_activity
-        query = (ttable.deleted == False) & \
-                (ltable.task_id == ttable.id) & \
-                (ltable.activity_id == atable.id)
-        rows = db(query).select(atable.id, atable.name)
-        return dict((row.id, row.name) for row in rows)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_task_milestone_opts():
-        """
-            Provide the options for the Milestone search filter
-            - all Milestones with Tasks
-        """
-
-        db = current.db
-        mtable = db.project_milestone
-        ttable = db.project_task
-        ltable = db.project_task_milestone
-        query = (ttable.deleted == False) & \
-                (ltable.task_id == ttable.id) & \
-                (ltable.milestone_id == mtable.id)
-        rows = db(query).select(mtable.id, mtable.name)
-        return dict((row.id, row.name) for row in rows)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -12130,57 +11842,86 @@ class ProjectTaskModel(S3Model):
         else:
             r.error(405, current.ERROR.BAD_METHOD)
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_time_onaccept(form):
-        """ When Time is logged, update the Task & Activity """
+# =============================================================================
+class ProjectTaskActivityModel(S3Model):
+    """
+        Project Task Activity Model
+    """
 
+    names = ("project_task_activity",
+             )
+
+    def model(self):
+
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        # Tasks <> Activities
+        #
+        tablename = "project_task_activity"
+        self.define_table(tablename,
+                          self.project_task_id(empty = False,
+                                               ondelete = "CASCADE",
+                                               ),
+                          self.project_activity_id(empty = False,
+                                                   ondelete = "CASCADE",
+                                                   ),
+                          *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
+        return None
+
+# =============================================================================
+class ProjectTaskCommentModel(S3Model):
+    """
+        Project Task Comments Model
+    """
+
+    names = ("project_comment",
+             )
+
+    def model(self):
+
+        T = current.T
         db = current.db
-        titable = db.project_time
-        ttable = db.project_task
-        atable = db.project_activity
-        tatable = db.project_task_activity
 
-        # Find the Task
-        task_id = form.vars.task_id
-        if not task_id:
-            # Component Form
-            record = db(titable.id == form.vars.id).select(titable.task_id,
-                                                           limitby = (0, 1),
-                                                           ).first()
-            if record:
-                task_id = record.task_id
+        # ---------------------------------------------------------------------
+        # Project comment
+        #
+        # @ToDo: Attachments?
+        #
+        # Parent field allows us to:
+        #  * easily filter for top-level threads
+        #  * easily filter for next level of threading
+        #  * hook a new reply into the correct location in the hierarchy
+        #
+        tablename = "project_comment"
+        self.define_table(tablename,
+                          Field("parent", "reference project_comment",
+                                readable = False,
+                                requires = IS_EMPTY_OR(
+                                            IS_ONE_OF(db, "project_comment.id"
+                                            )),
+                                ),
+                          self.project_task_id(empty = False,
+                                               ondelete = "CASCADE",
+                                               ),
+                          Field("body", "text", notnull=True,
+                                label = T("Comment"),
+                                requires = IS_NOT_EMPTY(),
+                                ),
+                          *s3_meta_fields())
 
-        # Total the Hours Logged
-        rows = db(titable.deleted == False).select(titable.hours)
-        hours = 0
-        for row in rows:
-            if row.hours:
-                hours += row.hours
+        # Resource Configuration
+        self.configure(tablename,
+                       list_fields = ["task_id",
+                                      "created_by",
+                                      "modified_on"
+                                      ],
+                       )
 
-        # Update the Task
-        db(ttable.id == task_id).update(time_actual = hours)
-
-        # Find the Activity
-        activity = db(tatable.task_id == task_id).select(tatable.activity_id,
-                                                         limitby = (0, 1),
-                                                         ).first()
-        if activity:
-            activity_id = activity.activity_id
-
-            # Find all Tasks in this Activity
-            query = (ttable.deleted == False) & \
-                    (tatable.task_id == ttable.id) & \
-                    (tatable.activity_id == activity_id)
-            tasks = db(query).select(ttable.time_actual)
-
-            # Total the Hours Logged
-            hours = 0
-            for task in tasks:
-                hours += task.time_actual or 0 # Handle None
-
-            # Update the Activity
-            db(atable.id == activity_id).update(time_actual = hours)
+        # Pass names back to global scope (s3.*)
+        return None
 
 # =============================================================================
 class ProjectTaskForumModel(S3Model):
@@ -12266,9 +12007,70 @@ class ProjectTaskHRMModel(S3Model):
                                            ),
                      *s3_meta_fields())
 
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
+        return None
+
+# =============================================================================
+class ProjectTaskMilestoneModel(S3Model):
+    """
+        Project Task Milestone Model
+    """
+
+    names = ("project_task_milestone",
+             )
+
+    def model(self):
+
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        # Tasks <> Milestones
         #
+        tablename = "project_task_milestone"
+        self.define_table(tablename,
+                          self.project_task_id(empty = False,
+                                               ondelete = "CASCADE",
+                                               ),
+                          self.project_milestone_id(empty = False,
+                                                    ondelete = "CASCADE",
+                                                    ),
+                          *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
+        return None
+
+# =============================================================================
+class ProjectTaskProjectModel(S3Model):
+    """
+        Project Task Project Model
+    """
+
+    names = ("project_task_project",
+             )
+
+    def model(self):
+
+        #T = current.T
+        db = current.db
+
+        # ---------------------------------------------------------------------
+        # Tasks <-> Projects
+        #
+        tablename = "project_task_project"
+        self.define_table(tablename,
+                          self.project_task_id(empty = False,
+                                               ondelete = "CASCADE",
+                                               ),
+                          self.project_project_id(empty = False,
+                                                  ondelete = "CASCADE",
+                                                  # Override requires so that update access to the projects isn't required
+                                                  requires = IS_ONE_OF(db, "project_project.id",
+                                                                       self.project_project_represent,
+                                                                       )
+                                                  ),
+                          *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
         return None
 
 # =============================================================================
@@ -12312,6 +12114,193 @@ class ProjectTaskTagModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return None
+
+# =============================================================================
+class ProjectTaskTimeModel(S3Model):
+    """
+        Task Time
+    """
+
+    names = ("project_time",)
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+        auth = current.auth
+        settings = current.deployment_settings
+
+        # ---------------------------------------------------------------------
+        # Project Time
+        # - used to Log hours spent on a Task
+        #
+        tablename = "project_time"
+        self.define_table(tablename,
+                          self.project_task_id(requires = IS_ONE_OF(db, "project_task.id",
+                                                                    project_TaskRepresent(show_project = True),
+                                                                    ),
+                                               ),
+                          self.pr_person_id(default = auth.s3_logged_in_person(),
+                                            # Dropdown, not auto-complete
+                                            widget = SQLFORM.widgets.options.widget
+                                            ),
+                          s3_datetime(default = "now",
+                                      past = 17520, # Hours, so 2 years
+                                      future = 0
+                                      ),
+                          Field("hours", "double",
+                                label = T("Effort (Hours)"),
+                                represent = lambda v: NONE if not v else \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                requires = IS_EMPTY_OR(
+                                            IS_FLOAT_AMOUNT(0, None)
+                                            ),
+                                widget = S3HoursWidget(precision = 2,
+                                                       ),
+                                ),
+                          Field.Method("day", project_time_day),
+                          Field.Method("week", project_time_week),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # CRUD Strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Log Time Spent"),
+            title_display = T("Logged Time Details"),
+            title_list = T("Logged Time"),
+            title_update = T("Edit Logged Time"),
+            title_upload = T("Import Logged Time data"),
+            title_report = T("Project Time Report"),
+            label_list_button = T("List Logged Time"),
+            msg_record_created = T("Time Logged"),
+            msg_record_modified = T("Time Log Updated"),
+            msg_record_deleted = T("Time Log Deleted"),
+            msg_list_empty = T("No Time Logged"),
+            )
+        if current.request.get_vars.get("rows") == "project":
+            crud_strings[tablename].title_report = T("Project Time Report")
+
+        list_fields = [(T("Project"), "task_id$task_project.project_id"),
+                       (T("Activity"), "task_id$task_activity.activity_id"),
+                       "task_id",
+                       "person_id",
+                       "date",
+                       "hours",
+                       "comments",
+                       ]
+
+        filter_widgets = [
+            S3OptionsFilter("person_id",
+                            #label = T("Person"),
+                            ),
+            S3OptionsFilter("task_id$task_project.project_id",
+                            #label = T("Project"),
+                            options = project_task_project_opts,
+                            ),
+            S3OptionsFilter("task_id$task_activity.activity_id",
+                            #label = T("Activity"),
+                            options = project_task_activity_opts,
+                            hidden = True,
+                            ),
+            S3DateFilter("date",
+                         #label = T("Date"),
+                         hide_time = True,
+                         hidden = True,
+                         ),
+            ]
+
+        if settings.get_project_milestones():
+            # Use the field in this format to get the custom represent
+            list_fields.insert(2, (T("Milestone"), "task_id$task_milestone.milestone_id"))
+            filter_widgets.insert(3, S3OptionsFilter("task_id$task_milestone.milestone_id",
+                                                     #label = T("Milestone"),
+                                                     hidden = True,
+                                                     ))
+
+        report_fields = list_fields + \
+                        [(T("Day"), "day"),
+                         (T("Week"), "week")]
+
+        if settings.get_project_sectors():
+            report_fields.insert(3, (T("Sector"),
+                                     "task_id$task_project.project_id$sector_project.sector_id"))
+            filter_widgets.insert(1, S3OptionsFilter("task_id$task_project.project_id$sector_project.sector_id",
+                                                     #label = T("Sector"),
+                                                     ))
+
+        report_options = Storage(rows = report_fields,
+                                 cols = report_fields,
+                                 fact = report_fields,
+                                 defaults = Storage(
+                                    rows = "task_id$task_project.project_id",
+                                    cols = "person_id",
+                                    fact = "sum(hours)",
+                                    totals = True,
+                                    ),
+                                 )
+
+        self.configure(tablename,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       onaccept = self.project_time_onaccept,
+                       report_fields = ["date"],
+                       report_options = report_options,
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_time_onaccept(form):
+        """ When Time is logged, update the Task & Activity """
+
+        db = current.db
+        titable = db.project_time
+        ttable = db.project_task
+        atable = db.project_activity
+        tatable = db.project_task_activity
+
+        # Find the Task
+        task_id = form.vars.task_id
+        if not task_id:
+            # Component Form
+            record = db(titable.id == form.vars.id).select(titable.task_id,
+                                                           limitby = (0, 1),
+                                                           ).first()
+            if record:
+                task_id = record.task_id
+
+        # Total the Hours Logged
+        rows = db(titable.deleted == False).select(titable.hours)
+        hours = 0
+        for row in rows:
+            if row.hours:
+                hours += row.hours
+
+        # Update the Task
+        db(ttable.id == task_id).update(time_actual = hours)
+
+        # Find the Activity
+        activity = db(tatable.task_id == task_id).select(tatable.activity_id,
+                                                         limitby = (0, 1),
+                                                         ).first()
+        if activity:
+            activity_id = activity.activity_id
+
+            # Find all Tasks in this Activity
+            query = (ttable.deleted == False) & \
+                    (tatable.task_id == ttable.id) & \
+                    (tatable.activity_id == activity_id)
+            tasks = db(query).select(ttable.time_actual)
+
+            # Total the Hours Logged
+            hours = 0
+            for task in tasks:
+                hours += task.time_actual or 0 # Handle None
+
+            # Update the Activity
+            db(atable.id == activity_id).update(time_actual = hours)
 
 # =============================================================================
 class ProjectWindowModel(S3Model):
@@ -13758,6 +13747,44 @@ def project_project_filters(org_label):
     return filter_widgets
 
 # =============================================================================
+def project_task_activity_opts():
+    """
+        Provide the options for the Activity search filter
+        - all Activities with Tasks
+    """
+
+    db = current.db
+    atable = db.project_activity
+    ttable = db.project_task
+    ltable = db.project_task_activity
+    query = (ttable.deleted == False) & \
+            (ltable.task_id == ttable.id) & \
+            (ltable.activity_id == atable.id)
+    rows = db(query).select(atable.id,
+                            atable.name,
+                            )
+    return {row.id: row.name for row in rows}
+
+# =============================================================================
+def project_task_milestone_opts():
+    """
+        Provide the options for the Milestone search filter
+        - all Milestones with Tasks
+    """
+
+    db = current.db
+    mtable = db.project_milestone
+    ttable = db.project_task
+    ltable = db.project_task_milestone
+    query = (ttable.deleted == False) & \
+            (ltable.task_id == ttable.id) & \
+            (ltable.milestone_id == mtable.id)
+    rows = db(query).select(mtable.id,
+                            mtable.name,
+                            )
+    return {row.id: row.name for row in rows}
+
+# =============================================================================
 def project_task_project_opts():
     """
         Provide the options for the Project search filter
@@ -13771,8 +13798,10 @@ def project_task_project_opts():
     query = (ttable.deleted != True) & \
             (ltable.task_id == ttable.id) & \
             (ltable.project_id == ptable.id)
-    rows = db(query).select(ptable.id, ptable.name)
-    return dict((row.id, row.name) for row in rows)
+    rows = db(query).select(ptable.id,
+                            ptable.name,
+                            )
+    return {row.id: row.name for row in rows}
 
 # =============================================================================
 def project_project_list_layout(list_id, item_id, resource, rfields, record,
