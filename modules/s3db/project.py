@@ -11382,8 +11382,6 @@ class ProjectTaskModel(S3Model):
                                                  },
                             # Format for S3SQLInlineComponent
                             project_task_milestone = "task_id",
-                            # Members
-                            project_member = "task_id",
                             # Job titles
                             hrm_job_title = {"link": "project_task_job_title",
                                              "joinby": "task_id",
