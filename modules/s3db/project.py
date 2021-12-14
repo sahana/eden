@@ -10926,7 +10926,6 @@ class ProjectTaskModel(S3Model):
         T = current.T
         db = current.db
         auth = current.auth
-        s3 = current.response.s3
         settings = current.deployment_settings
 
         set_method = self.set_method
@@ -11077,7 +11076,7 @@ class ProjectTaskModel(S3Model):
 
         # CRUD Strings
         ADD_TASK = T("Create Task")
-        s3.crud_strings[tablename] = Storage(
+        current.response.s3.crud_strings[tablename] = Storage(
             label_create = ADD_TASK,
             title_display = T("Task Details"),
             title_list = T("All Tasks"),
@@ -11113,12 +11112,9 @@ class ProjectTaskModel(S3Model):
         cappend = crud_fields.append
         cextend = crud_fields.extend
 
-        jquery_ready_append = s3.jquery_ready.append
-
         # Category fields (project, activity, tags)
-        use_projects = settings.get_project_projects()
-        if use_projects and current.request.function != "project":
-            jquery_ready_append = s3.jquery_ready.append
+        if settings.get_project_projects() and \
+           current.request.function != "project":
             lappend("task_project.project_id")
             fappend(S3OptionsFilter("task_project.project_id",
                                     options = project_task_project_opts,
@@ -11139,21 +11135,6 @@ class ProjectTaskModel(S3Model):
                                          fields = [("", "activity_id")],
                                          multiple = False,
                                          ))
-            if use_projects:
-                # Filter Activity List to just those for the Project
-                options = {"trigger": {"alias": "task_project",
-                                       "name": "project_id",
-                                       },
-                           "target": {"alias": "task_activity",
-                                      "name": "activity_id",
-                                      },
-                           "scope": "form",
-                           "lookupPrefix": "project",
-                           "lookupResource": "activity",
-                           "optional": True,
-                           }
-                jquery_ready_append('''$.filterOptionsS3(%s)''' % \
-                                    json.dumps(options, separators=SEPARATORS))
 
         # Basic workflow fields
         cextend(("name",
@@ -11176,21 +11157,6 @@ class ProjectTaskModel(S3Model):
                                          fields = [("", "milestone_id")],
                                          multiple = False,
                                          ))
-            if use_projects:
-                # Filter Milestone List to just those for the Project
-                options = {"trigger": {"alias": "task_project",
-                                       "name": "project_id",
-                                       },
-                           "target": {"alias": "task_milestone",
-                                      "name": "milestone_id",
-                                      },
-                           "scope": "form",
-                           "lookupPrefix": "project",
-                           "lookupResource": "milestone",
-                           "optional": True,
-                           }
-                jquery_ready_append('''$.filterOptionsS3(%s)''' % \
-                                    json.dumps(options, separators=SEPARATORS))
 
         # Remaining standard filter widgets for tasks
         filter_widgets.extend((S3OptionsFilter("pe_id",
@@ -13343,6 +13309,8 @@ def project_task_controller():
     auth = current.auth
     s3 = current.response.s3
     get_vars = current.request.get_vars
+    settings = current.deployment_settings
+    use_projects = settings.get_project_projects()
 
     # Pre-process
     def prep(r):
@@ -13352,7 +13320,7 @@ def project_task_controller():
 
         if r.record:
             if r.interactive and \
-               current.deployment_settings.get_project_task_comments():
+               settings.get_project_task_comments():
                 # Put the Comments in the RFooter
                 project_ckeditor()
                 s3.rfooter = LOAD("project", "comments.load",
@@ -13371,7 +13339,7 @@ def project_task_controller():
                            #"organisation_id$logo",
                            "modified_by",
                            ]
-            if current.deployment_settings.get_project_projects():
+            if use_projects:
                 list_fields.insert(5, (T("Project"), "task_project.project_id"))
             s3db.configure("project_task",
                            list_fields = list_fields,
@@ -13393,8 +13361,7 @@ def project_task_controller():
 
             if auth.user:
                 hide_fields = ("pe_id", "status")
-                if current.deployment_settings \
-                          .get_project_my_tasks_include_team_tasks():
+                if settings.get_project_my_tasks_include_team_tasks():
                     # Include tasks assigned to the current user's teams
 
                     # Look up all teams the current user is member of
@@ -13482,7 +13449,7 @@ def project_task_controller():
 
         if r.component:
             if r.component_name == "req":
-                if current.deployment_settings.has_module("hrm"):
+                if settings.has_module("hrm"):
                     r.component.table.type.default = 3
                 if r.method != "update" and r.method != "read":
                     # Hide fields which don't make sense in a Create form
@@ -13504,8 +13471,45 @@ def project_task_controller():
         if r.interactive:
             if not r.component and r.method != "import":
                 # Maintain vars: why?
-                update_url = URL(args=["[id]"], vars=get_vars)
+                update_url = URL(args = ["[id]"],
+                                 vars = get_vars,
+                                 )
                 s3_action_buttons(r, update_url=update_url)
+
+                if use_projects:
+                    jquery_ready_append = s3.jquery_ready.append
+
+                    if settings.get_project_activities():
+                        # Filter Activity List to just those for the Project
+                        options = {"trigger": {"alias": "task_project",
+                                               "name": "project_id",
+                                               },
+                                   "target": {"alias": "task_activity",
+                                              "name": "activity_id",
+                                              },
+                                   "scope": "form",
+                                   "lookupPrefix": "project",
+                                   "lookupResource": "activity",
+                                   "optional": True,
+                                   }
+                        jquery_ready_append('''$.filterOptionsS3(%s)''' % \
+                                            json.dumps(options, separators=SEPARATORS))
+
+                if settings.get_project_milestones():
+                    # Filter Milestone List to just those for the Project
+                    options = {"trigger": {"alias": "task_project",
+                                           "name": "project_id",
+                                           },
+                               "target": {"alias": "task_milestone",
+                                          "name": "milestone_id",
+                                          },
+                               "scope": "form",
+                               "lookupPrefix": "project",
+                               "lookupResource": "milestone",
+                               "optional": True,
+                               }
+                    jquery_ready_append('''$.filterOptionsS3(%s)''' % \
+                                        json.dumps(options, separators=SEPARATORS))
         return output
     s3.postp = postp
 

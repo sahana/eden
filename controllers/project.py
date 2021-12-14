@@ -977,7 +977,8 @@ def report():
     """
         RESTful CRUD controller
 
-        @ToDo: Why is this needed? To have no rheader?
+        TODO:
+            Why is this needed? To have no rheader?
     """
 
     return s3_rest_controller("project", "activity")
