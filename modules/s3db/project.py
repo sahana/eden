@@ -11588,7 +11588,7 @@ class ProjectTaskModel(S3Model):
                             (table[var].label, represent(vvar))
 
             if changed:
-                table = db.project_comment
+                table = s3db.project_comment
                 text = s3db.auth_UserRepresent(show_link = False)(current.auth.user.id)
                 for var in changed:
                     text = "%s\n%s" % (text, changed[var])
@@ -11598,7 +11598,7 @@ class ProjectTaskModel(S3Model):
 
         post_vars = current.request.post_vars
         if "project_id" in post_vars:
-            ltable = db.project_task_project
+            ltable = s3db.project_task_project
             filter_ = (ltable.task_id == task_id)
             project = post_vars.project_id
             if project:
@@ -11610,7 +11610,7 @@ class ProjectTaskModel(S3Model):
                 #                                         ).first()
                 #link = s3db.resource("project_task_project")
                 #link_id = link.update_link(master, record)
-                query = (ltable.task_id == task_id) & \
+                query = filter_ & \
                         (ltable.project_id == project)
                 record = db(query).select(ltable.id,
                                           limitby = (0, 1),
@@ -11627,7 +11627,7 @@ class ProjectTaskModel(S3Model):
             links.delete()
 
         if "activity_id" in post_vars:
-            ltable = db.project_task_activity
+            ltable = s3db.project_task_activity
             filter_ = (ltable.task_id == task_id)
             activity = post_vars.activity_id
             if post_vars.activity_id:
@@ -11639,7 +11639,7 @@ class ProjectTaskModel(S3Model):
                 #                                          ).first()
                 #link = s3db.resource("project_task_activity")
                 #link_id = link.update_link(master, record)
-                query = (ltable.task_id == task_id) & \
+                query = filter_ & \
                         (ltable.activity_id == activity)
                 record = db(query).select(ltable.id,
                                           limitby = (0, 1),
@@ -11656,7 +11656,7 @@ class ProjectTaskModel(S3Model):
             links.delete()
 
         if "milestone_id" in post_vars:
-            ltable = db.project_task_milestone
+            ltable = s3db.project_task_milestone
             filter_ = (ltable.task_id == task_id)
             milestone = post_vars.milestone_id
             if milestone:
@@ -11668,7 +11668,7 @@ class ProjectTaskModel(S3Model):
                 #                                           ).first()
                 #link = s3db.resource("project_task_milestone")
                 #link_id = link.update_link(master, record)
-                query = (ltable.task_id == task_id) & \
+                query = filter_ & \
                         (ltable.milestone_id == milestone)
                 record = db(query).select(ltable.id,
                                           limitby = (0, 1),
