@@ -382,7 +382,7 @@ def location():
                                                       "cols": None,
                                                       "fact": "sum(population)",
                                                       },
-                                         ),
+                                         },
                         )
 
     # Pre-processor

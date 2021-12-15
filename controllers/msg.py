@@ -1762,7 +1762,8 @@ def twitter_result():
             record = output["item"].record
             # Tweet link
             twitter_url = "https://twitter.com/%s/statuses/%s" % (record.from_address,
-                                                                  record.tweet_id)
+                                                                  record.tweet_id,
+                                                                  )
             script_url = "https://platform.twitter.com/widgets.js"
             # Themeable Throbber
             throbber = DIV(_class = "s3-twitter-throbber",
