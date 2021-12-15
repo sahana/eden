@@ -1506,16 +1506,14 @@ def config(settings):
                                        ],
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
-                       report_options = Storage(
-                        rows = report_fields,
-                        cols = report_fields,
-                        fact = report_fields,
-                        defaults = Storage(rows = "location_id$L3",
-                                           cols = "shelter_details.status",
-                                           fact = "count(name_and_type)",
-                                           totals = True,
-                                           )
-                        ),
+                       report_options = {"rows": report_fields,
+                                         "cols": report_fields,
+                                         "fact": report_fields,
+                                         "defaults": {"rows": "location_id$L3",
+                                                      "cols": "shelter_details.status",
+                                                      "fact": "count(name_and_type)",
+                                                      },
+                                         },
                        )
 
     settings.customise_cr_shelter_resource = customise_cr_shelter_resource
@@ -2498,16 +2496,14 @@ def config(settings):
                        crud_form = crud_form,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
-                       report_options = Storage(
-                        rows = report_fields,
-                        cols = report_fields,
-                        fact = report_fields,
-                        defaults = Storage(rows = "location_id$L3",
-                                           cols = "organisation_id",
-                                           fact = "count(person_id)",
-                                           totals = True,
-                                           )
-                        ),
+                       report_options = {"rows": report_fields,
+                                         "cols": report_fields,
+                                         "fact": report_fields,
+                                         "defaults": {"rows": "location_id$L3",
+                                                      "cols": "organisation_id",
+                                                      "fact": "count(person_id)",
+                                                      },
+                                         },
                        )
 
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
@@ -2921,16 +2917,14 @@ def config(settings):
 
             s3db.configure(tablename,
                            filter_widgets = filter_widgets,
-                           report_options = Storage(
-                            rows = report_fields,
-                            cols = report_fields,
-                            fact = report_fields,
-                            defaults = Storage(rows = "shelter_registration.site_id$location_id$L3",
-                                               cols = "age_group",
-                                               fact = "count(id)",
-                                               totals = True,
-                                               )
-                            ),
+                           report_options = {"rows": report_fields,
+                                             "cols": report_fields,
+                                             "fact": report_fields,
+                                             "defaults": {"rows": "shelter_registration.site_id$location_id$L3",
+                                                          "cols": "age_group",
+                                                          "fact": "count(id)",
+                                                          },
+                                             },
                            )
 
         elif current.auth.permission.format == "xls":
@@ -3247,16 +3241,14 @@ def config(settings):
                            filter_widgets = filter_widgets,
                            listadd = True, #if household else False,
                            list_fields = list_fields,
-                           #report_options = Storage(
-                           # rows = report_fields,
-                           # cols = report_fields,
-                           # fact = report_fields,
-                           # defaults = Storage(rows = "shelter_registration.site_id$location_id$L3",
-                           #                    cols = "age_group",
-                           #                    fact = "count(id)",
-                           #                    totals = True,
-                           #                    )
-                           # ),
+                           #report_options = {"rows": report_fields,
+                           #                  "cols": report_fields,
+                           #                  "fact": report_fields,
+                           #                  "defaults": {"rows": "shelter_registration.site_id$location_id$L3",
+                           #                               "cols": "age_group",
+                           #                               "fact": "count(id)",
+                           #                               }
+                           #                  },
                            #summary = ({"name": "table",
                            #            "label": "Table",
                            #            "widgets": [{"method": "datatable"}]

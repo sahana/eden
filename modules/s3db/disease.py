@@ -542,26 +542,6 @@ class DiseaseMonitoringModel(S3Model):
                 "site_id$location_id$L3",
                 "disease_id",
                 ]
-        report_options = {
-            "rows": axes,
-            "cols": axes,
-            "fact": facts,
-            "defaults": {"rows": axes[1],
-                         "cols": None,
-                         "fact": facts[0],
-                         "totals": True,
-                         },
-            }
-
-        timeplot_options = {
-            "fact": facts,
-            "timestamp": ((T("per interval"), "date,date"),
-                          (T("cumulative"), "date"),
-                          ),
-            "defaults": {"fact": facts[:2],
-                         "timestamp": "date,date",
-                         },
-            }
 
         # Table Configuration
         configure(tablename,
@@ -569,8 +549,22 @@ class DiseaseMonitoringModel(S3Model):
                   filter_widgets = filter_widgets,
                   onvalidation = self.testing_report_onvalidation,
                   orderby = "%s.date desc" % tablename,
-                  report_options = report_options,
-                  timeplot_options = timeplot_options,
+                  report_options = {"rows": axes,
+                                    "cols": axes,
+                                    "fact": facts,
+                                    "defaults": {"rows": axes[1],
+                                                 "cols": None,
+                                                 "fact": facts[0],
+                                                 },
+                                    },
+                  timeplot_options = {"fact": facts,
+                                      "timestamp": ((T("per interval"), "date,date"),
+                                                    (T("cumulative"), "date"),
+                                                    ),
+                                      "defaults": {"fact": facts[:2],
+                                                   "timestamp": "date,date",
+                                                   },
+                                      },
                   )
 
         # CRUD Strings
@@ -650,16 +644,6 @@ class DiseaseMonitoringModel(S3Model):
                 "demographic_id",
                 "report_id$disease_id",
                 ]
-        report_options = {
-            "rows": axes,
-            "cols": axes,
-            "fact": facts,
-            "defaults": {"rows": axes[1],
-                         "cols": None,
-                         "fact": facts[0],
-                         "totals": True,
-                         },
-            }
 
         configure(tablename,
                   filter_widgets = filter_widgets,
@@ -667,7 +651,15 @@ class DiseaseMonitoringModel(S3Model):
                   onvalidation = self.testing_demographic_onvalidation,
                   onaccept = self.testing_demographic_onaccept,
                   ondelete = self.testing_demographic_ondelete,
-                  report_options = report_options,
+                  report_options = {"rows": axes,
+                                    "cols": axes,
+                                    "fact": facts,
+                                    "defaults": {"rows": axes[1],
+                                                 "cols": None,
+                                                 "fact": facts[0],
+                                                 "totals": True,
+                                                 },
+                                    },
                   )
 
         # ---------------------------------------------------------------------
@@ -1139,16 +1131,6 @@ class CaseTrackingModel(S3Model):
                               "monitoring_level",
                               "diagnosis_status",
                               ])
-        report_options = {"rows": report_fields,
-                          "cols": report_fields,
-                          "fact": [(T("Number of Cases"), "count(id)"),
-                                   ],
-                          "defaults": {"rows": "location_id$L1",
-                                       "cols": "diagnosis_status",
-                                       "fact": "count(id)",
-                                       "totals": True,
-                                       },
-                          }
 
         # Filters
         filter_widgets = [S3TextFilter(["case_number",
@@ -1173,11 +1155,21 @@ class CaseTrackingModel(S3Model):
                   create_onvalidation = self.case_create_onvalidation,
                   crud_form = crud_form,
                   deduplicate = self.case_duplicate,
-                  delete_next = URL(f="case", args=["summary"]),
+                  delete_next = URL(f = "case",
+                                    args = ["summary"],
+                                    ),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = self.case_onaccept,
-                  report_options = report_options,
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": [(T("Number of Cases"), "count(id)"),
+                                             ],
+                                    "defaults": {"rows": "location_id$L1",
+                                                 "cols": "diagnosis_status",
+                                                 "fact": "count(id)",
+                                                 },
+                                    },
                   )
 
         # CRUD strings
@@ -2234,19 +2226,6 @@ class DiseaseStatsModel(S3Model):
                                            ),
                           ]
 
-        report_options = Storage(rows = location_fields,
-                                 cols = ["parameter_id"],
-                                 fact = [(T("Value"), "sum(value)"),
-                                         ],
-                                 defaults = Storage(rows = location_fields[0], # => L0 for multi-country, L1 for single country
-                                                    cols = "parameter_id",
-                                                    fact = "sum(value)",
-                                                    totals = True,
-                                                    chart = "breakdown:rows",
-                                                    table = "collapse",
-                                                    )
-                                 )
-
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("parameter_id",
                                                        "location_id",
@@ -2255,7 +2234,16 @@ class DiseaseStatsModel(S3Model):
                                             ),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
-                  report_options = report_options,
+                  report_options = {"rows": location_fields,
+                                    "cols": ["parameter_id"],
+                                    "fact": [(T("Value"), "sum(value)")],
+                                    "defaults": {"rows": location_fields[0], # => L0 for multi-country, L1 for single country
+                                                 "cols": "parameter_id",
+                                                 "fact": "sum(value)",
+                                                 "chart": "breakdown:rows",
+                                                 "table": "collapse",
+                                                 },
+                                    },
                   # @ToDo: Wrapper function to call this for the record linked
                   # to the relevant place depending on whether approval is
                   # required or not. Disable when auth.override is True.

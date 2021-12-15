@@ -796,17 +796,18 @@ $.filterOptionsS3({
             cols = ["site_id", "owner_org_id", "supply_org_id"]
             fact = ["quantity"]
 
-        report_options = Storage(rows = rows,
-                                 cols = cols,
-                                 fact = fact,
-                                 methods = ["sum"],
-                                 defaults = Storage(rows = "item_id",
-                                                    cols = "site_id",
-                                                    fact = "sum(quantity)",
-                                                    ),
-                                 groupby = self.inv_inv_item.site_id,
-                                 hide_comments = True,
-                                 )
+        report_options = {"rows": rows,
+                          "cols": cols,
+                          "fact": fact,
+                          "methods": ["sum"],
+                          "defaults": {"rows": "item_id",
+                                       "cols": "site_id",
+                                       "fact": "sum(quantity)",
+                                       },
+                          # These options don't do anything:
+                          #"groupby": self.inv_inv_item.site_id,
+                          #"hide_comments": True,
+                          }
 
         # List fields
         list_fields = ["site_id",
@@ -3668,18 +3669,15 @@ class InventoryRequisitionModel(S3Model):
                        ondelete = self.inv_req_ondelete,
                        list_fields = list_fields,
                        orderby = "inv_req.date desc",
-                       report_options = Storage(
-                            rows = report_fields,
-                            cols = report_fields,
-                            fact = fact_fields,
-                            methods = ["count", "list", "sum"],
-                            defaults = Storage(
-                                rows = "site_id$location_id$%s" % levels[0], # Highest-level of hierarchy
-                                cols = "priority",
-                                fact = "count(id)",
-                                totals = True,
-                                )
-                            ),
+                       report_options = {"rows": report_fields,
+                                         "cols": report_fields,
+                                         "fact": fact_fields,
+                                         "methods": ["count", "list", "sum"],
+                                         "defaults": {"rows": "site_id$location_id$%s" % levels[0], # Highest-level of hierarchy
+                                                      "cols": "priority",
+                                                      "fact": "count(id)",
+                                                      },
+                                         },
                        super_entity = "doc_entity",
                        # Leave this to templates
                        # - reduce load on templates which don't need this
@@ -4883,7 +4881,7 @@ class InventoryTrackingModel(S3Model):
         A module to manage the shipment of inventory items
         - Sent Items
         - Received Items
-        - And audit trail of the shipment process
+        - An audit trail of the shipment process
     """
 
     names = ("inv_send",
@@ -5131,6 +5129,8 @@ class InventoryTrackingModel(S3Model):
                      *s3_meta_fields())
 
         # Filter Widgets
+        none_selected_comment = T("If none are selected, then all are searched.")
+
         filter_widgets = [
             S3TextFilter(["sender_id$first_name",
                           "sender_id$middle_name",
@@ -5145,10 +5145,23 @@ class InventoryTrackingModel(S3Model):
                          label = T("Search"),
                          comment = T("Search for an item by text."),
                          ),
+            S3OptionsFilter("status",
+                            label = T("Status"),
+                            comment = none_selected_comment,
+                            cols = 3,
+                            #options = shipment_status,
+                            # Needs to be visible for default_filter to work
+                            #hidden = True,
+                            ),
+            S3OptionsFilter("site_id",
+                            label = T("From %(site)s") % {"site": SITE_LABEL},
+                            comment = none_selected_comment,
+                            cols = 3,
+                            hidden = True,
+                            ),
             S3OptionsFilter("to_site_id",
-                            label = T("To Organization"),
-                            comment = T("If none are selected, then all are searched."),
-                            cols = 2,
+                            label = T("To %(site)s") % {"site": SITE_LABEL},
+                            comment = none_selected_comment,
                             hidden = True,
                             ),
             S3TextFilter("type",
@@ -5253,6 +5266,22 @@ class InventoryTrackingModel(S3Model):
                   onaccept = inv_send_onaccept,
                   onvalidation = self.inv_send_onvalidation,
                   orderby = "inv_send.date desc",
+                  report_options = {"rows": ["to_site_id",
+                                             "site_id",
+                                             ],
+                                    "cols": ["to_site_id",
+                                             "site_id",
+                                             ],
+                                    "fact": [(T("Number of Shipments"), "count(id)"),
+                                             ],
+                                    "methods": ["count", "sum"],
+                                    "defaults": {"rows": "to_site_id",
+                                                 "cols": "site_id",
+                                                 "fact": "count(id)",
+                                                 "chart": "barchart:rows",
+                                                 "table": "collapse",
+                                                 },
+                                    },
                   sortby = [[5, "desc"], [1, "asc"]],
                   super_entity = ("doc_entity",),
                   wizard = inv_SendWizard(),
@@ -5485,22 +5514,29 @@ class InventoryTrackingModel(S3Model):
                          label = T("Search"),
                          comment = recv_search_comment,
                          ),
-            S3DateFilter(recv_search_date_field,
-                         comment = recv_search_date_comment,
-                         hidden = True,
-                         ),
             S3OptionsFilter("status",
                             label = T("Status"),
+                            comment = none_selected_comment,
                             cols = 3,
                             #options = shipment_status,
                             # Needs to be visible for default_filter to work
                             #hidden = True,
                             ),
             S3OptionsFilter("site_id",
-                            label = SITE_LABEL,
-                            cols = 2,
+                            label = T("To %(site)s") % {"site": SITE_LABEL},
+                            comment = none_selected_comment,
+                            cols = 3,
                             hidden = True,
                             ),
+            S3OptionsFilter("from_site_id",
+                            label = T("From %(site)s") % {"site": SITE_LABEL},
+                            comment = none_selected_comment,
+                            hidden = True,
+                            ),
+            S3DateFilter(recv_search_date_field,
+                         comment = recv_search_date_comment,
+                         hidden = True,
+                         ),
             #S3OptionsFilter("grn_status",
             #                label = T("GRN Status"),
             #                options = ship_doc_status,

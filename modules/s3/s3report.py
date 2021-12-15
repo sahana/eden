@@ -104,8 +104,6 @@ class S3Report(S3Method):
                 attr: controller attributes for the request
         """
 
-        output = {}
-
         resource = self.resource
         get_config = resource.get_config
 
@@ -216,7 +214,8 @@ class S3Report(S3Method):
             filter_url = r.url(method = "",
                                representation = "",
                                vars = ajax_vars.fromkeys((k for k in ajax_vars
-                                                          if k not in report_vars)))
+                                                          if k not in report_vars)),
+                               )
             ajaxurl = attr.get("ajaxurl", r.url(method = "report",
                                                 representation = "json",
                                                 vars = ajax_vars,
@@ -333,22 +332,25 @@ class S3Report(S3Method):
                 # Show Points
                 resource.clear_query()
                 # Apply URL filters (especially BBOX)
-                resource.build_query(filter=s3.filter, vars=get_vars)
+                resource.build_query(filter = s3.filter,
+                                     vars = get_vars)
 
                 # Extract the Location Data
                 xmlformat = S3XMLFormat(stylesheet)
                 include, exclude = xmlformat.get_fields(resource.tablename)
-                resource.load(fields=include,
-                              skip=exclude,
-                              start=0,
-                              limit=None,
-                              orderby=None,
-                              virtual=False,
-                              cacheable=True)
+                resource.load(fields = include,
+                              skip = exclude,
+                              start = 0,
+                              limit = None,
+                              orderby = None,
+                              virtual = False,
+                              cacheable = True,
+                              )
                 gis = current.gis
                 attr_fields = []
-                style = gis.get_style(layer_id=layer_id,
-                                      aggregate=False)
+                style = gis.get_style(layer_id = layer_id,
+                                      aggregate = False,
+                                      )
                 popup_format = style.popup_format
                 if popup_format:
                     if "T(" in popup_format:
@@ -370,7 +372,7 @@ class S3Report(S3Method):
                     attr_fields = ",".join(attr_fields)
 
                 location_data = gis.get_location_data(resource,
-                                                      attr_fields=attr_fields)
+                                                      attr_fields = attr_fields)
 
                 # Export as GeoJSON
                 current.xml.show_ids = True
@@ -441,7 +443,8 @@ class S3Report(S3Method):
                     #    attr_fields.append(attribute)
                     #attr_fields = ",".join(attr_fields)
 
-            ids, location_data = pivottable.geojson(fact=facts[0], level=level)
+            ids, location_data = pivottable.geojson(fact = facts[0],
+                                                    level = level)
 
             # Export as GeoJSON
             current.xml.show_ids = True
@@ -533,7 +536,8 @@ class S3Report(S3Method):
 
         # Render as JSON-serializable dict
         if pivottable is not None:
-            pivotdata = pivottable.json(maxrows=maxrows, maxcols=maxcols)
+            pivotdata = pivottable.json(maxrows = maxrows,
+                                        maxcols = maxcols)
         else:
             pivotdata = None
 
@@ -609,8 +613,8 @@ class S3Report(S3Method):
         pkey_colname = str(resource._id)
 
         # Parse the facts
-        get_vars = r.get_vars
-        facts = S3PivotTableFact.parse(get_vars.get("fact"))
+        get_vars_get = r.get_vars.get
+        facts = S3PivotTableFact.parse(get_vars_get("fact"))
 
         selectors = set()   # all fact selectors other than "id"
         ofacts = []         # all facts other than "count(id)"
@@ -644,8 +648,8 @@ class S3Report(S3Method):
         # report context (rows, cols, facts)
         represent = resource.get_config("report_represent", S3ReportRepresent)
         if represent:
-            rows = get_vars.get("rows")
-            cols = get_vars.get("cols")
+            rows = get_vars_get("rows")
+            cols = get_vars_get("cols")
             represent = represent(resource, rows=rows, cols=cols, facts=facts)
 
         # Determine what the items list should contain
@@ -898,8 +902,8 @@ class S3ReportForm:
 
             "thousandSeparator": settings.get_L10n_thousands_separator(),
             "thousandGrouping": settings.get_L10n_thousands_grouping(),
-            "textAll": str(T("All")),
-            "textRecords": str(T("Records")),
+            "textAll": s3_str(T("All")),
+            "textRecords": s3_str(T("Records")),
         }
         chart_opt = get_vars["chart"]
         if chart_opt is not None:
@@ -1139,22 +1143,18 @@ class S3ReportForm:
 
         resource = self.resource
 
-        all_methods = S3PivotTableFact.METHODS
-
         # Get all layers
-        layers = None
-        methods = None
         if options:
-            if "methods" in options:
-                methods = options["methods"]
-            if "fact" in options:
-                layers = options["fact"]
+            methods = options.get("methods", S3PivotTableFact.METHODS)
+            layers = options.get("fact")
+        else:
+            layers = None
+            methods = S3PivotTableFact.METHODS
+
         if not layers:
             layers = resource.get_config("list_fields")
         if not layers:
             layers = [f.name for f in resource.readable_fields()]
-        if not methods:
-            methods = all_methods
 
         # Resolve layer options
         T = current.T

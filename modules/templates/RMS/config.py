@@ -3694,13 +3694,13 @@ Thank you"""
                                                      ))
 
         report_options = s3db.get_config(tablename, "report_options")
-        report_options.fact += [(T("Total Weight"), "total_weight"),
-                                (T("Total Volume"), "total_volume"),
-                                ]
-        report_options.precision = {"total_value": 3,
-                                    "total_weight": 3,
-                                    "total_volume": 3,
-                                    }
+        report_options["fact"] += [(T("Total Weight"), "total_weight"),
+                                   (T("Total Volume"), "total_volume"),
+                                   ]
+        report_options["precision"] = {"total_value": 3,
+                                       "total_weight": 3,
+                                       "total_volume": 3,
+                                       }
 
         s3db.configure("inv_inv_item",
                        grouped = stock_reports,
@@ -3947,7 +3947,7 @@ Thank you"""
 
         return attr
 
-    settings.customise_inv_recv_controller = customise_inv_recv_controller
+    #settings.customise_inv_recv_controller = customise_inv_recv_controller
 
     # -------------------------------------------------------------------------
     def on_inv_send_process(record):
@@ -4107,29 +4107,21 @@ Thank you"""
             else:
                 result = True
 
-            if r.get_vars.get("draft"):
-                s3.crud_strings.inv_recv.title_list = T("Outbound Shipments")
-                # Filter to just Shipments able to be Received
-                #    SHIP_STATUS_IN_PROCESS = 0
-                from s3 import s3_set_default_filter, S3OptionsFilter
-                s3_set_default_filter("~.status",
-                                      [0],
-                                      tablename = "inv_send")
-                filter_widgets = r.resource.get_config("filter_widgets")
-                filter_widgets.insert(1, S3OptionsFilter("status",
-                                                         label = T("Status"),
-                                                         cols = 3,
-                                                         #options = shipment_status,
-                                                         # Needs to be visible for default_filter to work
-                                                         #hidden = True,
-                                                         ))
+            #if r.get_vars.get("draft"):
+            #    s3.crud_strings.inv_recv.title_list = T("Outbound Shipments")
+            #    # Filter to just Shipments able to be Received
+            #    #    SHIP_STATUS_IN_PROCESS = 0
+            #    from s3 import s3_set_default_filter
+            #    s3_set_default_filter("~.status",
+            #                          [0],
+            #                          tablename = "inv_send")
 
             return result
         s3.prep = custom_prep
 
         return attr
 
-    settings.customise_inv_send_controller = customise_inv_send_controller
+    #settings.customise_inv_send_controller = customise_inv_send_controller
 
     # -------------------------------------------------------------------------
     def stock_limit_alerts(warehouse):
@@ -5809,13 +5801,9 @@ Thank you"""
     #                            label = T("Activity Type"),
     #                            ))
     #        report_options = resource.get_config("report_options")
-    #        report_options.rows.append("beneficiary_activity_type.activity_type_id")
+    #        report_options["rows"].append("beneficiary_activity_type.activity_type_id")
     #        # Same object so would be added twice
-    #        #report_options.cols.append("beneficiary_activity_type.activity_type_id")
-
-    #        resource.configure(filter_widgets = filter_widgets,
-    #                           report_options = report_options,
-    #                           )
+    #        #report_options["cols"].append("beneficiary_activity_type.activity_type_id")
 
     # Only used for activity_types which aren't used by HNRC
     #settings.customise_project_beneficiary_resource = customise_project_beneficiary_resource

@@ -1742,22 +1742,18 @@ def twitter_result():
                      "lang",
                      ]
 
-    report_options = Storage(
-        rows=report_fields,
-        cols=report_fields,
-        fact=report_fields,
-        defaults=Storage(
-            rows="search_id",
-            cols="lang",
-            totals=True,
-        )
-    )
     s3db.configure(tablename,
                    deletable = False,
                    editable = False,
                    insertable = False,
                    filter_widgets = filter_widgets,
-                   report_options = report_options,
+                   report_options = {"rows": report_fields,
+                                     "cols": report_fields,
+                                     "fact": report_fields,
+                                     "defaults:" {"rows": "search_id",
+                                                  "cols": "lang",
+                                                  },
+                                     },
                    )
 
     def postp(r, output):

@@ -325,20 +325,11 @@ class MemberModel(S3Model):
                              ),
             ]
 
-        report_options = Storage(rows = report_fields,
-                                 cols = report_fields,
-                                 facts = report_fields,
-                                 defaults = Storage(
-                                    cols = default_col,
-                                    rows = "membership.organisation_id",
-                                    fact = "count(membership.person_id)",
-                                    totals = True,
-                                    )
-                                 )
-
         configure(tablename,
-                  create_next = URL(f="person", args="address",
-                                    vars={"membership.id": "[id]"}),
+                  create_next = URL(f = "person",
+                                    args = "address",
+                                    vars = {"membership.id": "[id]"},
+                                    ),
                   deduplicate = S3Duplicate(primary = ("person_id",
                                                        "organisation_id",
                                                        ),
@@ -351,7 +342,14 @@ class MemberModel(S3Model):
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = self.member_onaccept,
-                  report_options = report_options,
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "facts": report_fields,
+                                    "defaults": {"cols": default_col,
+                                                 "rows": "membership.organisation_id",
+                                                 "fact": "count(membership.person_id)",
+                                                 },
+                                    },
                   # Default summary
                   summary = [{"name": "addform",
                               "common": True,

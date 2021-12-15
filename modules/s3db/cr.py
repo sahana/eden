@@ -365,16 +365,14 @@ class ShelterModel(S3Model):
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = self.cr_shelter_onaccept,
-                  report_options = Storage(
-                        rows = report_fields,
-                        cols = report_fields,
-                        fact = report_fields,
-                        defaults = Storage(rows = lfield, # Lowest-level of hierarchy
-                                           cols = "shelter_details.status",
-                                           fact = "count(name)",
-                                           totals = True,
-                                           )
-                        ),
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": report_fields,
+                                    "defaults": {"rows": lfield, # Lowest-level of hierarchy
+                                                 "cols": "shelter_details.status",
+                                                 "fact": "count(name)",
+                                                 },
+                                    },
                   super_entity = ("doc_entity",
                                   "org_site",
                                   "pr_pentity",

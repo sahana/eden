@@ -375,16 +375,14 @@ def location():
         table.virtualfields.append(S3LocationVirtualFields())
 
         s3db.configure(tablename,
-                       report_options = Storage(
-                                rows = ["name"],
-                                cols = [],
-                                fact = [(T("Total Population"), "sum(population)")],
-                                defaults = Storage(rows = "name",
-                                                   cols = None,
-                                                   fact = "sum(population)",
-                                                   totals = True,
-                                                   )
-                                ),
+                       report_options = {"rows": ["name"],
+                                         "cols": [],
+                                         "fact": [(T("Total Population"), "sum(population)")],
+                                         "defaults": {"rows": "name",
+                                                      "cols": None,
+                                                      "fact": "sum(population)",
+                                                      },
+                                         ),
                         )
 
     # Pre-processor

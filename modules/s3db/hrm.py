@@ -963,17 +963,15 @@ class HRModel(S3Model):
                   ondelete = self.hrm_human_resource_ondelete,
                   realm_components = ("presence",),
                   report_fields = report_fields_extra,
-                  report_options = Storage(
-                    rows = report_fields,
-                    cols = report_fields,
-                    fact = report_fields,
-                    methods = ("count", "list",),
-                    defaults = Storage(
-                        rows = "organisation_id",
-                        cols = "training.course_id",
-                        fact = "count(person_id)",
-                        )
-                    ),
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": report_fields,
+                                    "methods": ("count", "list",),
+                                    "defaults": {"rows": "organisation_id",
+                                                 "cols": "training.course_id",
+                                                 "fact": "count(person_id)",
+                                                 },
+                                    },
                   # Default summary
                   summary = [{"name": "addform",
                               "common": True,
@@ -3235,18 +3233,6 @@ class HRSkillModel(S3Model):
         for level in levels:
             rappend("person_id$location_id$%s" % level)
 
-        report_options = Storage(rows = report_fields,
-                                 cols = report_fields,
-                                 fact = report_fields,
-                                 methods = ["count", "list"],
-                                 defaults = Storage(
-                                    rows = "training.course_id",
-                                    cols = "training.month",
-                                    fact = "count(training.person_id)",
-                                    totals = True,
-                                    )
-                                 )
-
         # Resource Configuration
         configure(tablename,
                   context = {"person": "person_id",
@@ -3264,7 +3250,15 @@ class HRSkillModel(S3Model):
                   # Only used in Imports
                   #onvalidation = hrm_training_onvalidation,
                   orderby = "hrm_training.date desc",
-                  report_options = report_options,
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": report_fields,
+                                    "methods": ["count", "list"],
+                                    "defaults": {"rows": "training.course_id",
+                                                 "cols": "training.month",
+                                                 "fact": "count(training.person_id)",
+                                                 }
+                                    },
                   )
 
         # Components
@@ -4979,16 +4973,6 @@ class HRProgrammeModel(S3Model):
                          "person_id$gender",
                          ]
 
-        report_options = Storage(rows = report_fields,
-                                 cols = report_fields,
-                                 fact = report_fields,
-                                 defaults = Storage(rows = "programme_id",
-                                                    cols = "month",
-                                                    fact = "sum(hours)",
-                                                    totals = True,
-                                                    )
-                                 )
-
         configure(tablename,
                   context = {"person": "person_id",
                              },
@@ -5004,7 +4988,14 @@ class HRProgrammeModel(S3Model):
                   onaccept = hrm_programme_hours_onaccept,
                   ondelete = hrm_programme_hours_onaccept,
                   orderby = "hrm_programme_hours.date desc",
-                  report_options = report_options,
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": report_fields,
+                                    "defaults": {"rows": "programme_id",
+                                                 "cols": "month",
+                                                 "fact": "sum(hours)",
+                                                 },
+                                    },
                   )
 
         # ---------------------------------------------------------------------
@@ -8403,22 +8394,18 @@ def hrm_human_resource_controller(extra_filter = None):
             if settings.get_org_regions():
                 rappend("organisation_id$organisation_region.region_id")
 
-            report_options = Storage(rows = report_fields,
-                                     cols = report_fields,
-                                     fact = report_fields,
-                                     defaults = Storage(
-                                        rows = "organisation_id",
-                                        cols = "training.course_id",
-                                        fact = "count(person_id)",
-                                        totals = True,
-                                        )
-                                     )
-
             # Configure resource
             s3db.configure("hrm_human_resource",
                            filter_widgets = filter_widgets,
                            list_fields = list_fields,
-                           report_options = report_options,
+                           report_options = {"rows": report_fields,
+                                             "cols": report_fields,
+                                             "fact": report_fields,
+                                             "defaults": {"rows": "organisation_id",
+                                                          "cols": "training.course_id",
+                                                          "fact": "count(person_id)",
+                                                          },
+                                             },
                            )
 
             # Remove controller filter

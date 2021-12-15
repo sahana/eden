@@ -1022,16 +1022,14 @@ def case_activity():
                 if case_activity_status:
                     axes.insert(4, "status_id")
 
-                report_options = {
-                    "rows": axes,
-                    "cols": axes,
-                    "fact": facts,
-                    "defaults": {"rows": default_rows,
-                                 "cols": default_cols,
-                                 "fact": "count(id)",
-                                 "totals": True,
-                                 },
-                    }
+                report_options = {"rows": axes,
+                                  "cols": axes,
+                                  "fact": facts,
+                                  "defaults": {"rows": default_rows,
+                                               "cols": default_cols,
+                                               "fact": "count(id)",
+                                               },
+                                  }
                 resource.configure(report_options = report_options)
 
         # Filter for valid+open cases

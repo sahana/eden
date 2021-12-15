@@ -365,17 +365,6 @@ class AssetModel(S3Model):
                             ),
             ]
 
-        report_options = Storage(
-            rows = report_fields,
-            cols = report_fields,
-            fact = [(T("Number of items"), "count(number)")],
-            defaults=Storage(cols = "location_id$%s" % levels[0], # Highest-level of hierarchy
-                             fact = "count(number)",
-                             rows = "item_id$item_category_id",
-                             totals = True,
-                             )
-            )
-
         # Default summary
         summary = [{"name": "addform",
                     "common": True,
@@ -419,7 +408,14 @@ class AssetModel(S3Model):
                   mark_required = ("organisation_id",),
                   onaccept = self.asset_onaccept,
                   realm_components = ("log", "presence"),
-                  report_options = report_options,
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": [(T("Number of items"), "count(number)")],
+                                    "defaults": {"cols": "location_id$%s" % levels[0], # Highest-level of hierarchy
+                                                 "fact": "count(number)",
+                                                 "rows": "item_id$item_category_id",
+                                                 }
+                                    },
                   summary = summary,
                   super_entity = ("doc_entity", "sit_trackable", "supply_item_entity"),
                   update_realm = True,

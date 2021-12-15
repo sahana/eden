@@ -428,8 +428,6 @@ class OutreachHouseholdModel(S3Model):
                        "household_followup.completed",
                        "household_followup.evaluation",
                        ]
-        reports = ((T("Number of Households Visited"), "count(id)"),
-                   )
 
         # Custom Form
         crud_form = S3SQLCustomForm("area_id",
@@ -477,12 +475,12 @@ class OutreachHouseholdModel(S3Model):
                                       ),
                   report_options = {"rows": report_axes,
                                     "cols": report_axes,
-                                    "fact": reports,
-                                    "defaults": {
-                                            "rows": "area_id",
-                                            "cols": "followup",
-                                            "fact": "count(id)",
-                                        }
+                                    "fact": ((T("Number of Households Visited"), "count(id)"),
+                                             ),
+                                    "defaults": {"rows": "area_id",
+                                                 "cols": "followup",
+                                                 "fact": "count(id)",
+                                                 },
                                     },
                   super_entity = ("doc_entity", "pr_pentity"),
                   )

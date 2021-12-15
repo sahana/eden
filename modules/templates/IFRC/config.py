@@ -3281,29 +3281,25 @@ def config(settings):
                       ]
 
         # Report options
-        report_fact = [(T("Number of Deployments"), "count(human_resource_id)"),
-                       (T("Average Rating"), "avg(appraisal.rating)"),
-                       ]
-        report_axis = [(T("Appeal Code"), "mission_id$code"),
+        report_axis = ((T("Appeal Code"), "mission_id$code"),
                        (T("Country"), "mission_id$location_id"),
                        (T("Disaster Type"), "mission_id$event_type_id"),
                        (T("RDRT Type"), "job_title_id"),
                        (T("Deploying NS"), "human_resource_id$organisation_id"),
-                      ]
-        report_options = Storage(
-            rows = report_axis,
-            cols = report_axis,
-            fact = report_fact,
-            defaults = Storage(rows="mission_id$location_id",
-                               cols="mission_id$event_type_id",
-                               fact="count(human_resource_id)",
-                               totals=True
-                               )
-            )
+                       )
 
         s3db.configure("deploy_assignment",
                        list_fields = list_fields,
-                       report_options = report_options,
+                       report_options = {"rows": report_axis,
+                                         "cols": report_axis,
+                                         "fact": ((T("Number of Deployments"), "count(human_resource_id)"),
+                                                  (T("Average Rating"), "avg(appraisal.rating)"),
+                                                  ),
+                                         "defaults": {"rows": "mission_id$location_id",
+                                                      "cols": "mission_id$event_type_id",
+                                                      "fact": "count(human_resource_id)",
+                                                      },
+                                         },
                        )
 
 
@@ -3440,28 +3436,6 @@ def config(settings):
                                        ),
                           ]
 
-        # Report options
-        report_fact = [(T("Number of Missions"), "count(id)"),
-                       (T("Number of Countries"), "count(location_id)"),
-                       (T("Number of Disaster Types"), "count(event_type_id)"),
-                       #(T("Number of Responses"), "sum(response_count)"),
-                       (T("Number of Deployments"), "sum(hrquantity)"),
-                      ]
-        report_axis = ["code",
-                       "location_id",
-                       "event_type_id",
-                       "status",
-                       ]
-        report_options = Storage(rows = report_axis,
-                                 cols = report_axis,
-                                 fact = report_fact,
-                                 defaults = Storage(rows = "location_id",
-                                                    cols = "event_type_id",
-                                                    fact = "sum(hrquantity)",
-                                                    totals = True,
-                                                    ),
-                                 )
-
         list_fields = ["name",
                        "date",
                        "event_type_id",
@@ -3472,10 +3446,28 @@ def config(settings):
                        "status",
                        ]
 
+        report_axis = ["code",
+                       "location_id",
+                       "event_type_id",
+                       "status",
+                       ]
+
         s3db.configure("deploy_mission",
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
-                       report_options = report_options,
+                       report_options = {"rows": report_axis,
+                                         "cols": report_axis,
+                                         "fact": ((T("Number of Missions"), "count(id)"),
+                                                  (T("Number of Countries"), "count(location_id)"),
+                                                  (T("Number of Disaster Types"), "count(event_type_id)"),
+                                                  #(T("Number of Responses"), "sum(response_count)"),
+                                                  (T("Number of Deployments"), "sum(hrquantity)"),
+                                                  ),
+                                         "defaults": {"rows": "location_id",
+                                                      "cols": "event_type_id",
+                                                      "fact": "sum(hrquantity)",
+                                                      },
+                                         },
                        )
 
         # CRUD Strings
@@ -4720,18 +4712,16 @@ def config(settings):
                     s3db.configure(tablename,
                                    crud_form = crud_form,
                                    filter_widgets = filter_widgets,
-                                   report_options = Storage(
-                                        rows = report_fields,
-                                        cols = report_fields,
-                                        fact = report_fields,
-                                        methods = ("count", "list",),
-                                        defaults = Storage(
-                                            rows = "organisation_id",
-                                            #cols = "vol_training.course_id",
-                                            cols = "training.course_id",
-                                            fact = "count(person_id)",
-                                            )
-                                        ),
+                                   report_options = {"rows": report_fields,
+                                                     "cols": report_fields,
+                                                     "fact": report_fields,
+                                                     "methods": ("count", "list",),
+                                                     "defaults": {"rows": "organisation_id",
+                                                                  #"cols": "vol_training.course_id",
+                                                                  "cols": "training.course_id",
+                                                                  "fact": "count(person_id)",
+                                                                  }
+                                                     },
                                    )
 
                 elif root_org == CRMADA:
@@ -5696,20 +5686,16 @@ def config(settings):
                                  (T("Year"), "year"),
                                  ]
 
-                report_options = Storage(rows = report_fields,
-                                         cols = report_fields,
-                                         fact = report_fields,
-                                         methods = ["count", "list"],
-                                         defaults = Storage(
-                                            rows = "person_id$human_resource.organisation_id$organisation_region.region_id",
-                                            cols = "training.course_id",
-                                            fact = "count(training.person_id)",
-                                            totals = True,
-                                            )
-                                        )
-
                 s3db.configure(tablename,
-                               report_options = report_options,
+                               report_options = {"rows": report_fields,
+                                                 "cols": report_fields,
+                                                 "fact": report_fields,
+                                                 "methods": ("count", "list"),
+                                                 "defaults": {"rows": "person_id$human_resource.organisation_id$organisation_region.region_id",
+                                                              "cols": "training.course_id",
+                                                              "fact": "count(training.person_id)",
+                                                              }
+                                                 },
                                )
 
         return attr
@@ -9009,10 +8995,6 @@ def config(settings):
             report_options.rows.append("beneficiary_activity_type.activity_type_id")
             # Same object so would be added twice
             #report_options.cols.append("beneficiary_activity_type.activity_type_id")
-
-            resource.configure(filter_widgets = filter_widgets,
-                               report_options = report_options,
-                               )
 
     settings.customise_project_beneficiary_resource = customise_project_beneficiary_resource
 

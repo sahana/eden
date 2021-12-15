@@ -392,20 +392,6 @@ class EventModel(S3Model):
             rappend("event_location.location_id$%s" % level)
         rappend((T("Year"), "year"))
 
-        report_options = Storage(
-            rows = report_fields,
-            cols = report_fields,
-            fact = [(T("Number of Disasters"), "count(id)")],
-            defaults = Storage(
-                rows = "event_type_id",
-                cols = "event_location.location_id$%s" % levels[0], # Highest-level of hierarchy
-                fact = "count(id)",
-                totals = True,
-                chart = "breakdown:rows",
-                table = "collapse",
-                ),
-            )
-
         # Custom Form
         crud_fields = ["name",
                        "event_type_id",
@@ -459,7 +445,16 @@ class EventModel(S3Model):
                   list_layout = event_event_list_layout,
                   list_orderby = "event_event.start_date desc",
                   orderby = "event_event.start_date desc",
-                  report_options = report_options,
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": [(T("Number of Disasters"), "count(id)")],
+                                    "defaults": {"rows": "event_type_id",
+                                                 "cols": "event_location.location_id$%s" % levels[0], # Highest-level of hierarchy
+                                                 "fact": "count(id)",
+                                                 "chart": "breakdown:rows",
+                                                 "table": "collapse",
+                                                 },
+                                    },
                   super_entity = "doc_entity",
                   update_onaccept = self.event_update_onaccept,
                   )
@@ -3574,16 +3569,14 @@ class IncidentModel(S3Model):
                        list_layout = event_incident_list_layout,
                        # Most recent Incident first
                        orderby = "event_incident.date desc",
-                       report_options = Storage(rows = report_fields,
-                                                cols = report_fields,
-                                                fact = report_fields,
-                                                defaults = Storage(
-                                                    rows = "location_id$%s" % levels[0],
-                                                    cols = "closed",
-                                                    fact = (fact, "count(name)"),
-                                                    totals = True,
-                                                    ),
-                                                ),
+                       report_options = {"rows": report_fields,
+                                         "cols": report_fields,
+                                         "fact": report_fields,
+                                         "defaults": {"rows": "location_id$%s" % levels[0],
+                                                      "cols": "closed",
+                                                      "fact": (fact, "count(name)"),
+                                                      },
+                                         },
                        super_entity = ("budget_entity", "doc_entity"),
                        update_onaccept = self.incident_update_onaccept,
                        )
@@ -4466,16 +4459,14 @@ class IncidentReportModel(S3Model):
         self.configure(tablename,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
-                       report_options = Storage(
-                        rows = report_fields,
-                        cols = report_fields,
-                        fact = report_fields,
-                        defaults = Storage(rows = "location_id$L1", # lfield, # Lowest-level of hierarchy
-                                           cols = "incident_type_id",
-                                           fact = "count(name)",
-                                           totals = True,
-                                           ),
-                        ),
+                       report_options = {"rows": report_fields,
+                                         "cols": report_fields,
+                                         "fact": report_fields,
+                                         "defaults": {"rows": "location_id$L1", # lfield, # Lowest-level of hierarchy
+                                                      "cols": "incident_type_id",
+                                                      "fact": "count(name)",
+                                                      },
+                                         },
                        super_entity = "doc_entity",
                        )
 

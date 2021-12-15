@@ -512,17 +512,14 @@ class ProjectModel(S3Model):
                                       "document",
                                       "image",
                                       ),
-                  report_options = Storage(
-                    rows = report_fields,
-                    cols = report_fields,
-                    fact = report_fact_fields,
-                    defaults = Storage(
-                        rows = report_row_default,
-                        cols = report_col_default,
-                        fact = report_fact_default,
-                        totals = True,
-                    )
-                  ),
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": report_fact_fields,
+                                    "defaults": {"rows": report_row_default,
+                                                 "cols": report_col_default,
+                                                 "fact": report_fact_default,
+                                                 },
+                                    },
                   super_entity = ("doc_entity", "budget_entity"),
                   update_realm = True,
                   )
@@ -1397,15 +1394,6 @@ class ProjectActivityModel(S3Model):
 
         crud_form = S3SQLCustomForm(*crud_fields)
 
-        report_options = Storage(rows = report_fields,
-                                 cols = report_fields,
-                                 fact = fact_fields,
-                                 defaults = Storage(rows = default_row,
-                                                    cols = default_col,
-                                                    fact = default_fact,
-                                                    totals = True,
-                                                    )
-                                 )
         configure(tablename,
                   # Leave these workflows for Templates
                   #create_next = create_next,
@@ -1421,7 +1409,14 @@ class ProjectActivityModel(S3Model):
                   list_fields = list_fields,
                   list_layout = project_activity_list_layout,
                   realm_entity = self.project_activity_realm_entity,
-                  report_options = report_options,
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": fact_fields,
+                                    "defaults": {"rows": default_row,
+                                                 "cols": default_col,
+                                                 "fact": default_fact,
+                                                 },
+                                    },
                   super_entity = "doc_entity",
                   update_realm = True,
                   )
@@ -2611,23 +2606,6 @@ class ProjectBeneficiaryModel(S3Model):
         else:
             default_row = "project_id"
 
-        # Report options and defaults
-        report_options = Storage(rows = report_fields,
-                                 cols = report_fields,
-                                 fact = [(T("Number of Beneficiaries"),
-                                          "sum(value)",
-                                          ),
-                                         (T("Number of Beneficiaries Targeted"),
-                                          "sum(target_value)",
-                                          ),
-                                         ],
-                                 defaults = Storage(rows = default_row,
-                                                    cols = "parameter_id",
-                                                    fact = "sum(value)",
-                                                    totals = True,
-                                                    ),
-                                 )
-
         # Resource configuration
         configure(tablename,
                   context = {"project": "project_id",
@@ -2639,7 +2617,20 @@ class ProjectBeneficiaryModel(S3Model):
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = self.project_beneficiary_onaccept,
-                  report_options = report_options,
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": [(T("Number of Beneficiaries"),
+                                              "sum(value)",
+                                              ),
+                                             (T("Number of Beneficiaries Targeted"),
+                                              "sum(target_value)",
+                                              ),
+                                             ],
+                                    "defaults": {"rows": default_row,
+                                                 "cols": "parameter_id",
+                                                 "fact": "sum(value)",
+                                                 },
+                                    },
                   super_entity = "stats_data",
                   )
 
@@ -3639,23 +3630,6 @@ class ProjectIndicatorModel(S3Model):
         #else:
         default_row = "project_id"
 
-        # Report options and defaults
-        report_options = Storage(rows = report_fields,
-                                 cols = report_fields,
-                                 fact = [(T("Value of Indicator"),
-                                          "sum(value)",
-                                          ),
-                                         (T("Target Value of Indicator"),
-                                          "sum(target_value)",
-                                          ),
-                                         ],
-                                 defaults = Storage(rows = default_row,
-                                                    cols = "parameter_id",
-                                                    fact = "sum(value)",
-                                                    totals = True
-                                                    ),
-                                 )
-
         # Resource configuration
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("parameter_id",
@@ -3665,7 +3639,20 @@ class ProjectIndicatorModel(S3Model):
                                             ),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
-                  report_options = report_options,
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": [(T("Value of Indicator"),
+                                              "sum(value)",
+                                              ),
+                                             (T("Target Value of Indicator"),
+                                              "sum(target_value)",
+                                              ),
+                                             ],
+                                    "defaults": {"rows": default_row,
+                                                 "cols": "parameter_id",
+                                                 "fact": "sum(value)",
+                                                 },
+                                    },
                   super_entity = "stats_data",
                   )
 
@@ -3901,17 +3888,6 @@ class ProjectLocationModel(S3Model):
             # Not ideal, but what else?
             default_fact = "list(project_id$organisation_id)"
 
-        # Report options and default
-        report_options = Storage(rows = report_fields,
-                                 cols = report_fields,
-                                 fact = report_fields,
-                                 defaults = Storage(rows = "location_id$%s" % levels[0], # Highest-level of Hierarchy
-                                                    cols = "project_id",
-                                                    fact = default_fact,
-                                                    totals = True,
-                                                    ),
-                                 )
-
         # Resource Configuration
         configure(tablename,
                   context = {"project": "project_id",
@@ -3926,7 +3902,14 @@ class ProjectLocationModel(S3Model):
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = self.project_location_onaccept,
-                  report_options = report_options,
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": report_fields,
+                                    "defaults": {"rows": "location_id$%s" % levels[0], # Highest-level of Hierarchy
+                                                 "cols": "project_id",
+                                                 "fact": default_fact,
+                                                 },
+                                    },
                   super_entity = "doc_entity",
                   )
 
@@ -4330,15 +4313,6 @@ class ProjectOrganisationModel(S3Model):
                          ]
         if settings.get_project_programmes():
             report_fields.insert(0, "project_id$programme_project.programme_id")
-        report_options = Storage(rows = report_fields,
-                                 cols = report_fields,
-                                 fact = report_fields,
-                                 defaults = Storage(rows = "organisation_id",
-                                                    cols = "currency",
-                                                    fact = "sum(amount)",
-                                                    totals = False
-                                                    )
-                                 )
 
         # Resource Configuration
         self.configure(tablename,
@@ -4352,7 +4326,15 @@ class ProjectOrganisationModel(S3Model):
                        ondelete = self.project_organisation_ondelete,
                        onvalidation = self.project_organisation_onvalidation,
                        realm_entity = self.project_organisation_realm_entity,
-                       report_options = report_options,
+                       report_options = {"rows": report_fields,
+                                         "cols": report_fields,
+                                         "fact": report_fields,
+                                         "defaults": {"rows": "organisation_id",
+                                                      "cols": "currency",
+                                                      "fact": "sum(amount)",
+                                                      "totals": False,
+                                                      },
+                                         },
                        )
 
         # Pass names back to global scope (s3.*)
@@ -5136,28 +5118,6 @@ class ProjectPlanningModel(S3Model):
             msg_list_empty = T("No Indicator Data defined"),
             )
 
-        report_options = {"rows": ["indicator_id", "end_date"],
-                          "cols": ["indicator_id", "end_date"],
-                          "fact": [(T("Target Value"), "avg(target_value)"),
-                                   (T("Actual Value"), "avg(value)"),
-                                   # Not working (because percentage-Method returns a string
-                                   # not a number, so no average calculation possible),
-                                   # list(avg) may do it, though.
-                                   #(T("Percentage"), "avg(percentage)"),
-                                   (T("Percentage"), "list(percentage)"),
-                                   (T("Comparison"), [(T("Actual Value"), "avg(value)"),
-                                                      (T("Target Value"), "avg(target_value)"),
-                                                      ],
-                                    ),
-                                   ],
-                          "defaults": {"rows": "indicator_id",
-                                       "cols": "end_date",
-                                       #"fact": "avg(percentage)",
-                                       "fact": "avg(value)",
-                                       "totals": False,
-                                       },
-                          }
-
         configure(tablename,
                   list_fields = ["indicator_id",
                                  "end_date",
@@ -5169,7 +5129,27 @@ class ProjectPlanningModel(S3Model):
                   onaccept = project_indicator_data_onaccept,
                   ondelete = self.project_indicator_data_ondelete,
                   orderby = ("project_indicator_data.end_date", "project_indicator_data.indicator_id"),
-                  report_options = report_options,
+                  report_options = {"rows": ["indicator_id", "end_date"],
+                                    "cols": ["indicator_id", "end_date"],
+                                    "fact": [(T("Target Value"), "avg(target_value)"),
+                                             (T("Actual Value"), "avg(value)"),
+                                             # Not working (because percentage-Method returns a string
+                                             # not a number, so no average calculation possible),
+                                             # list(avg) may do it, though.
+                                             #(T("Percentage"), "avg(percentage)"),
+                                             (T("Percentage"), "list(percentage)"),
+                                             (T("Comparison"), [(T("Actual Value"), "avg(value)"),
+                                                                (T("Target Value"), "avg(target_value)"),
+                                                                ],
+                                              ),
+                                             ],
+                                    "defaults": {"rows": "indicator_id",
+                                                 "cols": "end_date",
+                                                 #"fact": "avg(percentage)",
+                                                 "fact": "avg(value)",
+                                                 "totals": False,
+                                                 },
+                                    },
                   )
 
         # ---------------------------------------------------------------------
@@ -5408,28 +5388,6 @@ class ProjectPlanningModel(S3Model):
             msg_list_empty = T("No activity data defined"),
             )
 
-        report_options = {"rows": ["indicator_activity_id", "end_date"],
-                          "cols": ["indicator_activity_id", "end_date"],
-                          "fact": [(T("Target Value"), "avg(target_value)"),
-                                   (T("Actual Value"), "avg(value)"),
-                                   # Not working (because percentage-Method returns a string
-                                   # not a number, so no average calculation possible),
-                                   # list(avg) may do it, though.
-                                   #(T("Percentage"), "avg(percentage)"),
-                                   (T("Percentage"), "list(percentage)"),
-                                   (T("Comparison"), [(T("Actual Value"), "avg(value)"),
-                                                      (T("Target Value"), "avg(target_value)"),
-                                                      ],
-                                    ),
-                                   ],
-                          "defaults": {"rows": "indicator_activity_id",
-                                       "cols": "end_date",
-                                       #"fact": "avg(percentage)",
-                                       "fact": "avg(value)",
-                                       "totals": False,
-                                       },
-                          }
-
         configure(tablename,
                   list_fields = ["indicator_activity_id",
                                  "end_date",
@@ -5441,7 +5399,27 @@ class ProjectPlanningModel(S3Model):
                   onaccept = self.project_activity_data_onaccept,
                   ondelete = self.project_activity_data_ondelete,
                   orderby = ("project_activity_data.end_date", "project_activity_data.indicator_activity_id"),
-                  report_options = report_options,
+                  report_options = {"rows": ["indicator_activity_id", "end_date"],
+                                    "cols": ["indicator_activity_id", "end_date"],
+                                    "fact": [(T("Target Value"), "avg(target_value)"),
+                                             (T("Actual Value"), "avg(value)"),
+                                             # Not working (because percentage-Method returns a string
+                                             # not a number, so no average calculation possible),
+                                             # list(avg) may do it, though.
+                                             #(T("Percentage"), "avg(percentage)"),
+                                             (T("Percentage"), "list(percentage)"),
+                                             (T("Comparison"), [(T("Actual Value"), "avg(value)"),
+                                                                (T("Target Value"), "avg(target_value)"),
+                                                                ],
+                                              ),
+                                             ],
+                                    "defaults": {"rows": "indicator_activity_id",
+                                                 "cols": "end_date",
+                                                 #"fact": "avg(percentage)",
+                                                 "fact": "avg(value)",
+                                                 "totals": False,
+                                                 },
+                                    },
                   )
 
         # Pass names back to global scope (s3.*)
@@ -11231,16 +11209,6 @@ class ProjectTaskModel(S3Model):
         # Custom Form
         crud_form = S3SQLCustomForm(*crud_fields)
 
-        report_options = Storage(rows = list_fields,
-                                 cols = list_fields,
-                                 fact = list_fields,
-                                 defaults = Storage(rows = "task.project",
-                                                    cols = "task.pe_id",
-                                                    fact = "sum(task.time_estimated)",
-                                                    totals = True
-                                                    ),
-                                 )
-
         # Resource Configuration
         self.configure(tablename,
                        context = {"incident": "incident.incident_id",
@@ -11261,7 +11229,14 @@ class ProjectTaskModel(S3Model):
                        onvalidation = self.project_task_onvalidation,
                        orderby = "project_task.priority,project_task.date_due asc",
                        realm_entity = self.project_task_realm_entity,
-                       report_options = report_options,
+                       report_options = {"rows": list_fields,
+                                         "cols": list_fields,
+                                         "fact": list_fields,
+                                         "defaults": {"rows": "task.project",
+                                                      "cols": "task.pe_id",
+                                                      "fact": "sum(task.time_estimated)",
+                                                      },
+                                         },
                        super_entity = "doc_entity",
                        update_onaccept = self.project_task_update_onaccept,
                        )
@@ -12192,23 +12167,19 @@ class ProjectTaskTimeModel(S3Model):
                                                      #label = T("Sector"),
                                                      ))
 
-        report_options = Storage(rows = report_fields,
-                                 cols = report_fields,
-                                 fact = report_fields,
-                                 defaults = Storage(
-                                    rows = "task_id$task_project.project_id",
-                                    cols = "person_id",
-                                    fact = "sum(hours)",
-                                    totals = True,
-                                    ),
-                                 )
-
         self.configure(tablename,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        onaccept = self.project_time_onaccept,
                        report_fields = ["date"],
-                       report_options = report_options,
+                       report_options = {"rows": report_fields,
+                                         "cols": report_fields,
+                                         "fact": report_fields,
+                                         "defaults": {"rows": "task_id$task_project.project_id",
+                                                      "cols": "person_id",
+                                                      "fact": "sum(hours)",
+                                                      },
+                                         },
                        )
 
         # Pass names back to global scope (s3.*)
