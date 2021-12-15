@@ -8058,8 +8058,8 @@ def inv_packing_list(r, **attr):
             bmpdata = bmpfile.read()
             sheet.insert_bitmap_data(bmpdata, 0, 3)
 
-    # 5th row => Packing List
-    row_index = 4
+    # 7th row => Packing List
+    row_index = 6
     current_row = sheet.row(row_index)
     current_row.height = int(2.8 * 240 * 1.2) # 2 rows
     label = "PACKING LIST"
@@ -8072,15 +8072,15 @@ def inv_packing_list(r, **attr):
     else:
         sheet.write_merge(row_index, row_index, 0, 4, label, box_style)
 
-    # 7th row => Reference
-    row_index = 6
+    # 9th row => Reference
+    row_index = 8
     current_row = sheet.row(row_index)
     current_row.height = ROW_HEIGHT
     label = "Ref: %s" % send_ref
     sheet.write_merge(row_index, row_index, 0, 4, label, bold_italic_center_style)
 
-    # 9th row => Source
-    row_index = 8
+    # 11th row => Source
+    row_index = 10
     current_row = sheet.row(row_index)
     if fr:
         current_row.height = ROWS_2_HEIGHT
@@ -8096,8 +8096,8 @@ def inv_packing_list(r, **attr):
     current_row.write(3, "Date:", header_style)
     current_row.write(4, str(r.now.date()), header_style)
 
-    # 12th row => Destination
-    row_index = 11
+    # 14th row => Destination
+    row_index = 13
     current_row = sheet.row(row_index)
     current_row.height = ROW_HEIGHT
     if fr:
@@ -8121,8 +8121,8 @@ def inv_packing_list(r, **attr):
         label = "%s\n\n%s" % (label, recipient)
     sheet.write_merge(row_index, 16, 2, 4, label, dest_style)
 
-    # 22nd row => Column Headers
-    row_index = 21
+    # 24nd row => Column Headers
+    row_index = 23
     current_row = sheet.row(row_index)
     current_row.height = ROWS_2_HEIGHT
     col_index = 0
@@ -8145,7 +8145,7 @@ def inv_packing_list(r, **attr):
     # Data rows
     total_weight = 0
     total_volume = 0
-    row_index = 22
+    row_index = 24
     for row in items:
         current_row = sheet.row(row_index)
         current_row.height = ROW_HEIGHT
