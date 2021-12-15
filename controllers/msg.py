@@ -1750,7 +1750,7 @@ def twitter_result():
                    report_options = {"rows": report_fields,
                                      "cols": report_fields,
                                      "fact": report_fields,
-                                     "defaults:" {"rows": "search_id",
+                                     "defaults": {"rows": "search_id",
                                                   "cols": "lang",
                                                   },
                                      },
