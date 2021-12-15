@@ -7149,6 +7149,7 @@ def inv_gift_certificate(r, **attr):
         col_index += 1
 
     # Data rows
+    currency = ""
     one_currency = True
     grand_total = 0
     row_index = 21
@@ -7348,7 +7349,11 @@ def inv_item_label(r, **attr):
     item_name = supply_item.name[:24]
     pack_quantity = pack.quantity
 
-    weight = supply_item.weight * pack_quantity
+    weight = supply_item.weight
+    if weight:
+        weight = weight * pack_quantity
+    else:
+        weight = ""
 
     # Length & Width are unknown as we don't track pack sizes
     length = ""

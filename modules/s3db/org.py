@@ -5555,6 +5555,7 @@ def org_organisation_logo(org,
     if not logo:
         root_organisation = record.root_organisation
         if root_organisation != record.id:
+            table = current.s3db.org_organisation
             record = current.db(table.id == root_organisation).select(table.name,
                                                                       table.acronym,
                                                                       table.logo,
