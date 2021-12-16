@@ -440,20 +440,6 @@ class StatsDemographicModel(S3Model):
                                            ),
                           ]
 
-        report_options = Storage(rows = location_fields + ["year"],
-                                 cols = ["parameter_id"],
-                                 fact = [(T("Average"), "avg(value)"),
-                                         (T("Total"), "sum(value)"),
-                                         ],
-                                 defaults = Storage(rows = location_fields[0], # => L0 for multi-country, L1 for single country
-                                                    cols = "parameter_id",
-                                                    fact = "sum(value)",
-                                                    totals = True,
-                                                    chart = "breakdown:rows",
-                                                    table = "collapse",
-                                                    )
-                                 )
-
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("parameter_id",
                                                        "location_id",
@@ -468,7 +454,18 @@ class StatsDemographicModel(S3Model):
                   # required or not. Disable when auth.override is True.
                   #onaccept = self.stats_demographic_update_aggregates,
                   #onapprove = self.stats_demographic_update_aggregates,
-                  report_options = report_options,
+                  report_options = {"rows": location_fields + ["year"],
+                                    "cols": ["parameter_id"],
+                                    "fact": [(T("Average"), "avg(value)"),
+                                             (T("Total"), "sum(value)"),
+                                             ],
+                                    "defaults": {"rows": location_fields[0], # => L0 for multi-country, L1 for single country
+                                                 "cols": "parameter_id",
+                                                 "fact": "sum(value)",
+                                                 "chart": "breakdown:rows",
+                                                 "table": "collapse",
+                                                 },
+                                    },
                   # This should be set in Template:
                   #requires_approval = True,
                   super_entity = "stats_data",

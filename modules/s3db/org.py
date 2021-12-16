@@ -412,24 +412,8 @@ class OrganisationModel(S3Model):
             default_row = default_col
             default_col = None
 
-        report_options = Storage(rows = report_fields,
-                                 cols = report_fields,
-                                 fact = [(T("Number of Organizations"), "count(id)"),
-                                         (T("List of Organizations"), "list(name)"),
-                                         ],
-                                 defaults = Storage(rows = default_row,
-                                                    cols = default_col,
-                                                    fact = "count(id)",
-                                                    totals = True,
-                                                    chart = "spectrum:cols",
-                                                    #table = "collapse",
-                                                    ),
-                                 )
-
-        location_context = settings.get_org_organisation_location_context()
-
         configure(tablename,
-                  context = {"location": location_context,
+                  context = {"location": settings.get_org_organisation_location_context(),
                              },
                   crud_form = crud_form,
                   deduplicate = org_OrganisationDuplicate.duplicate,
@@ -439,9 +423,19 @@ class OrganisationModel(S3Model):
                   list_orderby = "org_organisation.name",
                   onaccept = self.org_organisation_onaccept,
                   ondelete = self.org_organisation_ondelete,
-                  referenced_by = [(auth.settings.table_user_name, "organisation_id"),
-                                   ],
-                  report_options = report_options,
+                  referenced_by = [(auth.settings.table_user_name, "organisation_id")],
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": [(T("Number of Organizations"), "count(id)"),
+                                             (T("List of Organizations"), "list(name)"),
+                                             ],
+                                    "defaults": {"rows": default_row,
+                                                 "cols": default_col,
+                                                 "fact": "count(id)",
+                                                 "chart": "spectrum:cols",
+                                                 #"table": "collapse",
+                                                 },
+                                    },
                   super_entity = "pr_pentity",
                   realm_components = ("organisation_organisation_type",),
                   )
@@ -2056,27 +2050,24 @@ class OrganisationResourceModel(S3Model):
                          "parameter_id",
                          ]
 
-        report_options = Storage(rows = report_fields,
-                                 cols = report_fields,
-                                 fact = [(T("Total Number of Resources"), "sum(value)"),
-                                         (T("Number of Resources"), "count(value)"),
-                                         ],
-                                 defaults=Storage(rows = "organisation_id",
-                                                  cols = "parameter_id",
-                                                  fact = "sum(value)",
-                                                  totals = True,
-                                                  chart = "barchart:rows",
-                                                  #table = "collapse",
-                                                  )
-                                 )
-
         configure(tablename,
                   context = {"location": "location_id",
                              "organisation": "organisation_id",
                              },
                   filter_widgets = filter_widgets,
                   list_layout = org_resource_list_layout,
-                  report_options = report_options,
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": [(T("Total Number of Resources"), "sum(value)"),
+                                             (T("Number of Resources"), "count(value)"),
+                                             ],
+                                    "defaults": {"rows": "organisation_id",
+                                                 "cols": "parameter_id",
+                                                 "fact": "sum(value)",
+                                                 "chart": "barchart:rows",
+                                                 #"table": "collapse",
+                                                 },
+                                    },
                   super_entity = "stats_data",
                   )
 
@@ -2655,20 +2646,17 @@ class OrganisationServiceModel(S3Model):
                   crud_form = crud_form,
                   deduplicate = self.org_service_location_deduplicate,
                   list_fields = list_fields,
-                  report_options = Storage(
-                    rows = report_fields,
-                    cols = report_fields,
-                    fact = [(T("Number of Organizations"),
-                             "count(organisation_id)",
-                             ),
-                            ],
-                    defaults = Storage(
-                        rows = default_row,
-                        cols = "service_location_service.service_id",
-                        fact = "count(organisation_id)",
-                        totals = True,
-                    )
-                  ),
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": [(T("Number of Organizations"),
+                                              "count(organisation_id)",
+                                              ),
+                                             ],
+                                    "defaults": {"rows": default_row,
+                                                 "cols": "service_location_service.service_id",
+                                                 "fact": "count(organisation_id)",
+                                                 },
+                                    },
                   super_entity = "doc_entity",
                   )
 
@@ -4789,20 +4777,6 @@ class FacilityModel(S3Model):
                                 cols = 3,
                                 ))
 
-        report_options = Storage(
-            rows = report_fields,
-            cols = report_fields,
-            fact = [(T("Number of Facilities"), "count(id)"),
-                    (T("List of Facilities"), "list(name)"),
-                    ],
-            defaults = Storage(rows = lfield, # Lowest-level of hierarchy
-                               cols = "site_facility_type.facility_type_id",
-                               fact = "count(id)",
-                               totals = True,
-                               chart = "barchart:rows",
-                               ),
-            )
-
         # Custom Form
         if hierarchical_facility_types:
             type_widget = "hierarchy"
@@ -4876,7 +4850,17 @@ class FacilityModel(S3Model):
                                       "recv",
                                       "address",
                                       ),
-                  report_options = report_options,
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": [(T("Number of Facilities"), "count(id)"),
+                                             (T("List of Facilities"), "list(name)"),
+                                             ],
+                                    "defaults": {"rows": lfield, # Lowest-level of hierarchy
+                                                 "cols": "site_facility_type.facility_type_id",
+                                                 "fact": "count(id)",
+                                                 "chart": "barchart:rows",
+                                                 },
+                                    },
                   super_entity = ("doc_entity", "org_site", "pr_pentity"),
                   update_realm = True,
                   )
@@ -5387,21 +5371,6 @@ class OfficeModel(S3Model):
                                  ),
                 ]
 
-        report_options = Storage(
-            rows = report_fields,
-            cols = report_fields,
-            fact = ["count(id)",
-                    "list(name)",
-                    ],
-            defaults = Storage(rows = lfield, # Lowest-level of hierarchy
-                               cols = "office_type_id",
-                               fact = "count(id)",
-                               totals = True,
-                               chart = "spectrum:rows",
-                               ),
-            )
-
-
         configure(tablename,
                   context = {"location": "location_id",
                              "organisation": "organisation_id",
@@ -5430,7 +5399,17 @@ class OfficeModel(S3Model):
                                       "recv",
                                       "address",
                                       ),
-                  report_options = report_options,
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": ["count(id)",
+                                             "list(name)",
+                                             ],
+                                    "defaults": {"rows": lfield, # Lowest-level of hierarchy
+                                                 "cols": "office_type_id",
+                                                 "fact": "count(id)",
+                                                 "chart": "spectrum:rows",
+                                                 },
+                                    },
                   super_entity = ("doc_entity", "pr_pentity", "org_site"),
                   update_realm = True,
                   )

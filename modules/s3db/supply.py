@@ -507,12 +507,6 @@ $.filterOptionsS3({
                             ),
             ]
 
-        report_options = Storage(defaults = Storage(rows = "name",
-                                                    cols = "item_category_id",
-                                                    fact = "count(id)",
-                                                    ),
-                                 )
-
         # Default summary
         summary = [{"name": "addform",
                     "common": True,
@@ -535,7 +529,11 @@ $.filterOptionsS3({
                   onaccept = self.supply_item_onaccept,
                   onvalidation = self.supply_item_onvalidation,
                   orderby = "supply_item.name",
-                  report_options = report_options,
+                  report_options = {"defaults": {"rows": "name",
+                                                 "cols": "item_category_id",
+                                                 "fact": "count(id)",
+                                                 },
+                                    },
                   summary = summary,
                   )
 
@@ -1553,21 +1551,6 @@ class SupplyDistributionModel(S3Model):
         else:
             default_row = "activity_id$activity_organisation.organisation_id"
 
-        report_options = Storage(rows = report_fields,
-                                 cols = report_fields,
-                                 fact = [(T("Number of Items"), "sum(value)"),
-                                         ],
-                                 defaults = Storage(rows = default_row,
-                                                    cols = "parameter_id",
-                                                    fact = "sum(value)",
-                                                    totals = True,
-                                                    ),
-                                 # Needed for Virtual Field
-                                 extra_fields = ["date",
-                                                 "end_date",
-                                                 ]
-                                 )
-
         configure(tablename,
                   context = {"location": "location_id",
                              "organisation": "activity_id$organisation_activity.organisation_id",
@@ -1577,9 +1560,20 @@ class SupplyDistributionModel(S3Model):
                                                        "parameter_id",
                                                        ),
                                             ),
-                  filter_widgets = filter_widgets,
+                  # Needed for Virtual Field
+                  extra_fields = ["date",
+                                  "end_date",
+                                  ],
+                                 filter_widgets = filter_widgets,
                   onaccept = self.supply_distribution_onaccept,
-                  report_options = report_options,
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": [(T("Number of Items"), "sum(value)")],
+                                    "defaults": {"rows": default_row,
+                                                 "cols": "parameter_id",
+                                                 "fact": "sum(value)",
+                                                 },
+                                    },
                   super_entity = "stats_data",
                   )
 

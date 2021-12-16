@@ -421,16 +421,6 @@ $.filterOptionsS3({
                          "person_id$gender",
                          ]
 
-        report_options = Storage(rows = report_fields,
-                                 cols = report_fields,
-                                 fact = report_fields,
-                                 defaults = Storage(rows = "activity_hours_activity_type.activity_type_id",
-                                                    cols = "month",
-                                                    fact = "sum(hours)",
-                                                    totals = True,
-                                                    )
-                                 )
-
         # Components
         add_components(tablename,
                        vol_activity_type = {"link": "vol_activity_hours_activity_type",
@@ -473,7 +463,14 @@ $.filterOptionsS3({
                   onaccept = vol_activity_hours_onaccept,
                   ondelete = vol_activity_hours_onaccept,
                   orderby = "vol_activity_hours.date desc",
-                  report_options = report_options,
+                  report_options = {"rows": report_fields,
+                                    "cols": report_fields,
+                                    "fact": report_fields,
+                                    "defaults": {"rows": "activity_hours_activity_type.activity_type_id",
+                                                 "cols": "month",
+                                                 "fact": "sum(hours)",
+                                                 },
+                                    },
                   )
 
         # ---------------------------------------------------------------------
@@ -1387,13 +1384,13 @@ def vol_volunteer_controller():
                 list_fields.insert(6, "person_id$hours.programme_id")
 
                 # Add active and programme to Report Options
-                report_fields = report_options.rows
+                report_fields = report_options["rows"]
                 report_fields.append("person_id$hours.programme_id")
                 if vol_active:
                     report_fields.append((T("Active?"), "details.active"))
-                report_options.rows = report_fields
-                report_options.cols = report_fields
-                report_options.fact = report_fields
+                report_options["rows"] = report_fields
+                report_options["cols"] = report_fields
+                report_options["fact"] = report_fields
             else:
                 # Use status field
                 list_fields.append("status")
