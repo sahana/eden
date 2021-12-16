@@ -155,7 +155,7 @@ def inv_req_form(r, **attr):
 def inv_req__footer(r):
 
     from s3db.pr import pr_PersonRepresent
-    from s3db.inv import inv_req_approvers
+    #from s3db.inv import inv_req_approvers
 
     T = current.T
 
@@ -165,22 +165,42 @@ def inv_req__footer(r):
                 TH(T("Date")),
                 )
 
-    record = r.record
-    requester = record.requester_id
-    approvers = inv_req_approvers(record.site_id)
-    person_ids = [requester] + list(approvers)
+    #record = r.record
+    #requester = record.requester_id
+    #approvers = inv_req_approvers(record.site_id)
+    #person_ids = [requester] + list(approvers)
 
-    names = pr_PersonRepresent().bulk(person_ids)
+    #names = pr_PersonRepresent().bulk(person_ids)
 
-    signature_rows = [TR(TH(T("Requester")),
-                         TD(names[requester]),
-                         )]
-    append = signature_rows.append
+    #signature_rows = [TR(TH(T("Requester")),
+    #                     TD(names[requester]),
+    #                     )]
+    #append = signature_rows.append
 
-    for approver in approvers:
-        append(TR(TH(approvers[approver]["title"]),
-                  TD(names[approver]),
-                  ))
+    #for approver in approvers:
+    #    append(TR(TH(approvers[approver]["title"]),
+    #              TD(names[approver]),
+    #              ))
+
+    signature_rows = [TR(TH(T("REQUESTER")),
+                         TD(pr_PersonRepresent(r.record.requester_id)),
+                         ),
+                      TR(TH(T("PERSON IN CHARGE OF BUDGET")),
+                         TD(),
+                         ),
+                      TR(TH(T("PERSON IN CHARGE OF LOGISTIC")),
+                         TD(),
+                         ),
+                      TR(TH(T("HEAD OF DELEGATION")),
+                         TD(),
+                         ),
+                      TR(TH(T("DESK GEOGRAPHIQUE")),
+                         TD(),
+                         ),
+                      TR(TH(T("LOG HEADQUARTERS")),
+                         TD(),
+                         ),
+                      ]
 
     return TABLE(header,
                  *signature_rows

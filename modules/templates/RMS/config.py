@@ -6603,10 +6603,41 @@ Thank you"""
                 if not result:
                     return False
 
-            if not r.id:
+            req_id = r.id
+            if not req_id:
                 current.s3db.inv_req_project.project_id.represent = S3Represent(lookup = "project_project",
                                                                                 fields = ["code"],
                                                                                 )
+            elif not r.component:
+                if r.record.workflow_status in (3, 4, 5): # Approved, Completed, Cancelled
+                    # Lookup PE of Project Code
+                    s3db = current.s3db
+                    ltable = s3db.inv_req_project
+                    ptable = s3db.project_project
+                    otable = s3db.org_organisation
+                    query = (ltable.req_id == req_id) & \
+                            (ltable.project_id == ptable.id) & \
+                            (ptable.organisation_id == otable.id)
+                    org = current.db(query).select(otable.pe_id,
+                                                   limitby = (0, 1),
+                                                   ).first()
+                    if current.auth.s3_has_roles(("logs_manager",
+                                                  "logs_manager_national",
+                                                  ),
+                                                 for_pe = org.pe_id,
+                                                 ):
+                        # Allow editing of the Project Code
+                        s3db.configure("inv_req",
+                                       editable = True,
+                                       )
+                        table = s3db.inv_req
+                        for fname in table.fields:
+                            table[fname].writable = False
+
+                        table.site_id.comment = None
+                        table.requester_id.comment = None
+                        table.recv_by_id.comment = None
+
             elif r.component_name == "req_item":
                 s3db = current.s3db
                 workflow_status = r.record.workflow_status
@@ -6619,7 +6650,7 @@ Thank you"""
                     if person_id in approvers and approvers[person_id]["matcher"]:
                         # Have we already approved?
                         atable = s3db.inv_req_approver_req
-                        query = (atable.req_id == r.id) & \
+                        query = (atable.req_id == req_id) & \
                                 (atable.person_id == person_id)
                         approved = current.db(query).select(atable.id,
                                                             limitby = (0, 1),

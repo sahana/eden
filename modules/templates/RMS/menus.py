@@ -56,7 +56,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
             # Additional Items
             menu(M("Forums", c="pr", f="forum"),
-                 M("Request Approvers", c="inv", f="req_approver"),
+                 #M("Request Approvers", c="inv", f="req_approver"),
                  M("Map Settings", c="gis", f="config"),
                  M("Content Management", c="cms", f="index"),
                  )
@@ -106,8 +106,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Forums", c="pr", f="forum")(
                             M("Create", m="create"),
                         ),
-                       M("Request Approvers", c="inv", f="req_approver")(
-                        ),
+                       #M("Request Approvers", c="inv", f="req_approver")(
+                       # ),
                        )
 
         else:
@@ -270,15 +270,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def inv(self):
         """ INV / Inventory """
 
-        if current.request.function == "req_approver":
-            # Accessed via Settings
-            has_role = current.auth.s3_has_role
-            if has_role("ADMIN"):
-                return self.admin()
-            elif has_role("ORG_ADMIN"):
-                return self.pr()
-            else:
-                return None
+        #if current.request.function == "req_approver":
+        #    # Accessed via Settings
+        #    has_role = current.auth.s3_has_role
+        #    if has_role("ADMIN"):
+        #        return self.admin()
+        #    elif has_role("ORG_ADMIN"):
+        #        return self.pr()
+        #    else:
+        #        return None
 
         if current.auth.s3_has_roles(("ORG_ADMIN",
                                       "wh_operator",
