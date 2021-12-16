@@ -4230,7 +4230,7 @@ Thank you"""
             message_T = T("%(item)s replenishment needed in %(site)s Warehouse. %(quantity)s remaining. Please review at: %(url)s")
             alert_T = T("%(item)s replenishment needed in %(site)s Warehouse. %(quantity)s remaining")
 
-            warnings = []
+            warnings = 0
 
             for alert in alerts:
                 item_id = alert[0]
@@ -4271,13 +4271,22 @@ Thank you"""
                 T.force(ui_language)
 
                 # Interactive Notification
-                alert = s3_str(alert_T) % {"item": item,
-                                           "site": warehouse_name,
-                                           "quantity": quantity,
-                                           }
-                warnings.append(alert)
+                #alert = {"item": item,
+                #         "site": warehouse_name,
+                #         "quantity": quantity,
+                #         }
+                #warnings.append(alert)
+                warnings += 1
 
-            session.warning = ", ".join(warnings)
+            if warnings == 1:
+                session.warning = s3_str(alert_T) % {"item": item,
+                                                     "site": warehouse_name,
+                                                     "quantity": quantity,
+                                                     }
+            else:
+                session.warning = s3_str(T("Replenishment of multiple items needed in %(site)s Warehouse. Check the Dashboard for details.")) % \
+                                            {"site": warehouse_name,
+                                             }
 
     # -------------------------------------------------------------------------
     def on_free_capacity_update(warehouse):
