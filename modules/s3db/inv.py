@@ -5131,9 +5131,6 @@ class InventoryTrackingModel(S3Model):
                      Field.Method("month",
                                   self.inv_send_month,
                                   ),
-                     Field.Method("popular_item",
-                                  self.inv_send_popular_item,
-                                  ),
                      Field.Method("total_value",
                                   self.inv_send_total_value,
                                   ),
@@ -5271,6 +5268,8 @@ class InventoryTrackingModel(S3Model):
                        "comments",
                        ]
 
+        WB = settings.get_inv_send_form_name()
+
         configure(tablename,
                   addbtn = True,
                   listadd = False,
@@ -5287,24 +5286,30 @@ class InventoryTrackingModel(S3Model):
                   onaccept = inv_send_onaccept,
                   onvalidation = self.inv_send_onvalidation,
                   orderby = "inv_send.date desc",
-                  report_options = {"rows": ["site_id",
+                  report_options = {"rows": ["track_item.item_id",
+                                             "site_id",
                                              "to_site_id",
                                              (T("Month"), "month"),
                                              "transport_type",
-                                             "track_item.item_id",
+                                             (T("Volume (kg)"), "total_volume"),
+                                             (T("Value"), "total_value"),
+                                             (WB, "send_ref"),
                                              ],
-                                    "cols": ["site_id",
+                                    "cols": ["track_item.item_id",
+                                             "site_id",
                                              "to_site_id",
                                              (T("Month"), "month"),
                                              "transport_type",
-                                             "track_item.item_id",
+                                             (T("Volume (kg)"), "total_volume"),
+                                             (T("Value"), "total_value"),
+                                             (WB, "send_ref"),
                                              ],
                                     "fact": [(T("Average Transit Time (h)"), "avg(transit_time)"),
-                                             #(T("Most Popular Item"), "list(popular_item)"),
                                              (T("Item Quantity"), "sum(track_item.quantity)"),
+                                             (T("List of Shipments"), "list(send_ref)"),
                                              (T("Number of Shipments"), "count(id)"),
-                                             (T("Value of Shipments"), "sum(total_value)"),
-                                             (T("Volume of Shipments (kg)"), "sum(total_volume)"),
+                                             (T("Total Value of Shipments"), "sum(total_value)"),
+                                             (T("Total Volume of Shipments (kg)"), "sum(total_volume)"),
                                              ],
                                     "defaults": {"rows": "month",
                                                  "cols": "site_id",
@@ -5456,7 +5461,7 @@ class InventoryTrackingModel(S3Model):
                                          _title = "%s|%s" % (T("%(GRN)s Status") % {"GRN": recv_shortname},
                                                              T("Has the %(GRN)s (%(GRN_name)s) form been completed?") % \
                                                                 {"GRN": recv_shortname,
-                                                                 "GRN_name": settings.get_inv_recv_form_name()
+                                                                 "GRN_name": settings.get_inv_recv_form_name(),
                                                                  },
                                                              ),
                                          ),
@@ -5960,45 +5965,6 @@ class InventoryTrackingModel(S3Model):
             return NONE
 
         return thisdate.date().strftime("%y-%m")
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def inv_send_popular_item(row):
-        """
-            The Most Popular Item in a sent shipment
-        """
-
-        try:
-            inv_send = getattr(row, "inv_send")
-        except AttributeError:
-            inv_send = row
-
-        s3db = current.s3db
-        ttable = s3db.inv_track_item
-        ptable = s3db.supply_item_pack
-        itable = s3db.supply_item
-        query = (ttable.send_id == inv_send.id) & \
-                (ttable.item_pack_id == ptable.id) & \
-                (ttable.item_id == itable.id)
-        rows = current.db(query).select(ttable.quantity,
-                                        ptable.quantity,
-                                        itable.name,
-                                        )
-        items = {}
-        for row in rows:
-            item_name = row["supply_item.name"]
-            quantity = row["inv_track_item.quantity"] * row["supply_item_pack.quantity"]
-            if item_name in items:
-                items[item_name] += quantity
-            else:
-                items[item_name] = quantity
-
-        for item in items:
-            if items[item] > quantity:
-                item_name = item
-                quantity = items[item]
-
-        return item_name
 
     # -------------------------------------------------------------------------
     @staticmethod

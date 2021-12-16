@@ -6723,13 +6723,13 @@ Thank you"""
                         s3db.configure("inv_req",
                                        editable = True,
                                        )
-                        table = s3db.inv_req
-                        for fname in table.fields:
-                            table[fname].writable = False
+                        #table = s3db.inv_req
+                        #for fname in table.fields:
+                        #    table[fname].writable = False
 
-                        table.site_id.comment = None
-                        table.requester_id.comment = None
-                        table.recv_by_id.comment = None
+                        #table.site_id.comment = None
+                        #table.requester_id.comment = None
+                        #table.recv_by_id.comment = None
 
             elif r.component_name == "req_item":
                 s3db = current.s3db
