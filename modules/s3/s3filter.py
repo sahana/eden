@@ -748,12 +748,12 @@ class S3DateFilter(S3RangeFilter):
         Keyword Args:
             label: label for the widget
             comment: comment for the widget
-        hidden: render widget initially hidden (="advanced" option)
-        fieldtype: explicit field type "date" or "datetime" to
-                   use for context or virtual fields
-        hide_time: don't show time selector
+            hidden: render widget initially hidden (="advanced" option)
+            fieldtype: explicit field type "date" or "datetime" to
+                       use for context or virtual fields
+            hide_time: don't show time selector
 
-        WIP: Incomplete:
+        TODO:
             filterby: field to filter records included by
             filter_opts: options to filter records included by
             negative: To Exclude matching records rather than Including them, provide the selector for the "selector=None"
@@ -1278,6 +1278,7 @@ class S3SliderFilter(S3RangeFilter):
     """
         Filter widget for Ranges which is controlled by a Slider instead of
         INPUTs
+
         Wraps jQueryUI's Range Slider in S3.range_slider in S3.js
 
         Keyword Args:
@@ -3724,33 +3725,30 @@ class S3Filter(S3Method):
         """
 
         representation = r.representation
-        output = None
 
         if representation == "options":
             # Return the filter options as JSON
-            output = self._options(r, **attr)
+            return self._options(r, **attr)
 
         elif representation == "json":
             if r.http == "GET":
                 # Load list of saved filters
-                output = self._load(r, **attr)
+                return self._load(r, **attr)
             elif r.http == "POST":
                 if "delete" in r.get_vars:
                     # Delete a filter
-                    output = self._delete(r, **attr)
+                    return self._delete(r, **attr)
                 else:
                     # Save a filter
-                    output = self._save(r, **attr)
+                    return self._save(r, **attr)
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
 
         elif representation == "html":
-            output = self._form(r, **attr)
+            return self._form(r, **attr)
 
         else:
             r.error(415, current.ERROR.BAD_FORMAT)
-
-        return output
 
     # -------------------------------------------------------------------------
     def _form(self, r, **attr):
@@ -3994,9 +3992,9 @@ class S3Filter(S3Method):
             record_ids = [i for i in load.split(",") if i.isdigit()]
             if record_ids:
                 if len(record_ids) > 1:
-                    query &= table.id.belongs(record_ids)
+                    query &= (table.id.belongs(record_ids))
                 else:
-                    query &= table.id == record_ids[0]
+                    query &= (table.id == record_ids[0])
         else:
             record_ids = None
 

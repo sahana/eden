@@ -12828,7 +12828,8 @@ def project_time_day(row):
         date, allows grouping per day instead of the individual datetime,
         used for project time report.
 
-        Requires "date" to be in the additional report_fields
+        Note:
+            Requires "date" to be in extra_fields
 
         Args:
             row: the Row
@@ -12856,7 +12857,8 @@ def project_time_week(row):
         Virtual field for project_time - returns the date of the Monday
         (=first day of the week) of this entry, used for project time report.
 
-        Requires "date" to be in the additional report_fields
+        Note:
+            Requires "date" to be in extra_fields
 
         Args:
             row: the Row
@@ -12870,7 +12872,7 @@ def project_time_week(row):
         return NONE
 
     day = thisdate.date()
-    monday = day - datetime.timedelta(days=day.weekday())
+    monday = day - datetime.timedelta(days = day.weekday())
 
     return monday
 

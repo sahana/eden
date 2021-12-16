@@ -4115,13 +4115,106 @@ Thank you"""
             #    s3_set_default_filter("~.status",
             #                          [0],
             #                          tablename = "inv_send")
+            if r.method == "report":
+                # Filter to just Shipments in the last 2 years
+                from datetime import timedelta
+                delta = timedelta(days = 730)
+                # Date filter needs to be visible
+                filter_widgets = r.resource.get_config("filter_widgets")
+                for w in filter_widgets:
+                    if w.field == "date":
+                        w.opts["hidden"] = False
+                        break
+                from s3 import s3_set_default_filter
+                s3_set_default_filter("~.date",
+                                      {"ge": r.utcnow - delta,
+                                       },
+                                      tablename = "inv_send")
+                # Filter to only Sent Shipments (inc Received Shipments)
+                s3_set_default_filter("~.status",
+                                      [1, 2],
+                                      tablename = "inv_send")
 
             return result
         s3.prep = custom_prep
 
         return attr
 
-    #settings.customise_inv_send_controller = customise_inv_send_controller
+    settings.customise_inv_send_controller = customise_inv_send_controller
+
+    # -------------------------------------------------------------------------
+    def customise_inv_track_item_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.method == "report":
+                # Configure Report Options
+                current.s3db.configure("inv_track_item",
+                                       report_options = {"rows": ["item_id",
+                                                                  "send_id$site_id",
+                                                                  "send_id$to_site_id",
+                                                                  #(T("Month"), "send_id$month"),
+                                                                  "send_id$transport_type",
+                                                                  ],
+                                                         "cols": ["item_id",
+                                                                  "send_id$site_id",
+                                                                  "send_id$to_site_id",
+                                                                  #(T("Month"), "send_id$month"),
+                                                                  "send_id$transport_type",
+                                                                  ],
+                                                         "fact": [#(T("Average Transit Time (h)"), "avg(send_id$transit_time)"),
+                                                                  (T("List of Items"), "list(item_id)"),
+                                                                  (T("Quantity of Items"), "sum(quantity)"),
+                                                                  #(T("Number of Shipments"), "count(send_id)"),
+                                                                  #(T("Value of Shipments"), "sum(send_id$total_value)"),
+                                                                  #(T("Volume of Shipments (kg)"), "sum(send_id$total_volume)"),
+                                                                  ],
+                                                         "defaults": {"rows": "item_id",
+                                                                      "cols": "send_id$site_id",
+                                                                      "fact": "sum(quantity)",
+                                                                      "chart": "barchart:rows",
+                                                                      "table": "collapse",
+                                                                      },
+                                                         },
+                                       )
+                # Filter to just Shipments in the last 2 years
+                from datetime import timedelta
+                delta = timedelta(days = 730)
+                # Date filter needs to be visible
+                filter_widgets = r.resource.get_config("filter_widgets")
+                for w in filter_widgets:
+                    if w.field == "send_id$date":
+                        w.opts["hidden"] = False
+                        break
+                from s3 import s3_set_default_filter, S3OptionsFilter
+                s3_set_default_filter("~.send_id$date",
+                                      {"ge": r.utcnow - delta,
+                                       },
+                                      tablename = "inv_track_item")
+                # Filter to only Sent Shipments (inc Received Shipments)
+                filter_widgets.insert(1, S3OptionsFilter("send_id$status",
+                                                         label = T("Status"),
+                                                         cols = 3,
+                                                         ))
+                s3_set_default_filter("~.send_id$status",
+                                      [1, 2],
+                                      tablename = "inv_track_item")
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    #settings.customise_inv_track_item_controller = customise_inv_track_item_controller
 
     # -------------------------------------------------------------------------
     def stock_limit_alerts(warehouse):

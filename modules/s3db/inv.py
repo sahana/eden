@@ -679,10 +679,10 @@ class InventoryModel(S3Model):
                            writable = False,
                            ),
                      Field.Method("total_value",
-                                  self.inv_item_total_value
+                                  self.inv_item_total_value,
                                   ),
                      Field.Method("pack_quantity",
-                                  SupplyItemPackQuantity(tablename)
+                                  SupplyItemPackQuantity(tablename),
                                   ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -873,27 +873,25 @@ $.filterOptionsS3({
                        onimport = self.inv_item_onimport,
                        report_options = report_options,
                        super_entity = "supply_item_entity",
-                       grouped = {
-                        "default": {
-                            "title": T("Warehouse Stock Report"),
-                            "fields": [(T("Warehouse"), "site_id$name"),
-                                       "item_id$item_category_id",
-                                       "layout_id",
-                                       "item_id$name",
-                                       "quantity",
-                                       "pack_value",
-                                       "total_value",
-                                       ],
-                            "groupby": ["site_id",
-                                        ],
-                            "orderby": ["site_id$name",
-                                        "item_id$name",
-                                        ],
-                            "aggregate": [("sum", "quantity"),
-                                          ("sum", "total_value"),
-                                          ],
-                         },
-                        },
+                       grouped = {"default": {"title": T("Warehouse Stock Report"),
+                                              "fields": [(T("Warehouse"), "site_id$name"),
+                                                         "item_id$item_category_id",
+                                                         "layout_id",
+                                                         "item_id$name",
+                                                         "quantity",
+                                                         "pack_value",
+                                                         "total_value",
+                                                         ],
+                                              "groupby": ["site_id",
+                                                          ],
+                                              "orderby": ["site_id$name",
+                                                          "item_id$name",
+                                                          ],
+                                              "aggregate": [("sum", "quantity"),
+                                                            ("sum", "total_value"),
+                                                            ],
+                                              },
+                                  },
                        )
 
         self.add_components(tablename,
@@ -5104,6 +5102,10 @@ class InventoryTrackingModel(S3Model):
                                  label = T("Estimated Delivery Date"),
                                  represent = "date",
                                  ),
+                     s3_datetime("date_received",
+                                 label = T("Date Received"),
+                                 represent = "date",
+                                 ),
                      Field("status", "integer",
                            default = SHIP_STATUS_IN_PROCESS,
                            label = T("Status"),
@@ -5126,6 +5128,21 @@ class InventoryTrackingModel(S3Model):
                            writable = False,
                            ),
                      s3_comments(),
+                     Field.Method("month",
+                                  self.inv_send_month,
+                                  ),
+                     Field.Method("popular_item",
+                                  self.inv_send_popular_item,
+                                  ),
+                     Field.Method("total_value",
+                                  self.inv_send_total_value,
+                                  ),
+                     Field.Method("total_volume",
+                                  self.inv_send_total_volume,
+                                  ),
+                     Field.Method("transit_time",
+                                  self.inv_send_transit_time,
+                                  ),
                      *s3_meta_fields())
 
         # Filter Widgets
@@ -5189,6 +5206,7 @@ class InventoryTrackingModel(S3Model):
             label_create = T("Send New Shipment"),
             title_display = T("Sent Shipment Details"),
             title_list = T("Sent Shipments"),
+            title_report = T("Sent Shipments Report"),
             title_update = T("Shipment to Send"),
             label_list_button = T("List Sent Shipments"),
             label_delete_button = T("Delete Sent Shipment"),
@@ -5261,21 +5279,34 @@ class InventoryTrackingModel(S3Model):
                   # It shouldn't be possible for the user to delete a shipment
                   # unless *maybe* if it is pending and has no items referencing it
                   deletable = False,
+                  extra_fields = ["date",
+                                  "date_received",
+                                  ],
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = inv_send_onaccept,
                   onvalidation = self.inv_send_onvalidation,
                   orderby = "inv_send.date desc",
-                  report_options = {"rows": ["to_site_id",
-                                             "site_id",
+                  report_options = {"rows": ["site_id",
+                                             "to_site_id",
+                                             (T("Month"), "month"),
+                                             "transport_type",
+                                             "track_item.item_id",
                                              ],
-                                    "cols": ["to_site_id",
-                                             "site_id",
+                                    "cols": ["site_id",
+                                             "to_site_id",
+                                             (T("Month"), "month"),
+                                             "transport_type",
+                                             "track_item.item_id",
                                              ],
-                                    "fact": [(T("Number of Shipments"), "count(id)"),
+                                    "fact": [(T("Average Transit Time (h)"), "avg(transit_time)"),
+                                             #(T("Most Popular Item"), "list(popular_item)"),
+                                             (T("Item Quantity"), "sum(track_item.quantity)"),
+                                             (T("Number of Shipments"), "count(id)"),
+                                             (T("Value of Shipments"), "sum(total_value)"),
+                                             (T("Volume of Shipments (kg)"), "sum(total_volume)"),
                                              ],
-                                    "methods": ["count", "sum"],
-                                    "defaults": {"rows": "to_site_id",
+                                    "defaults": {"rows": "month",
                                                  "cols": "site_id",
                                                  "fact": "count(id)",
                                                  "chart": "barchart:rows",
@@ -5905,6 +5936,166 @@ class InventoryTrackingModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def inv_send_month(row):
+        """
+            Abbreviated string format for date, allows grouping per month,
+            instead of the individual datetime, used for inv_send report.
+
+            Requires "date" to be in the extra_fields
+
+            Args:
+                row: the Row
+        """
+
+        try:
+            inv_send = getattr(row, "inv_send")
+        except AttributeError:
+            inv_send = row
+
+        try:
+            thisdate = inv_send.date
+        except AttributeError:
+            return NONE
+        if not thisdate:
+            return NONE
+
+        return thisdate.date().strftime("%y-%m")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_send_popular_item(row):
+        """
+            The Most Popular Item in a sent shipment
+        """
+
+        try:
+            inv_send = getattr(row, "inv_send")
+        except AttributeError:
+            inv_send = row
+
+        s3db = current.s3db
+        ttable = s3db.inv_track_item
+        ptable = s3db.supply_item_pack
+        itable = s3db.supply_item
+        query = (ttable.send_id == inv_send.id) & \
+                (ttable.item_pack_id == ptable.id) & \
+                (ttable.item_id == itable.id)
+        rows = current.db(query).select(ttable.quantity,
+                                        ptable.quantity,
+                                        itable.name,
+                                        )
+        items = {}
+        for row in rows:
+            item_name = row["supply_item.name"]
+            quantity = row["inv_track_item.quantity"] * row["supply_item_pack.quantity"]
+            if item_name in items:
+                items[item_name] += quantity
+            else:
+                items[item_name] = quantity
+
+        for item in items:
+            if items[item] > quantity:
+                item_name = item
+                quantity = items[item]
+
+        return item_name
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_send_total_value(row):
+        """
+            Total value of a sent shipment
+
+            Note:
+                This only makes sense if all items use the same currency for their values!
+        """
+
+        try:
+            inv_send = getattr(row, "inv_send")
+        except AttributeError:
+            inv_send = row
+
+        ttable = current.s3db.inv_track_item
+        rows = current.db(ttable.send_id == inv_send.id).select(ttable.quantity,
+                                                                ttable.pack_value,
+                                                                )
+        total_value = 0
+        for row in rows:
+            pack_value = row.pack_value
+            quantity = row.quantity
+            if quantity and pack_value:
+                total_value += (quantity * pack_value)
+
+        return round(total_value, 2)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_send_total_volume(row):
+        """
+            Total volume of a sent shipment
+        """
+
+        try:
+            inv_send = getattr(row, "inv_send")
+        except AttributeError:
+            inv_send = row
+
+        s3db = current.s3db
+        ttable = s3db.inv_track_item
+        ptable = s3db.supply_item_pack
+        itable = s3db.supply_item
+        query = (ttable.send_id == inv_send.id) & \
+                (ttable.item_pack_id == ptable.id) & \
+                (ttable.item_id == itable.id)
+        rows = current.db(query).select(ttable.quantity,
+                                        ptable.quantity,
+                                        itable.volume,
+                                        )
+        total_volume = 0
+        for row in rows:
+            quantity = row["inv_track_item.quantity"]
+            volume = row["supply_item.volume"]
+            if quantity and volume:
+                pack_quantity = row["supply_item_pack.quantity"]
+                total_volume += (quantity * pack_quantity * volume)
+
+        return round(total_volume, 3)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_send_transit_time(row):
+        """
+            Time in transit of a sent shipment (in Hours)
+        """
+
+        try:
+            inv_send = getattr(row, "inv_send")
+        except AttributeError:
+            inv_send = row
+
+        try:
+            date = inv_send.date
+            date_received = inv_send.date_received
+        except AttributeError:
+            # Need to reload the send
+            # Avoid this by adding to extra_fields
+            stable = current.s3db.inv_send
+            inv_send = current.db(stable.id == inv_send.id).select(stable.date,
+                                                                   stable.date_received,
+                                                                   limitby = (0, 1),
+                                                                   ).first()
+            date = inv_send.date
+            date_received = inv_send.date_received
+
+        if date and date_received:
+            delta = date_received - date
+            return round(delta.hours, 1)
+        else:
+            # Item lacks date, or date_received, or both
+            return NONE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def inv_track_item_total_value(row):
         """ Total value of a track item """
 
@@ -5920,11 +6111,10 @@ class InventoryTrackingModel(S3Model):
             # Need to reload the track item
             # Avoid this by adding to extra_fields
             ttable = current.s3db.inv_track_item
-            query = (ttable.id == inv_track_item.id)
-            inv_track_item = current.db(query).select(ttable.quantity,
-                                                      ttable.pack_value,
-                                                      limitby = (0, 1),
-                                                      ).first()
+            inv_track_item = current.db(ttable.id == inv_track_item.id).select(ttable.quantity,
+                                                                               ttable.pack_value,
+                                                                               limitby = (0, 1),
+                                                                               ).first()
             quantity = inv_track_item.quantity
             pack_value = inv_track_item.pack_value
 
@@ -10035,9 +10225,10 @@ def inv_recv_process(r, **attr):
     if track_item:
         send_id = track_item.send_id
         if send_id:
-            # Update the Send record to lock for editing
-            stable = db.inv_send
-            db(stable.id == send_id).update(status = SHIP_STATUS_RECEIVED)
+            # Update the Send record
+            db(db.inv_send.id == send_id).update(status = SHIP_STATUS_RECEIVED,
+                                                 date_recvd = r.utcnow,
+                                                 )
 
     rbtable = s3db.inv_recv_item_bin
     iitable = s3db.inv_inv_item
