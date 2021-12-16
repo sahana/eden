@@ -14657,7 +14657,7 @@ def inv_send_controller():
                     if r.http == "GET" and \
                        track_record.status == TRACK_STATUS_PREPARING:
                         # Provide initial options for Pack in Update forms
-                        # Don't include in the POSTs as we want to be able to select alternate Items, and hance packs
+                        # Don't include in the POSTs as we want to be able to select alternate Items, and hence Packs
                         f = tracktable.item_pack_id
                         f.requires = IS_ONE_OF(db, "supply_item_pack.id",
                                                f.represent,
@@ -14736,9 +14736,11 @@ def inv_send_controller():
                                     query = (rtable.id == req_ids[0])
                                 else:
                                     query = (rtable.id.belongs(req_ids))
+                                # Note: In order to allow request items to go via transit hops, we only check quantity_fulfil
+                                # ToDo: Add req_item_site table to track each hop
                                 query &= (ritable.req_id == rtable.id) & \
                                          (ritable.site_id == site_id) & \
-                                         (ritable.quantity_transit < ritable.quantity) & \
+                                         (ritable.quantity_fulfil < ritable.quantity) & \
                                          (ritable.item_pack_id == iptable.id) & \
                                          (ritable.item_id == iitable.item_id) & \
                                          (iitable.site_id == site_id)
@@ -14995,9 +14997,11 @@ i18n.reg='%s'
                         site_query = (ritable.site_id.belongs(site_ids))
                     else:
                         site_query = (ritable.site_id == site_ids[0])
+                    # Note: In order to allow request items to go via transit hops, we only check quantity_fulfil
+                    # ToDo: Add req_item_site table to track each hop
                     query = (rtable.id == ritable.req_id) & \
                             site_query & \
-                            (ritable.quantity_transit < ritable.quantity)
+                            (ritable.quantity_fulfil < ritable.quantity)
                     if settings.get_inv_req_workflow():
                         query = (rtable.workflow_status == 3) & query
                     else:
