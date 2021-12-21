@@ -853,7 +853,7 @@
 'Data uploaded': 'تم رفع البيانات',
 'database %s select': 'اختر قاعدة البيانات بـ%s',
 'Database Development': 'تطوير قاعدة بيانات',
-'Date': '',
+'Date': 'تاريخ',
 'Date & Time': 'التاريخ والوقت',
 'Date and time this report relates to.': 'تاريخ و وقت هذا التقرير يتعلق بـ.',
 'Date Created': 'تاريخ الإنشاء',

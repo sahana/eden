@@ -722,7 +722,8 @@ def req_item():
     """
         RESTful CRUD controller for Request Items
 
-        @ToDo: Filter out fulfilled Items?
+        TODO:
+            Filter out fulfilled Items?
     """
 
     # Filter out Template Items

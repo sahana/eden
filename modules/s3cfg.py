@@ -4993,6 +4993,30 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Inventory Requisitions Settings
+    def get_inv_req_approvers(self):
+        """
+            Custom Function to get a list of Approvers for an
+            Inventory Requisition
+            - defaults to inv_req_approvers
+        """
+        return self.inv.get("req_approvers", None)
+
+    def get_inv_req_approvers_to_notify(self):
+        """
+            Custom Function to get a list of Approvers to Notify for an
+            Inventory Requisition
+            - defaults to inv_req_approvers_to_notify
+        """
+        return self.inv.get("req_approvers_to_notify", None)
+
+    def get_inv_req_is_approver(self):
+        """
+            Custom Function to lookup whether the currently logged-in person is an
+            Approver for an Inventory Requisition
+            - defaults to inv_req_is_approver
+        """
+        return self.inv.get("req_is_approver", None)
+
     def get_inv_req_copyable(self):
         """
             Provide a Copy button for Inventory Requisitions?

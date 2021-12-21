@@ -329,7 +329,8 @@ def inv_operators_for_sites(site_ids):
     """
         Determine to whom Alerts should be sent for specific Site(s)
 
-        @ToDo: Use site_contact instead?
+        TODO:
+            Use site_contact instead?
             + Much faster/more generic lookup for the Server
             - More to setup for the Users
             Need to allow visibility of HRM
@@ -788,7 +789,6 @@ class inv_Dashboard(S3CustomController):
         gtable = db.auth_group
         mtable = db.auth_membership
         query = (mtable.user_id == user_id) & \
-                (mtable.deleted == False) & \
                 (mtable.group_id == gtable.id) & \
                 (gtable.uuid.belongs("ORG_ADMIN",
                                      "logs_manager",

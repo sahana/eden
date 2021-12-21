@@ -68,7 +68,8 @@ __all__ = ("WarehouseModel",
            #"inv_remove",
            "inv_req_add_from_template", # Exported for Tasks
            #"inv_req_approve",
-           "inv_req_approvers",
+           #"inv_req_approvers",
+           #"inv_req_approvers_to_notify",
            #"inv_req_copy_all",
            #"inv_req_commit_all",
            "inv_req_controller",
@@ -4053,6 +4054,7 @@ class InventoryRequisitionItemModel(S3Model):
 
         settings = current.deployment_settings
         quantities_writable = settings.get_inv_req_item_quantities_writable()
+        prompt_match = settings.get_inv_req_prompt_match()
         use_commit = settings.get_inv_use_commit()
         show_qty_transit = settings.get_inv_req_show_quantity_transit()
         track_pack_values = settings.get_inv_req_pack_values()
@@ -4174,7 +4176,7 @@ $.filterOptionsS3({
  'fncRepresent':S3.supply.fncRepresentItem
 })''')
 
-        if settings.get_inv_req_prompt_match():
+        if prompt_match:
             # Shows the inventory items which match a requested item
             create_next = URL(c="inv", f="req_item",
                               args = ["[id]", "inv_item"],
@@ -4186,7 +4188,7 @@ $.filterOptionsS3({
                        "item_pack_id",
                        ]
         lappend = list_fields.append
-        if settings.get_inv_req_prompt_match():
+        if prompt_match:
             lappend("site_id")
         lappend("quantity")
         if use_commit:
@@ -4217,6 +4219,11 @@ $.filterOptionsS3({
         else:
             ondelete = None
 
+        if settings.get_inv_req_reserve_items():
+            ondelete_cascade = self.req_item_ondelete_cascade
+        else:
+            ondelete_cascade = None
+
         self.configure(tablename,
                        create_next = create_next,
                        deduplicate = self.req_item_duplicate,
@@ -4226,6 +4233,7 @@ $.filterOptionsS3({
                        list_fields = list_fields,
                        onaccept = self.req_item_onaccept,
                        ondelete = ondelete,
+                       ondelete_cascade = ondelete_cascade,
                        # @ToDo: default realm to that of the req_id
                        #realm_entity = self.req_item_realm_entity,
                        super_entity = "supply_item_entity",
@@ -4259,21 +4267,28 @@ $.filterOptionsS3({
             On-accept actions for requested items:
                 - update committed/in-transit/fulfilled status of the request
                   when an item is added or quantity changed
+                - if the site requested from changes, then delete any reservations
+                    (putting items back into stock)
                 - add item category links for the request when adding an item
                   of a new item category
 
-            NB Calling update_realm_entity of the parent Req based on changed site_id is left to templates to do in custom onaccept (e.g. see RMS)
+            Note:
+                Calling update_realm_entity of the parent Req based on changed
+                site_id is left to templates to do in custom onaccept (e.g. see RMS)
         """
 
         db = current.db
+        s3db = current.s3db
 
-        form_vars = form.vars
+        form_vars_get = form.vars.get
 
-        req_id = form_vars.get("req_id")
-        if not req_id:
+        req_id = form_vars_get("req_id")
+        if req_id:
+            record_id = None
+        else:
             # Reload the record to get the req_id
-            record_id = form_vars.get("id")
-            table = current.s3db.inv_req_item
+            record_id = form_vars_get("id")
+            table = s3db.inv_req_item
             record = db(table.id == record_id).select(table.req_id,
                                                       limitby = (0, 1),
                                                       ).first()
@@ -4287,13 +4302,56 @@ $.filterOptionsS3({
         # Update Request Status
         inv_req_update_status(req_id)
 
-        if current.deployment_settings.get_inv_req_filter_by_item_category():
+        settings = current.deployment_settings
+
+        if settings.get_inv_req_reserve_items():
+            record = form.record
+            if record:
+                site_id = record.site_id
+                if site_id:
+                    new_site_id = form_vars_get("site_id")
+                    if not new_site_id:
+                        if not record_id:
+                            record_id = form_vars_get("id")
+                            table = s3db.inv_req_item
+                        record = db(table.id == record_id).select(table.site_id,
+                                                                  limitby = (0, 1),
+                                                                  ).first()
+                        new_site_id = record.site_id
+                    if new_site_id != site_id:
+                        # Remove any old reservations
+                        if not record_id:
+                            record_id = form_vars_get("id")
+                            table = s3db.inv_req_item
+                        db(table.id == record_id).update(quantity_reserved = 0)
+                        rbtable = s3db.inv_req_item_inv
+                        reservations = db(rbtable.req_item_id == record_id).select(rbtable.id,
+                                                                                   rbtable.inv_item_id,
+                                                                                   rbtable.layout_id,
+                                                                                   rbtable.quantity,
+                                                                                   )
+                        if reservations:
+                            iitable = s3db.inv_inv_item
+                            ibtable = s3db.inv_inv_item_bin
+                            for row in reservations:
+                                # Restore Inventory
+                                quantity = row.quantity
+                                inv_item_id = row.inv_item_id
+                                db(iitable.id == inv_item_id).update(quantity = iitable.quantity + quantity)
+                                layout_id = row.layout_id
+                                if layout_id:
+                                    query = (ibtable.inv_item_id == inv_item_id) & \
+                                            (ibtable.layout_id == layout_id)
+                                    db(query).update(qquantity = ibtable.quantity + quantity)
+                            db(rbtable.id.belongs([row.id for row in reservations])).delete()
+
+        if settings.get_inv_req_filter_by_item_category():
             # Update inv_req_item_category link table
-            item_id = form_vars.get("item_id")
+            item_id = form_vars_get("item_id")
             if item_id: # Field not present when coming from inv_req_from
                 citable = db.supply_catalog_item
                 cats = db(citable.item_id == item_id).select(citable.item_category_id)
-                rictable = current.s3db.inv_req_item_category
+                rictable = s3db.inv_req_item_category
                 for cat in cats:
                     item_category_id = cat.item_category_id
                     query = (rictable.deleted == False) & \
@@ -4315,13 +4373,19 @@ $.filterOptionsS3({
                 - delete item category links from the requisition when the last
                   item of a category is removed from the requisition
 
-            TODO: also update the committed/in-transit/fulfilled
-                  status of the requisition?
+            TODO:
+                If a template allows deleting of REQ Items which relate to
+                Committed/In-Transit or Fulfilled Requests then the REQ Status
+                should be updated accordingly
         """
 
         db = current.db
         s3db = current.db
+        #settings = current.deployment_settings
 
+        record_id = row.id
+
+        #if settings.get_inv_req_filter_by_item_category():
         table = db.inv_req_item
 
         if hasattr(row, "req_id") and hasattr(row, "item_id"):
@@ -4329,17 +4393,15 @@ $.filterOptionsS3({
             item_id = row.item_id
         else:
             # Read from deleted_fk
-            record_id = row.id
-
             # Load record
             record = db(table.id == record_id).select(table.deleted_fk,
                                                       limitby = (0, 1),
                                                       ).first()
-
+    
             deleted_fk = json.loads(record.deleted_fk)
             req_id = deleted_fk.get("req_id")
-            item_id = deleted_fk.get("item_id")
-
+        item_id = deleted_fk.get("item_id")
+    
         if req_id and item_id:
             citable = s3db.supply_catalog_item
             cats = db(citable.item_id == item_id).select(citable.item_category_id)
@@ -4361,6 +4423,43 @@ $.filterOptionsS3({
                                              filter = query,
                                              )
                     resource.delete(cascade = True)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def req_item_ondelete_cascade(row):
+        """
+            On-delete Cascade actions for requested items:
+                - delete any reservations (putting items back into stock)
+        """
+
+        db = current.db
+        s3db = current.db
+        #settings = current.deployment_settings
+
+        record_id = row.id
+
+        #if settings.get_inv_req_reserve_items():
+        # Remove any old reservations
+        rbtable = s3db.inv_req_item_inv
+        reservations = db(rbtable.req_item_id == record_id).select(rbtable.id,
+                                                                   rbtable.inv_item_id,
+                                                                   rbtable.layout_id,
+                                                                   rbtable.quantity,
+                                                                   )
+        if reservations:
+            iitable = s3db.inv_inv_item
+            ibtable = s3db.inv_inv_item_bin
+            for row in reservations:
+                # Restore Inventory
+                quantity = row.quantity
+                inv_item_id = row.inv_item_id
+                db(iitable.id == inv_item_id).update(quantity = iitable.quantity + quantity)
+                layout_id = row.layout_id
+                if layout_id:
+                    query = (ibtable.inv_item_id == inv_item_id) & \
+                            (ibtable.layout_id == layout_id)
+                    db(query).update(quantity = ibtable.quantity + quantity)
+            db(rbtable.id.belongs([row.id for row in reservations])).delete()
 
     # ---------------------------------------------------------------------
     @classmethod
@@ -6567,10 +6666,13 @@ def inv_adj_close(r, **attr):
 
             # Add the Bins
             for row in bins:
-                inv_bin_table.insert(inv_item_id = inv_item_id,
-                                     layout_id = row.layout_id,
-                                     quantity = row.quantity,
-                                     )
+                row = row.inv_adj_item_bin
+                layout_id = row.layout_id
+                if layout_id:
+                    inv_bin_table.insert(inv_item_id = inv_item_id,
+                                         layout_id = layout_id,
+                                         quantity = row.quantity,
+                                         )
 
             # Apply the realm entity
             inv_item["id"] = inv_item_id
@@ -10580,7 +10682,10 @@ def inv_req_approve(r, **attr):
                 tree = '"%s"' % URL(args = [req_id]),
                 )
 
-    approvers = inv_req_approvers(record.site_id)
+    approvers_lookup = current.deployment_settings.get_inv_req_approvers()
+    if not approvers_lookup:
+        approvers_lookup = inv_req_approvers
+    approvers = approvers_lookup(record)
     person_id = current.auth.s3_logged_in_person()
 
     # Check we have permission to approve the Request
@@ -10656,13 +10761,18 @@ def inv_req_approve(r, **attr):
                        }, separators=SEPARATORS)
 
 # =============================================================================
-def inv_req_approvers(site_id):
+def inv_req_approvers(record):
     """
         Return people permitted to Approve an Inventory Requisition
+
+        Defaults to looking up entries in the inv_req_approver table for the
+        REQ's site_id.
     """
 
     db = current.db
     s3db = current.s3db
+
+    site_id = record.site_id
 
     stable = s3db.org_site
     site_entity = db(stable.site_id == site_id).select(stable.instance_type,
@@ -10690,12 +10800,56 @@ def inv_req_approvers(site_id):
                             } for row in approvers}
 
 # =============================================================================
+def inv_req_approvers_to_notify(record):
+    """
+        Return a list of Approvers to Notify for an Inventory Requisition
+
+        Defaults to looking up entries in the inv_req_approver table for the
+        REQ's site_id.
+    """
+
+    from .pr import pr_get_ancestors
+
+    db = current.db
+    s3db = current.s3db
+
+    site_id = record.site_id
+    stable = s3db.org_site
+    site_entity = db(stable.site_id == site_id).select(stable.instance_type,
+                                                       limitby = (0, 1),
+                                                       ).first()
+    itable = s3db.table(site_entity.instance_type)
+    site = db(itable.site_id == site_id).select(itable.name, # Needed later for Message construction
+                                                itable.pe_id,
+                                                limitby = (0, 1),
+                                                ).first()
+    pe_id = site.pe_id
+    ancestors = pr_get_ancestors(pe_id)
+    pe_ids = ancestors + [pe_id]
+    atable = s3db.inv_req_approver
+    ptable = s3db.pr_person
+    ltable = s3db.pr_person_user
+    utable = db.auth_user
+
+    query = (atable.pe_id.belongs(pe_ids)) & \
+            (atable.person_id == ptable.id) & \
+            (ptable.pe_id == ltable.pe_id) & \
+            (ltable.user_id == utable.id)
+
+    approvers = db(query).select(ltable.pe_id,
+                                 #ltable.user_id, # For on_req_submit hook (e.g. RMS)
+                                 utable.language,
+                                 )
+    return approvers, site
+
+# =============================================================================
 def inv_req_copy_all(r, **attr):
     """
         Copy an existing Request
             - creates a req with req_item records
 
-        @ToDO: Convert to POST
+        TODO:
+            Convert to POST
     """
 
     db = current.db
@@ -10771,8 +10925,9 @@ def inv_req_commit_all(r, **attr):
         arg: req_id
         vars: site_id
 
-        @ToDo: Rewrite as Method
-        @ToDo: POST
+        TODO:
+            Rewrite as Method
+            POST
     """
 
     req_id = request.args[0]
@@ -11487,18 +11642,19 @@ $.filterOptionsS3({
                                       )
                     if r.component_name == "req_item" and \
                        settings.get_inv_req_prompt_match():
-                        table = r.component.table
-                        query = (table.site_id == None) & \
-                                (table.deleted == False)
-                        rows = db(query).select(table.id)
-                        restrict = [str(row.id) for row in rows]
+                        # Allow Items to be re-matched later (e.g. for Intermediate Hops), or just a change of plan
+                        #table = r.component.table
+                        #query = (table.site_id == None) & \
+                        #        (table.deleted == False)
+                        #rows = db(query).select(table.id)
+                        #restrict = [str(row.id) for row in rows]
                         s3.actions.append({"label": s3_str(T("Request from Facility")),
                                            "url": URL(c = "inv",
                                                       f = "req_item",
                                                       args = ["[id]", "inv_item"],
                                                       ),
                                            "_class": "action-btn",
-                                           "restrict": restrict,
+                                           #"restrict": restrict,
                                            })
 
                     elif r.component_name == "commit":
@@ -11866,31 +12022,10 @@ def inv_req_submit(r, **attr):
     db = current.db
 
     # Lookup Approver(s)
-    site_id = record.site_id
-    stable = s3db.org_site
-    site_entity = db(stable.site_id == site_id).select(stable.instance_type,
-                                                       limitby = (0, 1),
-                                                       ).first()
-    itable = s3db.table(site_entity.instance_type)
-    site = db(itable.site_id == site_id).select(itable.name, # Needed later for Message construction
-                                                itable.pe_id,
-                                                limitby = (0, 1),
-                                                ).first()
-    pe_id = site.pe_id
-    ancestors = s3db.pr_get_ancestors(pe_id)
-    pe_ids = ancestors + [pe_id]
-    atable = s3db.inv_req_approver
-    ptable = s3db.pr_person
-    ltable = s3db.pr_person_user
-    utable = db.auth_user
-    query = (atable.pe_id.belongs(pe_ids)) & \
-            (atable.person_id == ptable.id) & \
-            (ptable.pe_id == ltable.pe_id) & \
-            (ltable.user_id == utable.id)
-    approvers = db(query).select(ltable.pe_id,
-                                 ltable.user_id, # For custom hooks (e.g. RMS)
-                                 utable.language,
-                                 )
+    approvers_to_notify = current.deployment_settings.get_inv_req_approvers_to_notify()
+    if not approvers_to_notify:
+        approvers_to_notify = inv_req_approvers_to_notify
+    approvers, site = approvers_to_notify(record)
     if not approvers:
         error = T("No Request Approver defined")
         current.session.error = error
@@ -12001,7 +12136,7 @@ def inv_req_from(r, **attr):
                                       req_id = req_id,
                                       site_id = site_id, # For custom onaccepts (e.g. to set realm_entity)
                                       ),
-                       record = Storage(site_id = None),
+                       record = Storage(site_id = r.record.site_id),
                        )
         if not isinstance(onaccepts, (list, tuple)):
             onaccepts = [onaccepts]
@@ -12148,9 +12283,12 @@ $.filterOptionsS3({
     s3.crud.submit_button = T("Save")
 
 # =============================================================================
-def inv_req_is_approver(site_id):
+def inv_req_is_approver(record):
     """
         Check if User has permission to Approve an Inventory Requisition
+
+        Defaults to looking up entries in the inv_req_approver table for the
+        REQ's site_id.
     """
 
     auth = current.auth
@@ -12161,14 +12299,18 @@ def inv_req_is_approver(site_id):
 
     db = current.db
     s3db = current.s3db
+
     atable = s3db.inv_req_approver
+
     query = (atable.person_id == auth.s3_logged_in_person()) & \
             (atable.deleted == False)
+
     entities = db(query).select(atable.pe_id)
     if not entities:
         # Not an Approver for any
         return False
 
+    site_id = record.site_id
     pe_ids = [row.pe_id for row in entities]
 
     stable = s3db.org_site
@@ -12186,8 +12328,9 @@ def inv_req_is_approver(site_id):
         return True
 
     # Check for child entities
+    from .pr import pr_get_descendants
     entity_types = ["org_organisation"] + list(auth.org_site_types.keys())
-    child_pe_ids = s3db.pr_get_descendants(pe_ids, entity_types=entity_types)
+    child_pe_ids = pr_get_descendants(pe_ids, entity_types=entity_types)
     if pe_id in child_pe_ids:
         # Permitted via child entity
         return True
@@ -13325,7 +13468,10 @@ def inv_req_rheader(r, check_page=False):
                             s3.rfooter = TAG[""](submit_btn)
 
                     elif workflow_status == 2: # Submitted
-                        if inv_req_is_approver(site_id):
+                        is_approver = settings.get_inv_req_is_approver()
+                        if not is_approver:
+                            is_approver = inv_req_is_approver
+                        if is_approver(record):
                             # Have they already approved?
                             atable = s3db.inv_req_approver_req
                             query = (atable.req_id == req_id) & \
