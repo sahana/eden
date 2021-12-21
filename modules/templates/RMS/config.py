@@ -6511,11 +6511,15 @@ Thank you"""
                             ))
         req_ref = record.req_ref
         date_required = record.date_required
-        date_represent = S3DateTime.date_represent # We want Dates not datetime which table.date_required uses
         send_email = current.msg.send_by_pe_id
         subject_T = T("Request Approved for Items from your Warehouse")
-        message_T = T("A new Request, %(reference)s, has been Approved for shipment from %(site)s by %(date_required)s. Please review at: %(url)s")
-        alert_T = T("Request %(reference)s for items from %(site)s by %(date_required)s")
+        if date_required:
+            date_represent = S3DateTime.date_represent # We want Dates not datetime which table.date_required uses
+            message_T = T("A new Request, %(reference)s, has been Approved for shipment from %(site)s by %(date_required)s. Please review at: %(url)s")
+            alert_T = T("Request %(reference)s for items from %(site)s by %(date_required)s")
+        else:
+            message_T = T("A new Request, %(reference)s, has been Approved for shipment from %(site)s. Please review at: %(url)s")
+            alert_T = T("Request %(reference)s for items from %(site)s")
 
         insert = s3db.auth_user_notification.insert
         sites = inv_operators_for_sites(site_ids)
@@ -6533,18 +6537,27 @@ Thank you"""
                 languages[language].append((row["pr_person_user.pe_id"], row["pr_person_user.user_id"]))
             for language in languages:
                 T.force(language)
-                session_s3.language = language # for date_represent
-                date = date_represent(date_required)
                 subject = "%s: %s" % (s3_str(subject_T), req_ref)
-                message = s3_str(message_T) % {"date_required": date,
+                if date_required:
+                    session_s3.language = language # for date_represent
+                    date = date_represent(date_required)
+                    message = s3_str(message_T) % {"date_required": date,
+                                                   "reference": req_ref,
+                                                   "site": site_name,
+                                                   "url": url,
+                                                   }
+                    alert = s3_str(alert_T) % {"date_required": date,
                                                "reference": req_ref,
                                                "site": site_name,
-                                               "url": url,
                                                }
-                alert = s3_str(alert_T) % {"date_required": date,
-                                           "reference": req_ref,
-                                           "site": site_name,
-                                           }
+                else:
+                    message = s3_str(message_T) % {"reference": req_ref,
+                                                   "site": site_name,
+                                                   "url": url,
+                                                   }
+                    alert = s3_str(alert_T) % {"reference": req_ref,
+                                               "site": site_name,
+                                               }
 
                 users = languages[language]
                 for user in users:
@@ -6587,13 +6600,17 @@ Thank you"""
                             ))
         req_ref = record.req_ref
         date_required = record.date_required
-        date_represent = S3DateTime.date_represent # We want Dates not datetime which table.date_required uses
         requester = s3_fullname(record.requester_id)
         site_name = site.name
         send_email = current.msg.send_by_pe_id
         subject_T = T("Request submitted for Approval")
-        message_T = T("A new Request, %(reference)s, has been submitted for Approval by %(person)s for delivery to %(site)s by %(date_required)s. Please review at: %(url)s")
-        alert_T = T("A new Request, %(reference)s, has been submitted for Approval by %(person)s for delivery to %(site)s by %(date_required)s")
+        if date_required:
+            date_represent = S3DateTime.date_represent # We want Dates not datetime which table.date_required uses
+            message_T = T("A new Request, %(reference)s, has been submitted for Approval by %(person)s for delivery to %(site)s by %(date_required)s. Please review at: %(url)s")
+            alert_T = T("A new Request, %(reference)s, has been submitted for Approval by %(person)s for delivery to %(site)s by %(date_required)s")
+        else:
+            message_T = T("A new Request, %(reference)s, has been submitted for Approval by %(person)s for delivery to %(site)s. Please review at: %(url)s")
+            alert_T = T("A new Request, %(reference)s, has been submitted for Approval by %(person)s for delivery to %(site)s")
 
         insert = s3db.auth_user_notification.insert
 
@@ -6606,20 +6623,32 @@ Thank you"""
             languages[language].append((row["pr_person_user.pe_id"], row["pr_person_user.user_id"]))
         for language in languages:
             T.force(language)
-            session_s3.language = language # for date_represent
-            date = date_represent(date_required)
             subject = "%s: %s" % (s3_str(subject_T), req_ref)
-            message = s3_str(message_T) % {"date_required": date_represent(date_required),
+            if date_required:
+                session_s3.language = language # for date_represent
+                date = date_represent(date_required)
+                message = s3_str(message_T) % {"date_required": date,
+                                               "reference": req_ref,
+                                               "person": requester,
+                                               "site": site_name,
+                                               "url": url,
+                                               }
+                alert = s3_str(alert_T) % {"date_required": date,
                                            "reference": req_ref,
                                            "person": requester,
                                            "site": site_name,
-                                           "url": url,
                                            }
-            alert = s3_str(alert_T) % {"date_required": date,
-                                       "reference": req_ref,
-                                       "person": requester,
-                                       "site": site_name,
-                                       }
+            else:
+                message = s3_str(message_T) % {"reference": req_ref,
+                                               "person": requester,
+                                               "site": site_name,
+                                               "url": url,
+                                               }
+                alert = s3_str(alert_T) % {"reference": req_ref,
+                                           "person": requester,
+                                           "site": site_name,
+                                           }
+                
 
             users = languages[language]
             for user in users:
