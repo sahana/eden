@@ -39,6 +39,7 @@ $(document).ready(function() {
             binnedQuantity = reqData.b || 0, // Total Quantity Reserved allocated from Stock
             invItems = reqData.i || {},
             reqQuantity = reqData.r,
+            reqQuantityField = $('#inv_req_item_quantity'),
             singleRow = 0,
             siteID = reqData.s,
             totalQuantity = totalQuantityField.val();  // Total Quantity Reserved
@@ -115,6 +116,19 @@ $(document).ready(function() {
             }
             // Validate the new bin again
             //newRowQuantityField.change();
+        });
+
+        // if reqQuantityField is editable then manage it's changes
+        reqQuantityField.change(function() {
+            reqQuantity = reqQuantityField.val();
+            if (reqQuantity) {
+                reqQuantity = parseFloat(reqQuantity);
+            } else {
+                reqQuantity = 0;
+            }
+            if (totalQuantity > reqQuantity) {
+                totalQuantityField.change();
+            }
         });
 
         newRowQuantityField.change(function() {

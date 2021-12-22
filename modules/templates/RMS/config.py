@@ -6926,12 +6926,12 @@ Thank you"""
                         settings.inv.req_prompt_match = True
                         
                         # Allow editing of the REQ items
+                        table.quantity.writable = True
                         # Do via req_item_inv_item
                         #table.site_id.writable = True
                         # Makes the reseved items much harder...simply allow deleting/inserting instead
                         #table.item_id.writable = True
                         #table.item_pack_id.writable = True
-                        #table.quantity.writable = True
                         s3db.configure("inv_req_item",
                                        deletable = True,
                                        editable = True,
