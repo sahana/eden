@@ -217,6 +217,7 @@ settings.import_template()
 #
 
 # e.g.
+#settings.security.self_registration = True
 #settings.base.system_name = T("Sahana TEST")
 #settings.base.prepopulate = ("MY_TEMPLATE_ONLY")
 #settings.base.prepopulate += ("default", "default/users")
