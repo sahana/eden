@@ -8830,7 +8830,7 @@ def inv_pick_list(r, **attr):
     record = r.record
 
     if record.status != SHIP_STATUS_IN_PROCESS:
-        r.error(405, T("Picking List can only be generated for Shipments being prepared"),
+        r.error(405, current.T("Picking List can only be generated for Shipments being prepared"),
                 next = '"%s"' % URL(c = "inv",
                                     f = "send",
                                     args = [send_id],
