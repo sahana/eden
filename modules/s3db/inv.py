@@ -7574,7 +7574,7 @@ def inv_gift_certificate(r, **attr):
                      )
         sheet.write_rich_text(row_index, 0, rich_text, style)
     else:
-        current_row.write(0, "Received by:", italic_style)
+        current_row.write(0, "Received by:", style)
 
     # Export to File
     output = BytesIO()
