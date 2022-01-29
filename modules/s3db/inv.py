@@ -8830,12 +8830,11 @@ def inv_pick_list(r, **attr):
     record = r.record
 
     if record.status != SHIP_STATUS_IN_PROCESS:
-        r.error(405, current.T("Picking List can only be generated for Shipments being prepared"),
-                next = '"%s"' % URL(c = "inv",
-                                    f = "send",
-                                    args = [send_id],
-                                    ),
-                )
+        current.session.error = current.T("Picking List can only be generated for Shipments being prepared")
+        redirect(URL(c = "inv",
+                     f = "send",
+                     args = [send_id],
+                     ))
 
     from s3.codecs.xls import S3XLS
 
