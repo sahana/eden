@@ -523,12 +523,12 @@ def do_js(minimize,
     try:
         os.chdir(rollup_dir)
     except FileNotFoundError:
-        info("Unable to build olgm as ol-rollup not found")
+        info("Unable to build ol6 as ol-rollup not found")
     else:
         os.system("npm install")
-        os.system("npm run-script build-olgm")
+        os.system("npm run-script build-ol6")
         output_dir = os.path.join("..", "..", "static", "scripts", "gis")
-        move_to("olgm.min.js", output_dir)
+        move_to("ol6.min.js", output_dir)
     finally:
         # Restore CWD
         os.chdir(cwd)

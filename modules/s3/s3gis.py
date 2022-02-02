@@ -7503,12 +7503,19 @@ class MAP2(DIV):
                            ]
 
         # Load CSS now as too late in xml()
-        stylesheets = current.response.s3.stylesheets
+        s3 = current.response.s3
+        stylesheets = s3.stylesheets
         stylesheet = "gis/ol.css"
         if stylesheet not in stylesheets:
             stylesheets.append(stylesheet)
         # @ToDo: Move this to Theme
         stylesheet = "gis/ol_popup.css"
+        if stylesheet not in stylesheets:
+            stylesheets.append(stylesheet)
+        if s3.debug:
+            stylesheet = "gis/ol-layerswitcher.css"
+        else:
+            stylesheet = "gis/ol-layerswitcher.min.css"
         if stylesheet not in stylesheets:
             stylesheets.append(stylesheet)
 
@@ -7848,7 +7855,7 @@ class MAP2(DIV):
             else:
                 error_message = DIV(
                     "Map cannot display without GIS config!",  # Deliberately not T() to save unneccessary load on translators
-                    _class="mapError"
+                    _class = "mapError",
                     )
 
             self.components = [error_message]
@@ -7868,6 +7875,15 @@ class MAP2(DIV):
         script = "/%s/static/scripts/gis/ol.js" % appname
         if script not in s3.scripts:
             s3.scripts.append(script)
+
+        # LayerSwitcher
+        # Compiled into ol6.min.js
+        #if s3.debug:
+        #    script = "/%s/static/scripts/gis/ol-layerswitcher.js" % appname
+        #else:
+        #    script = "/%s/static/scripts/gis/ol-layerswitcher.min.js" % appname
+        #if script not in s3.scripts_modules:
+        #    s3.scripts_modules.append(script)
 
         # S3 GIS
         if s3.debug:
@@ -9185,8 +9201,8 @@ class LayerOSM(Layer):
 
             if self.openlayers == 6:
                 # Mandatory attributes
-                output = {#"id": self.layer_id,
-                          #"name": self.safe_name,
+                output = {"i": self.layer_id,
+                          "n": self.safe_name,
                           #"url": self.url1,
                           }
 

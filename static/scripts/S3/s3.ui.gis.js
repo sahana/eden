@@ -1,13 +1,13 @@
 /*
  * Map Widget
  */
-import { googleInteractions, GoogleLayer, OLGoogleMaps } from '../gis/olgm.min.js'; // This includes some core OL too, which isn't ideal
+import { googleInteractions, GoogleLayer, OLGoogleMaps, LayerSwitcher, LayerGroup } from '../gis/ol6.min.js'; // This includes some core OL too, which isn't ideal
  
 (function(factory) {
     'use strict';
     // Use window. for Browser globals (not AMD or Node):
-    factory(window.jQuery, window._, window.ol, googleInteractions, GoogleLayer, OLGoogleMaps);
-})(function($, _, ol, googleInteractions, GoogleLayer, OLGoogleMaps) {
+    factory(window.jQuery, window._, window.ol, googleInteractions, GoogleLayer, OLGoogleMaps, LayerSwitcher, LayerGroup);
+})(function($, _, ol, googleInteractions, GoogleLayer, OLGoogleMaps, LayerSwitcher, LayerGroup) {
 
     'use strict';
     var mapID = 0;
@@ -77,10 +77,10 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps } from '../gis/olgm.min.j
                 extent: extent
             });*/
 
-            var layers = this.addLayers(options);
+            var allLayers = this.addLayers(options);
 
             var map_options = {
-                layers: layers,
+                layers: allLayers,
                 target: options.id,
                 view: new ol.View({
                     center: ol.proj.fromLonLat([options.lon, options.lat]),
@@ -96,6 +96,15 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps } from '../gis/olgm.min.j
 
             var map = new ol.Map(map_options);
             this.map = map;
+
+            // Layer Switcher
+            var layerSwitcher = new LayerSwitcher({
+                activationMode: 'click',
+                startActive: true,
+                tipLabel: 'Layers', // @ToDo: i18n
+                groupSelectStyle: 'none' // Can be 'children' [default], 'group' or 'none'
+            });
+            map.addControl(layerSwitcher);
 
             // Tooltip
             var tooltip = $('#' + options.id + ' .s3-gis-tooltip');
@@ -124,36 +133,55 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps } from '../gis/olgm.min.j
          */
         addLayers: function(options) {
 
-            var allLayers = [];
+            var baseLayers = [];
 
             // OpenStreetMap
             var layers_osm = options.layers_osm;
             if (undefined != layers_osm) {
-                this.addLayersOSM(allLayers, layers_osm);
+                this.addLayersOSM(baseLayers, layers_osm);
             }
 
             // Bing
             var Bing = options.Bing;
             if (undefined != Bing) {
-                this.addLayersBing(allLayers, Bing);
+                this.addLayersBing(baseLayers, Bing);
             }
 
             // Google
             var Google = options.Google;
             if (undefined != Google) {
-                this.addLayersGoogle(allLayers, Google);
+                this.addLayersGoogle(baseLayers, Google);
             }
 
-            // GeoJSON Layers
-            this.addLayersGeoJSON(allLayers, options);
+            // @ToDo: Add support for custom folders ('dir' in the layer def)
+            var overlayLayers = [];
 
-            return allLayers;
+            // GeoJSON Layers
+            this.addLayersGeoJSON(overlayLayers, options);
+
+            return [
+                // Need to use LayerGroup instead of ol.layer.Group to ensure that instanceof works inside ol-layerswitcher
+                //new ol.layer.Group({
+                new LayerGroup({
+                    title: 'Overlays', // @ToDo: i18n
+                    //combine: false,
+                    fold: 'open',
+                    layers: overlayLayers
+                    }),
+                new LayerGroup({
+                    title: 'Base Layers', // @ToDo: i18n
+                    //combine: false,
+                    fold: 'open',
+                    layers: baseLayers
+                    }),
+                ];
+
         },
 
         /**
          * Add OSM Layers to the Map
          */
-        addLayersOSM: function(allLayers, layers_osm) {
+        addLayersOSM: function(baseLayers, layers_osm) {
 
             var attributions,
                 base,
@@ -199,7 +227,13 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps } from '../gis/olgm.min.j
                            };
 
                 osmLayer = new ol.layer.Tile({
-                                source: new ol.source.OSM(options)
+                                source: new ol.source.OSM(options),
+                                // This is used to Save State
+                                s3_layer_id: layer.i,
+                                s3_layer_type: 'osm',
+                                // For LayerSwitcher
+                                title: layer.n,
+                                type: 'base' // @ToDo: respect layer.base
                             });
 
                 if (undefined != layer._base) {
@@ -209,14 +243,14 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps } from '../gis/olgm.min.j
                     osmLayer.setVisible(false);
                 }
 
-                allLayers.push(osmLayer);
+                baseLayers.push(osmLayer);
             }
         },
 
         /**
          * Add Bing Layers to the Map
          */
-        addLayersBing: function(allLayers, Bing) {
+        addLayersBing: function(baseLayers, Bing) {
 
             var apiKey = Bing.a,
                 bingLayer,
@@ -230,15 +264,18 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps } from '../gis/olgm.min.j
                 bingLayer = new ol.layer.Tile({
                                 source: new ol.source.BingMaps({
                                     key: apiKey,
-                                    imagerySet: layer.t,
-                                    name: layer.n,
-                                    // This is used to Save State
-                                    s3_layer_id: layer.i,
-                                    s3_layer_type: 'bing'
-                                    // use maxZoom 19 to see stretched tiles instead of the BingMaps
-                                    // "no photos at this zoom level" tiles
-                                    // maxZoom: 19
-                                })
+                                    imagerySet: layer.t
+                                }),
+                                //name: layer.n,
+                                // This is used to Save State
+                                s3_layer_id: layer.i,
+                                s3_layer_type: 'bing',
+                                // For LayerSwitcher
+                                title: layer.n,
+                                type: 'base'
+                                // use maxZoom 19 to see stretched tiles instead of the BingMaps
+                                // "no photos at this zoom level" tiles
+                                // maxZoom: 19
                             });
 
                 if (undefined != layer.b) {
@@ -248,14 +285,14 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps } from '../gis/olgm.min.j
                     bingLayer.setVisible(false);
                 }
 
-                allLayers.push(bingLayer);
+                baseLayers.push(bingLayer);
             }
         },
 
         /**
          * Add Google Layers to the Map
          */
-        addLayersGoogle: function(allLayers, Google) {
+        addLayersGoogle: function(baseLayers, Google) {
 
             var googleLayer,
                 layer,
@@ -267,10 +304,13 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps } from '../gis/olgm.min.j
 
                 googleLayer = new GoogleLayer({
                                 mapTypeId: layer.t,
-                                name: layer.n,
+                                //name: layer.n,
                                 // This is used to Save State
                                 s3_layer_id: layer.i,
-                                s3_layer_type: 'google'
+                                s3_layer_type: 'google',
+                                // For LayerSwitcher
+                                title: layer.n,
+                                type: 'base'
                             });
 
                 if (undefined != layer.b) {
@@ -280,7 +320,7 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps } from '../gis/olgm.min.j
                     googleLayer.setVisible(false);
                 }
 
-                allLayers.push(googleLayer);
+                baseLayers.push(googleLayer);
             }
         },
 
@@ -290,7 +330,7 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps } from '../gis/olgm.min.j
          * @ToDo: Combine these 7 layer types server-side to save a little bandwidth
          * @ToDo: Option to use Tiles (geojson-vt)
          */
-        addLayersGeoJSON: function(allLayers, options) {
+        addLayersGeoJSON: function(overlayLayers, options) {
 
             var feature_queries = options.feature_queries || [],
                 feature_resources = options.feature_resources || [],
@@ -340,23 +380,25 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps } from '../gis/olgm.min.j
                 */
 
                 vectorSource = new ol.source.Vector({
-                    url: url,
-                    format: format
+                    format: format,
+                    url: url
                 });
 
                 vectorLayer = new ol.layer.Vector({
                     source: vectorSource,
-                    style: style
+                    style: style,
+                    // For LayerSwitcher
+                    title: layer.name
                 });
 
-                if (undefined != layer.dir) {
-                    vectorLayer.dir = layer.dir;
-                }
+                //if (undefined != layer.dir) {
+                //    vectorLayer.dir = layer.dir;
+                //}
 
                 // Set the popup_format, even if empty
                 // - leave if not set (e.g. Feature Queries)
                 if (undefined != layer.popup_format) {
-                    vectorLayer.s3_popup_format = layer.popup_format;
+                    vectorLayer.set('s3_popup_format', layer.popup_format);
                 }
 
                 if (undefined != layer.type) {
@@ -365,13 +407,13 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps } from '../gis/olgm.min.j
                     // Feature Layers
                     layerType = 'feature';
                 }
-                vectorLayer.s3_layer_type = layerType;
+                vectorLayer.set('s3_layer_type', layerType);
 
                 if (undefined != layer.visibility) {
                     vectorLayer.setVisible(layer.visibility);
                 }
 
-                allLayers.push(vectorLayer);
+                overlayLayers.push(vectorLayer);
             }
         },
 
