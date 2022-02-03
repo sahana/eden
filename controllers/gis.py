@@ -3995,6 +3995,7 @@ def proxy():
 
         allowed_content_types = (
             "application/json", "text/json", "text/x-json",
+            "application/geo+json",
             "application/xml", "text/xml",
             "application/vnd.ogc.se_xml",           # OGC Service Exception
             "application/vnd.ogc.se+xml",           # OGC Service Exception

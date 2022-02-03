@@ -8707,7 +8707,8 @@ class LayerFeature(Layer):
                 # id is used for url_format
                 url = "%s.geojson?layer=%i&show_ids=true" % \
                     (URL(c=self.controller, f=self.function, args="report"),
-                     self.layer_id)
+                     self.layer_id,
+                     )
                 # Use gis/location controller in all reports
                 url_format = "%s/{id}.plain" % URL(c="gis", f="location")
             else:
@@ -8720,7 +8721,8 @@ class LayerFeature(Layer):
                 url = "%s.geojson?layer=%i&mcomponents=None&maxdepth=%s&show_ids=true" % \
                     (_url,
                      self.layer_id,
-                     maxdepth)
+                     maxdepth,
+                     )
                 url_format = "%s/{id}.plain" % _url
             if self.filter:
                 url = "%s&%s" % (url, self.filter)

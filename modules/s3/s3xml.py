@@ -2175,6 +2175,11 @@ class S3XML(S3Codec):
                 del root_dict["s3"]
             else:
                 root_dict["s3"] = json.loads(root_dict["s3"])
+        elif not root_dict and current.auth.permission.format == "geojson":
+            # Empty {} not liked by GeoJSON parsers, including OL6
+            root_dict = {"type": "FeatureCollection",
+                         "features": []
+                         }
 
         if as_dict:
             return root_dict

@@ -161,6 +161,7 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps, LayerSwitcher, LayerGrou
 
             return [
                 // Need to use LayerGroup instead of ol.layer.Group to ensure that instanceof works inside ol-layerswitcher
+                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof#instanceof_and_multiple_context_e.g._frames_or_windows
                 //new ol.layer.Group({
                 new LayerGroup({
                     title: 'Overlays', // @ToDo: i18n
@@ -332,11 +333,14 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps, LayerSwitcher, LayerGrou
          */
         addLayersGeoJSON: function(overlayLayers, options) {
 
-            var feature_queries = options.feature_queries || [],
+            var $this = this,
+                currentExtent,
+                feature_queries = options.feature_queries || [],
                 feature_resources = options.feature_resources || [],
                 format,
                 layer,
                 layerType,
+                layerUrl,
                 layers_feature = options.layers_feature || [],
                 layers_geojson = options.layers_geojson || [],
                 layers_georss = options.layers_georss || [],
@@ -344,7 +348,6 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps, LayerSwitcher, LayerGrou
                 layers_theme = options.layers_theme || [],
                 proxyHost = this.proxyHost,
                 style,
-                url,
                 vectorLayer,
                 vectorLayers = [],
                 vectorSource;
@@ -369,7 +372,14 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps, LayerSwitcher, LayerGrou
 
                 style = this.layerStyle(layer);
 
-                url = layer.url;
+                if (undefined != layer.type) {
+                    layerType = layer.type;
+                } else {
+                    // Feature Layers
+                    layerType = 'feature';
+                }
+
+                let url = layer.url; // We want a unique value per closure for the layerUrl function
                 if (url.startsWith('http')) {
                     // Layer read from remote server: add proxy to avoid issues with CORS
                     url = proxyHost.concat(url);
@@ -379,10 +389,30 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps, LayerSwitcher, LayerGrou
                     url = S3.Ap.concat(url);
                 */
 
+                if (layerType == 'feature') {
+                    // Add the current BBOX to the URL
+                    layerUrl = function(extent, resolution, projection) {
+                                var map = $this.map;
+                                currentExtent = map.getView().calculateExtent(map.getSize());
+                                currentExtent = ol.proj.transformExtent(currentExtent, projection, 'EPSG:4326');
+                                return (
+                                    url +
+                                    '&bbox=' +
+                                    currentExtent.join(',')
+                                );
+                            };
+                } else {
+                    layerUrl = url;
+                }
+
                 vectorSource = new ol.source.Vector({
                     format: format,
-                    url: url
+                    url: layerUrl
                 });
+
+                if (layerType == 'feature') {
+                    vectorSource.set('strategy', ol.loadingstrategy.bbox);
+                }
 
                 vectorLayer = new ol.layer.Vector({
                     source: vectorSource,
@@ -401,12 +431,6 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps, LayerSwitcher, LayerGrou
                     vectorLayer.set('s3_popup_format', layer.popup_format);
                 }
 
-                if (undefined != layer.type) {
-                    layerType = layer.type;
-                } else {
-                    // Feature Layers
-                    layerType = 'feature';
-                }
                 vectorLayer.set('s3_layer_type', layerType);
 
                 if (undefined != layer.visibility) {

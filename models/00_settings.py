@@ -287,6 +287,7 @@ s3_crud.navigate_away_confirm = settings.get_ui_navigate_away_confirm()
 # specified here:
 s3.content_type = {"tc": "application/atom+xml", # TableCast feeds
                    "rss": "application/rss+xml", # RSS
+                   "geojson": "application/geo+json", # GeoJSON
                    "georss": "application/rss+xml", # GeoRSS
                    "kml": "application/vnd.google-earth.kml+xml", # KML
                    }
