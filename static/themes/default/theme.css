@@ -207,6 +207,34 @@ body.rtl .about-menu {
   text-align: right;
 }
 
+/* Footer */
+/* line 2, ../scss/theme/_footer.scss */
+#footer {
+  background: transparent;
+  padding-top: 20px;
+  border-top: 1px solid #F0F0F0;
+  margin-top: 20px;
+  margin-bottom: 1rem;
+}
+
+/* line 43, ../scss/theme/_footer.scss */
+#poweredby {
+  margin-right: 0.5rem;
+  text-align: right;
+}
+/* line 46, ../scss/theme/_footer.scss */
+#poweredby a {
+  color: #999;
+  text-decoration: none;
+  font-size: 0.8rem;
+  margin-left: 0.2rem;
+}
+
+/* line 54, ../scss/theme/_footer.scss */
+body.rtl #poweredby {
+  text-align: left;
+}
+
 /* General forms */
 /* line 22, ../scss/theme/_forms.scss */
 form {

@@ -173,47 +173,4 @@ body.rtl {
     }
 }
 
-/* Footer */
-#footer {
-    background: $footer_bgcolor;
-    padding-top: 20px;
-    @if $footer_min_height {
-        min-height: $footer_min_height;
-    }
-    border-top: 1px solid #F0F0F0;
-    margin-top: $footer_top_margin;
-    margin-bottom: 1rem;
-}
-#poweredby {
-    margin-right: 0.5rem;
-    text-align: right;
-    a {
-        color: $footer_fgcolor;
-        text-decoration: none;
-        font-size: 0.8rem;
-        margin-left: 0.2rem;
-    }
-}
-body.rtl {
-    #poweredby {
-        text-align: left;
-    }
-}
-
-// About Menu (in footer)
-.about-menu {
-    color: $footer_fgcolor;
-    a {
-        color: $footer_fgcolor;
-    }
-    text-align: left;
-    margin-left: 0;
-    margin-right: 0;
-}
-body.rtl {
-    .about-menu {
-        text-align: right;
-    }
-}
-
 // END ========================================================================
