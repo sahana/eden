@@ -69,7 +69,7 @@
 
     $(document).ready(function() {
         setAPIFields();
-        $('#sync_repository_apitype').unbind('.sync').bind('change.sync', function() {
+        $('#sync_repository_apitype').off('.sync').on('change.sync', function() {
             setAPIFields();
         });
     });

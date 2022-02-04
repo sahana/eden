@@ -228,6 +228,18 @@ def region():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def organisation_region():
+    """
+        RESTful CRUD controller
+        - just used for options.s3json lookups
+    """
+
+    s3.prep = lambda r: \
+        r.representation == "s3json" and r.method == "options"
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def sector():
     """ RESTful CRUD controller """
 

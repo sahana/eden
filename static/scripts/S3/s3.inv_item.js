@@ -52,7 +52,7 @@ $(document).ready(function() {
                 trees = $('div[id^="sub_defaultbin_defaultbin_i_layout_id"].s3-hierarchy-widget'); // There will be 3
 
             if (trees.length) {
-                siteField.change(function() {
+                siteField.on('change', function() {
                     // Remove all Bin allocations
                     inlineComponent.inlinecomponent('removeRows');
                     siteID = siteField.val();
@@ -154,7 +154,7 @@ $(document).ready(function() {
             oldPackQuantity = PackQuantity;
         });
 
-        totalQuantityField.change(function() {
+        totalQuantityField.on('change', function() {
             totalQuantity = totalQuantityField.val();
             if (totalQuantity) {
                 totalQuantity = parseFloat(totalQuantity);
@@ -167,16 +167,16 @@ $(document).ready(function() {
                 message = 'Total Quantity reduced to Quantity in Bins';
                 error = $('<div class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
                 totalQuantityField.val(binnedQuantityPacked)
-                                  .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                                  .parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                     $(this).fadeOut('slow').remove();
                     return false;
                 });
             }
             // Validate the new bin again
-            newBinQuantityField.change();
+            newBinQuantityField.trigger('change');
         });
 
-        newBinQuantityField.change(function() {
+        newBinQuantityField.on('change', function() {
             binQuantity = newBinQuantityField.val();
             if (binQuantity) {
                 binQuantity = parseFloat(binQuantity);
@@ -187,7 +187,7 @@ $(document).ready(function() {
                     message = 'Bin Quantity reduced to Available Quantity';
                     error = $('<div class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
                     newBinQuantityField.val(availableQuantity)
-                                       .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                                       .parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                         $(this).fadeOut('slow').remove();
                         return false;
                     });
@@ -195,7 +195,7 @@ $(document).ready(function() {
             }
         });
 
-        oldBinQuantityField.change(function() {
+        oldBinQuantityField.on('change', function() {
             binQuantity = oldBinQuantityField.val();
             if (binQuantity) {
                 binQuantity = parseFloat(binQuantity);
@@ -206,7 +206,7 @@ $(document).ready(function() {
                     message = 'Bin Quantity reduced to Available Quantity';
                     error = $('<div class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
                     oldBinQuantityField.val(availableQuantity)
-                                       .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                                       .parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                         $(this).fadeOut('slow').remove();
                         return false;
                     });
@@ -224,7 +224,7 @@ $(document).ready(function() {
             }
         });
 
-        $('#rdy-defaultbin-0').click(function() {
+        $('#rdy-defaultbin-0').on('click', function() {
             // read-only row has been opened for editing
             // - Tick clicked to save changes
             binQuantity = oldBinQuantityField.val();
@@ -234,7 +234,7 @@ $(document).ready(function() {
                 binnedQuantity += (binQuantity * PackQuantity / startingPackQuantity);
             }
             // Validate the new bin again
-            newBinQuantityField.change();
+            newBinQuantityField.trigger('change');
         });
 
         inlineComponent.on('editCancelled', function(event, rowindex) {

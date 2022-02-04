@@ -410,7 +410,7 @@
 
             this._updateButtonText(selectedIDs);
             if (changed) {
-                input.change();
+                input.trigger('change');
                 $(this.element).trigger('select.s3hierarchy');
             }
             return true;
@@ -475,7 +475,7 @@
                 var wrapper = this.wrapper,
                     self = this;
                 if (self.options.multiple) {
-                    wrapper.unbind('mouseleave.hierarchicalopts')
+                    wrapper.off('mouseleave.hierarchicalopts')
                            .one('mouseleave.hierarchicalopts', function() {
                         window.setTimeout(function() {
                             self.closeMenu();
@@ -835,8 +835,8 @@
             $(window).off(this._namespace + '-mpos');
 
             $(this.tree).jstree('unset_focus')
-                        .unbind('click.hierarchicalopts')
-                        .unbind('mouseleave.hierarchicalopts');
+                        .off('click.hierarchicalopts')
+                        .off('mouseleave.hierarchicalopts');
             $(this.wrapper).fadeOut(50);
             this._isOpen = false;
             $(this.button).removeClass('ui-state-active');
@@ -961,28 +961,28 @@
 
             // Cancel auto-close when opening a context menu
             var icons = $.vakata.context.settings.icons;
-            $(document).bind('context_show.vakata', function() {
-                wrapper.unbind('mouseleave.hierarchicalopts');
+            $(document).on('context_show.vakata', function() {
+                wrapper.off('mouseleave.hierarchicalopts');
                 $.vakata.context.settings.icons = icons;
             });
 
             // Open/select/deselect nodes
-            tree.bind('select_node.jstree', function (event, data) {
+            tree.on('select_node.jstree', function (event, data) {
                 self._selectNode(data.node);
-            }).bind('deselect_node.jstree', function (event, data) {
+            }).on('deselect_node.jstree', function (event, data) {
                 self._deselectNode(data.node);
-            }).bind("open_node.jstree", function (event, data) {
+            }).on("open_node.jstree", function (event, data) {
                 self._openNode(data.node);
             });
 
             // Button events (mimic multiselect)
-            button.bind('click' + ns, function() {
+            button.on('click' + ns, function() {
                 if (!self._isOpen) {
                     self.openMenu();
                 } else {
                     self.closeMenu();
                 }
-            }).bind('keyup' + ns, function(event) {
+            }).on('keyup' + ns, function(event) {
                 event.preventDefault();
                 switch(event.keyCode) {
                     case 27: // esc
@@ -995,52 +995,52 @@
                         self.openMenu();
                         break;
                 }
-            }).bind('mouseenter' + ns, function() {
+            }).on('mouseenter' + ns, function() {
                 if (!button.hasClass('ui-state-disabled')) {
                     $(this).addClass('ui-state-hover');
                 }
-            }).bind('mouseleave' + ns, function() {
+            }).on('mouseleave' + ns, function() {
                 $(this).removeClass('ui-state-hover');
-            }).bind('focus' + ns, function() {
+            }).on('focus' + ns, function() {
                 if (!button.hasClass('ui-state-disabled')) {
                     $(this).addClass('ui-state-focus');
                 }
-            }).bind('blur' + ns, function() {
+            }).on('blur' + ns, function() {
                 $(this).removeClass('ui-state-focus');
             });
 
             if (opts.multiple && opts.bulkSelect && !opts.cascadeOptionInTree) {
                 // Bulk selection/de-selection from separate header
                 wrapper.find('.s3-hierarchy-select-all')
-                    .bind('click' + ns, function(event) {
+                    .on('click' + ns, function(event) {
                     event.preventDefault();
                     inst.select_all();
                     self._updateSelectedNodes();
                 });
                 wrapper.find('.s3-hierarchy-deselect-all')
-                    .bind('click' + ns, function(event) {
+                    .on('click' + ns, function(event) {
                     event.preventDefault();
                     inst.deselect_all();
                     self._updateSelectedNodes();
                 });
                 // Prevent propagation of click/mousedown events
                 wrapper.find('.s3-hierarchy-header')
-                       .bind('click' + ns, function(event) {
+                       .on('click' + ns, function(event) {
                     event.preventDefault();
                     event.stopPropagation();
-                }).bind('mousedown' + ns, function(event) {
+                }).on('mousedown' + ns, function(event) {
                     event.preventDefault();
                     event.stopPropagation();
                 });
             }
 
             // Auto-close when clicking outside the menu or button
-            $(document).bind('mousedown' + ns, function(event) {
+            $(document).on('mousedown' + ns, function(event) {
 
                 var target = event.target;
                 if ($('.jstree-contextmenu').has(target).length || event.which == 3) {
                     // Cancel auto-close when opening/interacting with context menu
-                    wrapper.unbind('mouseleave.hierarchicalopts');
+                    wrapper.off('mouseleave.hierarchicalopts');
                     return true;
                 }
                 if (!tree.is(target) && !button.is(target) &&
@@ -1061,13 +1061,13 @@
                 button = $(this.button),
                 ns = this._namespace;
 
-            tree.unbind('select_node.jstree')
-                .unbind('deselect_node.jstree')
-                .unbind('loaded.jstree')
-                .unbind('open_node.jstree');
+            tree.off('select_node.jstree')
+                .off('deselect_node.jstree')
+                .off('loaded.jstree')
+                .off('open_node.jstree');
 
-            $(this.button).unbind(ns);
-            $(document).unbind(ns);
+            $(this.button).off(ns);
+            $(document).off(ns);
 
             return true;
         }

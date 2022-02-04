@@ -30,6 +30,7 @@
 __all__ = ("S3Request",
            "S3Method",
            "s3_request",
+           "CONTENT_TYPES",
            )
 
 import json
@@ -49,6 +50,15 @@ from .s3utils import s3_get_extension, s3_keep_messages, s3_remove_last_record_i
 
 REGEX_FILTER = re.compile(r".+\..+|.*\(.+\).*")
 HTTP_METHODS = ("GET", "PUT", "POST", "DELETE")
+# Content Type Headers, default is application/xml for XML formats
+# and text/x-json for JSON formats, other content types must be
+# specified here:
+CONTENT_TYPES = {"tc": "application/atom+xml", # TableCast feeds
+                 "rss": "application/rss+xml", # RSS
+                 "geojson": "application/geo+json", # GeoJSON
+                 "georss": "application/rss+xml", # GeoRSS
+                 "kml": "application/vnd.google-earth.kml+xml", # KML
+                 }
 
 # =============================================================================
 class S3Request:
@@ -675,8 +685,8 @@ class S3Request:
             response.view = "xml.html"
 
         # Content type
-        response.headers["Content-Type"] = s3.content_type.get(representation,
-                                                               "text/html")
+        response.headers["Content-Type"] = CONTENT_TYPES.get(representation,
+                                                             "text/html")
 
         # Custom action?
         if not self.custom_action:
@@ -981,8 +991,8 @@ class S3Request:
         else:
             as_json = False
             default = "text/xml"
-        headers["Content-Type"] = s3.content_type.get(representation,
-                                                      default)
+        headers["Content-Type"] = CONTENT_TYPES.get(representation,
+                                                    default)
 
         # Export the resource
         resource = r.resource

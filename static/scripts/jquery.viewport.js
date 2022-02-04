@@ -36,7 +36,7 @@
         return !$.rightofscreen(element, settings) && !$.leftofscreen(element, settings) && !$.belowthefold(element, settings) && !$.abovethetop(element, settings);
     };
     
-    $.extend($.expr[':'], {
+    $.extend($.expr.pseudos, {
         "below-the-fold": function(a, i, m) {
             return $.belowthefold(a, {threshold : 0});
         },

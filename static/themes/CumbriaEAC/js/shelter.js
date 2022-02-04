@@ -9,7 +9,7 @@ $(document).ready(function(){
         streetview_field.hide()
                         .after('<button class="btn tiny button streetview_edit">Edit</button>')
                         .after('<a href="' + streetview_url + '" target="_blank" id="cr_shelter_streetview_btn">' + streetview_url + '</a>');
-        $('#cr_shelter_sub_streetview_value').next().next().click(function(e) {
+        $('#cr_shelter_sub_streetview_value').next().next().on('click', function(e) {
             e.preventDefault(); // Stop form submission
             streetview_field.show()
                             .next().hide()

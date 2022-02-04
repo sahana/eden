@@ -47,7 +47,7 @@
         $('#' + map_id).removeClass('fullscreen');
     }
 
-    $('.gis_fullscreen_map-btn').click(function(evt) {
+    $('.gis_fullscreen_map-btn').on('click', function(evt) {
         if (navigator.appVersion.indexOf('MSIE') != -1) {
             // Not supported on IE => do full-page reload instead
             return;
@@ -70,17 +70,17 @@
         }
     });
 
-    $('body').bind('webkitfullscreenchange', function() {
+    $('body').on('webkitfullscreenchange', function() {
         if (!is_fullscreen())
             disable_fullscreen(map);
     });
 
-    $(document).bind('mozfullscreenchange', function() {
+    $(document).on('mozfullscreenchange', function() {
         if (!is_fullscreen())
             disable_fullscreen(map);
     });
 
-    $('body').bind('webkitfullscreenchange', function() {
+    $('body').on('webkitfullscreenchange', function() {
         if (!is_fullscreen())
             disable_fullscreen(map);
     });

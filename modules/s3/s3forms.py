@@ -252,7 +252,7 @@ class S3SQLForm:
                     else:
                         # Default script: hide form, show add-button
                         script = \
-'''$('.cancel-form-btn').click(function(){$('#%(hide)s').slideUp('medium',function(){$('#%(show)s').show()})})'''
+'''$('.cancel-form-btn').on('click',function(){$('#%(hide)s').slideUp('medium',function(){$('#%(show)s').show()})})'''
                     s3.jquery_ready.append(script % cancel)
                 elif s3.cancel is True:
                     cancel_button.add_class("s3-cancel")

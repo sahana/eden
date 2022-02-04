@@ -45,7 +45,7 @@ $(document).ready(function() {
             lookupSites(req_id);
         }
 
-        reqField.change(function() {
+        reqField.on('change', function() {
             req_id = reqField.val();
             lookupSites(req_id);
         });
@@ -93,6 +93,6 @@ $(document).ready(function() {
         };
 
         transportTypeChange();
-        transportTypeField.change(transportTypeChange);
+        transportTypeField.on('change', transportTypeChange);
     }
 });

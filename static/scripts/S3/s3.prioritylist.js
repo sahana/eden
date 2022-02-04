@@ -79,19 +79,19 @@
                 remove: this._remove
             }).disableSelection();
 
-            urgentButton.click(function() {
+            urgentButton.on('click', function() {
                 self.addNeed( 'urgent' );
             });
 
-            noNeedButton.click(function() {
+            noNeedButton.on('click', function() {
                 self.addNeed( 'no' );
             });
             
-            acceptingButton.click(function() {
+            acceptingButton.on('click', function() {
                 self.addNeed( 'need' );
             });
             
-            $( '.delete-need' ).live('click', function() {
+            $('.delete-need').on('click', function() {
                 self.deleteNeed( $(this).parent() );
             });
         },

@@ -1,213 +1,188 @@
-// Foundation by ZURB
-// foundation.zurb.com
+// Foundation for Sites
+// https://get.foundation
 // Licensed under MIT Open Source
 
-@import 'global';
-@import 'grid';
+////
+/// @group reveal
+////
 
-//
-// @name _reveal.scss
-// @dependencies _global.scss
-//
+/// Default background color of a modal.
+/// @type Color
+$reveal-background: $white !default;
 
-$include-html-reveal-classes: $include-html-classes !default;
+/// Default width of a modal, with no class applied.
+/// @type Number
+$reveal-width: 600px !default;
 
-// We use these to control the style of the reveal overlay.
-$reveal-overlay-bg: rgba($black, .45) !default;
-$reveal-overlay-bg-old: $black !default;
+/// Default maximum width of a modal.
+/// @type Number
+$reveal-max-width: $global-width !default;
 
-// We use these to control the style of the modal itself.
-$reveal-modal-bg: $white !default;
-$reveal-position-top: rem-calc(100) !default;
-$reveal-default-width: 80% !default;
-$reveal-max-width: $row-width !default;
-$reveal-modal-padding: rem-calc(30) !default;
-$reveal-box-shadow: 0 0 10px rgba($black,.4) !default;
+/// Default padding inside a modal.
+/// @type Number
+$reveal-padding: $global-padding !default;
 
-// We use these to style the reveal close button
-$reveal-close-font-size: rem-calc(40) !default;
-$reveal-close-top: rem-calc(10) !default;
-$reveal-close-side: rem-calc(22) !default;
-$reveal-close-color: $base !default;
-$reveal-close-weight: $font-weight-bold !default;
+/// Default border around a modal.
+/// @type Number
+$reveal-border: 1px solid $medium-gray !default;
 
-// We use this to set the default radius used throughout the core.
+/// Default radius for modal.
+/// @type Number
 $reveal-radius: $global-radius !default;
-$reveal-round: $global-rounded !default;
 
-// We use these to control the modal border
-$reveal-border-style: solid !default;
-$reveal-border-width: 1px !default;
-$reveal-border-color: $steel !default;
+/// z-index for modals. The overlay uses this value, while the modal itself uses this value plus one.
+/// @type Number
+$reveal-zindex: 1005 !default;
 
-$reveal-modal-class: "reveal-modal" !default;
-$close-reveal-modal-class: "close-reveal-modal" !default;
+/// Background color of modal overlays.
+/// @type Color
+$reveal-overlay-background: rgba($black, 0.45) !default;
 
-// Set base z-index
-$z-index-base: 1005;
 
-//
-// @mixins
-//
+// Placeholder selector for medium-and-up modals
+// Prevents duplicate CSS when defining multiple Reveal sizes
+// This should be in the same breakpoint then `@mixin reveal-modal-width`
+@include breakpoint(medium) {
+  %reveal-centered {
+    right: auto;
+    left: auto;
+    margin: 0 auto;
+  }
+}
 
-// We use this to create the reveal background overlay styles
-@mixin reveal-bg( $include-z-index-value: true ) {
-  // position: absolute; // allows modal background to extend beyond window position
-  background: $reveal-overlay-bg-old; // Autoprefixer should be used to avoid such variables needed when Foundation for Sites can do so in the near future.
-  background: $reveal-overlay-bg;
-  bottom: 0;
-  display: none;
-  left: 0;
+
+/// Adds styles for a modal overlay.
+/// @param {Color} $background [$reveal-overlay-background] - Background color of the overlay.
+@mixin reveal-overlay($background: $reveal-overlay-background) {
   position: fixed;
-  right: 0;
   top: 0;
-  z-index: if( $include-z-index-value, $z-index-base - 1, auto );
-  #{$default-float}: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: $reveal-zindex;
+
+  display: none;
+  background-color: $background;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-// We use this mixin to create the structure of a reveal modal
-//
-// $base-style - Provides reveal base styles, can be set to false to override. Default: true, Options: false
-// $width - Sets reveal width Default: $reveal-default-width || 80%
-//
-@mixin reveal-modal-base( $base-style: true, $width:$reveal-default-width, $max-width:$reveal-max-width, $border-radius: $reveal-radius) {
-  @if $base-style {
-    border-radius: $border-radius;
-    display: none;
-    position: absolute;
-    top:0;
-    visibility: hidden;
+/// Adds base styles for a modal.
+@mixin reveal-modal-base {
+  @include disable-mouse-outline;
+  z-index: $reveal-zindex + 1;
+  // Workaround android browser z-index bug
+  backface-visibility: hidden;
+
+  display: none;
+  padding: $reveal-padding;
+
+  border: $reveal-border;
+  border-radius: $reveal-radius;
+  background-color: $reveal-background;
+
+  @include breakpoint(medium) {
+    min-height: 0;
+  }
+
+  // Make sure rows don't have a min-width on them
+  .column {
+    min-width: 0;
+  }
+
+  // Strip margins from the last item in the modal
+  > :last-child {
+    margin-bottom: 0;
+  }
+}
+
+/// Adjusts the width of a modal.
+/// @param {Number} $width - Width of the modal. Generally a percentage.
+/// @param {Number} $max-width [$reveal-max-width] - Maximum width of the modal.
+@mixin reveal-modal-width(
+  $width: $reveal-width,
+  $max-width: $reveal-max-width
+) {
+  // Extends must be made outside of breakpoints for compatibility with newer Sass versions (libsass v3.5)
+  @extend %reveal-centered;
+  @include breakpoint(medium) {
+    width: $width;
+    max-width: $max-width;
+  }
+}
+
+/// Creates a full-screen modal, which stretches the full width and height of the window.
+@mixin reveal-modal-fullscreen {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  min-height: 100%;
+  margin-left: 0;
+
+  border: 0;
+  border-radius: 0;
+}
+
+@mixin foundation-reveal {
+
+  /// Disables the scroll when Reveal is shown to prevent the background from shifting
+  html.is-reveal-open {
+    position: fixed;
     width: 100%;
-    z-index: $z-index-base;
-    #{$default-float}: 0;
+    overflow-y: hidden;
 
-    @media #{$small-only} {
-      min-height:100vh;
+    &.zf-has-scroll {
+      overflow-y: scroll;
+      -webkit-overflow-scrolling: touch;
     }
 
-    // Make sure rows don't have a min-width on them
-    .column, .columns { min-width: 0; }
-
-    // Get rid of margin from first and last element inside modal
-    > :first-child { margin-top: 0; }
-
-    > :last-child { margin-bottom: 0; }
-  }
-
-  @if $width {
-    @media #{$medium-up} {
-      left: 0;
-      margin: 0 auto;
-      max-width: $max-width;
-      right: 0;
-      width: $width;
+    body { // sass-lint:disable-line no-qualifying-elements
+      overflow-y: hidden;
     }
   }
-}
 
-// We use this to style the reveal modal defaults
-//
-// $bg - Sets background color of reveal modal. Default: $reveal-modal-bg || $white
-// $padding - Padding to apply to reveal modal. Default: $reveal-modal-padding.
-// $border - Choose whether reveal uses a border. Default: true, Options: false
-// $border-style - Set reveal border style. Default: $reveal-border-style || solid
-// $border-width - Width of border (i.e. 1px). Default: $reveal-border-width.
-// $border-color - Color of border. Default: $reveal-border-color.
-// $box-shadow - Choose whether or not to include the default box-shadow. Default: true, Options: false
-// $radius - If true, set to modal radius which is $global-radius || explicitly set radius amount in px (ex. $radius:10px). Default: false
-// $top-offset - Default: $reveal-position-top || 50px
-@mixin reveal-modal-style(
-  $bg:false,
-  $padding:false,
-  $border:false,
-  $border-style:$reveal-border-style,
-  $border-width:$reveal-border-width,
-  $border-color:$reveal-border-color,
-  $box-shadow:false,
-  $radius:false,
-  $top-offset:false) {
-
-  @if $bg { background-color: $bg; }
-  @if $padding != false { padding: $padding; }
-
-  @if $border { border: $border-style $border-width $border-color; }
-
-  // We can choose whether or not to include the default box-shadow.
-  @if $box-shadow {
-    box-shadow: $reveal-box-shadow;
-  }
-  @else{
-       box-shadow: none;
+  // Overlay
+  .reveal-overlay {
+    @include reveal-overlay;
   }
 
-  // We can control how much radius is used on the modal
-  @if $radius == true { @include radius($reveal-radius); }
-  @else if $radius { @include radius($radius); }
+  // Modal container
+  .reveal {
+    @include reveal-modal-base;
+    @include reveal-modal-width($reveal-width);
+    position: relative;
+    top: 100px;
+    margin-right: auto;
+    margin-left: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 
-  @if $top-offset {
-    @media #{$medium-up} {
-      top: $top-offset;
+    // Remove padding
+    &.collapse {
+      padding: 0;
     }
-  }
-}
 
-// We use this to create a close button for the reveal modal
-//
-// $color - Default: $reveal-close-color || $base
-@mixin reveal-close($color:$reveal-close-color) {
-  color: $color;
-  cursor: $cursor-pointer-value;
-  font-size: $reveal-close-font-size;
-  font-weight: $reveal-close-weight;
-  line-height: 1;
-  position: absolute;
-  top: $reveal-close-top;
-  #{$opposite-direction}: $reveal-close-side;
-  text-decoration: none;
-}
+    // Sizing classes
+    &.tiny  { @include reveal-modal-width(30%); }
+    &.small { @include reveal-modal-width(50%); }
+    &.large { @include reveal-modal-width(90%); }
 
-@include exports("reveal") {
-  @if $include-html-reveal-classes {
+    // Full-screen mode
+    &.full {
+      @include reveal-modal-fullscreen;
+    }
 
-    // Reveal Modals
-    .reveal-modal-bg { @include reveal-bg; }
+    @include breakpoint($-zf-zero-breakpoint only) {
+      @include reveal-modal-fullscreen;
+    }
 
-    .#{$reveal-modal-class} {
-      @include reveal-modal-base;
-      @include reveal-modal-style(
-        $bg:$reveal-modal-bg,
-        $padding:$reveal-modal-padding,
-        $border:true,
-        $box-shadow:true,
-        $radius:false,
-        $top-offset:$reveal-position-top
-      );
-
-      &.radius { @include reveal-modal-style($radius:true); }
-      &.round  { @include reveal-modal-style($radius:$reveal-round); }
-      &.collapse { @include reveal-modal-style($padding:0); }
-      &.tiny  { @include reveal-modal-base(false, 30%); }
-      &.small { @include reveal-modal-base(false, 40%); }
-      &.medium  { @include reveal-modal-base(false, 60%); }
-      &.large { @include reveal-modal-base(false, 70%); }
-      &.xlarge { @include reveal-modal-base(false, 95%); }
-      &.full {
-        @include reveal-modal-base(false, 100%);
-        height: 100vh;
-        height:100%;
-        left:0;
-        margin-left: 0 !important;
-        max-width: none !important;
-        min-height:100vh;
-        top:0;
-      }
-
-      // Modals pushed to back
-      &.toback {
-        z-index: $z-index-base - 2;
-      }
-
-      .#{$close-reveal-modal-class} { @include reveal-close; }
+    &.without-overlay {
+      position: fixed;
     }
   }
 }

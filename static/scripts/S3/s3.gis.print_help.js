@@ -1,5 +1,5 @@
 $(document).ready(function() {    
-    $('.gis_print_map-btn').click(function() {
+    $('.gis_print_map-btn').on('click', function() {
         if ($('#gis_print_help_popup').length) {
             $('#gis_print_help_popup').dialog('open');
         } else {

@@ -223,12 +223,12 @@
                 lchartTotals = widgetID + '-lchart-totals';
 
             $(chartOpts).append($(
-                '<span id="' + lchartTotals + '" class="tp-chart-icon tp-lchart"/>' +
+                '<span id="' + lchartTotals + '" class="tp-chart-icon tp-lchart"></span>' +
                 '<span class="tp-chart-label">Line Chart</span>'
             ));
 
             $(chartOpts).append($(
-                '<span id="' + bchartTotals + '" class="tp-chart-icon tp-bchart"/>' +
+                '<span id="' + bchartTotals + '" class="tp-chart-icon tp-bchart"></span>' +
                 '<span class="tp-chart-label">Bar Chart</span>'
             ));
 
@@ -779,11 +779,11 @@
                 widgetID = '#' + this.widget_id;
 
             // Show/hide report options
-            $(widgetID + '-options legend').click(function() {
+            $(widgetID + '-options legend').on('click', function() {
                 $(this).siblings().toggle();
                 $(this).children().toggle();
             });
-            $(widgetID + '-filters legend').click(function() {
+            $(widgetID + '-filters legend').on('click', function() {
                 $(this).siblings().toggle();
                 $(this).children().toggle();
             });
@@ -828,10 +828,10 @@
             }
 
             // Charts
-            $(widgetID + '-lchart-totals').click(function() {
+            $(widgetID + '-lchart-totals').on('click', function() {
                 self._renderChart({type: 'linechart', axis: 'totals'});
             });
-            $(widgetID + '-bchart-totals').click(function() {
+            $(widgetID + '-bchart-totals').on('click', function() {
                 self._renderChart({type: 'barchart', axis: 'totals'});
             });
         },
@@ -846,13 +846,13 @@
             $(window).off("resize.timeplot");
             $(widgetID + '-tp-form').off('optionChanged');
             $(widgetID + '-tp-form input.tp-submit').off('click.timeplot');
-            $(widgetID + '-time').unbind('change.autosubmit');
+            $(widgetID + '-time').off('change.autosubmit');
 
-            $(widgetID + '-options legend').unbind('click');
-            $(widgetID + '-filters legend').unbind('click');
+            $(widgetID + '-options legend').off('click');
+            $(widgetID + '-filters legend').off('click');
 
             $(widgetID + '-lchart-totals,' +
-              widgetID + '-bchart-totals').unbind('click');
+              widgetID + '-bchart-totals').off('click');
 
         }
     });

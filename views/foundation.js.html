@@ -1,22 +1,5 @@
-{{if s3.debug:}}
-<script src="/{{=appname}}/static/scripts/foundation/vendor/fastclick.js"></script>
-<script src="/{{=appname}}/static/scripts/foundation/foundation/foundation.js"></script>
-<script src="/{{=appname}}/static/scripts/foundation/foundation/foundation.abide.js"></script>
-<script src="/{{=appname}}/static/scripts/foundation/foundation/foundation.accordion.js"></script>
-<script src="/{{=appname}}/static/scripts/foundation/foundation/foundation.alert.js"></script>
-<script src="/{{=appname}}/static/scripts/foundation/foundation/foundation.clearing.js"></script>
-<script src="/{{=appname}}/static/scripts/foundation/foundation/foundation.dropdown.js"></script>
-<script src="/{{=appname}}/static/scripts/foundation/foundation/foundation.equalizer.js"></script>
-<script src="/{{=appname}}/static/scripts/foundation/foundation/foundation.interchange.js"></script>
-<script src="/{{=appname}}/static/scripts/foundation/foundation/foundation.joyride.js"></script>
-<script src="/{{=appname}}/static/scripts/foundation/foundation/foundation.magellan.js"></script>
-<script src="/{{=appname}}/static/scripts/foundation/foundation/foundation.offcanvas.js"></script>
-<script src="/{{=appname}}/static/scripts/foundation/foundation/foundation.reveal.js"></script>
-<script src="/{{=appname}}/static/scripts/foundation/foundation/foundation.tab.js"></script>
-<script src="/{{=appname}}/static/scripts/foundation/foundation/foundation.tooltip.js"></script>
-<script src="/{{=appname}}/static/scripts/foundation/foundation/foundation.topbar.js"></script>
-{{else:}}
-<script src="/{{=appname}}/static/scripts/foundation/vendor/fastclick.js"></script>
-<script src="/{{=appname}}/static/scripts/foundation/foundation.min.js"></script>
-{{pass}}
-<script>$(document).foundation({{if s3.js_foundation:}}{{=XML(s3.js_foundation)}}{{pass}})</script>
+{{if s3.cdn:}}<script src="https://cdn.jsdelivr.net/npm/what-input@5.2.10/dist/what-input.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/foundation-sites@6.7.4/dist/js/foundation.min.js"></script>{{else:}}
+<script src="/{{=appname}}/static/scripts/what-input.min.js"></script>
+<script src="/{{=appname}}/static/scripts/foundation/foundation.min.js"></script>{{pass}}
+<script>$(document).foundation()</script>

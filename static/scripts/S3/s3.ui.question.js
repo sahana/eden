@@ -193,7 +193,7 @@
             // Bind change event for all the input fields
             var selector = '#' + this.fieldname;
 
-            this.inputFields.bind('change' + ns, function() {
+            this.inputFields.on('change' + ns, function() {
                 self._collectData(this);
                 if (this.id.slice(-4) === 'type') {
                     self._handleForm();
@@ -202,7 +202,7 @@
 
             // Trigger the change event for Type field
             var form = $(selector).closest('form');
-            $(form).submit(function() {
+            $(form).on('submit', function() {
                 $(selector + '_type').trigger('change' + ns);
             });
 
@@ -216,8 +216,8 @@
             var ns = this.eventNamespace,
                 el = $(this.element);
 
-            this.inputFields.unbind(ns);
-            el.unbind(ns);
+            this.inputFields.off(ns);
+            el.off(ns);
 
             return true;
         }

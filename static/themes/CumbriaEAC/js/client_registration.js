@@ -11,7 +11,7 @@ $(document).ready(function(){
     ethnicity_other.hide();
     religion_other.hide();
 
-    ethnicity.change(function() {
+    ethnicity.on('change', function() {
         if (['White: Any other White background',
              'Mixed/Multiple ethnic groups: Any other Mixed/Multiple ethnic background',
              'Asian/Asian British: Any other Asian background',
@@ -26,7 +26,7 @@ $(document).ready(function(){
         }
     });
 
-    religion.change(function() {
+    religion.on('change', function() {
         if (religion.val() == 'other') {
             // Show
             religion_other.show();

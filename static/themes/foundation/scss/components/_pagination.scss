@@ -1,163 +1,201 @@
-// Foundation by ZURB
-// foundation.zurb.com
+// Foundation for Sites
+// https://get.foundation
 // Licensed under MIT Open Source
 
-@import 'global';
+////
+/// @group pagination
+////
 
-//
-// @variables
-//
-$include-pagination-classes: $include-html-classes !default;
+/// Font size of pagination items.
+/// @type Number
+$pagination-font-size: rem-calc(14) !default;
 
-// We use these to control the pagination container
-$pagination-height: rem-calc(24) !default;
-$pagination-margin: rem-calc(-5) !default;
+/// Default bottom margin of the pagination object.
+/// @type Number
+$pagination-margin-bottom: $global-margin !default;
 
-// We use these to set the list-item properties
-$pagination-li-float: $default-float !default;
-$pagination-li-height: rem-calc(24) !default;
-$pagination-li-font-color: $jet !default;
-$pagination-li-font-size: rem-calc(14) !default;
-$pagination-li-margin: rem-calc(5) !default;
+/// Text color of pagination items.
+/// @type Color
+$pagination-item-color: $black !default;
 
-// We use these for the pagination anchor links
-$pagination-link-pad: rem-calc(1 10 1) !default;
-$pagination-link-font-color: $aluminum !default;
-$pagination-link-active-bg: scale-color($white, $lightness: -10%) !default;
+/// Padding inside of pagination items.
+/// @type Number
+$pagination-item-padding: rem-calc(3 10) !default;
 
-// We use these for disabled anchor links
-$pagination-link-unavailable-cursor: default !default;
-$pagination-link-unavailable-font-color: $aluminum !default;
-$pagination-link-unavailable-bg-active: transparent !default;
+/// Right margin to separate pagination items.
+/// @type Number
+$pagination-item-spacing: rem-calc(1) !default;
 
-// We use these for currently selected anchor links
-$pagination-link-current-background: $primary-color !default;
-$pagination-link-current-font-color: $white !default;
-$pagination-link-current-font-weight: $font-weight-bold !default;
-$pagination-link-current-cursor: default !default;
-$pagination-link-current-active-bg: $primary-color !default;
+/// Default radius for pagination items.
+/// @type Number
+$pagination-radius: $global-radius !default;
 
-// @mixins
-//
-// Style the pagination container. Currently only used when centering elements.
-// $center - Default: false, Options: true
-@mixin pagination-container($center:false) {
-  @if $center { text-align: center; }
-}
+/// Background color of pagination items on hover.
+/// @type Color
+$pagination-item-background-hover: $light-gray !default;
 
-// @mixins
-// Style unavailable list items
-@mixin pagination-unavailable-item {
-  a, button {
-    cursor: $pagination-link-unavailable-cursor;
-    color: $pagination-link-unavailable-font-color;
-    pointer-events: none;
-  }
-  &:hover a,
-  & a:focus,
+/// Background color of pagination item for the current page.
+/// @type Color
+$pagination-item-background-current: $primary-color !default;
 
-  &:hover button,
-  & button:focus
-  { background: $pagination-link-unavailable-bg-active; }
-}
-// @mixins
-// Style the current list item. Do not assume that the current item has
-// an anchor <a> element.
-// $has-anchor - Default: true, Options: false
-@mixin pagination-current-item($has-anchor: true) {
-  @if $has-anchor {
-    a, button {
-      background: $pagination-link-current-background;
-      color: $pagination-link-current-font-color;
-      cursor: $pagination-link-current-cursor;
-      font-weight: $pagination-link-current-font-weight;
+/// Text color of the pagination item for the current page.
+/// @type Color
+$pagination-item-color-current: $white !default;
 
-      &:hover,
-      &:focus { background: $pagination-link-current-active-bg; }
-    }
-  } @else {
-    background: $pagination-link-current-background;
-    color: $pagination-link-current-font-color;
-    cursor: $pagination-link-current-cursor;
-    font-weight: $pagination-link-current-font-weight;
-    height: auto;
-    padding: $pagination-link-pad;
-    @include radius;
+/// Text color of a disabled pagination item.
+/// @type Color
+$pagination-item-color-disabled: $medium-gray !default;
 
-    &:hover,
-    &:focus { background: $pagination-link-current-active-bg; }
-  }
-}
+/// Color of the ellipsis in a pagination menu.
+/// @type Color
+$pagination-ellipsis-color: $black !default;
 
-// @mixins
-//
-// We use this mixin to set the properties for the creating Foundation pagination
-// $center - Left or center align the li elements. Default: false
-// $base-style - Sets base styles for pagination. Default: true, Options: false
-// $use-default-classes - Makes unavailable & current classes available for use. Default: true
-@mixin pagination($center:false, $base-style:true, $use-default-classes:true) {
+/// If `false`, don't display page number links on mobile, only next/previous links
+/// and optionally current page number.
+/// @type Boolean
+$pagination-mobile-items: false !default;
 
-  @if $base-style {
-    display: block;
-    margin-#{$default-float}: $pagination-margin;
-    min-height: $pagination-height;
+/// If `true`, display the current page number on mobile even if `$pagination-mobile-items` is set to `false`.
+/// This parameter will only override the visibility setting of the current item for `$pagination-mobile-items: false;`,
+/// it will not affect the current page number visibility when `$pagination-mobile-items` is set to `true`.
+/// @type Boolean
+$pagination-mobile-current-item: false !default;
 
-    li {
-      color: $pagination-li-font-color;
-      font-size: $pagination-li-font-size;
-      height: $pagination-li-height;
-      margin-#{$default-float}: $pagination-li-margin;
+/// If `true`, arrows are added to the next and previous links of pagination.
+/// @type Boolean
+$pagination-arrows: true !default;
 
-      a, button {
-        @include radius;
-        @include single-transition(background-color);
-        background: none;
-        color: $pagination-link-font-color;
-        display: block;
-        font-size: 1em;
-        font-weight: normal;
-        line-height: inherit;
-        padding: $pagination-link-pad;
-      }
+/// Content for the previous arrow when `$pagination-arrows` is `true`
+/// @type String
+$pagination-arrow-previous: '\00AB' !default;
 
-      &:hover a,
-      a:focus,
-      &:hover button,
-      button:focus
-      { background: $pagination-link-active-bg; }
+/// Content for the next arrow when `$pagination-arrows` is `true`
+/// @type String
+$pagination-arrow-next: '\00BB' !default;
 
-      @if $use-default-classes {
-        &.unavailable { @include pagination-unavailable-item(); }
-        &.current { @include pagination-current-item(); }
-      }
-    }
-  }
+/// Adds styles for a pagination container. Apply this to a `<ul>`.
+@mixin pagination-container (
+  $margin-bottom: $pagination-margin-bottom,
+  $font-size: $pagination-font-size,
+  $spacing: $pagination-item-spacing,
+  $radius: $pagination-radius,
+  $color: $pagination-item-color,
+  $padding: $pagination-item-padding,
+  $background-hover: $pagination-item-background-hover
+) {
+  @include clearfix;
+  margin-#{$global-left}: 0;
+  margin-bottom: $margin-bottom;
 
-  // Left or center align the li elements
+  // List item
   li {
-    @if $center {
+    margin-#{$global-right}: $spacing;
+    border-radius: $radius;
+    font-size: $font-size;
+
+    @if $pagination-mobile-items {
       display: inline-block;
-      float: none;
-    } @else {
-      display: block;
-      float: $pagination-li-float;
+    }
+    @else {
+      display: none;
+
+      &:last-child,
+      &:first-child {
+        display: inline-block;
+      }
+
+      @if $pagination-mobile-current-item {
+        &.current {
+          display: inline-block;
+        }
+      }
+
+      @include breakpoint(medium) {
+        display: inline-block;
+      }
+    }
+  }
+
+  // Page links
+  a,
+  button {
+    display: block;
+    padding: $padding;
+    border-radius: $radius;
+    color: $color;
+
+    &:hover {
+      background: $background-hover;
     }
   }
 }
 
-@include exports("pagination") {
-  @if $include-pagination-classes {
-    ul.pagination {
-      @include pagination;
+/// Adds styles for the current pagination item. Apply this to an `<a>`.
+@mixin pagination-item-current (
+  $padding: $pagination-item-padding,
+  $background-current: $pagination-item-background-current,
+  $color-current: $pagination-item-color-current
+) {
+  padding: $padding;
+  background: $background-current;
+  color: $color-current;
+  cursor: default;
+}
+
+/// Adds styles for a disabled pagination item. Apply this to an `<a>`.
+@mixin pagination-item-disabled (
+  $padding: $pagination-item-padding,
+  $color: $pagination-item-color-disabled
+) {
+  padding: $padding;
+  color: $color;
+  cursor: not-allowed;
+
+  &:hover {
+    background: transparent;
+  }
+}
+
+/// Adds styles for an ellipsis for use in a pagination list.
+@mixin pagination-ellipsis (
+  $padding: $pagination-item-padding,
+  $color: $pagination-ellipsis-color
+) {
+  padding: $padding;
+  content: '\2026';
+  color: $color;
+}
+
+@mixin foundation-pagination {
+  .pagination {
+    @include pagination-container;
+
+    .current {
+      @include pagination-item-current;
     }
 
-    /* Pagination centred wrapper */
-    .pagination-centered {
-      @include pagination-container(true);
+    .disabled {
+      @include pagination-item-disabled;
+    }
 
-      ul.pagination {
-        @include pagination(true, false);
-      }
+    .ellipsis::after {
+      @include pagination-ellipsis;
+    }
+  }
+
+  @if $pagination-arrows {
+    .pagination-previous a::before,
+    .pagination-previous.disabled::before {
+      display: inline-block;
+      margin-#{$global-right}: 0.5rem;
+      content: $pagination-arrow-previous;
+    }
+
+    .pagination-next a::after,
+    .pagination-next.disabled::after {
+      display: inline-block;
+      margin-#{$global-left}: 0.5rem;
+      content: $pagination-arrow-next;
     }
   }
 }

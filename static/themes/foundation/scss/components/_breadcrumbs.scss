@@ -1,133 +1,119 @@
-// Foundation by ZURB
-// foundation.zurb.com
+// Foundation for Sites
+// https://get.foundation
 // Licensed under MIT Open Source
 
-@import 'global';
+////
+/// @group breadcrumbs
+////
 
-//
-// Breadcrumb Variables
-//
-$include-html-nav-classes: $include-html-classes !default;
+/// Margin around a breadcrumbs container.
+/// @type Number
+$breadcrumbs-margin: 0 0 $global-margin 0 !default;
 
-// We use this to set the background color for the breadcrumb container.
-$crumb-bg: scale-color($secondary-color, $lightness: 55%) !default;
+/// Font size of breadcrumb links.
+/// @type Number
+$breadcrumbs-item-font-size: rem-calc(11) !default;
 
-// We use these to set the padding around the breadcrumbs.
-$crumb-padding: rem-calc(9 14 9) !default;
-$crumb-side-padding: rem-calc(12) !default;
+/// Color of breadcrumb links.
+/// @type Color
+$breadcrumbs-item-color: $primary-color !default;
 
-// We use these to control border styles.
-$crumb-function-factor: -10% !default;
-$crumb-border-size: 1px !default;
-$crumb-border-style: solid !default;
-$crumb-border-color: scale-color($crumb-bg, $lightness: $crumb-function-factor) !default;
-$crumb-radius: $global-radius !default;
+/// Color of the active breadcrumb link.
+/// @type Color
+$breadcrumbs-item-color-current: $black !default;
 
-// We use these to set various text styles for breadcrumbs.
-$crumb-line-height: rem-calc(11) !default;
-$crumb-font-size: rem-calc(11) !default;
-$crumb-font-color: $primary-color !default;
-$crumb-font-color-current: $oil !default;
-$crumb-font-color-unavailable: $aluminum !default;
-$crumb-font-transform: uppercase !default;
-$crumb-link-decor: underline !default;
+/// Opacity of disabled breadcrumb links.
+/// @type Number
+$breadcrumbs-item-color-disabled: $medium-gray !default;
 
-// We use these to control the slash between breadcrumbs
-$crumb-slash-color: $base !default;
-$crumb-slash: "/" !default;
-$crumb-slash-position: 1px !default;
+/// Margin between breadcrumb items.
+/// @type Number
+$breadcrumbs-item-margin: 0.75rem !default;
 
-//
-// Breadcrumb Mixins
-//
+/// If `true`, makes breadcrumb links uppercase.
+/// @type Boolean
+$breadcrumbs-item-uppercase: true !default;
 
-// We use this mixin to create a container around our breadcrumbs
-@mixin crumb-container {
-  border-style: $crumb-border-style;
-  border-width: $crumb-border-size;
-  display: block;
+/// If `true`, adds a seperator between breadcrumb links.
+/// @type Boolean
+$breadcrumbs-item-separator: true !default;
+
+// If it exists $breadcrumbs-item-slash is used to build $breadcrumbs-item-separator. See the documentation.
+@if variable-exists(breadcrumbs-item-slash) {
+  $breadcrumbs-item-separator: $breadcrumbs-item-slash;
+}
+
+/// Used character for the breadcrumb separator.
+/// @type Content
+$breadcrumbs-item-separator-item: '/' !default;
+
+/// Used character for the breadcrumb separator in rtl mode.
+/// @type Content
+$breadcrumbs-item-separator-item-rtl: '\\' !default;
+
+/// Color of breadcrumb item.
+/// @type Color
+$breadcrumbs-item-separator-color: $medium-gray !default;
+
+// If it exists $breadcrumbs-item-slash-color is used to build $breadcrumbs-item-separator-color. See the documentation.
+@if variable-exists(breadcrumbs-item-slash-color) {
+  $breadcrumbs-item-separator-color: $breadcrumbs-item-slash-color;
+}
+
+/// Adds styles for a breadcrumbs container, along with the styles for the `<li>` and `<a>` elements inside of it.
+@mixin breadcrumbs-container {
+  @include clearfix;
+  margin: $breadcrumbs-margin;
   list-style: none;
-  margin-#{$default-float}: 0;
-  overflow: hidden;
-  padding: $crumb-padding;
 
-  // We control which background color and border come through.
-  background-color: $crumb-bg;
-  border-color: $crumb-border-color;
-}
+  // Item wrapper
+  li {
+    float: #{$global-left};
 
-// We use this mixin to create breadcrumb styles from list items.
-@mixin crumbs {
+    font-size: $breadcrumbs-item-font-size;
+    color: $breadcrumbs-item-color-current;
+    cursor: default;
 
-  // A normal state will make the links look and act like clickable breadcrumbs.
-  color: $crumb-font-color;
-  float: $default-float;
-  font-size: $crumb-font-size;
-  line-height: $crumb-line-height;
-  margin: 0;
-  text-transform: $crumb-font-transform;
-
-  &:hover a, &:focus a { text-decoration: $crumb-link-decor; }
-
-  a {
-    color: $crumb-font-color;
-  }
-
-  // Current is for the link of the current page
-  &.current {
-    color: $crumb-font-color-current;
-    cursor: $cursor-default-value;
-    a {
-      color: $crumb-font-color-current;
-      cursor: $cursor-default-value;
+    @if $breadcrumbs-item-uppercase {
+      text-transform: uppercase;
     }
 
-    &:hover, &:hover a,
-    &:focus, &:focus a { text-decoration: none; }
-  }
+    @if $breadcrumbs-item-separator {
+      // Need to escape the backslash
+      $separator: if($global-text-direction == 'ltr', $breadcrumbs-item-separator-item, $breadcrumbs-item-separator-item-rtl);
 
-  // Unavailable removed color and link styles so it looks inactive.
-  &.unavailable {
-    color: $crumb-font-color-unavailable;
-    a { color: $crumb-font-color-unavailable; }
-
-    &:hover,
-    &:hover a,
-    &:focus,
-    a:focus {
-      color: $crumb-font-color-unavailable;
-      cursor: $cursor-disabled-value;
-      text-decoration: none;
-    }
-  }
-
-  &:after {
-    color: $crumb-slash-color;
-    content: "#{$crumb-slash}";
-    margin: 0 $crumb-side-padding;
-    position: relative;
-    top: $crumb-slash-position;
-  }
-
-  &:last-child:after {
-    content: " ";
-    margin: 0;
-  }
-}
-
-@include exports("breadcrumbs") {
-  @if $include-html-nav-classes {
-    .breadcrumbs {
-      @include crumb-container;
-      @include radius($crumb-radius);
-
-      > * {
-        @include crumbs;
+      &:not(:last-child) {
+        &::after {
+          position: relative;
+          margin: 0 $breadcrumbs-item-margin;
+          opacity: 1;
+          content: $separator;
+          color: $breadcrumbs-item-separator-color;
+        }
       }
     }
-    /* Accessibility - hides the backward slash */
-    [aria-label="breadcrumbs"] [aria-hidden="true"]:before {
-      content: "/";
+    @else {
+      margin-#{$global-right}: $breadcrumbs-item-margin;
+    }
+  }
+
+  // Page links
+  a {
+    color: $breadcrumbs-item-color;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+@mixin foundation-breadcrumbs {
+  .breadcrumbs {
+    @include breadcrumbs-container;
+
+    .disabled {
+      color: $breadcrumbs-item-color-disabled;
+      cursor: not-allowed;
     }
   }
 }

@@ -384,8 +384,8 @@ var TextAreaAutoResizer = function(
     resize();
     $text_area.css('padding-top', 0);
     $text_area.css('padding-bottom', 0);
-    $text_area.bind('keyup', resize);
-    $text_area.bind('focus', resize);
+    $text_area.on('keyup', resize);
+    $text_area.on('focus', resize);
     return resizer;
 };
 
@@ -475,7 +475,7 @@ var QueryBox = OpenLayers.Class(OpenLayers.Control, {
             style: 'margin-top:5px;'
         });
         $update_button.hide();
-        $update_button.click(function() {
+        $update_button.on('click', function() {
             query_box.updated(query_box.$text_area.val());
         });
         $query_box_div.append($text_area);
@@ -492,7 +492,7 @@ var QueryBox = OpenLayers.Class(OpenLayers.Control, {
             //$update_button.toggle($text_area.html() != query_box.previous_query);
         }
 
-        $text_area.bind('keyup', show_update_button);
+        $text_area.on('keyup', show_update_button);
 
         $text_area.show();
         query_box.resizer = new TextAreaAutoResizer(
@@ -671,7 +671,7 @@ var FilterBox = OpenLayers.Class(OpenLayers.Control, {
             style: 'margin-top:5px;'
         });
         $update_button.hide();
-        $update_button.click(function() {
+        $update_button.on('click', function() {
             filter_box.update_plugin();
         });
         $filter_box_div.append($text_area);
@@ -687,7 +687,7 @@ var FilterBox = OpenLayers.Class(OpenLayers.Control, {
             $update_button.show();
         }
 
-        $text_area.bind('keyup', show_update_button);
+        $text_area.on('keyup', show_update_button);
 
         $text_area.show();
         filter_box.resizer = new TextAreaAutoResizer(

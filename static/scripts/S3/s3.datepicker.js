@@ -95,19 +95,19 @@ $(document).ready(function() {
                 yearRange: 'c-100:c+100',
                 showButtonPanel: true
             }).one('click', function() {
-                $(this).focus()
+                $(this).trigger('focus')
             });
 
             // Insert a clear button next to the end_date which clears the field
             // Only insert if needed (options)
             if (options.show_clear_button) {
-                var clear_button = $('<button id="end_date_clear" class="btn date-clear-btn" type="button">'+ i18n.btn_clear +'</button>').click( function() {
+                var clear_button = $('<button id="end_date_clear" class="btn date-clear-btn" type="button">'+ i18n.btn_clear +'</button>').on('click', function() {
                     element.val('');
                 });
                 element.next().after(clear_button);
             }
 
-            element.unbind(self.namespace).on('click' + self.namespace, function() {
+            element.off(self.namespace).on('click' + self.namespace, function() {
                 select_start_date = start_element.datepicker('getDate');
                 if (select_start_date != null) {
                     self._inputclick();
@@ -216,28 +216,28 @@ $(document).ready(function() {
 
             // @ToDo: DRY (make an array instead of repeating the code and numbering the buttons)
             var btn_1 = $('<a class="ui-datepicker-current ui-state-default ui-priority-primary" type="button">'+ i18n.btn_1_label +'</a>');
-            btn_1.unbind(ns).bind('click' + ns, function() {
+            btn_1.off(ns).on('click' + ns, function() {
                 self.interval = 6;
                 self._end_date_automate(self.interval);
             });
             btn_1.appendTo(buttonPane);
 
             var btn_2 = $('<a class="ui-datepicker-current ui-state-default ui-priority-primary" type="button">'+ i18n.btn_2_label +'</a>');
-            btn_2.unbind(ns).bind('click' + ns, function() {
+            btn_2.off(ns).on('click' + ns, function() {
                 self.interval = 12;
                 self._end_date_automate(self.interval);
             });
             btn_2.appendTo(buttonPane);
 
             var btn_3 = $('<a class="ui-datepicker-current ui-state-default ui-priority-primary" type="button">'+ i18n.btn_3_label +'</a>');
-            btn_3.unbind(ns).bind('click' + ns, function() {
+            btn_3.off(ns).on('click' + ns, function() {
                 self.interval = 24;
                 self._end_date_automate(self.interval);
             });
             btn_3.appendTo(buttonPane);
 
             var btn_4 = $('<a class="ui-datepicker-current ui-state-default ui-priority-primary" type="button">'+ i18n.btn_4_label +'</a>');
-            btn_4.unbind(ns).bind('click' + ns, function() {
+            btn_4.off(ns).on('click' + ns, function() {
                 self.interval = 60;
                 self._end_date_automate(self.interval);
             });

@@ -69,7 +69,7 @@ from gluon.storage import Storage
 from s3dal import Rows
 from .s3datetime import s3_format_datetime, s3_parse_datetime
 from .s3fields import s3_all_meta_field_names
-from .s3rest import S3Method
+from .s3rest import CONTENT_TYPES, S3Method
 from .s3rtb import S3ResourceTree
 from .s3track import S3Trackable
 from .s3utils import s3_include_ext, s3_include_underscore, s3_str
@@ -10124,8 +10124,8 @@ class S3ExportPOI(S3Method):
         else:
             as_json = False
             default = "text/xml"
-        headers["Content-Type"] = s3.content_type.get(representation,
-                                                      default)
+        headers["Content-Type"] = CONTENT_TYPES.get(representation,
+                                                    default)
 
         # Find XSLT stylesheet and transform
         stylesheet = r.stylesheet()

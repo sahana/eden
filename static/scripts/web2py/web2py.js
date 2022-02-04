@@ -594,7 +594,7 @@
             /* set to disabled state*/
             el[method](el.data('w2p_disable_with'));
 
-            el.bind('click.w2pDisable', function (e) { /* prevent further clicking*/
+            el.on('click.w2pDisable', function (e) { /* prevent further clicking*/
                 return web2py.stopEverything(e);
             });
         },
@@ -608,7 +608,7 @@
                 el.removeData('w2p_enable_with');
             }
             el.removeClass('disabled');
-            el.unbind('click.w2pDisable');
+            el.off('click.w2pDisable');
         },
         /*convenience wrapper, internal use only */
         simple_component: function (action, target, element) {
@@ -646,7 +646,7 @@
                 }
             });
             for (var name in triggers) {
-                $('#' + name, target).change(show_if).keyup(show_if);
+                $('#' + name, target).on('change', show_if).on('keyup', show_if);
                 show_if.call($('#' + name, target));
             }
         },

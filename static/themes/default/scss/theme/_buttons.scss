@@ -5,16 +5,19 @@
 
 // Foundation variables used:
 //$primary-color
-//$button-bg-color
-//$button-bg-hover
+//$button-background
+//$button-background-hover
 //$alert-color
+// v5 variables no longer in v6
 //$alert-button-bg-hover
+$button-function-factor: -20%;
+$alert-button-bg-hover: scale-color($alert-color, $lightness: $button-function-factor);
 
 // Action buttons defaults
-$action_btn_bgcolor: $button-bg-color !default;
-$action_btn_bgcolor_hover: $button-bg-hover !default;
-$action_btn_fgcolor: white !default;
-$action_btn_fgcolor_hover: white !default;
+$action_btn_bgcolor: $button-background !default;
+$action_btn_bgcolor_hover: $button-background-hover !default;
+$action_btn_fgcolor: $white !default;
+$action_btn_fgcolor_hover: $white !default;
 
 // Standard action button
 $action_btn_bgcolor_default: $action_btn_bgcolor !default;
@@ -23,7 +26,7 @@ $action_btn_fgcolor_default: $action_btn_fgcolor !default;
 $action_btn_fgcolor_default_hover: $action_btn_fgcolor_hover !default;
 
 // Debug action button (debug toolbar in footer)
-$action_btn_bgcolor_debug: #dddddd !default;
+$action_btn_bgcolor_debug: #ddd !default;
 $action_btn_bgcolor_debug_hover: #a0a0a0 !default;
 $action_btn_fgcolor_debug: $action_btn_fgcolor !default;
 $action_btn_fgcolor_debug_hover: $action_btn_fgcolor_hover !default;
@@ -40,6 +43,25 @@ $action_btn_fgcolor_disabled: $action_btn_fgcolor_hover !default;
 
 // ============================================================================
 // STYLES
+
+button,
+.button,
+.button.primary {
+    background-color: $lightblue;
+    border-color: #2285a2;
+    color: $white;
+}
+button:hover,
+.button:hover,
+.button.primary:hover {
+    color: $white;
+}
+
+button.small,
+.button.small {
+    padding: .875rem 1.75rem .9375rem 1.75rem;
+    font-size: .8125rem;
+}
 
 /* Action buttons */
 .action-btn,

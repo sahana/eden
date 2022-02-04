@@ -395,7 +395,7 @@
                 minHeight: 480,
                 modal: true,
                 open: function(event, ui) {
-                    $('.ui-widget-overlay').bind('click', function() {
+                    $('.ui-widget-overlay').on('click', function() {
                         dialog.dialog('close');
                     });
                 },

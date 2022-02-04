@@ -36,7 +36,11 @@ class S3MainMenuLayout(S3NavigationItem):
 
     @staticmethod
     def layout(item):
-        """ Custom Layout Method """
+        """
+            Custom Layout Method
+
+            Replicate Google Suite's look and feel
+        """
 
         T = current.T
         auth = current.auth
@@ -389,6 +393,12 @@ class S3MainMenuLayout(S3NavigationItem):
 
 # =============================================================================
 class S3AboutMenuLayout(S3NavigationItem):
+    """
+        Footer menu
+
+        Classes use Foundation's Menu component
+            https://get.foundation/sites/docs/menu.html
+    """
 
     @staticmethod
     def layout(item):
@@ -398,14 +408,16 @@ class S3AboutMenuLayout(S3NavigationItem):
             items = item.render_components()
             if items:
                 return UL(items,
-                          _class = "sub-nav about-menu left",
+                          _class = "menu", # https://get.foundation/sites/docs/menu.html
                           )
             else:
                 return "" # menu is empty
         else:
             # A menu item
             if item.enabled and item.authorized:
-                return LI(A(item.label, _href=item.url()))
+                return LI(A(item.label,
+                            _href = item.url(),
+                            ))
             else:
                 return None
 
@@ -424,7 +436,8 @@ class S3OrgMenuLayout(S3NavigationItem):
     @staticmethod
     def layout(item):
         """
-            @ToDo: Migrate to s3db.org_logo_represent
+            ToDo:
+                Migrate to s3db.org_logo_represent
         """
 
         name = "IFRC"

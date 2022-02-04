@@ -471,7 +471,7 @@
                 function() {
                     // Validation succeeded => submit the form
                     self.submitInProgress = false;
-                    form.off(ns).submit();
+                    form.off(ns).trigger('submit');
                 },
                 function() {
                     // Validation failed
@@ -1050,7 +1050,7 @@
                    .show();
 
             // Trigger the dropdown change event
-            $('select:not(".lx-select")', editRow).change();
+            $('select:not(".lx-select")', editRow).trigger('change');
 
             // Disable the add-row while editing
             this._disableAddRow();
@@ -1130,14 +1130,14 @@
                     emptyWidget = defaultField.clone();
                     emptyWidget.attr('id', currentField.attr('id'))
                                .attr('name', currentField.attr('name'))
-                               .change(changeHandler);
+                               .on('change', changeHandler);
                     currentField.replaceWith(emptyWidget);
 
                 } else {
 
                     // Set the input to the default value
                     defaultValue = defaultField.val();
-                    currentField.val(defaultValue).change();
+                    currentField.val(defaultValue).trigger('change');
 
                     // Refresh widgets
                     if (currentField.attr('type') == 'checkbox') {
@@ -1430,7 +1430,7 @@
                                         var emptyWidget = d.clone();
                                         emptyWidget.attr('id', f.attr('id'))
                                                    .attr('name', f.attr('name'))
-                                                   .change(changeHandler);
+                                                   .on('change', changeHandler);
                                         f.replaceWith(emptyWidget);
 
                                     } else {

@@ -1,0 +1,49 @@
+// ============================================================================
+// Styles for Menus
+// ============================================================================
+// VARIABLES
+
+// ============================================================================
+// STYLES
+
+/* Side (Options) Menu) */
+aside.columns {
+    font-size: .875rem;
+    padding-left: 0.7em;
+    padding-right: 0.6rem;
+    a {
+        background: #f3f3f3;
+        color: #666;
+    }
+    a:hover {
+        color: $primary-color;
+        background: #e0e0e0;
+    }
+    li.heading {
+        margin-top: .125rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    li.heading:not(:first-child) {
+        border-top: 1px solid #eaeaea;
+    }
+    .menu .active > a {
+        color: #444;
+        background: #e0e1e2;
+    }
+    .menu .active > a:hover {
+        color: $primary-color;
+        background: #e0e0e0;
+    }
+    .menu.nested {
+        margin-left: 1.25rem;
+    }
+    nav {
+        background: #f3f3f3;
+        margin-top: 10px;
+        padding-top: .25rem;
+        padding-bottom: .25rem;
+    }
+}
+
+// END ========================================================================

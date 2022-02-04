@@ -101,7 +101,7 @@ class S3Profile(S3CRUD):
         """
 
         tablename = self.tablename
-        get_config = self.resource.get_config
+        get_config = current.s3db.get_config
 
         header = get_config(tablename, "profile_header")
 

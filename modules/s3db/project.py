@@ -11388,14 +11388,14 @@ class ProjectTaskModel(S3Model):
         """ Set the task realm entity to the project's realm entity """
 
         task_id = record.id
-        db = current.db
-        ptable = db.project_project
-        ltable = db.project_task_project
+        s3db = current.s3db
+        ptable = s3db.project_project
+        ltable = s3db.project_task_project
         query = (ltable.task_id == task_id) & \
                 (ltable.project_id == ptable.id)
-        project = db(query).select(ptable.realm_entity,
-                                   limitby = (0, 1),
-                                   ).first()
+        project = current.db(query).select(ptable.realm_entity,
+                                           limitby = (0, 1),
+                                           ).first()
         if project:
             return project.realm_entity
         else:

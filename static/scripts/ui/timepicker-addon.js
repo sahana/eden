@@ -1,4 +1,4 @@
-/*! jQuery Timepicker Addon - v1.5.0 - 2014-09-01
+/*! jQuery Timepicker Addon - v1.5.0 - 2014-09-01 (Patched to support jQuery 3.6.0)
 * http://trentrichardson.com/examples/timepicker
 * Copyright (c) 2014 Trent Richardson; Licensed MIT */
 (function ($) {
@@ -179,14 +179,14 @@
 
 			overrides = {
 				beforeShow: function (input, dp_inst) {
-					if ($.isFunction(tp_inst._defaults.evnts.beforeShow)) {
+					if (typeof tp_inst._defaults.evnts.beforeShow === 'function') {
 						return tp_inst._defaults.evnts.beforeShow.call($input[0], input, dp_inst, tp_inst);
 					}
 				},
 				onChangeMonthYear: function (year, month, dp_inst) {
 					// Update the time as well : this prevents the time from disappearing from the $input field.
 					tp_inst._updateDateTime(dp_inst);
-					if ($.isFunction(tp_inst._defaults.evnts.onChangeMonthYear)) {
+					if (typeof  tp_inst._defaults.evnts.onChangeMonthYear === 'function') {
 						tp_inst._defaults.evnts.onChangeMonthYear.call($input[0], year, month, dp_inst, tp_inst);
 					}
 				},
@@ -194,7 +194,7 @@
 					if (tp_inst.timeDefined === true && $input.val() !== '') {
 						tp_inst._updateDateTime(dp_inst);
 					}
-					if ($.isFunction(tp_inst._defaults.evnts.onClose)) {
+					if (typeof tp_inst._defaults.evnts.onClose === 'function') {
 						tp_inst._defaults.evnts.onClose.call($input[0], dateText, dp_inst, tp_inst);
 					}
 				}
@@ -296,7 +296,7 @@
 			if (tp_inst._defaults.maxDateTime !== undefined && tp_inst._defaults.maxDateTime instanceof Date) {
 				tp_inst._defaults.maxDate = new Date(tp_inst._defaults.maxDateTime.getTime());
 			}
-			tp_inst.$input.bind('focus', function () {
+			tp_inst.$input.on('focus', function () {
 				tp_inst._onFocus();
 			});
 
@@ -490,7 +490,7 @@
 						selectLocalTimezone(tp_inst);
 					}
 				}
-				this.timezone_select.change(function () {
+				this.timezone_select.on('change', function () {
 					tp_inst._onTimeChange();
 					tp_inst._onSelectHandler();
 				});

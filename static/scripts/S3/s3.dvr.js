@@ -135,7 +135,7 @@
 
             // Focus on label input at start
             var labelInput = $(prefix + '_label');
-            labelInput.focus().val(labelInput.val());
+            labelInput.trigger('focus').val(labelInput.val());
 
             this._bindEvents();
         },
@@ -691,20 +691,20 @@
 
             if (navigator.userAgent.toLowerCase().indexOf("android") == -1) {
                 // Disable Zxing-button if not Android
-                zxingButton.addClass('disabled').click(function(e) {
+                zxingButton.addClass('disabled').on('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     return false;
                 });
             } else {
                 // Clear alert space when launching Zxing
-                zxingButton.bind('click' + ns, function() {
+                zxingButton.on('click' + ns, function() {
                     self._clearAlert();
                 });
             }
 
             // Toggle event type selector
-            eventTypeToggle.bind('click' + ns, function() {
+            eventTypeToggle.on('click' + ns, function() {
                 self._clearAlert();
                 if (eventTypeSelector.hasClass('hide')) {
                     eventTypeSelector.hide().removeClass('hide').slideDown();
@@ -714,7 +714,7 @@
             });
 
             // Select event type
-            eventTypeSelector.find('a.event-type-selector').bind('click' + ns, function() {
+            eventTypeSelector.find('a.event-type-selector').on('click' + ns, function() {
 
                 var $this = $(this),
                     code = $this.data('code'),
@@ -744,25 +744,25 @@
                 eventTypeSelector.slideUp();
             });
 
-            form.delegate('.toggle-picture', 'click' + ns, function(e) {
+            form.on('click' + ns, '.toggle-picture', function(e) {
                 e.preventDefault();
                 self._togglePicture();
             });
 
             // Cancel-button to clear the form
-            form.find('a.cancel-action').bind('click' + ns, function(e) {
+            form.find('a.cancel-action').on('click' + ns, function(e) {
                 e.preventDefault();
                 self._clearForm();
             });
 
             if (this.options.ajax) {
                 // Click-Handler for Check-ID button
-                form.find('.check-btn').bind('click' + ns, function(e) {
+                form.find('.check-btn').on('click' + ns, function(e) {
                     e.preventDefault();
                     self._checkID();
                 });
                 // Click-Handler for Register button
-                form.find('.submit-btn').unbind(ns).bind('click' + ns, function(e) {
+                form.find('.submit-btn').off(ns).on('click' + ns, function(e) {
                     e.preventDefault();
                     self._registerEvent();
                 });
@@ -772,12 +772,12 @@
             var labelInput = $(prefix + '_label');
 
             // Changing the label resets form
-            labelInput.bind('input' + ns, function(e) {
+            labelInput.on('input' + ns, function(e) {
                 self._clearForm(false, true);
             });
 
             // Key events for label field
-            labelInput.bind('keyup' + ns, function(e) {
+            labelInput.on('keyup' + ns, function(e) {
                 switch (e.which) {
                     case 27:
                         // Pressing ESC resets the form
@@ -800,19 +800,19 @@
                 ns = this.eventNamespace,
                 prefix = this.idPrefix;
 
-            $('.zxing-button').unbind(ns).unbind('click');
-            $('#event-type-toggle').unbind(ns);
-            $('#event-type-selector').find('a.event-type-selector').unbind(ns);
+            $('.zxing-button').off(ns).off('click');
+            $('#event-type-toggle').off(ns);
+            $('#event-type-selector').find('a.event-type-selector').off(ns);
 
-            $(prefix + '_label').unbind(ns);
+            $(prefix + '_label').off(ns);
 
-            form.find('a.cancel-action').unbind(ns);
+            form.find('a.cancel-action').off(ns);
 
-            form.find('.check-btn').unbind(ns);
+            form.find('.check-btn').off(ns);
 
-            form.find('.submit-btn').unbind(ns);
+            form.find('.submit-btn').off(ns);
 
-            form.undelegate(ns);
+            form.off(ns);
 
             return true;
         }

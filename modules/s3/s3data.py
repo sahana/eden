@@ -181,7 +181,7 @@ class S3DataTable:
                         skip(col_idx)
                         break
         else:
-            dt_ordering = [(1, "asc")]
+            dt_ordering = [[1, "asc"]]
 
         self.orderby = dt_ordering
 

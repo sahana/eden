@@ -121,7 +121,7 @@
     var $uploadTitle = $('#upload-title'),
         $uploadContainer = $('#upload-container');
 
-    $uploadTitle.bind('click', function(e) {
+    $uploadTitle.on('click', function(e) {
         $uploadContainer.slideDown('fast', function() {
             $uploadTitle.html(i18n.upload_image);
         });    
@@ -243,9 +243,9 @@
         });
     };
 
-    $selectCrop.bind('click', enableCrop);
-    $crop.bind('click', cropImage);
-    $cancel.bind('click', disableCrop);
+    $selectCrop.on('click', enableCrop);
+    $crop.on('click', cropImage);
+    $cancel.on('click', disableCrop);
 
     var UpdateCropPoints = function(coords) {
         var points = coords.x + ',' + coords.y + ',' + coords.x2 + ',' + coords.y2;
@@ -279,7 +279,7 @@
                      });
     };
 
-    $('#uploaded-image').bind('load', EnableCrop);
+    $('#uploaded-image').on('load', EnableCrop);
 
     // Image already stored in DB ( Update form )
     // load the Image
@@ -309,9 +309,9 @@
     }
 
     // Bind Events to catch Image Upload Events
-    $('.imagecrop-drag').bind('dragover', FileHoverHandler)
-                        .bind('dragleave', FileHoverHandler)
-                        .bind('drop', FileSelectHandler);
-    $('.imagecrop-upload').bind('change', FileSelectHandler); 
+    $('.imagecrop-drag').on('dragover', FileHoverHandler)
+                        .on('dragleave', FileHoverHandler)
+                        .on('drop', FileSelectHandler);
+    $('.imagecrop-upload').on('change', FileSelectHandler); 
 
  });

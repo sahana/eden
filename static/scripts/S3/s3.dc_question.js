@@ -142,7 +142,6 @@ $(document).ready(function() {
         // Do the normal form-submission tasks
         // @ToDo: Look to have this happen automatically
         // http://forum.jquery.com/topic/multiple-event-handlers-on-form-submit
-        // http://api.jquery.com/bind/
         S3ClearNavigateAwayConfirm();
 
         var value = qtype.val()

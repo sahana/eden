@@ -1,0 +1,55 @@
+/* Footer */
+#footer {
+    text-align: right;
+    padding-top: 20px;
+    border-top: #f0f0f0 1px solid;
+    margin-top: 20px;
+    margin-bottom: 1rem;
+
+    // Bottom menu
+    .menu {
+        li {
+            font-size: .75rem;
+            font-weight: normal;
+            a {
+                color: #999;
+                display: inline-block;
+                padding: .125rem .375rem;
+                text-decoration: none;
+            }
+            a:hover {
+                color: #737373;
+            }
+        }
+        li:before {
+            content: "|";
+            margin: 0 .75rem;
+        }
+        li:first-child:before {
+            content: "";
+            margin: 0;
+        }
+    }
+
+    // Debug buttons in footer - use action-button styles
+    button.btn {
+        @include tiny_button_style();
+        margin-left: 2px;
+        margin-right: 2px;
+        color: $action_btn_fgcolor_debug;
+        background: $action_btn_bgcolor_debug;
+    }
+    button.btn:hover {
+        color: $action_btn_fgcolor_debug_hover;
+        background: $action_btn_bgcolor_debug_hover;
+    }
+}
+#poweredby {
+    margin-right: 0.5rem;
+    a {
+        color: #999999;
+        text-decoration: none;
+        font-size: 0.8rem;
+        margin-left: 0.2rem;
+    }
+}

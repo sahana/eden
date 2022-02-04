@@ -1,6 +1,6 @@
 /* jshint forin:true, noarg:true, noempty:true, eqeqeq:true, boss:true, undef:true, curly:true, browser:true, jquery:true */
 /*
- * jQuery MultiSelect UI Widget 1.14pre
+ * jQuery MultiSelect UI Widget 1.14pre (fixed for jQuery 3.6.0)
  * Copyright (c) 2012 Eric Hynds
  * Copyright (c) 2013-15 Sahana Software Foundation
  *
@@ -253,7 +253,7 @@
             } else if (numChecked === $inputs.length) {
                 value = o.allSelectedText;
             } else {
-                if ($.isFunction(o.selectedText)) {
+                if (typeof o.selectedText === 'function') {
                     value = o.selectedText.call(this, numChecked, $inputs.length, $checked.get());
                 } else if (/\d/.test(o.selectedList) && o.selectedList > 0 && numChecked <= o.selectedList) {
                     //value = $checked.map(function() { return $(this).next().html(); }).get().join(', ');
@@ -298,10 +298,10 @@
 
         // Webkit doesn't like it when you click on the span :(
         button.find('span')
-              .bind('click.multiselect', clickHandler);
+              .on('click.multiselect', clickHandler);
 
         // Button events
-        button.bind({
+        button.on({
             click: clickHandler,
             keypress: function(e) {
                 switch(e.which) {
@@ -335,7 +335,7 @@
         });
 
         // Header links
-        this.header.delegate('a', 'click.multiselect', function(e) {
+        this.header.on('click.multiselect', 'a', function(e) {
             // Close link
             if($(this).hasClass('ui-multiselect-close')) {
                 self.close();
@@ -348,7 +348,7 @@
         });
 
         // optgroup label toggle support
-        this.menu.delegate('li.ui-multiselect-optgroup-label a', 'click.multiselect', function(e) {
+        this.menu.on('click.multiselect', 'li.ui-multiselect-optgroup-label a', function(e) {
             e.preventDefault();
 
             var $this = $(this);
@@ -373,13 +373,13 @@
                 checked: nodes[0].checked
             });
         })
-        .delegate('label', 'mouseenter.multiselect', function() {
+        .on('mouseenter.multiselect', 'label', function() {
             if (!$(this).hasClass('ui-state-disabled')) {
                 self.labels.removeClass('ui-state-hover');
-                $(this).addClass('ui-state-hover').find('input').focus();
+                $(this).addClass('ui-state-hover').find('input').trigger('focus');
             }
         })
-       .delegate('label', 'keydown.multiselect', function(e) {
+       .on('keydown.multiselect', 'label', function(e) {
             e.preventDefault();
 
             switch(e.which) {
@@ -398,7 +398,7 @@
                     break;
             }
         })
-        .delegate('input[type="checkbox"], input[type="radio"]', 'click.multiselect', function(e) {
+        .on('click.multiselect', 'input[type="checkbox"], input[type="radio"]', function(e) {
             var $this = $(this);
             var val = this.value;
             var checked = this.checked;
@@ -412,7 +412,7 @@
 
             // Make sure the input has focus. otherwise, the esc key
             // won't close the menu after clicking an item.
-            $this.focus();
+            $this.trigger('focus');
 
             // Toggle aria state
             $this.attr('aria-selected', checked);
@@ -444,7 +444,7 @@
         });
 
         // Close each widget when clicking on any other element/anywhere else on the page
-        $doc.bind('mousedown.' + this._namespaceID, function(event) {
+        $doc.on('mousedown.' + this._namespaceID, function(event) {
             var target = event.target;
 
             if (self._isOpen
@@ -461,7 +461,7 @@
         // restored to their defaultValue prop on form reset, and the reset
         // handler fires before the form is actually reset.  delaying it a bit
         // gives the form inputs time to clear.
-        $(this.element[0].form).bind('reset.' + this._namespaceID, function() {
+        $(this.element[0].form).on('reset.' + this._namespaceID, function() {
             setTimeout($.proxy(self.refresh, self), 10);
         });
     },
@@ -533,7 +533,7 @@
         $inputs.each(this._toggleState('checked', flag));
 
         // Give the first input focus
-        $inputs.eq(0).focus();
+        $inputs.eq(0).trigger('focus');
 
         // Update button text
         this.update();
@@ -601,7 +601,7 @@
         var effect = o.show;
 
         // Figure out opening effects/speeds
-        if ($.isArray(o.show)) {
+        if (Array.isArray(o.show)) {
             effect = o.show[0];
             speed = o.show[1] || self.speed;
         }
@@ -643,7 +643,7 @@
         var args = [];
 
         // Figure out opening effects/speeds
-        if ($.isArray(o.hide)) {
+        if (Array.isArray(o.hide)) {
             effect = o.hide[0];
             speed = o.hide[1] || this.speed;
         }
@@ -685,8 +685,8 @@
         $.Widget.prototype.destroy.call(this);
 
         // unbind events
-        $doc.unbind(this._namespaceID);
-        $(this.element[0].form).unbind(this._namespaceID);
+        $doc.off(this._namespaceID);
+        $(this.element[0].form).off(this._namespaceID);
 
         this.button.remove();
         this.menu.remove();

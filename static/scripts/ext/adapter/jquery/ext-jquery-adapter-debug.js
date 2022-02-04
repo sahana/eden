@@ -1860,15 +1860,15 @@ Ext.lib.Event = {
 
     // all Ext events will go through event manager which provides scoping
     on : function(el, eventName, fn, scope, override){
-        jQuery(el).bind(eventName, fn);
+        jQuery(el).on(eventName, fn);
     },
 
     un : function(el, eventName, fn){
-        jQuery(el).unbind(eventName, fn);
+        jQuery(el).off(eventName, fn);
     },
 
     purgeElement : function(el){
-        jQuery(el).unbind();
+        jQuery(el).off();
     },
 
     preventDefault : function(e){

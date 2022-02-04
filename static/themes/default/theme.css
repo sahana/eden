@@ -1,67 +1,3 @@
-/* line 429, ../../foundation/scss/components/_global.scss */
-meta.foundation-version {
-  font-family: "/{{VERSION}}/";
-}
-
-/* line 433, ../../foundation/scss/components/_global.scss */
-meta.foundation-mq-small {
-  font-family: "/only screen/";
-  width: 0;
-}
-
-/* line 438, ../../foundation/scss/components/_global.scss */
-meta.foundation-mq-small-only {
-  font-family: "/only screen and (max-width: 40em)/";
-  width: 0;
-}
-
-/* line 443, ../../foundation/scss/components/_global.scss */
-meta.foundation-mq-medium {
-  font-family: "/only screen and (min-width:40.0625em)/";
-  width: 40.0625em;
-}
-
-/* line 448, ../../foundation/scss/components/_global.scss */
-meta.foundation-mq-medium-only {
-  font-family: "/only screen and (min-width:40.0625em) and (max-width:64em)/";
-  width: 40.0625em;
-}
-
-/* line 453, ../../foundation/scss/components/_global.scss */
-meta.foundation-mq-large {
-  font-family: "/only screen and (min-width:64.0625em)/";
-  width: 64.0625em;
-}
-
-/* line 458, ../../foundation/scss/components/_global.scss */
-meta.foundation-mq-large-only {
-  font-family: "/only screen and (min-width:64.0625em) and (max-width:90em)/";
-  width: 64.0625em;
-}
-
-/* line 463, ../../foundation/scss/components/_global.scss */
-meta.foundation-mq-xlarge {
-  font-family: "/only screen and (min-width:90.0625em)/";
-  width: 90.0625em;
-}
-
-/* line 468, ../../foundation/scss/components/_global.scss */
-meta.foundation-mq-xlarge-only {
-  font-family: "/only screen and (min-width:90.0625em) and (max-width:120em)/";
-  width: 90.0625em;
-}
-
-/* line 473, ../../foundation/scss/components/_global.scss */
-meta.foundation-mq-xxlarge {
-  font-family: "/only screen and (min-width:120.0625em)/";
-  width: 120.0625em;
-}
-
-/* line 478, ../../foundation/scss/components/_global.scss */
-meta.foundation-data-attribute-namespace {
-  font-family: false;
-}
-
 /* Throbber style */
 /* line 31, ../scss/theme/_page.scss */
 .inline-throbber {
@@ -129,7 +65,7 @@ meta.foundation-data-attribute-namespace {
 /* Amber indicator */
 /* line 86, ../scss/theme/_page.scss */
 .expiring {
-  color: #f08a24;
+  color: #ffae00;
   font-weight: bold;
 }
 
@@ -303,45 +239,47 @@ form .form-row > a {
 /* line 43, ../scss/theme/_forms.scss */
 form .form-row select {
   min-width: 4rem;
+  background-position: right -0.5rem center;
+  background-size: 6px 4px;
 }
-/* line 46, ../scss/theme/_forms.scss */
+/* line 48, ../scss/theme/_forms.scss */
 form .form-row .controls span.postfix {
   height: 1.75rem;
   line-height: 1.5rem;
   font-size: 0.8rem;
 }
-/* line 50, ../scss/theme/_forms.scss */
+/* line 52, ../scss/theme/_forms.scss */
 form .form-row .controls span.postfix .fa {
   line-height: inherit;
 }
-/* line 54, ../scss/theme/_forms.scss */
+/* line 56, ../scss/theme/_forms.scss */
 form .form-row .s3-hierarchy-widget,
 form .form-row .calendar-widget-container {
   display: inline-block;
   vertical-align: middle;
 }
-/* line 59, ../scss/theme/_forms.scss */
+/* line 61, ../scss/theme/_forms.scss */
 form .form-row .inline-component {
   overflow: auto;
 }
-/* line 63, ../scss/theme/_forms.scss */
+/* line 65, ../scss/theme/_forms.scss */
 form .jstree-anchor {
   font-size: 0.9rem;
 }
-/* line 66, ../scss/theme/_forms.scss */
+/* line 68, ../scss/theme/_forms.scss */
 form label.inline {
   padding: 0;
 }
-/* line 69, ../scss/theme/_forms.scss */
+/* line 71, ../scss/theme/_forms.scss */
 form .gis_loc_select_btn {
   font-size: 0.8em;
 }
-/* line 71, ../scss/theme/_forms.scss */
+/* line 73, ../scss/theme/_forms.scss */
 form .gis_loc_select_btn i {
   font-size: 1.0em;
   margin-right: 4px;
 }
-/* line 76, ../scss/theme/_forms.scss */
+/* line 78, ../scss/theme/_forms.scss */
 form .error {
   display: block;
   padding: 0.375rem 0.5625rem 0.5625rem;
@@ -352,97 +290,97 @@ form .error {
   background: #c60f13;
   color: white;
 }
-/* line 86, ../scss/theme/_forms.scss */
+/* line 88, ../scss/theme/_forms.scss */
 form .date-clear-btn {
   font-size: 0.75rem;
   margin-left: 0.15rem !important;
 }
-/* line 90, ../scss/theme/_forms.scss */
+/* line 92, ../scss/theme/_forms.scss */
 form .action-lnk {
   font-weight: normal;
   font-size: 0.75rem;
 }
-/* line 96, ../scss/theme/_forms.scss */
+/* line 98, ../scss/theme/_forms.scss */
 form table.embeddedComponent {
   margin-top: 0.125rem;
   margin-bottom: 0.125rem;
   border: 1px solid #dddddd;
   border-collapse: separate;
 }
-/* line 102, ../scss/theme/_forms.scss */
+/* line 104, ../scss/theme/_forms.scss */
 form table.embeddedComponent td {
   border: none;
   padding-bottom: 0.05rem;
   padding-top: 0.15rem;
   vertical-align: top;
 }
-/* line 110, ../scss/theme/_forms.scss */
+/* line 112, ../scss/theme/_forms.scss */
 form table.embeddedComponent.subform-vertical .add-row td, form table.embeddedComponent.subform-vertical .edit-row td {
   border-top: 1px solid #dddddd;
   padding: 0 0.4rem 0.4rem 0.4rem;
 }
-/* line 113, ../scss/theme/_forms.scss */
+/* line 115, ../scss/theme/_forms.scss */
 form table.embeddedComponent.subform-vertical .add-row td.subform-action, form table.embeddedComponent.subform-vertical .edit-row td.subform-action {
   vertical-align: bottom;
 }
-/* line 120, ../scss/theme/_forms.scss */
+/* line 122, ../scss/theme/_forms.scss */
 form table.embeddedComponent .label-row td {
   border-bottom: 1px solid #dddddd;
 }
-/* line 122, ../scss/theme/_forms.scss */
+/* line 124, ../scss/theme/_forms.scss */
 form table.embeddedComponent .label-row td:empty {
   padding: 0;
 }
-/* line 126, ../scss/theme/_forms.scss */
+/* line 128, ../scss/theme/_forms.scss */
 form table.embeddedComponent .label-row label {
-  color: black;
+  color: #4d4d4d;
 }
-/* line 131, ../scss/theme/_forms.scss */
+/* line 133, ../scss/theme/_forms.scss */
 form table.embeddedComponent tr.inline-form input,
 form table.embeddedComponent tr.inline-form .btn.date-clear-btn,
 form table.embeddedComponent tr.inline-form .postfix.calendar-clear-btn {
   margin-top: 0;
 }
-/* line 136, ../scss/theme/_forms.scss */
+/* line 138, ../scss/theme/_forms.scss */
 form table.embeddedComponent tr.inline-form.single td:only-child {
   padding: 0;
 }
-/* line 138, ../scss/theme/_forms.scss */
+/* line 140, ../scss/theme/_forms.scss */
 form table.embeddedComponent tr.inline-form.single td:only-child div.form-row {
   padding: 0 0.2rem 0.2rem;
 }
-/* line 142, ../scss/theme/_forms.scss */
+/* line 144, ../scss/theme/_forms.scss */
 form table.embeddedComponent tr.inline-form select {
   max-width: 18rem;
 }
-/* line 145, ../scss/theme/_forms.scss */
+/* line 147, ../scss/theme/_forms.scss */
 form table.embeddedComponent tr.inline-form .s3_inline_add_resource_link {
   padding: 0.1rem;
 }
-/* line 151, ../scss/theme/_forms.scss */
+/* line 153, ../scss/theme/_forms.scss */
 form table.embeddedComponent tr.inline-form .zoom img,
 form table.embeddedComponent tr.read-row .zoom img {
   max-height: 8rem;
 }
-/* line 156, ../scss/theme/_forms.scss */
+/* line 158, ../scss/theme/_forms.scss */
 form .inline-open-add {
   display: inline-block;
   margin-bottom: 1.25rem;
   margin-left: 0;
 }
-/* line 163, ../scss/theme/_forms.scss */
+/* line 165, ../scss/theme/_forms.scss */
 form.auth_login #submit_record__row {
   white-space: pre;
 }
 
 /* S3SQLInlineLink read-only list representation */
-/* line 169, ../scss/theme/_forms.scss */
+/* line 171, ../scss/theme/_forms.scss */
 ul.s3-inline-link {
   font-size: inherit;
 }
 
 /* General Widgets */
-/* line 174, ../scss/theme/_forms.scss */
+/* line 176, ../scss/theme/_forms.scss */
 input[type="text"],
 input[type="password"],
 input[type="date"],
@@ -464,7 +402,7 @@ select {
   font-weight: normal;
 }
 
-/* line 194, ../scss/theme/_forms.scss */
+/* line 196, ../scss/theme/_forms.scss */
 input[type="text"],
 input[type="password"],
 input[type="date"],
@@ -483,24 +421,24 @@ select {
   max-width: 100%;
 }
 
-/* line 211, ../scss/theme/_forms.scss */
+/* line 213, ../scss/theme/_forms.scss */
 textarea {
   resize: both;
   max-width: 100%;
 }
 
-/* line 215, ../scss/theme/_forms.scss */
+/* line 217, ../scss/theme/_forms.scss */
 input.datetimepicker {
   max-width: 8rem;
 }
 
-/* line 218, ../scss/theme/_forms.scss */
+/* line 220, ../scss/theme/_forms.scss */
 select {
   padding: 0 1rem 0 0.25rem !important;
 }
 
 /* Form and Item containers */
-/* line 223, ../scss/theme/_forms.scss */
+/* line 225, ../scss/theme/_forms.scss */
 #last_update,
 #markDuplicate {
   float: right;
@@ -508,12 +446,12 @@ select {
   text-align: right;
 }
 
-/* line 229, ../scss/theme/_forms.scss */
+/* line 231, ../scss/theme/_forms.scss */
 #markDuplicate {
   margin-bottom: 1rem;
 }
 
-/* line 233, ../scss/theme/_forms.scss */
+/* line 235, ../scss/theme/_forms.scss */
 body.rtl #last_update,
 body.rtl #markDuplicate {
   float: left;
@@ -521,61 +459,61 @@ body.rtl #markDuplicate {
   text-align: left;
 }
 
-/* line 241, ../scss/theme/_forms.scss */
+/* line 243, ../scss/theme/_forms.scss */
 .form-container,
 .item-container {
   width: auto;
   overflow: inherit;
 }
-/* line 243, ../scss/theme/_forms.scss */
+/* line 245, ../scss/theme/_forms.scss */
 .form-container form,
 .item-container form {
   background: #fefefe;
   padding: 5px 10px;
 }
-/* line 246, ../scss/theme/_forms.scss */
+/* line 248, ../scss/theme/_forms.scss */
 .form-container form tr td,
 .item-container form tr td {
   padding: 0.1875rem;
 }
-/* line 249, ../scss/theme/_forms.scss */
+/* line 251, ../scss/theme/_forms.scss */
 .form-container form .embeddedComponent td,
 .item-container form .embeddedComponent td {
   padding-right: 0.5625rem;
 }
-/* line 255, ../scss/theme/_forms.scss */
+/* line 257, ../scss/theme/_forms.scss */
 .form-container .controls,
 .item-container .controls {
   display: inline-block;
 }
-/* line 257, ../scss/theme/_forms.scss */
+/* line 259, ../scss/theme/_forms.scss */
 .form-container .controls:not(.columns),
 .item-container .controls:not(.columns) {
   max-width: 100%;
 }
 
-/* line 262, ../scss/theme/_forms.scss */
+/* line 264, ../scss/theme/_forms.scss */
 .form-container {
   margin-top: 0.125rem;
   margin-bottom: 0.875rem;
 }
-/* line 266, ../scss/theme/_forms.scss */
+/* line 268, ../scss/theme/_forms.scss */
 .form-container form select,
 .form-container form input.string:not(.date),
 .form-container form textarea {
   margin: 0;
 }
-/* line 271, ../scss/theme/_forms.scss */
+/* line 273, ../scss/theme/_forms.scss */
 .form-container form .ui-multiselect {
   max-width: 100%;
   display: inline-block !important;
 }
-/* line 276, ../scss/theme/_forms.scss */
+/* line 278, ../scss/theme/_forms.scss */
 .form-container form:not(.filter-form):not(.auth_login):not(.auth_register):not(.rm-form) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.hours):not(.dms-input) {
   width: 20rem !important;
 }
 
-/* line 283, ../scss/theme/_forms.scss */
+/* line 285, ../scss/theme/_forms.scss */
 .item-container .controls {
   background: #fafafa;
   padding: 0.35rem;
@@ -583,24 +521,24 @@ body.rtl #markDuplicate {
 }
 
 /* Filter Forms & Report Options */
-/* line 293, ../scss/theme/_forms.scss */
+/* line 295, ../scss/theme/_forms.scss */
 .filter-form table tr,
 .filter-form .ui-multiselect,
 .report-options table tr,
 .report-options .ui-multiselect {
   max-width: 60%;
 }
-/* line 297, ../scss/theme/_forms.scss */
+/* line 299, ../scss/theme/_forms.scss */
 .filter-form table.s3-groupedopts-widget,
 .report-options table.s3-groupedopts-widget {
   display: inline-block;
 }
-/* line 300, ../scss/theme/_forms.scss */
+/* line 302, ../scss/theme/_forms.scss */
 .filter-form .inline-tooltip,
 .report-options .inline-tooltip {
   padding-top: 0.2rem;
 }
-/* line 303, ../scss/theme/_forms.scss */
+/* line 305, ../scss/theme/_forms.scss */
 .filter-form label.inline,
 .report-options label.inline {
   line-height: normal;
@@ -608,7 +546,7 @@ body.rtl #markDuplicate {
 }
 
 /* Login/Registration box */
-/* line 310, ../scss/theme/_forms.scss */
+/* line 312, ../scss/theme/_forms.scss */
 #login_form,
 #register_form,
 #login_box {
@@ -616,13 +554,13 @@ body.rtl #markDuplicate {
 }
 
 /* Help Popup */
-/* line 317, ../scss/theme/_forms.scss */
+/* line 319, ../scss/theme/_forms.scss */
 .inline-tooltip {
   display: inline-block;
   vertical-align: top;
   padding-left: 0.75rem;
 }
-/* line 321, ../scss/theme/_forms.scss */
+/* line 323, ../scss/theme/_forms.scss */
 .inline-tooltip .tooltip,
 .inline-tooltip .tooltipbody,
 .inline-tooltip .stickytip,
@@ -631,7 +569,7 @@ body.rtl #markDuplicate {
   padding: 0;
   width: 60px;
 }
-/* line 329, ../scss/theme/_forms.scss */
+/* line 331, ../scss/theme/_forms.scss */
 .inline-tooltip .s3_add_resource_link {
   display: inline-block;
   margin: -3px 0 -3px 5px;
@@ -753,8 +691,8 @@ div.tabs span.tab_last, div.tabs span.tab_other {
 }
 /* line 147, ../scss/theme/_rheader.scss */
 div.tabs span.tab_last:hover, div.tabs span.tab_other:hover {
-  background-color: #2285a2;
-  border-color: #2285a2;
+  background-color: #258dad;
+  border-color: #258dad;
 }
 /* line 151, ../scss/theme/_rheader.scss */
 div.tabs span.tab_last a, div.tabs span.tab_other a {
@@ -765,8 +703,31 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
   color: #ffffff !important;
 }
 
+/* line 47, ../scss/theme/_buttons.scss */
+button,
+.button,
+.button.primary {
+  background-color: #2ba6cb;
+  border-color: #2285a2;
+  color: #fefefe;
+}
+
+/* line 54, ../scss/theme/_buttons.scss */
+button:hover,
+.button:hover,
+.button.primary:hover {
+  color: #fefefe;
+}
+
+/* line 60, ../scss/theme/_buttons.scss */
+button.small,
+.button.small {
+  padding: .875rem 1.75rem .9375rem 1.75rem;
+  font-size: .8125rem;
+}
+
 /* Action buttons */
-/* line 45, ../scss/theme/_buttons.scss */
+/* line 67, ../scss/theme/_buttons.scss */
 .action-btn,
 .delete-btn-ajax,
 .delete-btn,
@@ -780,7 +741,7 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
   text-decoration: none !important;
   display: inline-block;
 }
-/* line 50, ../scss/theme/_buttons.scss */
+/* line 72, ../scss/theme/_buttons.scss */
 .action-btn[disabled], .action-btn[disabled]:hover,
 .delete-btn-ajax[disabled],
 .delete-btn-ajax[disabled]:hover,
@@ -788,52 +749,52 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
 .delete-btn[disabled]:hover,
 .selected-action[disabled],
 .selected-action[disabled]:hover {
-  color: white;
+  color: #fefefe;
   background-color: rgba(192, 192, 192, 0.25);
 }
 
 /* Default action buttons */
-/* line 58, ../scss/theme/_buttons.scss */
+/* line 80, ../scss/theme/_buttons.scss */
 .action-btn,
 .selected-action {
   background-color: #2ba6cb;
-  color: white !important;
+  color: #fefefe !important;
 }
-/* line 62, ../scss/theme/_buttons.scss */
+/* line 84, ../scss/theme/_buttons.scss */
 .action-btn:hover,
 .selected-action:hover {
-  background-color: #2285a2;
-  color: white !important;
+  background-color: #258dad;
+  color: #fefefe !important;
 }
 
 /* Alert-style action buttons (e.g. delete) */
-/* line 69, ../scss/theme/_buttons.scss */
+/* line 91, ../scss/theme/_buttons.scss */
 .delete-btn-ajax,
 .delete-btn {
   background-color: #c60f13;
-  color: white !important;
+  color: #fefefe !important;
 }
-/* line 73, ../scss/theme/_buttons.scss */
+/* line 95, ../scss/theme/_buttons.scss */
 .delete-btn-ajax:hover,
 .delete-btn:hover {
   background-color: #9e0c0f !important;
-  color: white !important;
+  color: #fefefe !important;
 }
 
 /* Cancel button */
-/* line 80, ../scss/theme/_buttons.scss */
+/* line 102, ../scss/theme/_buttons.scss */
 .cancel-form-btn {
   padding: 0.9375rem;
 }
 
-/* line 83, ../scss/theme/_buttons.scss */
+/* line 105, ../scss/theme/_buttons.scss */
 .cancel-form-btn:hover {
   color: white;
   background-color: #2ba6cb;
 }
 
 /* Full screen map button */
-/* line 89, ../scss/theme/_buttons.scss */
+/* line 111, ../scss/theme/_buttons.scss */
 .map_home .gis_fullscreen_map-btn {
   font-weight: normal;
   font-size: 0.8rem;
@@ -841,23 +802,23 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
 }
 
 /* Action buttons in datatables */
-/* line 98, ../scss/theme/_buttons.scss */
+/* line 120, ../scss/theme/_buttons.scss */
 .dataTable .action-btn,
 .dataTable .selected-action {
-  color: white;
+  color: #fefefe;
 }
-/* line 102, ../scss/theme/_buttons.scss */
+/* line 124, ../scss/theme/_buttons.scss */
 .dataTable .delete-btn,
 .dataTable .delete-btn-ajax {
-  color: white;
+  color: #fefefe;
 }
-/* line 106, ../scss/theme/_buttons.scss */
+/* line 128, ../scss/theme/_buttons.scss */
 .dataTable td.actions {
   white-space: nowrap;
 }
 
 /* Submit-button in contacts inline-edit form */
-/* line 112, ../scss/theme/_buttons.scss */
+/* line 134, ../scss/theme/_buttons.scss */
 .pr-contacts-editable button {
   font-size: 0.6875rem;
   border: 0;
@@ -870,7 +831,7 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
 }
 
 /* Debug buttons in footer */
-/* line 118, ../scss/theme/_buttons.scss */
+/* line 140, ../scss/theme/_buttons.scss */
 #footer button.btn {
   font-size: 0.6875rem;
   border: 0;
@@ -882,37 +843,37 @@ div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
   display: inline-block;
   margin-left: 2px;
   margin-right: 2px;
-  color: white;
-  background: #dddddd;
+  color: #fefefe;
+  background: #ddd;
 }
-/* line 125, ../scss/theme/_buttons.scss */
+/* line 147, ../scss/theme/_buttons.scss */
 #footer button.btn:hover {
-  color: white;
+  color: #fefefe;
   background: #a0a0a0;
 }
 
 /* Action links */
-/* line 132, ../scss/theme/_buttons.scss */
+/* line 154, ../scss/theme/_buttons.scss */
 .action-lnk {
   margin-left: 0.6rem;
 }
-/* line 134, ../scss/theme/_buttons.scss */
+/* line 156, ../scss/theme/_buttons.scss */
 .action-lnk:first-child {
   margin-left: 0;
 }
 
-/* line 138, ../scss/theme/_buttons.scss */
+/* line 160, ../scss/theme/_buttons.scss */
 body.rtl .action-lnk {
   margin-left: 0;
   margin-right: 0.6rem;
 }
-/* line 141, ../scss/theme/_buttons.scss */
+/* line 163, ../scss/theme/_buttons.scss */
 body.rtl .action-lnk:first-child {
   margin-right: 0;
 }
 
 /* Caret */
-/* line 147, ../scss/theme/_buttons.scss */
+/* line 169, ../scss/theme/_buttons.scss */
 .caret {
   display: inline-block;
   width: 0;
@@ -924,302 +885,254 @@ body.rtl .action-lnk:first-child {
   content: "";
 }
 
-/* Top bar */
-/* line 23, ../scss/theme/_menus.scss */
-.top-bar {
-  z-index: 1000;
-  /* Menu logo */
+/* Top (Modules) Menu) */
+/* line 12, ../scss/theme/_menus.scss */
+.top-bar .logo {
+  display: inline-block;
+  height: 35px;
+  margin-top: -10px;
+  margin-bottom: -10px;
 }
-/* line 24, ../scss/theme/_menus.scss */
-.top-bar.expanded {
-  width: 100%;
+/* line 18, ../scss/theme/_menus.scss */
+.top-bar a {
+  color: #fefefe;
+  font-size: .8125rem;
+}
+/* line 22, ../scss/theme/_menus.scss */
+.top-bar a:hover {
+  background: #2ba6cb;
+}
+/* line 25, ../scss/theme/_menus.scss */
+.top-bar .menu .active > a {
+  color: #fefefe;
+  background: #555555;
 }
 /* line 29, ../scss/theme/_menus.scss */
-.top-bar .logo {
-  color: white;
-  display: inline-block;
-  font-size: 1.1rem;
-  font-weight: bold;
-  height: 35px;
-  padding: 0.625rem 0.5rem 0 0.7rem;
+.top-bar .menu .active > a:hover {
+  background: #2ba6cb;
+}
+/* line 32, ../scss/theme/_menus.scss */
+.top-bar .menu.dropdown {
+  z-index: 100;
+}
+
+/* Side (Options) Menu) */
+/* line 39, ../scss/theme/_menus.scss */
+aside.columns {
+  font-size: .875rem;
+  padding-left: 0.7em;
+  padding-right: 0.6rem;
+}
+/* line 43, ../scss/theme/_menus.scss */
+aside.columns a {
+  background: #d7d8d9;
+  color: #444;
+}
+/* line 47, ../scss/theme/_menus.scss */
+aside.columns a:hover {
+  color: #fefefe;
+  background: #2ba6cb;
+}
+/* line 51, ../scss/theme/_menus.scss */
+aside.columns li.heading {
+  margin-top: .125rem;
+  font-weight: 700;
   text-transform: uppercase;
 }
-/* line 38, ../scss/theme/_menus.scss */
-.top-bar .menu-toggle input {
-  margin-right: 5px;
-}
-/* line 41, ../scss/theme/_menus.scss */
-.top-bar li.name {
-  padding-top: 0.2rem;
-}
-/* line 44, ../scss/theme/_menus.scss */
-.top-bar .home-link {
-  font-size: 1.375rem;
-  color: white;
-  padding: 0.5rem;
-}
-
-/* line 50, ../scss/theme/_menus.scss */
-.top-bar-section li.menu-home a {
-  font-weight: bold !important;
-  font-size: 1.4em !important;
-  text-transform: capitalize !important;
-}
-
-/* Side Menu */
-/* line 57, ../scss/theme/_menus.scss */
-.sidebar {
-  background: none repeat scroll 0 0 #d7d8d9;
-  margin-top: 10px;
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
-}
-
-/* line 64, ../scss/theme/_menus.scss */
-.side-nav li {
-  list-style-type: none;
-  list-style-position: inside;
-  line-height: 1.2;
-  padding: 0;
-}
-/* line 70, ../scss/theme/_menus.scss */
-.side-nav li.heading {
-  margin-top: 0.125rem;
-}
-/* line 73, ../scss/theme/_menus.scss */
-.side-nav li.heading:not(:first-child) {
+/* line 56, ../scss/theme/_menus.scss */
+aside.columns li.heading:not(:first-child) {
   border-top: 1px solid #c0c1c2;
 }
-/* line 78, ../scss/theme/_menus.scss */
-.side-nav li.active > a:first-child:not(.button) {
-  font-weight: bold;
-  background-color: #e0e1e2;
+/* line 59, ../scss/theme/_menus.scss */
+aside.columns .menu .active > a {
+  color: #444;
+  background: #e0e1e2;
 }
-/* line 81, ../scss/theme/_menus.scss */
-.side-nav li.active > a:first-child:not(.button):hover {
-  color: #FFFFFF;
-  background-color: #2ba6cb;
+/* line 63, ../scss/theme/_menus.scss */
+aside.columns .menu .active > a:hover {
+  color: #fefefe;
+  background: #2ba6cb;
 }
-
-/* Page Header */
-/* line 92, ../scss/theme/_menus.scss */
-.main-title .org-logo {
-  vertical-align: top;
-  display: inline-block;
-  padding: 0.4rem 0.8rem 0.3rem 0;
+/* line 67, ../scss/theme/_menus.scss */
+aside.columns .menu.nested {
+  margin-left: 1.25rem;
 }
-/* line 97, ../scss/theme/_menus.scss */
-.main-title .system-title {
-  display: inline-block;
-}
-/* line 99, ../scss/theme/_menus.scss */
-.main-title .system-title .system-name {
-  color: #333333;
-}
-/* line 102, ../scss/theme/_menus.scss */
-.main-title .system-title .org-name {
-  color: #999999;
-  line-height: 1rem;
-}
-/* line 106, ../scss/theme/_menus.scss */
-.main-title .system-title h5:first-child, .main-title .system-title h6:first-child {
-  margin: 0.3rem 0 0.125rem;
-}
-/* line 110, ../scss/theme/_menus.scss */
-.main-title .personal-menu-area {
-  text-align: right;
-}
-/* line 113, ../scss/theme/_menus.scss */
-.main-title .personal-menu {
-  float: right;
-  clear: right;
-  padding-top: 0;
-  margin-bottom: 0.125rem;
-}
-/* line 118, ../scss/theme/_menus.scss */
-.main-title .personal-menu li a {
-  padding: 0 0.375rem;
-}
-/* line 122, ../scss/theme/_menus.scss */
-.main-title .language-selector {
-  float: right;
-  display: block;
-  margin-top: 0.625rem;
-  margin-bottom: 0.125rem;
+/* line 70, ../scss/theme/_menus.scss */
+aside.columns nav {
+  background: #d7d8d9;
+  margin-top: 10px;
+  padding-top: .25rem;
+  padding-bottom: .25rem;
 }
 
-/* line 131, ../scss/theme/_menus.scss */
-body.rtl .main-title .personal-menu {
-  float: left;
-  clear: left;
-}
-/* line 135, ../scss/theme/_menus.scss */
-body.rtl .main-title .language-selector {
-  float: left;
+/* line 27, ../scss/theme/_tables.scss */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
 }
 
 /* Datatables */
-/* line 27, ../scss/theme/_tables.scss */
+/* line 33, ../scss/theme/_tables.scss */
 #table-container {
   margin-bottom: 1.5rem;
 }
 
-/* line 31, ../scss/theme/_tables.scss */
+/* line 37, ../scss/theme/_tables.scss */
 table.dataTable thead th, table.dataTable th, table.dataTable td {
   border: 1px solid #cccccc;
   padding: 0.2em 1.5em 0.2em 0.5em;
 }
-/* line 36, ../scss/theme/_tables.scss */
+/* line 42, ../scss/theme/_tables.scss */
 table.dataTable thead th, table.dataTable thead td {
   background-color: #ffffff;
 }
-/* line 41, ../scss/theme/_tables.scss */
+/* line 47, ../scss/theme/_tables.scss */
 table.dataTable tbody tr.even {
   background-color: #ffffff;
 }
-/* line 44, ../scss/theme/_tables.scss */
+/* line 50, ../scss/theme/_tables.scss */
 table.dataTable tbody tr.even td.sorting_1 {
   background-color: #fafafa;
 }
-/* line 48, ../scss/theme/_tables.scss */
+/* line 54, ../scss/theme/_tables.scss */
 table.dataTable tbody tr.odd {
   background-color: #f7f8f9;
 }
-/* line 50, ../scss/theme/_tables.scss */
+/* line 56, ../scss/theme/_tables.scss */
 table.dataTable tbody tr.odd td {
   border-color: #cccccc;
 }
-/* line 54, ../scss/theme/_tables.scss */
+/* line 60, ../scss/theme/_tables.scss */
 table.dataTable tbody tr.odd td.sorting_1 {
   background-color: #f0f1f2;
 }
-/* line 60, ../scss/theme/_tables.scss */
+/* line 66, ../scss/theme/_tables.scss */
 table.dataTable tfoot th, table.dataTable tfoot td {
   background-color: #f7f8f9;
   border-top: 2px solid #cccccc;
   padding: 0.5em;
 }
-/* line 68, ../scss/theme/_tables.scss */
+/* line 74, ../scss/theme/_tables.scss */
 table.dataTable .selected-action {
   margin: 5px 0 5px;
 }
-/* line 71, ../scss/theme/_tables.scss */
+/* line 77, ../scss/theme/_tables.scss */
 table.dataTable .bulk-select-options {
   font-size: 0.7rem;
   font-weight: normal;
 }
-/* line 74, ../scss/theme/_tables.scss */
+/* line 80, ../scss/theme/_tables.scss */
 table.dataTable .bulk-select-options input[type=checkbox] {
   margin-bottom: 0.2rem;
   margin-right: 0.5rem;
   vertical-align: middle;
 }
-/* line 80, ../scss/theme/_tables.scss */
+/* line 86, ../scss/theme/_tables.scss */
 table.dataTable input.bulkcheckbox[type=checkbox] {
   margin-top: 0.2rem;
 }
-/* line 84, ../scss/theme/_tables.scss */
+/* line 90, ../scss/theme/_tables.scss */
 table.dataTable .group span.ui-icon {
   display: inline-block;
 }
-/* line 87, ../scss/theme/_tables.scss */
+/* line 93, ../scss/theme/_tables.scss */
 table.dataTable .group .group-indent {
   width: 10px;
 }
-/* line 90, ../scss/theme/_tables.scss */
+/* line 96, ../scss/theme/_tables.scss */
 table.dataTable .group .group-opened,
 table.dataTable .group .group-closed {
   padding: 0.2rem;
 }
-/* line 94, ../scss/theme/_tables.scss */
+/* line 100, ../scss/theme/_tables.scss */
 table.dataTable .group .group-collapse,
 table.dataTable .group .group-expand {
   cursor: pointer;
   float: right;
 }
-/* line 101, ../scss/theme/_tables.scss */
+/* line 107, ../scss/theme/_tables.scss */
 table.dataTable.dtr-inline.collapsed tbody td:first-child::before, table.dataTable.dtr-inline.collapsed tbody th:first-child::before {
   top: 6px;
   background-color: #2ba6cb;
 }
-/* line 106, ../scss/theme/_tables.scss */
+/* line 112, ../scss/theme/_tables.scss */
 table.dataTable.dtr-inline.collapsed tbody tr.parent td:first-child::before, table.dataTable.dtr-inline.collapsed tbody tr.parent th:first-child::before {
   top: 6px;
   background-color: #c60f13;
 }
 
-/* line 113, ../scss/theme/_tables.scss */
+/* line 119, ../scss/theme/_tables.scss */
 .dataTables_length {
   float: left !important;
 }
-/* line 115, ../scss/theme/_tables.scss */
+/* line 121, ../scss/theme/_tables.scss */
 .dataTables_length label {
   font-size: 0.75rem;
   white-space: nowrap;
   margin-right: 10em;
   margin-bottom: 0.3em;
 }
-/* line 121, ../scss/theme/_tables.scss */
+/* line 127, ../scss/theme/_tables.scss */
 .dataTables_length select {
   height: auto;
   padding: 0.2rem 1.1rem 0.2rem 0 !important;
   font-size: 0.75rem;
 }
 
-/* line 127, ../scss/theme/_tables.scss */
+/* line 133, ../scss/theme/_tables.scss */
 .dataTables_processing {
   padding: 14px 0 28px;
 }
 
-/* line 130, ../scss/theme/_tables.scss */
+/* line 136, ../scss/theme/_tables.scss */
 .dataTables_filter {
   text-align: left;
   font-size: 0.75rem;
   margin-right: 3rem;
 }
-/* line 134, ../scss/theme/_tables.scss */
+/* line 140, ../scss/theme/_tables.scss */
 .dataTables_filter input[type="search"] {
   margin-left: 0.2rem;
 }
 
-/* line 139, ../scss/theme/_tables.scss */
+/* line 145, ../scss/theme/_tables.scss */
 .dt-export-options {
   float: right;
 }
-/* line 141, ../scss/theme/_tables.scss */
+/* line 147, ../scss/theme/_tables.scss */
 .dt-export-options .list_formats {
   padding-top: 0;
   margin: 0 0.2rem;
 }
-/* line 145, ../scss/theme/_tables.scss */
+/* line 151, ../scss/theme/_tables.scss */
 .dt-export-options .dt-export {
   margin: 0 0.1rem;
 }
-/* line 147, ../scss/theme/_tables.scss */
+/* line 153, ../scss/theme/_tables.scss */
 .dt-export-options .dt-export.fa {
   font-size: 14px;
   padding: 0;
   padding-top: 2px;
 }
 
-/* line 155, ../scss/theme/_tables.scss */
+/* line 161, ../scss/theme/_tables.scss */
 body.rtl .dt-export-options,
 body.rtl .list_formats div {
   float: left;
 }
-/* line 160, ../scss/theme/_tables.scss */
+/* line 166, ../scss/theme/_tables.scss */
 body.rtl .dataTable .group .group-collapse,
 body.rtl .dataTable .group .group-expand {
   float: left;
 }
 
-/* line 166, ../scss/theme/_tables.scss */
+/* line 172, ../scss/theme/_tables.scss */
 .empty {
   font-style: italic;
   font-size: 0.825rem;
 }
 
-/* line 171, ../scss/theme/_tables.scss */
+/* line 177, ../scss/theme/_tables.scss */
 .fc table,
 .fc table tr {
   background: transparent;
@@ -2049,4 +1962,160 @@ body.rtl .rm-form .rm-assign .rm-duplicate td:first-child {
 body.rtl .rm-form .rm-assign .rm-duplicate td:last-child {
   border-right: 0;
   border-left: 1px solid red;
+}
+
+/* line 1, ../scss/theme/_wizard.scss */
+.crud-submit-button.next {
+  margin-left: 0.9375rem;
+}
+
+/* line 5, ../scss/theme/_wizard.scss */
+.wizard-btns {
+  margin-bottom: 1rem;
+}
+
+/* Uses ideas from https://codepen.io/audreyfeldroy/pen/tvxAz and https://coderwall.com/p/-7trcg/simple-css-only-wizard-progress-tracker */
+/* line 11, ../scss/theme/_wizard.scss */
+.steps {
+  padding-left: 0;
+  list-style: none;
+  /*font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;*/
+  font-size: 12px;
+  line-height: 1;
+  margin: 30px auto;
+  border-radius: 3px;
+}
+
+/* line 21, ../scss/theme/_wizard.scss */
+.steps strong {
+  font-size: 14px;
+  display: block;
+  line-height: 1.4;
+}
+
+/* line 27, ../scss/theme/_wizard.scss */
+.steps > li {
+  position: relative;
+  display: block;
+  padding: 12px 50px 8px 50px;
+  max-width: 240px;
+  height: 60px;
+}
+
+/* line 34, ../scss/theme/_wizard.scss */
+.steps[data-steps="2"] li {
+  width: 50%;
+}
+
+/* line 35, ../scss/theme/_wizard.scss */
+.steps[data-steps="3"] li {
+  width: 33%;
+}
+
+/* line 36, ../scss/theme/_wizard.scss */
+.steps[data-steps="4"] li {
+  width: 25%;
+}
+
+/* line 37, ../scss/theme/_wizard.scss */
+.steps[data-steps="5"] li {
+  width: 20%;
+}
+
+/* Arrows on bigger screens */
+/* @ToDo: Something else for smaller screens */
+@media (min-width: 768px) {
+  /* line 42, ../scss/theme/_wizard.scss */
+  .steps > li {
+    float: left;
+  }
+
+  /* line 43, ../scss/theme/_wizard.scss */
+  .steps .past {
+    color: #fff;
+    background: #50a8d6;
+  }
+
+  /* line 44, ../scss/theme/_wizard.scss */
+  .steps .current {
+    color: #fff;
+    background: #367494;
+  }
+
+  /* line 45, ../scss/theme/_wizard.scss */
+  .steps .future {
+    color: #777;
+    background: #f5f5f5;
+  }
+
+  /* line 47, ../scss/theme/_wizard.scss */
+  .steps li > span:after,
+  .steps li > span:before {
+    content: "";
+    display: block;
+    width: 0px;
+    height: 0px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: solid transparent;
+    border-left-color: #f0f0f0;
+    border-width: 30px;
+  }
+
+  /* line 61, ../scss/theme/_wizard.scss */
+  .steps li > span:after {
+    top: -5px;
+    z-index: 1;
+    border-left-color: white;
+    border-width: 34px;
+  }
+
+  /* line 68, ../scss/theme/_wizard.scss */
+  .steps li > span:before {
+    z-index: 2;
+  }
+
+  /* line 70, ../scss/theme/_wizard.scss */
+  .steps li.past + li > span:before {
+    border-left-color: #50a8d6;
+  }
+
+  /* line 71, ../scss/theme/_wizard.scss */
+  .steps li.current + li > span:before {
+    border-left-color: #367494;
+  }
+
+  /* line 72, ../scss/theme/_wizard.scss */
+  .steps li.future + li > span:before {
+    border-left-color: #f5f5f5;
+  }
+
+  /* line 74, ../scss/theme/_wizard.scss */
+  .steps li:first-child > span:after,
+  .steps li:first-child > span:before {
+    display: none;
+  }
+
+  /* Arrows at start and end */
+  /* line 78, ../scss/theme/_wizard.scss */
+  .steps li:first-child i,
+  .steps li:last-child i {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: solid transparent;
+    border-left-color: white;
+    border-width: 30px;
+  }
+
+  /* line 89, ../scss/theme/_wizard.scss */
+  .steps li:last-child i {
+    left: auto;
+    right: -30px;
+    border-left-color: transparent;
+    border-top-color: white;
+    border-bottom-color: white;
+  }
 }

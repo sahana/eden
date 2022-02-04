@@ -1,8 +1,8 @@
 $(document).ready(function() {
     var scenarios = $('#scenarios');
-    scenarios.change(function() {
+    scenarios.on('change', function() {
         // Confirmation Box
-        var scenario = $('#scenarios option:selected').prop('label');
+        var scenario = $('#scenarios option:selected').attr('label');
         if (confirm(i18n.scenarioConfirm + ' ' + scenario)) {
             // Submit Data
             var url = S3.Ap.concat('/event/incident/' + scenarios.data('incident_id') + '/scenario');

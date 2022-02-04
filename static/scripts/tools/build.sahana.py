@@ -436,8 +436,8 @@ def do_js(minimize,
          "sahana.js.jstree.cfg", "s3.jstree.min.js", None),
         ("Chat",
          "sahana.js.chat.cfg", "s3.chat.min.js", "--strict_mode_input=false"),
-        ("Guided Tour",
-         "sahana.js.guidedTour.cfg", "s3.guidedtour.min.js", None),
+        #("Guided Tour",
+        # "sahana.js.guidedTour.cfg", "s3.guidedtour.min.js", None),
         ("Timeline",
          "sahana.js.timeline.cfg", "s3.timeline.min.js", None),
         )
@@ -564,15 +564,15 @@ def do_js(minimize,
                 with openf(out_f, "w") as out:
                     out.write(minimize(inp.read()))
 
-        info("Compressing Foundation")
-        # Merge + minify
-        merged = mergejs.run("..", None, "foundation.cfg")
-        minimized = minimize(merged)
-        # Write minified file
-        with openf("foundation.min.js", "w") as outFile:
-            outFile.write(minimized)
-        # Replace target file
-        move_to("foundation.min.js", "../foundation")
+        #info("Compressing Foundation")
+        ## Merge + minify
+        #merged = mergejs.run("..", None, "foundation.cfg")
+        #minimized = minimize(merged)
+        ## Write minified file
+        #with openf("foundation.min.js", "w") as outFile:
+        #    outFile.write(minimized)
+        ## Replace target file
+        #move_to("foundation.min.js", "../foundation")
 
     if JS_VULNERABILITY:
         # Vulnerability

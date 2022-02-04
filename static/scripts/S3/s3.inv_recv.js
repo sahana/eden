@@ -33,7 +33,7 @@ $(document).ready(function() {
         };
 
         recvTypeChange();
-        recvTypeField.change(recvTypeChange);
+        recvTypeField.on('change', recvTypeChange);
     }
 
     if (reqField.length) {
@@ -58,7 +58,7 @@ $(document).ready(function() {
                     }
                     // Set to 'Internal Shipment'
                     $('#inv_recv_type').val(11)
-                                       .change();
+                                       .trigger('change');
                 }
                 toSites = data[1];
                 if (toSites.length == 1) {
@@ -73,7 +73,7 @@ $(document).ready(function() {
             lookupSites(req_id);
         }
 
-        reqField.change(function() {
+        reqField.on('change', function() {
             req_id = reqField.val();
             lookupSites(req_id);
         });
@@ -116,6 +116,6 @@ $(document).ready(function() {
         };
 
         transportTypeChange();
-        transportTypeField.change(transportTypeChange);
+        transportTypeField.on('change', transportTypeChange);
     }
 });

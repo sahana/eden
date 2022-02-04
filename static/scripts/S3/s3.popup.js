@@ -196,7 +196,7 @@ function s3_popup_refresh_caller(popupData) {
     if (typeof personID != 'undefined') {
         // Person Selector
         var field = parentWindow.$('#' + caller);
-        field.val(personID).change();
+        field.val(personID).trigger('change');
         parentWindow.S3.popup_remove();
         return;
     }
@@ -372,7 +372,7 @@ function s3_popup_refresh_caller(popupData) {
 
         if (hasDummy) {
             dummy.val(lastOptionRepr);
-            callerWidget.val(lastOptionValue).change();
+            callerWidget.val(lastOptionValue).trigger('change');
         }
 
         var i;
@@ -391,10 +391,10 @@ function s3_popup_refresh_caller(popupData) {
                 // @ToDo: Read existing values for a multi-select
                 // Clean up the caller
                 options.remove();
-                callerWidget.append(append.join('')).val(lastOptionValue).change();
+                callerWidget.append(append.join('')).val(lastOptionValue).trigger('change');
             }
             // Select the value we just added
-            callerWidget.val(lastOptionValue).change();
+            callerWidget.val(lastOptionValue).trigger('change');
             // Ensure Input not disabled
             callerWidget.prop('disabled', false);
             // Refresh MultiSelect if present
@@ -440,7 +440,7 @@ function s3_popup_refresh_caller(popupData) {
             callerWidget.html(output.join(''));
             // Select the value we just added
             values.push(lastOptionValue);
-            //callerWidget.val(values).change();
+            //callerWidget.val(values).trigger('change');
             for (i = 0; i < values.length; i++) {
                 parentWindow.$('#' + caller + ' input[value="' + values[i] + '"]').prop('checked', true);
             }

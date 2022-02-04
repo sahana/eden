@@ -15,10 +15,10 @@ $(document).ready(function() {
             type = typeField.val();
             if (type == 'PALLET') {
                 // Enable field
-                maxHeightField.removeAttr('disabled');
+                maxHeightField.prop('disabled', false);
             } else {
                 // Disable field
-                maxHeightField.attr('disabled', 'disabled');
+                maxHeightField.prop('disabled', true);
             }
         };
 

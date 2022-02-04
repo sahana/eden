@@ -5,7 +5,7 @@
 /**
  * @summary     Responsive
  * @description Responsive tables plug-in for DataTables
- * @version     1.0.2
+ * @version     1.0.2 (Patched to support jQuery 3.6.0)
  * @file        dataTables.responsive.js
  * @author      SpryMedia Ltd (www.sprymedia.co.uk)
  * @contact     www.sprymedia.co.uk/contact
@@ -333,7 +333,7 @@ Responsive.prototype = {
 
 			// Split the class name up so multiple rules can be applied if needed
 			for ( var k=0, ken=classNames.length ; k<ken ; k++ ) {
-				var className = $.trim( classNames[k] );
+				var className = classNames[k].trim();
 
 				if ( className === 'all' ) {
 					// Include in all

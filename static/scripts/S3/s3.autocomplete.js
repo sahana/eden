@@ -84,7 +84,7 @@
                         //if (create.length) {
                             // Open popup to create new entry
                             // @ToDo: prepopulate name field
-                        //    create.click();
+                        //    create.trigger('click');
                         //} else {
                             // No link to create new (e.g. no permission to do so)
                             var extra = {id: 0};
@@ -143,7 +143,7 @@
                             .append('<a>' + label + '</a>')
                             .appendTo(ul);
         };
-        dummy_input.blur(function() {
+        dummy_input.on('blur', function() {
             if (existing && existing.label != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
@@ -151,7 +151,7 @@
                 //if (create.length) {
                     // Open popup to create new entry
                     // @ToDo: prepopulate name field
-                //    create.click();
+                //    create.trigger('click');
                 //}
             }
         });
@@ -220,7 +220,7 @@
                         //if (create.length) {
                             // Open popup to create new entry
                             // @ToDo: prepopulate name field
-                        //    create.click();
+                        //    create.trigger('click');
                         //} else {
                             // No link to create new (e.g. no permission to do so)
                             data.push({
@@ -291,7 +291,7 @@
                             .append('<a>' + label + '</a>')
                             .appendTo(ul);
         };
-        dummy_input.blur(function() {
+        dummy_input.on('blur', function() {
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
@@ -299,7 +299,7 @@
                 //if (create.length) {
                     // Open popup to create new entry
                     // @ToDo: prepopulate name field
-                //    create.click();
+                //    create.trigger('click');
                 //}
             }
         });
@@ -452,7 +452,7 @@
                         //if (create.length) {
                             // Open popup to create new entry
                             // @ToDo: prepopulate name field
-                        //    create.click();
+                        //    create.trigger('click');
                         //} else {
                             // No link to create new (e.g. no permission to do so)
                             data.push({
@@ -510,7 +510,7 @@
                             .append('<a>' + label + '</a>')
                             .appendTo(ul);
         };
-        dummy_input.blur(function() {
+        dummy_input.on('blur', function() {
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
@@ -518,7 +518,7 @@
                 //if (create.length) {
                     // Open popup to create new entry
                     // @ToDo: prepopulate name field
-                //    create.click();
+                //    create.trigger('click');
                 //}
             }
         });
@@ -612,7 +612,7 @@
                         //if (create.length) {
                             // Open popup to create new entry
                             // @ToDo: prepopulate name field
-                        //    create.click();
+                        //    create.trigger('click');
                         //} else {
                             // No link to create new (e.g. no permission to do so)
                             data.push({
@@ -670,7 +670,7 @@
                             .append('<a>' + label + '</a>')
                             .appendTo(ul);
         };
-        dummy_input.blur(function() {
+        dummy_input.on('blur', function() {
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
@@ -678,7 +678,7 @@
                 //if (create.length) {
                     // Open popup to create new entry
                     // @ToDo: prepopulate name field
-                //    create.click();
+                //    create.trigger('click');
                 //}
             }
         });
@@ -755,7 +755,7 @@
                         //if (create.length) {
                             // Open popup to create new entry
                             // @ToDo: prepopulate name field
-                        //    create.click();
+                        //    create.trigger('click');
                         //} else {
                             // No link to create new (e.g. no permission to do so)
                             data.push({
@@ -818,7 +818,7 @@
                             .append('<a>' + label + '</a>')
                             .appendTo(ul);
         };
-        dummy_input.blur(function() {
+        dummy_input.on('blur', function() {
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
@@ -826,7 +826,7 @@
                 //if (create.length) {
                     // Open popup to create new entry
                     // @ToDo: prepopulate name field
-                //    create.click();
+                //    create.trigger('click');
                 //}
             }
         });
@@ -935,7 +935,7 @@
                         //if (create.length) {
                             // Open popup to create new entry
                             // @ToDo: prepopulate name field
-                        //    create.click();
+                        //    create.trigger('click');
                         //} else {
                             // No link to create new (e.g. no permission to do so)
                             data.push({
@@ -994,7 +994,7 @@
                             .append('<a>' + label + '</a>')
                             .appendTo(ul);
         };
-        dummy_input.blur(function() {
+        dummy_input.on('blur', function() {
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
@@ -1002,7 +1002,7 @@
                 //if (create.length) {
                     // Open popup to create new entry
                     // @ToDo: prepopulate name field
-                //    create.click();
+                //    create.trigger('click');
                 //}
             }
         });
@@ -1114,7 +1114,7 @@
                         //    var old_url = create.attr('href');
                         //    var new_url = old_url + '&name=' + dummy_input.val();
                         //    create.attr('href', new_url);
-                        //    create.click();
+                        //    create.trigger('click');
                             // Restore URL
                         //    create.attr('href', old_url);
                         //} else {
@@ -1174,7 +1174,7 @@
                             .append('<a>' + label + '</a>')
                             .appendTo(ul);
         };
-        dummy_input.blur(function() {
+        dummy_input.on('blur', function() {
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
@@ -1182,7 +1182,7 @@
                 //if (create.length) {
                     // Open popup to create new entry
                     // @ToDo: Prepopulate name field
-                //    create.click();
+                //    create.trigger('click');
                 //}
             }
         });
@@ -1379,7 +1379,7 @@
                         //    var old_url = create.attr('href');
                         //    var new_url = old_url + '&name=' + dummy_input.val();
                         //    create.attr('href', new_url);
-                        //    create.click();
+                        //    create.trigger('click');
                             // Restore URL
                         //    create.attr('href', old_url);
                         //} else {
@@ -1439,7 +1439,7 @@
                             .append('<a>' + label + '</a>')
                             .appendTo(ul);
         };
-        dummy_input.blur(function() {
+        dummy_input.on('blur', function() {
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
@@ -1447,7 +1447,7 @@
                 //if (create.length) {
                     // Open popup to create new entry
                     // @ToDo: Prepopulate name field
-                //    create.click();
+                //    create.trigger('click');
                 //}
             }
         });

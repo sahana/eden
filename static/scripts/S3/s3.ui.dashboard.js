@@ -169,16 +169,15 @@
                 self = this;
 
             // Config mode switches
-            // @ToDo: Replace bind() with on() as bind deprecated: http://api.jquery.com/bind/
-            $('.db-config-on').bind('click' + ns, function() {
+            $('.db-config-on').on('click' + ns, function() {
                 self.configMode(true);
             });
-            $('.db-config-off').bind('click' + ns, function() {
+            $('.db-config-off').on('click' + ns, function() {
                 self.configMode(false);
             });
 
             // Config saved => update version key
-            el.bind('configSaved' + ns, function(e, data) {
+            el.on('configSaved' + ns, function(e, data) {
 
                 // Prevent configSaved event from bubbling further up
                 e.stopPropagation();
@@ -202,7 +201,7 @@
 
             var ns = this.eventNamespace;
 
-            $('.dashboard-config').unbind(ns);
+            $('.dashboard-config').off(ns);
 
             return true;
         }
@@ -422,7 +421,7 @@
             });
 
             // Actions after successful config update
-            el.bind('configSaved' + ns, function(e, data) {
+            el.on('configSaved' + ns, function(e, data) {
 
                 // New config returned from form processing?
                 var newConfig = null;
@@ -451,7 +450,7 @@
             var el = $(this.element),
                 ns = this.eventNamespace;
 
-            el.unbind(ns);
+            el.off(ns);
 
             this.configBar.find('.db-task-config').off('click' + ns);
 

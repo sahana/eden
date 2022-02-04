@@ -1343,7 +1343,6 @@ class asset_AssetRepresent(S3Represent):
         s3db = current.s3db
         table = s3db.asset_asset
         itable = db.supply_item
-        btable = db.supply_brand
 
         qty = len(values)
         if qty == 1:
@@ -1359,8 +1358,7 @@ class asset_AssetRepresent(S3Represent):
                                 table.number,
                                 table.type,
                                 itable.name,
-                                btable.name,
-                                left = btable.on(itable.brand_id == btable.id),
+                                itable.brand,
                                 limitby = limitby,
                                 )
         self.queries += 1
@@ -1377,8 +1375,9 @@ class asset_AssetRepresent(S3Represent):
 
         # Custom Row (with the item & brand left-joined)
         number = row["asset_asset.number"]
-        item = row["supply_item.name"]
-        brand = row.get("supply_brand.name", None)
+        item = row["supply_item"]
+        brand = item.brand
+        item = item.name
 
         if not number:
             return self.default

@@ -5,7 +5,7 @@
 /**
  * @summary     DataTables
  * @description Paginate, search and order HTML tables
- * @version     1.10.3
+ * @version     1.10.3 (Patched to support jQuery 3.6.0)
  * @file        jquery.dataTables.js
  * @author      SpryMedia Ltd (www.sprymedia.co.uk)
  * @contact     www.sprymedia.co.uk/contact
@@ -897,7 +897,7 @@
 					def.targets :
 					def.aTargets;
 	
-				if ( ! $.isArray( aTargets ) )
+				if ( ! Array.isArray( aTargets ) )
 				{
 					aTargets = [ aTargets ];
 				}
@@ -1525,7 +1525,7 @@
 	
 		var cellProcess = function ( cell ) {
 			col = columns[i];
-			contents = $.trim(cell.innerHTML);
+			contents = cell.innerHTML.trim()
 	
 			if ( col && col._bAttrSrc ) {
 				var setter = _fnSetObjectDataFn( col.mData._ );
@@ -2340,7 +2340,7 @@
 	
 		// Convert to object based for 1.10+ if using the old array scheme which can
 		// come from server-side processing or serverParams
-		if ( data && $.isArray(data) ) {
+		if ( data && Array.isArray(data) ) {
 			var tmp = {};
 			var rbracket = /(.*?)\[\]$/;
 	
@@ -2371,12 +2371,12 @@
 		{
 			ajaxData = ajax.data;
 	
-			var newData = $.isFunction( ajaxData ) ?
+			var newData = typeof ajaxData === 'function' ?
 				ajaxData( data ) :  // fn can manipulate data or return an object
 				ajaxData;           // object or array to merge
 	
 			// If the function returned an object, use that alone
-			data = $.isFunction( ajaxData ) && newData ?
+			data = typeof ajaxData === 'function' && newData ?
 				newData :
 				$.extend( true, data, newData );
 	
@@ -2439,7 +2439,7 @@
 				url: ajax || oSettings.sAjaxSource
 			} ) );
 		}
-		else if ( $.isFunction( ajax ) )
+		else if ( typeof ajax === 'function' )
 		{
 			// Is a function - let the caller define what needs to be done
 			oSettings.jqXHR = ajax.call( instance, data, fn, oSettings );
@@ -2723,13 +2723,13 @@
 		var jqFilter = $('input', filter)
 			.val( previousSearch.sSearch )
 			.attr( 'placeholder', language.sSearchPlaceholder )
-			.bind(
+			.on(
 				'keyup.DT search.DT input.DT paste.DT cut.DT',
 				searchDelay ?
 					_fnThrottle( searchFn, searchDelay ) :
 					searchFn
 			)
-			.bind( 'keypress.DT', function(e) {
+			.on( 'keypress.DT', function(e) {
 				/* Prevent form submission */
 				if ( e.keyCode == 13 ) {
 					return false;
@@ -3307,7 +3307,7 @@
 			classes  = settings.oClasses,
 			tableId  = settings.sTableId,
 			menu     = settings.aLengthMenu,
-			d2       = $.isArray( menu[0] ),
+			d2       = Array.isArray( menu[0] ),
 			lengths  = d2 ? menu[0] : menu,
 			language = d2 ? menu[1] : menu;
 	
@@ -3334,13 +3334,13 @@
 		// reference is broken by the use of outerHTML
 		$('select', div)
 			.val( settings._iDisplayLength )
-			.bind( 'change.DT', function(e) {
+			.on( 'change.DT', function(e) {
 				_fnLengthChange( settings, $(this).val() );
 				_fnDraw( settings );
 			} );
 	
 		// Update node value whenever anything changes the table's length
-		$(settings.nTable).bind( 'length.dt.DT', function (e, s, len) {
+		$(settings.nTable).on( 'length.dt.DT', function (e, s, len) {
 			if ( settings === s ) {
 				$('select', div).val( len );
 			}
@@ -4177,7 +4177,7 @@
 		}
 	
 		if ( (tableWidthAttr || scrollX) && ! oSettings._reszEvt ) {
-			$(window).bind('resize.DT-'+oSettings.sInstance, _fnThrottle( function () {
+			$(window).on('resize.DT-'+oSettings.sInstance, _fnThrottle( function () {
 				_fnAdjustColumnSizing( oSettings );
 			} ) );
 	
@@ -4401,7 +4401,7 @@
 			fixedObj = $.isPlainObject( fixed ),
 			nestedSort = [],
 			add = function ( a ) {
-				if ( a.length && ! $.isArray( a[0] ) ) {
+				if ( a.length && ! Array.isArray( a[0] ) ) {
 					// 1D array
 					nestedSort.push( a );
 				}
@@ -4413,7 +4413,7 @@
 	
 		// Build the sort array, with pre-fix and post-fix options if they have been
 		// specified
-		if ( $.isArray( fixed ) ) {
+		if ( Array.isArray( fixed ) ) {
 			add( fixed );
 		}
 	
@@ -5003,9 +5003,9 @@
 	 */
 	function _fnMap( ret, src, name, mappedName )
 	{
-		if ( $.isArray( name ) ) {
+		if ( Array.isArray( name ) ) {
 			$.each( name, function (i, val) {
-				if ( $.isArray( val ) ) {
+				if ( Array.isArray( val ) ) {
 					_fnMap( ret, src, val[0], val[1] );
 				}
 				else {
@@ -5057,7 +5057,7 @@
 					}
 					$.extend( true, out[prop], val );
 				}
-				else if ( breakRefs && prop !== 'data' && prop !== 'aaData' && $.isArray(val) ) {
+				else if ( breakRefs && prop !== 'data' && prop !== 'aaData' && Array.isArray(val) ) {
 					out[prop] = val.slice();
 				}
 				else {
@@ -5082,17 +5082,17 @@
 	function _fnBindAction( n, oData, fn )
 	{
 		$(n)
-			.bind( 'click.DT', oData, function (e) {
-					n.blur(); // Remove focus outline for mouse users
+			.on( 'click.DT', oData, function (e) {
+					n.trigger('blur'); // Remove focus outline for mouse users
 					fn(e);
 				} )
-			.bind( 'keypress.DT', oData, function (e){
+			.on( 'keypress.DT', oData, function (e){
 					if ( e.which === 13 ) {
 						e.preventDefault();
 						fn(e);
 					}
 				} )
-			.bind( 'selectstart.DT', function () {
+			.on( 'selectstart.DT', function () {
 					/* Take the brutal approach to cancelling text selection */
 					return false;
 				} );
@@ -5375,7 +5375,7 @@
 			var api = this.api( true );
 		
 			/* Check if we want to add multiple rows or not */
-			var rows = $.isArray(data) && ( $.isArray(data[0]) || $.isPlainObject(data[0]) ) ?
+			var rows = Array.isArray(data) && ( Array.isArray(data[0]) || $.isPlainObject(data[0]) ) ?
 				api.rows.add( data ) :
 				api.row.add( data );
 		
@@ -5403,7 +5403,7 @@
 		 *        "bPaginate": false
 		 *      } );
 		 *
-		 *      $(window).bind('resize', function () {
+		 *      $(window).on('resize', function () {
 		 *        oTable.fnAdjustColumnSizing();
 		 *      } );
 		 *    } );
@@ -6094,7 +6094,7 @@
 			// If the length menu is given, but the init display length is not, use the length menu
 			if ( oInit.aLengthMenu && ! oInit.iDisplayLength )
 			{
-				oInit.iDisplayLength = $.isArray( oInit.aLengthMenu[0] ) ?
+				oInit.iDisplayLength = Array.isArray( oInit.aLengthMenu[0] ) ?
 					oInit.aLengthMenu[0][0] : oInit.aLengthMenu[0];
 			}
 			
@@ -6212,7 +6212,7 @@
 			if ( oInit.iDeferLoading !== null )
 			{
 				oSettings.bDeferLoading = true;
-				var tmp = $.isArray( oInit.iDeferLoading );
+				var tmp = Array.isArray( oInit.iDeferLoading );
 				oSettings._iRecordsDisplay = tmp ? oInit.iDeferLoading[0] : oInit.iDeferLoading;
 				oSettings._iRecordsTotal = tmp ? oInit.iDeferLoading[1] : oInit.iDeferLoading;
 			}
@@ -6642,7 +6642,7 @@
 			}
 		};
 	
-		if ( $.isArray( context ) ) {
+		if ( Array.isArray( context ) ) {
 			for ( var i=0, ien=context.length ; i<ien ; i++ ) {
 				ctxSettings( context[i] );
 			}
@@ -6994,7 +6994,7 @@
 	
 	_Api.register = _api_register = function ( name, val )
 	{
-		if ( $.isArray( name ) ) {
+		if ( Array.isArray( name ) ) {
 			for ( var j=0, jen=name.length ; j<jen ; j++ ) {
 				_Api.register( name[j], val );
 			}
@@ -7059,7 +7059,7 @@
 				// New API instance returned, want the value from the first item
 				// in the returned array for the singular result.
 				return ret.length ?
-					$.isArray( ret[0] ) ?
+					Array.isArray( ret[0] ) ?
 						new _Api( ret.context, ret[0] ) : // Array results are 'enhanced'
 						ret[0] :
 					undefined;
@@ -7452,7 +7452,7 @@
 				[ selector[i] ];
 	
 			for ( j=0, jen=a.length ; j<jen ; j++ ) {
-				res = select( typeof a[j] === 'string' ? $.trim(a[j]) : a[j] );
+				res = select( typeof a[j] === 'string' ? a[j].trim() : a[j] );
 	
 				if ( res && res.length ) {
 					out.push.apply( out, res );
@@ -7829,7 +7829,7 @@
 			}
 		};
 	
-		if ( $.isArray( data ) || data instanceof $ ) {
+		if ( Array.isArray( data ) || data instanceof $ ) {
 			for ( var i=0, ien=data.length ; i<ien ; i++ ) {
 				addRow( data[i], klass );
 			}
@@ -8579,7 +8579,7 @@
 			// Simple column / direction passed in
 			order = [ [ order, dir ] ];
 		}
-		else if ( ! $.isArray( order[0] ) ) {
+		else if ( ! Array.isArray( order[0] ) ) {
 			// Arguments passed in (list of 1D arrays)
 			order = Array.prototype.slice.call( arguments );
 		}
@@ -8933,8 +8933,8 @@
 			// Blitz all `DT` namespaced events (these are internal events, the
 			// lowercase, `dt` events are user subscribed and they are responsible
 			// for removing them
-			jqWrapper.unbind('.DT').find(':not(tbody *)').unbind('.DT');
-			$(window).unbind('.DT-'+settings.sInstance);
+			jqWrapper.off('.DT').find(':not(tbody *)').off('.DT');
+			$(window).off('.DT-'+settings.sInstance);
 	
 			// When scrolling we had to break the table up - restore it
 			if ( table != thead.parentNode ) {
@@ -14053,7 +14053,7 @@
 					for ( i=0, ien=buttons.length ; i<ien ; i++ ) {
 						button = buttons[i];
 	
-						if ( $.isArray( button ) ) {
+						if ( Array.isArray( button ) ) {
 							var inner = $( '<'+(button.DT_el || 'div')+'/>' )
 								.appendTo( container );
 							attach( inner, button );
@@ -14134,7 +14134,7 @@
 					attach( $(host).empty(), buttons );
 	
 					if ( activeEl !== null ) {
-						$(host).find( '[data-dt-idx='+activeEl+']' ).focus();
+						$(host).find( '[data-dt-idx='+activeEl+']' ).trigger('focus');
 					}
 				}
 				catch (e) {}

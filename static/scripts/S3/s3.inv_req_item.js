@@ -68,7 +68,7 @@ $(document).ready(function() {
                 message = 'Quantity Reserved decreased to Quantity Requested';
                 error = $('<div id="inv_req_item_quantity_reserved-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
                 totalQuantityField.val(totalQuantity)
-                                  .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                                  .parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                     $(this).fadeOut('slow').remove();
                     return false;
                 });
@@ -77,7 +77,7 @@ $(document).ready(function() {
                 message = 'Quantity Reserved cannot be negative';
                 error = $('<div id="inv_req_item_quantity_reserved-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
                 totalQuantityField.val(totalQuantity)
-                                  .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                                  .parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                     $(this).fadeOut('slow').remove();
                     return false;
                 });
@@ -109,7 +109,7 @@ $(document).ready(function() {
                 message = 'Quantity Reserved increased to Quantity in Bins';
                 error = $('<div id="inv_req_item_quantity_reserved-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
                 totalQuantityField.val(totalQuantity)
-                                  .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                                  .parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                     $(this).fadeOut('slow').remove();
                     return false;
                 });
@@ -182,7 +182,7 @@ $(document).ready(function() {
             if (message) {
                 error = $('<div id="sub_defaultreq_item_inv_defaultreq_item_inv_i_quantity_edit_none-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
                 newRowQuantityField.val(availableQuantity)
-                                   .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                                   .parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                     $(this).fadeOut('slow').remove();
                     return false;
                 });
@@ -240,7 +240,7 @@ $(document).ready(function() {
                 // Enable the Bins
                 singleRow = false;
                 onTreeReady = function() {
-                    $('.s3-hierarchy-button').removeAttr('disabled');
+                    $('.s3-hierarchy-button').prop('disabled', false);
                     // Filter the Bins
                     // - can be done client-side without any AJAX, as we have all the layout_ids
                     newTree.hierarchicalopts('show', bins, true);
@@ -330,7 +330,7 @@ $(document).ready(function() {
             if (message) {
                 error = $('<div id="sub_defaultreq_item_inv_defaultreq_item_inv_i_quantity_edit_0-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
                 oldRowQuantityField.val(availableQuantity)
-                                   .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                                   .parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                     $(this).fadeOut('slow').remove();
                     return false;
                 });
@@ -365,7 +365,7 @@ $(document).ready(function() {
                 }
             } else {
                 // Enable the Bins
-                $('.s3-hierarchy-button').removeAttr('disabled');
+                $('.s3-hierarchy-button').prop('disabled', false);
                 // Filter the Bins
                 // - can be done client-side without any AJAX, as we have all the layout_ids
                 oldTree.hierarchicalopts('show', bins);
@@ -390,7 +390,7 @@ $(document).ready(function() {
             binnedQuantity -= binQuantity;
         });
 
-        $('#rdy-defaultbin-0').click(function() {
+        $('#rdy-defaultbin-0').on('click', function() {
             // read-only row has been opened for editing
             // - Tick clicked to save changes
             binQuantity = oldRowQuantityField.val();

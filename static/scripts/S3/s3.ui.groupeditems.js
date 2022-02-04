@@ -581,7 +581,7 @@
                 ns = this.eventNamespace,
                 self = this;
 
-            el.delegate('.gi-export', 'click' + ns, function() {
+            el.on('click' + ns, '.gi-export', function() {
 
                 var url = $(this).data('url'),
                     queries = self._getFilters();
@@ -601,7 +601,7 @@
             var el = $(this.element),
                 ns = this.eventNamespace;
 
-            el.undelegate(ns);
+            el.off(ns);
         }
     });
 })(jQuery);

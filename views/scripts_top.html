@@ -12,19 +12,19 @@ function s3_debug(message, value) {
 //]]></script>
 {{if s3.cdn:}}
  {{# For Sites Hosted on the Public Internet, using Google's version of jQuery should provide better performance }}
- <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.js"></script>
- <script src="//code.jquery.com/jquery-migrate-1.4.1.js"></script>
+ <script src="//ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.js"></script>
+ <script src="//code.jquery.com/jquery-migrate-3.3.2.js"></script>
  {{else:}}
- <script src="/{{=appname}}/static/scripts/jquery-2.2.4.js"></script>
- <script src="/{{=appname}}/static/scripts/jquery-migrate-1.4.1.js"></script>
+ <script src="/{{=appname}}/static/scripts/jquery-3.6.0.js"></script>
+ <script src="/{{=appname}}/static/scripts/jquery-migrate-3.3.2.js"></script>
 {{pass}}
 {{=s3base.s3_include_debug_js()}}
 {{else:}}{{# Running in Production mode, so we want fewer compressed scripts to download}}
 <script>function s3_debug(){}</script>
 {{if s3.cdn:}}{{# For Sites Hosted on the Public Internet, using a CDN should provide better performance}}
- <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+ <script src="//ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 {{else:}}
- <script src="/{{=appname}}/static/scripts/jquery-2.2.4.min.js"></script>
+ <script src="/{{=appname}}/static/scripts/jquery-3.3.2.min.js"></script>
 {{pass}}
 {{# Built by /static/scripts/tools/build.sahana.py }}
 <script src="/{{=appname}}/static/scripts/S3/S3.min.js"></script>

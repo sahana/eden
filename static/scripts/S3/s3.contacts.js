@@ -15,7 +15,7 @@ $(document).ready(function() {
         controller = S3.pr_contacts_controller,
         access = S3.pr_contacts_access;
 
-    $('#contact-add').click(function() {
+    $('#contact-add').on('click', function() {
         // Show a Spinner
         $('#contact-add_throbber').removeClass('hide').show();
         var button = $(this);
@@ -50,14 +50,14 @@ $(document).ready(function() {
         var contact = $(this);
         var id = contact.attr('id').match(/\d+/);
 
-        contact.find('a.delete-btn-ajax').click(function (e) {
+        contact.find('a.delete-btn-ajax').on('click', function (e) {
             if (confirm(i18n.delete_confirmation)) {
                 $.post(S3.Ap.concat('/pr/contact/' + id[0] + '/delete'));
                 contact.addClass('hide');
             }
         });
 
-        contact.find('a.editBtn').click(function(e) {
+        contact.find('a.editBtn').on('click', function(e) {
             var span = contact.find('span');
             var current = span.html();
 
@@ -96,7 +96,7 @@ $(document).ready(function() {
                                 $('<div id="pr_contact_value_error" class="error">' + error_message + '</div>')
                                     .css({display: 'none'})
                                     .slideDown('slow')
-                                    .click(function() { $(this).fadeOut('slow'); return false; })
+                                    .on('click', function() { $(this).fadeOut('slow'); return false; })
                             );
                             contact.removeClass('saving').addClass('edit');
                             form.find('input[type=submit]').removeClass('hide');
@@ -114,7 +114,7 @@ $(document).ready(function() {
         });
     });
 
-    $('#emergency-add').click(function() {
+    $('#emergency-add').on('click', function() {
         // Show a Spinner
         $('#emergency-add_throbber').removeClass('hide').show();
         var button = $(this);
@@ -151,14 +151,14 @@ $(document).ready(function() {
         var emergency = $(this);
         var id = emergency.attr('id').match(/\d+/);
 
-        emergency.find('a.delete-btn-ajax').click(function (e) {
+        emergency.find('a.delete-btn-ajax').on('click', function (e) {
             if (confirm(i18n.delete_confirmation)) {
                 $.post(S3.Ap.concat('/pr/contact_emergency/' + id + '/delete'));
                 emergency.addClass('hide');
             }
         });
 
-        emergency.find('a.editBtn').click(function() {
+        emergency.find('a.editBtn').on('click', function() {
             // Show a Spinner
             $('#emergency-add_throbber').removeClass('hide').show();
             // Download the form
@@ -187,7 +187,7 @@ $(document).ready(function() {
     });
 
     /* Addresses not done in this controller for now as can't load Google Maps properly
-    $('#address-add').click(function () {
+    $('#address-add').on('click', function () {
         // Show a Spinner
         $('#address-add_throbber').removeClass('hide').show();
         var button = $(this);
@@ -221,7 +221,7 @@ $(document).ready(function() {
     $('.address').each(function () {
         var address = $(this);
         var id = address.attr('id').match(/\d+/);
-        address.find('a.editBtn').click(function () {
+        address.find('a.editBtn').on('click', function () {
             // Show a Spinner
             $('#address-add_throbber').removeClass('hide').show();
             // Download the form

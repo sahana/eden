@@ -42,7 +42,7 @@
       this.inputs = instance.menu.find('input[type="checkbox"], input[type="radio"]');
 
       // build the input box
-      this.input = wrapper.find('input').bind({
+      this.input = wrapper.find('input').on({
         keydown: function(e) {
           // prevent the enter key from submitting the form / closing the widget
           if(e.which === 13) {
@@ -91,20 +91,20 @@
       };
 
       // rebuild cache when multiselect is updated
-      var doc = $(document).bind('multiselectrefresh.' + instance._namespaceID, $.proxy(function() {
+      var doc = $(document).on('multiselectrefresh.' + instance._namespaceID, $.proxy(function() {
         this.updateCache();
         this._handler();
       }, this));
 
       // automatically reset the widget on close?
       if(this.options.autoReset) {
-        doc.bind('multiselectclose.' + instance._namespaceID, $.proxy(this._reset, this));
+        doc.on('multiselectclose.' + instance._namespaceID, $.proxy(this._reset, this));
       }
     },
 
     // thx for the logic here ben alman
     _handler: function(e) {
-      var term = $.trim(this.input[0].value.toLowerCase()),
+      var term = this.input[0].value.toLowerCase().trim(),
 
       // speed up lookups
       rows = this.rows, inputs = this.inputs, cache = this.cache;

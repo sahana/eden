@@ -1852,6 +1852,7 @@ class OrganisationRegionModel(S3Model):
                                     comment = S3PopupLink(c = "org",
                                                           f = "region",
                                                           label = T("Add Region"),
+                                                          vars = {"parent": "organisation_region"},
                                                           title = T("Region"),
                                                           tooltip = T("If you don't see the Type in the list, you can add a new one by clicking link 'Add Region'."),
                                                           ),

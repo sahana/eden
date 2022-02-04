@@ -59,7 +59,7 @@ class S3MainMenu(object):
             cls.menu_gis(right = True),
             cls.menu_auth(right = True),
             cls.menu_admin(right = True),
-        )
+            )
 
         return main_menu
 
@@ -214,13 +214,16 @@ class S3MainMenu(object):
 
             self_registration = settings.get_security_registration_visible()
             if self_registration == "index":
-                register = MM("Register", c="default", f="index", m="register",
-                               vars={"_next": login_next},
-                               check=self_registration)
+                register = MM("Register",
+                              c="default", f="index", m="register",
+                              vars = {"_next": login_next},
+                              check = self_registration,
+                              )
             else:
                 register = MM("Register", m="register",
-                               vars={"_next": login_next},
-                               check=self_registration)
+                              vars = {"_next": login_next},
+                              check = self_registration,
+                              )
 
             if settings.get_auth_password_changes() and \
                settings.get_auth_password_retrieval():
@@ -228,14 +231,17 @@ class S3MainMenu(object):
             else:
                 lost_pw = None
 
-            menu_auth = MM("Login", c="default", f="user", m="login",
-                           _id="auth_menu_login",
-                           vars={"_next": login_next}, **attr)(
-                                MM("Login", m="login",
-                                   vars={"_next": login_next}),
-                                register,
-                                lost_pw,
-                                )
+            menu_auth = MM("Login",
+                           c="default", f="user", m="login",
+                           _id = "auth_menu_login",
+                           vars = {"_next": login_next},
+                           **attr)(
+                            MM("Login", m="login",
+                               vars = {"_next": login_next},
+                               ),
+                            register,
+                            lost_pw,
+                            )
         else:
             # Logged-in
 
@@ -244,24 +250,32 @@ class S3MainMenu(object):
             else:
                 change_pw = None
 
-            menu_auth = MM(auth.user.email, c="default", f="user",
-                           translate=False, link=False, _id="auth_menu_email",
+            menu_auth = MM(auth.user.email,
+                           c="default", f="user",
+                           translate = False,
+                           link = False,
+                           _id = "auth_menu_email",
                            **attr)(
-                            MM("Logout", m="logout", _id="auth_menu_logout"),
+                            MM("Logout", m="logout",
+                               _id = "auth_menu_logout",
+                               ),
                             MM("User Profile", m="profile"),
                             MM("Personal Data", c="default", f="person", m="update"),
                             MM("Contact Details", c="pr", f="person",
-                                args="contact",
-                                vars={"person.pe_id" : auth.user.pe_id}),
+                               args = "contact",
+                               vars = {"person.pe_id" : auth.user.pe_id},
+                               ),
                             #MM("Subscriptions", c="pr", f="person",
                             #    args="pe_subscription",
                             #    vars={"person.pe_id" : auth.user.pe_id}),
                             change_pw,
                             SEP(),
                             MM({"name": current.T("Rapid Data Entry"),
-                               "id": "rapid_toggle",
-                               "value": current.session.s3.rapid_data_entry is True},
-                               f="rapid"),
+                                "id": "rapid_toggle",
+                                "value": current.session.s3.rapid_data_entry is True,
+                                },
+                               f = "rapid",
+                               ),
                         )
 
         return menu_auth
@@ -278,17 +292,17 @@ class S3MainMenu(object):
         if has_role("ADMIN"):
             translate = settings.has_module("translate")
             menu_admin = MM(name_nice, c="admin", **attr)(
-                                MM("Setup", c="setup"),
-                                MM("Settings", f="setting"),
-                                MM("Users", f="user"),
-                                MM("Person Registry", c="pr"),
-                                MM("CMS", c="cms", f="post"),
-                                MM("Database", c="appadmin", f="index"),
-                                MM("Error Tickets", f="errors"),
-                                MM("Synchronization", c="sync", f="index"),
-                                MM("Translation", c="admin", f="translate",
-                                   check=translate),
-                                #MM("Test Results", f="result"),
+                            MM("Setup", c="setup"),
+                            MM("Settings", f="setting"),
+                            MM("Users", f="user"),
+                            MM("Person Registry", c="pr"),
+                            MM("CMS", c="cms", f="post"),
+                            MM("Database", c="appadmin", f="index"),
+                            MM("Error Tickets", f="errors"),
+                            MM("Synchronization", c="sync", f="index"),
+                            MM("Translation", c="admin", f="translate",
+                               check=translate),
+                            #MM("Test Results", f="result"),
                             )
         elif has_role("ORG_ADMIN"):
             menu_admin = MM(name_nice, c="admin", f="user", **attr)()
@@ -402,19 +416,19 @@ class S3MainMenu(object):
 
         return MOA(c="default")(
                 MOA("Login with Facebook", f="facebook",
-                    args=["login"],
+                    args = ["login"],
                     api = "facebook",
                     check = lambda item: current.s3db.msg_facebook_login(),
                     title = T("Login using Facebook account"),
                     ),
                 MOA("Login with Google", f="google",
-                    args=["login"],
+                    args = ["login"],
                     api = "google",
                     check = lambda item: settings.get_auth_google(),
                     title = T("Login using Google account"),
                     ),
                 MOA("Login with Humanitarian.ID", f="humanitarian_id",
-                    args=["login"],
+                    args = ["login"],
                     api = "humanitarianid",
                     check = lambda item: settings.get_auth_humanitarian_id(),
                     title = T("Login using Humanitarian.ID account"),

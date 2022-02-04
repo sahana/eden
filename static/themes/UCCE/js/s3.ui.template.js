@@ -3851,8 +3851,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
             var ns = this.eventNamespace;
 
-            $('#survey-name').unbind(ns);
-            $('#survey-l10n').unbind(ns);
+            $('#survey-name').off(ns);
+            $('#survey-l10n').off(ns);
             var draggable_el = $('.draggable');
             if (draggable_el.draggable('instance') != undefined) {
                 draggable_el.draggable('destroy');

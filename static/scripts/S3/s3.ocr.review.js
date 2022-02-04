@@ -1,12 +1,12 @@
 $(document).ready(function() {
     $('form#ocr-review-form a.colorbox').remove();
 
-    $('.ignore-button').filter(':button').click(function() {
+    $('.ignore-button').filter(':button').on('click', function() {
         $(this).toggleClass('ignore-button-toggle-yes');
         return false;
     });
 
-    $('.clrbutton').filter(':button').click(function() {
+    $('.clrbutton').filter(':button').on('click', function() {
         var buttonid = this.name.split('-')[1];
         try {
             $('.field-' + buttonid).val('');
@@ -18,7 +18,7 @@ $(document).ready(function() {
         return false;
     });
 
-    $('.submit-button').filter(':button').click(function() {
+    $('.submit-button').filter(':button').on('click', function() {
         var ignore_fields = '';
         $.each($('.ignore-button-toggle-yes'), function(index, value) {
             if (ignore_fields === '') {

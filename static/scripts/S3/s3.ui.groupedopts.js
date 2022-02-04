@@ -304,7 +304,7 @@
         _bindEvents: function() {
 
             var self = this;
-            self.menu.find('.s3-groupedopts-option').click(function() {
+            self.menu.find('.s3-groupedopts-option').on('click', function() {
                 var $this = $(this);
                 var value = $this.val(),
                     el = self.element,
@@ -345,7 +345,7 @@
             // Apply cluetip (from S3.js)
             self.menu.find('label[title]').cluetip({splitTitle: '|', showTitle:false});
 
-            self.menu.find('.s3-groupedopts-label').click(function() {
+            self.menu.find('.s3-groupedopts-label').on('click', function() {
                 var div = $(this);
                 div.next('table').toggle();
                 div.toggleClass('expanded');

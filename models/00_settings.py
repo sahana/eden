@@ -282,16 +282,6 @@ s3_crud.confirm_delete = T("Do you really want to delete these records?")
 s3_crud.archive_not_delete = settings.get_security_archive_not_delete()
 s3_crud.navigate_away_confirm = settings.get_ui_navigate_away_confirm()
 
-# Content Type Headers, default is application/xml for XML formats
-# and text/x-json for JSON formats, other content types must be
-# specified here:
-s3.content_type = {"tc": "application/atom+xml", # TableCast feeds
-                   "rss": "application/rss+xml", # RSS
-                   "geojson": "application/geo+json", # GeoJSON
-                   "georss": "application/rss+xml", # GeoRSS
-                   "kml": "application/vnd.google-earth.kml+xml", # KML
-                   }
-
 # JSON Formats
 s3.json_formats = ("geojson", "s3json")
 

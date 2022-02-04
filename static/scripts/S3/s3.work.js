@@ -10,10 +10,10 @@
      * Bind button event handlers for sign-up and cancellation
      */
     var bindSignUpActions = function() {
-        $('.job-signup').unbind('.work').bind('click.work', function() {
+        $('.job-signup').off('.work').on('click.work', function() {
             signup(this, true);
         });
-        $('.job-cancel').unbind('.work').bind('click.work', function() {
+        $('.job-cancel').off('.work').on('click.work', function() {
             signup(this, false);
         });
     };
@@ -66,7 +66,7 @@
      */
     $(document).ready(function() {
         // Re-bind signup-actions after every datalist update
-        $('.job-signup, .job-cancel').closest('.dl').unbind('.work').bind('listUpdate.work', function() {
+        $('.job-signup, .job-cancel').closest('.dl').off('.work').on('listUpdate.work', function() {
             bindSignUpActions();
         });
         // ...and bind once at document-ready

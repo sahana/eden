@@ -1459,7 +1459,7 @@
     $.fn.fgtimepicker = function (options) {
         /* Initialise the time picker. */
         if (!$.fgtimepicker.initialized) {
-            $(document).mousedown($.fgtimepicker._checkExternalClick);
+            $(document).on('mousedown', $.fgtimepicker._checkExternalClick);
             $.fgtimepicker.initialized = true;
         }
 

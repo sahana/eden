@@ -368,7 +368,7 @@
             if (this.dateInput && this.timeInput) {
                 this._updateInput();
             } else {
-                el.val('').change();
+                el.val('').trigger('change');
             }
 
             this._updateExtremes(null);
@@ -598,7 +598,7 @@
 
                     onSelect: function( /* input */ ) {
                         // Trigger a change event (calendarPicker does not)
-                        el.change();
+                        el.trigger('change');
                     },
                     onClose: function(selectedDates) {
                         var selectedDate = null;
@@ -774,7 +774,7 @@
                 date = this.dateInput.val(),
                 time = this.timeInput.val();
 
-            el.val(this._join(date, time)).change();
+            el.val(this._join(date, time)).trigger('change');
 
             // Inform the filter form about the change
             el.closest('.filter-form').trigger('optionChanged');
@@ -895,7 +895,7 @@
             var node = $(trigger);
             if (node.is(':focus')) {
                 node.one('click', function(){
-                    $(this).focus();
+                    $(this).trigger('focus');
                 });
             }
             return node;
@@ -1150,23 +1150,23 @@
 
             // Trigger calendarsPicker.show when real input receives focus
             if (this.dateInput || this.timeInput) {
-                el.bind('focus' + ns, function() {
+                el.on('focus' + ns, function() {
                     self.dateInput.calendarsPicker('show');
                 });
-                el.bind('keypress' + ns, function(event) {
+                el.on('keypress' + ns, function(event) {
                     self._manualInput(event);
                 });
-                el.bind('keydown' + ns, function(event) {
+                el.on('keydown' + ns, function(event) {
                     self._manualInput(event);
                 });
-                el.bind('keyup' + ns, function(event) {
+                el.on('keyup' + ns, function(event) {
                     self._manualInput(event);
                 });
                 // Change-event for date and time inputs
-                this.dateInput.bind('change' + ns, function() {
+                this.dateInput.on('change' + ns, function() {
                     self._updateInput();
                 });
-                this.timeInput.bind('change' + ns, function() {
+                this.timeInput.on('change' + ns, function() {
                     self._updateInput();
                 });
             }
@@ -1174,7 +1174,7 @@
             // Trigger-button
             if (this.triggerButton) {
                 if (this.options.calendar == "gregorian") {
-                    this.triggerButton.bind('click' + ns, function() {
+                    this.triggerButton.on('click' + ns, function() {
                         el.datepicker('show');
                     });
                 } else {
@@ -1182,7 +1182,7 @@
                     if (!element) {
                         element = el;
                     }
-                    this.triggerButton.bind('click' + ns, function() {
+                    this.triggerButton.on('click' + ns, function() {
                         element.calendarsPicker('show');
                     });
                 }
@@ -1190,7 +1190,7 @@
 
             // Clear-button
             if (this.clearButton) {
-                this.clearButton.bind('click' + ns, function() {
+                this.clearButton.on('click' + ns, function() {
                     self.clear();
                 });
             }
@@ -1208,24 +1208,24 @@
                 ns = this.eventNamespace;
 
             // Real input
-            el.unbind(ns);
+            el.off(ns);
 
             // Hidden inputs
             if (this.dateInput) {
-                this.dateInput.unbind(ns);
+                this.dateInput.off(ns);
             }
             if (this.timeInput) {
-                this.timeInput.unbind(ns);
+                this.timeInput.off(ns);
             }
 
             // Clear-button
             if (this.clearButton) {
-                this.clearButton.unbind(ns);
+                this.clearButton.off(ns);
             }
 
             // Trigger-button
             if (this.triggerButton) {
-                this.triggerButton.unbind(ns);
+                this.triggerButton.off(ns);
             }
 
             return true;

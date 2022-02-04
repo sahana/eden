@@ -260,28 +260,28 @@
             var self = this,
                 ns = this.eventNamespace;
 
-            this.input.closest('form').bind('submit' + this.eventNamespaceID, function () {
+            this.input.closest('form').on('submit' + this.eventNamespaceID, function () {
                 self._onFormSubmission();
                 return true;
             });
 
-            this.selectBtn.bind('click' + ns, function() {
+            this.selectBtn.on('click' + ns, function() {
                 // Activate search
                 self.selectRow.hide();
                 self.autocompleteRow.removeClass('hide').show();
                 self.autocompleteLabel.removeClass('hide').show();
-                self.dummyInput.removeClass('hide').show().focus();
+                self.dummyInput.removeClass('hide').show().trigger('focus');
             });
 
-            this.editBtn.bind('click' + ns, function() {
+            this.editBtn.on('click' + ns, function() {
                 self._edit();
             });
 
-            this.clearBtn.bind('click' + ns, function() {
+            this.clearBtn.on('click' + ns, function() {
                 self._clear();
             });
 
-            this.dummyInput.bind('focusout' + ns, function() {
+            this.dummyInput.on('focusout' + ns, function() {
                 // Reset form when clicking outside of dummy input
                 var componentID = self.input.val();
                 $(this).hide();
@@ -293,7 +293,7 @@
             });
 
             if (!this.options.autocomplete) {
-                this.dummyInput.bind('change' + ns, function() {
+                this.dummyInput.on('change' + ns, function() {
                     var value = $(this).val();
                     if (value) {
                         self.input.val(value).change();
@@ -301,7 +301,7 @@
                 })
             }
 
-            this.input.bind('change' + ns, function() {
+            this.input.on('change' + ns, function() {
                 var value = $(this).val();
                 if (value) {
                     self.select(value);
@@ -318,13 +318,13 @@
 
             var ns = this.eventNamespace;
 
-            this.input.closest('form').unbind(this.eventNamespaceID);
+            this.input.closest('form').off(this.eventNamespaceID);
 
-            this.selectBtn.unbind(ns);
-            this.editBtn.unbind(ns);
-            this.clearBtn.unbind(ns);
+            this.selectBtn.off(ns);
+            this.editBtn.off(ns);
+            this.clearBtn.off(ns);
 
-            this.dummyInput.unbind(ns);
+            this.dummyInput.off(ns);
 
             return true;
         }

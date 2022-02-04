@@ -51,7 +51,14 @@ from s3theme import NAV, SECTION
 
 # =============================================================================
 class S3MainMenuDefaultLayout(S3NavigationItem):
-    """ Application Main Menu Layout """
+    """
+        Application Main Menu Layout
+
+        Classes use Foundation's Top-Bar Component, which wraps
+                    Foundation's Menu component
+            https://get.foundation/sites/docs/menu.html
+            https://get.foundation/sites/docs/top-bar.html
+    """
 
     # Use the layout method of this class in templates/<theme>/layouts.py
     # if it is available at runtime (otherwise fallback to this layout):
@@ -88,17 +95,16 @@ class S3MainMenuDefaultLayout(S3NavigationItem):
                     toplevel = False
 
                 if item.components:
-                    classes.append("has-dropdown not-click")
-                    _class = " ".join(classes)
                     # Menu item with Dropdown
-                    if item.get_first(enabled=True):
-                        _href = item.url()
+                    if item.get_first(enabled = True):
+                        classes.append("is-dropdown-submenu-parent") # Prevent FoUC
+                        _class = " ".join(classes)
                         return LI(A(item.label,
-                                    _href = _href,
-                                    _id = item.attr._id
+                                    _href = item.url(),
+                                    _id = item.attr._id,
                                     ),
                                   UL(items,
-                                     _class = "dropdown"
+                                     _class = "menu",
                                      ),
                                   _class = _class,
                                   )
@@ -148,29 +154,30 @@ class S3MainMenuDefaultLayout(S3NavigationItem):
                 T = current.T
                 settings = current.deployment_settings
 
-                if item.opts.title_area:
-                    # Custom override
-                    title_area = item.opts.title_area
-                else:
-                    # Standard: render a menu logo
-                    logo = settings.get_ui_menu_logo()
-                    if logo is None:
-                        # Render an icon
-                        logo = SPAN(settings.get_system_name_short(),
-                                    _class = "logo",
-                                    )
-                    elif isinstance(logo, str):
-                        # Assume image-URL
-                        logo = IMG(_src = logo,
-                                   _class = "logo",
-                                   _alt = settings.get_system_name_short(),
-                                   )
-                    #else:
-                        # use as-is (assume HTML or T())
-                    title_area = A(logo,
-                                   _href = URL(c="default", f="index"),
-                                   _title = T("Homepage"),
-                                   )
+                # CRMT/WACOP used this:
+                #if item.opts.title_area:
+                #    # Custom override
+                #    title_area = item.opts.title_area
+                #else:
+                # Standard: render a menu logo
+                logo = settings.get_ui_menu_logo()
+                if logo is None:
+                    # Render an icon
+                    logo = SPAN(settings.get_system_name_short(),
+                                _class = "logo",
+                                )
+                elif isinstance(logo, str):
+                    # Assume image-URL
+                    logo = IMG(_src = logo,
+                               _class = "logo",
+                               _alt = settings.get_system_name_short(),
+                               )
+                #else:
+                    # use as-is (assume HTML or T())
+                title_area = A(logo,
+                               _href = URL(c="default", f="index"),
+                               _title = T("Homepage"),
+                               )
 
                 # Arrange items left/right
                 right = []
@@ -187,25 +194,24 @@ class S3MainMenuDefaultLayout(S3NavigationItem):
                 if current.response.s3.rtl:
                     right, left = left, right
 
+                left = UL(title_area,
+                          left,
+                          _class = "menu dropdown",
+                          )
+                left["_data-dropdown-menu"] = ""
+                right = UL(right,
+                           _class = "menu dropdown",
+                           )
+                right["_data-dropdown-menu"] = ""
+
                 # Build top-bar HTML
-                return NAV(UL(LI(title_area,
-                                 _class = "name",
-                                 ),
-                              LI(A(SPAN(T("Menu"))),
-                                 _class = "toggle-topbar menu-icon",
-                                 ),
-                              _class = "title-area",
-                              ),
-                           SECTION(UL(right,
-                                      _class = "right",
-                                      ),
-                                   UL(left,
-                                      _class = "left",
-                                      ),
-                                   _class = "top-bar-section",
-                                   ),
+                return NAV(DIV(left,
+                               _class = "top-bar-left",
+                               ),
+                           DIV(right,
+                               _class = "top-bar-right",
+                               ),
                            _class = "top-bar",
-                           data = {"topbar": " "},
                            )
         else:
             return None
@@ -254,7 +260,12 @@ class S3MainMenuDefaultLayout(S3NavigationItem):
 
 # =============================================================================
 class S3OptionsMenuDefaultLayout(S3NavigationItem):
-    """ Controller Options Menu Layout """
+    """
+        Controller Options Menu Layout
+
+        Classes use Foundation's Menu component
+            https://get.foundation/sites/docs/menu.html
+    """
 
     # Use the layout method of this class in templates/<theme>/layouts.py
     # if it is available at runtime (otherwise fallback to this layout):
@@ -302,7 +313,9 @@ class S3OptionsMenuDefaultLayout(S3NavigationItem):
                                    ]
 
                         if items:
-                            section.append(UL(items))
+                            section.append(UL(items,
+                                              _class = "menu vertical nested", # https://get.foundation/sites/docs/menu.html
+                                              ))
                         return section
 
                     else:
@@ -320,12 +333,10 @@ class S3OptionsMenuDefaultLayout(S3NavigationItem):
             else:
                 # Main menu
                 items = item.render_components()
-                return DIV(NAV(UL(items,
-                                  _id = "main-sub-menu",
-                                  _class = "side-nav",
-                                  ),
-                               ),
-                           _class = "sidebar",
+                return NAV(UL(items,
+                              _id = "main-sub-menu",
+                              _class = "menu vertical", # https://get.foundation/sites/docs/menu.html
+                              ),
                            )
 
         else:

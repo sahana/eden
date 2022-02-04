@@ -87,7 +87,7 @@ class S3CRUD(S3Method):
                 output object to send to the view
         """
 
-        self.sqlform = self.resource.get_config("crud_form", S3SQLDefaultForm())
+        self.sqlform = self.resource.get_config("crud_form") or S3SQLDefaultForm()
 
         # Pre-populate create-form?
         self.data = None
@@ -165,7 +165,7 @@ class S3CRUD(S3Method):
         """
 
         # Settings
-        self.sqlform = self.resource.get_config("crud_form", S3SQLDefaultForm())
+        self.sqlform = self.resource.get_config("crud_form") or S3SQLDefaultForm()
 
         _attr = Storage(attr)
         _attr["list_id"] = widget_id
@@ -594,7 +594,7 @@ class S3CRUD(S3Method):
 
                     # Add-button script
                     # - now in S3.js
-                    #script = '''$('#show-add-btn').click(function(){$('#show-add-btn').hide(10, function(){$('#list-add').slideDown('medium')})})'''
+                    #script = '''$('#show-add-btn').on('click', function(){$('#show-add-btn').hide(10, function(){$('#list-add').slideDown('medium')})})'''
                     #s3.jquery_ready.append(script)
 
             elif addbtn:

@@ -6,7 +6,7 @@
 $(document).ready(function() {
     var field = $('#share-case');
 
-    field.change(function() {
+    field.on('change', function() {
         if (confirm('Are you sure you want to share this case?')) {
             // Send request as a POST
             var orgID = field.val(),

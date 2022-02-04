@@ -10,7 +10,7 @@
 # Require any additional compass plugins here:
 
 # Import path:
-add_import_path "../../foundation/scss/components"
+add_import_path "../../foundation/scss"
 
 # Paths:
 http_path = "/"

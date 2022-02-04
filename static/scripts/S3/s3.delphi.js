@@ -8,7 +8,7 @@ $(document).ready(function() {
     }).disableSelection();
 
     // AJAX Save
-    $('#vote_button').click(function() {
+    $('#vote_button').on('click', function() {
         $(this).html(i18n.delphi_saving);
         $(this).addClass('saving');
         var ranks = $('#rankings').sortable('toArray').toString();

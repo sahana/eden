@@ -353,7 +353,7 @@
 
             // Clear ID label
             if (!keepInput) {
-                $(prefix + '_label').val('').focus();
+                $(prefix + '_label').val('').trigger('focus');
             }
 
             // Clear details
@@ -448,22 +448,22 @@
                 prefix = this.idPrefix;
 
             // Click-Handler for Check-ID button
-            form.find('.check-btn').bind('click' + ns, function(e) {
+            form.find('.check-btn').on('click' + ns, function(e) {
                 e.preventDefault();
                 self._checkID();
             });
             // Click-Handler for Check-in button
-            form.find('.check-in-btn').unbind(ns).bind('click' + ns, function(e) {
+            form.find('.check-in-btn').off(ns).on('click' + ns, function(e) {
                 e.preventDefault();
                 self._register('check-in');
             });
             // Click-Handler for Check-out button
-            form.find('.check-out-btn').unbind(ns).bind('click' + ns, function(e) {
+            form.find('.check-out-btn').off(ns).on('click' + ns, function(e) {
                 e.preventDefault();
                 self._register('check-out');
             });
             // Cancel-button to clear the form
-            form.find('a.cancel-action, .clear-btn').bind('click' + ns, function(e) {
+            form.find('a.cancel-action, .clear-btn').on('click' + ns, function(e) {
                 e.preventDefault();
                 self._clearForm();
             });
@@ -472,12 +472,12 @@
             var labelInput = $(prefix + '_label');
 
             // Changing the label resets form
-            labelInput.bind('input' + ns, function(e) {
+            labelInput.on('input' + ns, function(e) {
                 self._clearForm(false, true);
             });
 
             // Key events for label field
-            labelInput.bind('keyup' + ns, function(e) {
+            labelInput.on('keyup' + ns, function(e) {
                 switch (e.which) {
                     case 27:
                         // Pressing ESC resets the form
@@ -500,12 +500,12 @@
                 ns = this.eventNamespace,
                 prefix = this.idPrefix;
 
-            $(prefix + '_label').unbind(ns);
+            $(prefix + '_label').off(ns);
 
-            form.find('.check-btn').unbind(ns);
-            form.find('.check-in-btn').unbind(ns);
-            form.find('.check-out-btn').unbind(ns);
-            form.find('a.cancel-action, .clear-btn').unbind(ns);
+            form.find('.check-btn').off(ns);
+            form.find('.check-in-btn').off(ns);
+            form.find('.check-out-btn').off(ns);
+            form.find('a.cancel-action, .clear-btn').off(ns);
 
             return true;
         }

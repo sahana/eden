@@ -422,7 +422,7 @@
             }
 
             // Parse and store the table config
-            var tableConfig = $.parseJSON(config.val());
+            var tableConfig = JSON.parse(config.val());
             this.tableConfig = tableConfig;
 
             // Apply actions fallback
@@ -631,7 +631,7 @@
                     request.length = requestLength * conf.pages;
 
                     // Provide the same `data` options as DataTables.
-                    if ($.isFunction(conf.data)) {
+                    if (typeof conf.data === 'function') {
                         // As a function it is executed with the data object as an arg
                         // for manipulation. If an object is returned, it is used as the
                         // data object to submit

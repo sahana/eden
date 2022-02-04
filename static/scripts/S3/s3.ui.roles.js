@@ -417,11 +417,9 @@
             var addButton = $('.rm-submit-add', this.addRow);
             if (addButton.length) {
                 if (on) {
-                    addButton.prop('disabled', false)
-                             .removeAttr('disabled');
+                    addButton.prop('disabled', false);
                 } else {
-                    addButton.prop('disabled', true)
-                             .attr('disabled', 'disabled');
+                    addButton.prop('disabled', true);
                 }
             }
         },

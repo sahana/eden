@@ -200,7 +200,7 @@
                 self = this;
 
             // Toggle submit dependent on housing unit selection
-            $('#shelter_inspection_shelter_unit_id').bind('change' + ns, function() {
+            $('#shelter_inspection_shelter_unit_id').on('change' + ns, function() {
                 if ($(this).val()) {
                     self._toggleSubmit(true);
                 } else {
@@ -209,13 +209,13 @@
             });
 
             // Click-Handler for Submit-button
-            form.find('.submit-btn').bind('click' + ns, function(e) {
+            form.find('.submit-btn').on('click' + ns, function(e) {
                 e.preventDefault();
                 self._registerInspection();
             });
 
             // Cancel-button to clear the form
-            form.find('a.cancel-action').bind('click' + ns, function(e) {
+            form.find('a.cancel-action').on('click' + ns, function(e) {
                 e.preventDefault();
                 self._clearForm();
             });
@@ -231,11 +231,11 @@
             var form = $(this.element),
                 ns = this.eventNamespace;
 
-            $('#shelter_inspection_shelter_unit_id').unbind(ns);
+            $('#shelter_inspection_shelter_unit_id').off(ns);
 
-            form.find('.submit-btn').unbind(ns);
+            form.find('.submit-btn').off(ns);
 
-            form.find('a.cancel-action').unbind(ns);
+            form.find('a.cancel-action').off(ns);
 
             return true;
         }

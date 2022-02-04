@@ -1,31 +1,13 @@
-@import "settings";
-
-$include-html-classes: false;
-$include-html-global-classes: false;
-@import "../../foundation/scss/components/global";
-@import "../../foundation/scss/components/forms";
-
-// CUSTOM VARIABLES & MIXINS
-// before writing custom CSS, search variables in _settings 
-
-@import "custom/variables";
-@import "custom/colors";
-
-// CUSTOM MODULES 
-
-@import "custom/page";
-@import "custom/forms";
-@import "custom/rheader";
-@import "custom/buttons";
-@import "custom/footer";
-@import "custom/menus";
-@import "custom/tables";
-@import "custom/charts";
-@import "custom/widgets";
-@import "custom/misc";
-@import "custom/wizard";
-
-// CUSTOM PAGES
- 
-//@import "custom/home";
-//@import "custom/dashboard";
+// THEME MODULES
+@import "theme/base";       // required
+@import "theme/page";
+@import "theme/forms";
+@import "theme/rheader";
+@import "theme/buttons";
+@import "theme/menus";
+@import "theme/tables";
+@import "theme/datalists";
+@import "theme/profile";
+@import "theme/widgets";
+@import "theme/wizard";
+@import "theme/misc";

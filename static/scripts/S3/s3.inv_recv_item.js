@@ -222,7 +222,7 @@ $(document).ready(function() {
             oldPackQuantity = PackQuantity;
         });
 
-        QuantityField.change(function() {
+        QuantityField.on('change', function() {
             sendQuantity = QuantityField.val();
             if (sendQuantity) {
                 sendQuantity = parseFloat(sendQuantity);
@@ -235,7 +235,7 @@ $(document).ready(function() {
                         error = $('<div class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
                         sendQuantity = recvQuantity;
                         QuantityField.val(recvQuantity)
-                                     .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                                     .parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                             $(this).fadeOut('slow').remove();
                             return false;
                         });
@@ -258,7 +258,7 @@ $(document).ready(function() {
                     error = $('<div class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
                     recvQuantity = sendQuantity;
                     RecvQuantityField.val(sendQuantity)
-                                     .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                                     .parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                         $(this).fadeOut('slow').remove();
                         return false;
                     });
@@ -279,7 +279,7 @@ $(document).ready(function() {
                     message = 'Bin Quantity reduced to Quantity remaining to be Received';
                     error = $('<div class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
                     newBinQuantityField.val(availableQuantity)
-                                       .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                                       .parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                         $(this).fadeOut('slow').remove();
                         return false;
                     });
@@ -298,7 +298,7 @@ $(document).ready(function() {
                     message = 'Bin Quantity reduced to Quantity remaining to be Received';
                     error = $('<div id="sub_defaultrecv_bin_defaultrecv_bin_i_quantity_edit_0-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
                     oldBinQuantityField.val(availableQuantity)
-                                       .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                                       .parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                         $(this).fadeOut('slow').remove();
                         return false;
                     });
@@ -316,7 +316,7 @@ $(document).ready(function() {
             }
         });
 
-        $('#rdy-defaultbin-0').click(function() {
+        $('#rdy-defaultbin-0').on('click', function() {
             // read-only row has been opened for editing
             // - Tick clicked to save changes
             binQuantity = oldBinQuantityField.val();

@@ -587,7 +587,7 @@ import { googleInteractions, GoogleLayer, OLGoogleMaps, LayerSwitcher, LayerGrou
                         // Resize when images are loaded
                         //popup.registerImageListeners();
                         // Check for links to load in iframe
-                        $('#' + id + ' a.btn.iframe').click(function() {
+                        $('#' + id + ' a.btn.iframe').on('click', function() {
                             var url = $(this).attr('href');
                             if (url.indexOf('http://') === 0) {
                                 // Use Proxy for remote popups

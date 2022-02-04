@@ -277,7 +277,7 @@ S3.search = {};
             } else {
                 var id = $this.attr('id');
                 $("input[name='" + id + "']:checked").each(function() {
-                    $(this).click();
+                    $(this).trigger('click');
                 });
             }
             if ($this.hasClass('location-filter')) {
@@ -295,7 +295,7 @@ S3.search = {};
                 s3 = S3.gis.maps[map_id].s3,
                 polygonButton = s3.polygonButton;
             if (polygonButton.getIconClass() == 'drawpolygonclear-off') {
-                polygonButton.items[0].btnEl.dom.click();
+                polygonButton.items[0].btnEl.dom.trigger('click');
             }
         });
 
@@ -2192,19 +2192,19 @@ S3.search = {};
         $('.groupedopts-filter-widget:visible,.multiselect-filter-widget:visible').addClass('active');
 
         // Clear all filters
-        $('.filter-clear').click(function() {
+        $('.filter-clear').on('click', function() {
             var form = $(this).closest('.filter-form');
             clearFilters(form);
         });
 
         // Show Filter Manager
-        $('.show-filter-manager').click(function() {
+        $('.show-filter-manager').on('click', function() {
             $('.filter-manager-row').removeClass('hide').show();
             $('.show-filter-manager').hide();
         });
 
         // Manual form submission
-        $('.filter-submit').click(function() {
+        $('.filter-submit').on('click', function() {
             filterSubmit($(this).closest('.filter-form'));
         });
 
@@ -2288,7 +2288,7 @@ S3.search = {};
                         wkt = widget.val();
                         if (wkt) {
                             // Press Toolbar button
-                            s3.polygonButton.items[0].btnEl.dom.click();
+                            s3.polygonButton.items[0].btnEl.dom.trigger('click');
                             // Draw Polygon
                             var geometry = OpenLayers.Geometry.fromWKT(wkt);
                             geometry.transform(gis.proj4326, map.getProjectionObject());
@@ -2673,7 +2673,7 @@ S3.search = {};
         });
 
         // Don't submit if pressing Enter
-        $('.text-filter').keypress(function(e) {
+        $('.text-filter').on('keypress', function(e) {
             if (e.which == 13) {
                 e.preventDefault();
                 return false;
@@ -2880,21 +2880,21 @@ S3.search = {};
             var input = $('<input type="text" id="fm-title-input-' + this.id + '">')
                         .val(hint)
                         .css({color: 'grey', 'float': 'left'})
-                        .focusin(function() {
+                        .on('focusin', function() {
                             if (!$(this).hasClass('changed')) {
                                 $(this).css({color: 'black'}).val('');
                             }
                         })
-                        .change(function() {
+                        .on('change', function() {
                             $(this).addClass('changed');
                         })
-                        .focusout(function() {
+                        .on('focusout', function() {
                             if ($(this).val() === '') {
                                 $(this).removeClass('changed')
                                        .css({color: 'grey'})
                                        .val(hint);
                             }
-                        }).keypress(function(e) {
+                        }).on('keypress', function(e) {
                             if(e.which == 13) {
                                 e.preventDefault();
                                 var $this = $(this);
@@ -2953,7 +2953,7 @@ S3.search = {};
                         fm.options.filters[new_id] = filter.query;
                         // Append filter to SELECT + select it
                         var new_opt = $('<option value="' + new_id + '">' + filter.title + '</option>');
-                        $(el).append(new_opt).val(new_id).change().prop('disabled', false);
+                        $(el).append(new_opt).val(new_id).trigger('change').prop('disabled', false);
                     }
                     // Close save-dialog
                     fm._cancel();
@@ -3184,32 +3184,32 @@ S3.search = {};
             var fm = this;
 
             // @todo: don't bind create if readOnly
-            this.create_btn.click(function() {
+            this.create_btn.on('click', function() {
                 fm._newFilter();
             });
-            this.accept_btn.click(function() {
+            this.accept_btn.on('click', function() {
                 fm._accept();
             });
-            this.cancel_btn.click(function() {
+            this.cancel_btn.on('click', function() {
                 fm._cancel();
             });
-            this.element.change(function() {
+            this.element.on('change', function() {
                 fm._showCRUDButtons();
                 if (!fm.options.explicitLoad) {
                     fm._load();
                 }
             });
             if (this.options.explicitLoad) {
-                this.load_btn.click(function() {
+                this.load_btn.on('click', function() {
                     fm._load();
                 });
             }
             // @todo: don't bind save if readOnly
-            this.save_btn.click(function() {
+            this.save_btn.on('click', function() {
                 fm._save();
             });
             // @todo: don't bind delete if readOnly
-            this.delete_btn.click(function() {
+            this.delete_btn.on('click', function() {
                 fm._delete();
             });
         },
@@ -3220,24 +3220,24 @@ S3.search = {};
         _unbindEvents: function() {
 
             if (this.create_btn) {
-                this.create_btn.unbind('click');
+                this.create_btn.off('click');
             }
             if (this.accept_btn) {
-                this.accept_btn.unbind('click');
+                this.accept_btn.off('click');
             }
             if (this.cancel_btn) {
-                this.cancel_btn.unbind('click');
+                this.cancel_btn.off('click');
             }
             if (this.load_btn && this.options.explicitLoad) {
-                this.load_btn.unbind('click');
+                this.load_btn.off('click');
             }
             if (this.save_btn) {
-                this.save_btn.unbind('click');
+                this.save_btn.off('click');
             }
             if (this.delete_btn) {
-                this.delete_btn.unbind('click');
+                this.delete_btn.off('click');
             }
-            this.element.unbind('change');
+            this.element.off('change');
         }
     });
 })(jQuery);

@@ -37,14 +37,14 @@ $(document).ready(function() {
             // @ToDo: i18n
             message = 'Enter a number greater than or equal to 0';
             error = $('<div id="inv_adj_item_new_quantity-error" class="alert alert-error" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
-            totalQuantityField.parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+            totalQuantityField.parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                 $(this).fadeOut('slow').remove();
                 return false;
             });
         }
     });
 
-    totalQuantityField.change(function() {
+    totalQuantityField.on('change', function() {
         totalQuantity = totalQuantityField.val();
         if (totalQuantity) {
             totalQuantity = parseFloat(totalQuantity);
@@ -60,7 +60,7 @@ $(document).ready(function() {
             message = 'Quantity cannot be Negative';
             error = $('<div id="inv_adj_item_new_quantity-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
             totalQuantityField.val(totalQuantity)
-                              .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                              .parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                 $(this).fadeOut('slow').remove();
                 return false;
             });
@@ -89,7 +89,7 @@ $(document).ready(function() {
                 message = 'Quantity in Bins reduced to Total Quantity';
                 error = $('<div id="sub_defaultbin_defaultbin_i_quantity_edit_none-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
                 newBinQuantityField.val(newBinQuantity - (availableQuantity - totalQuantity))
-                                   .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                                   .parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                     $(this).fadeOut('slow').remove();
                     return false;
                 });
@@ -99,7 +99,7 @@ $(document).ready(function() {
                 message = 'Quantity in Bins reduced to Total Quantity';
                 error = $('<div id="sub_defaultbin_defaultbin_i_quantity_edit_none-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
                 oldBinQuantityField.val(oldBinQuantity - (availableQuantity - totalQuantity))
-                                   .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                                   .parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                     $(this).fadeOut('slow').remove();
                     return false;
                 });
@@ -136,7 +136,7 @@ $(document).ready(function() {
                     }
                     message = 'Quantity in Bins reduced to Total Quantity';
                     error = $('<div id="sub_defaultbin_defaultbin_i_quantity_edit_none-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
-                    newBinQuantityField.parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                    newBinQuantityField.parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                         $(this).fadeOut('slow').remove();
                         return false;
                     });
@@ -148,7 +148,7 @@ $(document).ready(function() {
                     message = 'You need to reduce the Quantity in the Bins before you can reduce the Total Quantity';
                     error = $('<div id="inv_adj_item_new_quantity-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
                     totalQuantityField.val(totalQuantity)
-                                      .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                                      .parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                         $(this).fadeOut('slow').remove();
                         return false;
                     });
@@ -156,10 +156,10 @@ $(document).ready(function() {
             }
         }
         // Validate the new bin again
-        //newBinQuantityField.change();
+        //newBinQuantityField.trigger('change');
     });
 
-    newBinQuantityField.change(function() {
+    newBinQuantityField.on('change', function() {
         newBinQuantity = newBinQuantityField.val();
         if (newBinQuantity) {
             newBinQuantity = parseFloat(newBinQuantity);
@@ -172,14 +172,14 @@ $(document).ready(function() {
             message = 'Quantity in Bins cannot be higher than Total Quantity';
             error = $('<div id="sub_defaultbin_defaultbin_i_quantity_edit_none-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
             newBinQuantityField.val(availableQuantity)
-                               .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                               .parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                 $(this).fadeOut('slow').remove();
                 return false;
             });
         }
     });
 
-    oldBinQuantityField.change(function() {
+    oldBinQuantityField.on('change', function() {
         oldBinQuantity = oldBinQuantityField.val();
         if (oldBinQuantity) {
             oldBinQuantity = parseFloat(oldBinQuantity);
@@ -192,7 +192,7 @@ $(document).ready(function() {
             message = 'Quantity in Bins cannot be higher than Total Quantity';
             error = $('<div id="sub_defaultbin_defaultbin_i_quantity_edit_0-warning" class="alert alert-warning" style="padding-left:36px;">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
             oldBinQuantityField.val(availableQuantity)
-                               .parent().append(error).undelegate('.s3').delegate('.alert', 'click.s3', function() {
+                               .parent().append(error).off('.s3').on('click.s3', '.alert', function() {
                 $(this).fadeOut('slow').remove();
                 return false;
             });
@@ -212,7 +212,7 @@ $(document).ready(function() {
         binnedQuantity -= oldBinQuantity;
     });
 
-    $('#rdy-defaultbin-0').click(function() {
+    $('#rdy-defaultbin-0').on('click', function() {
         // read-only row has been opened for editing
         // - Tick clicked to save changes
         oldBinQuantity = oldBinQuantityField.val();
@@ -224,7 +224,7 @@ $(document).ready(function() {
         // Make this Bin's Quantity unavailable
         binnedQuantity += oldBinQuantity;
         // Validate the new bin again
-        newBinQuantityField.change();
+        newBinQuantityField.trigger('change');
     });
 
     inlineComponent.on('editCancelled', function(event, rowindex) {

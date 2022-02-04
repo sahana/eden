@@ -503,7 +503,7 @@
 
                 e.preventDefault();
 
-                var col = $(this).focus(),
+                var col = $(this).trigger('focus'),
                     newStatus = col.hasClass('wh-off'),
                     selector = '.wh-off';
 

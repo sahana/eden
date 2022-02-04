@@ -4,7 +4,7 @@
      * Bind button event handlers for clone
      */
     var bindCloneActions = function() {
-        $('.cap-clone-update').unbind('.cap').bind('click.cap', function() {
+        $('.cap-clone-update').off('.cap').on('click.cap', function() {
             clone($(this).attr('data'));
         });
     };

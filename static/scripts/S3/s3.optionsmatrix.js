@@ -6,7 +6,7 @@
 	var methods = {
 		init: function(options) {
 			return this.each(function() {
-				//$(window).bind('resize.s3optionsmatrix', methods.reposition);
+				//$(window).on('resize.s3optionsmatrix', methods.reposition);
 			});
 		},
 		destroy: function() {

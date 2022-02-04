@@ -1,5 +1,5 @@
 /*!
- * jQuery UI Datepicker 1.12.1
+ * jQuery UI Datepicker @VERSION
  * http://jqueryui.com
  *
  * Copyright jQuery Foundation and other contributors
@@ -9,8 +9,7 @@
  * http://api.jqueryui.com/datepicker/#theming
  */
 .ui-datepicker {
-	/* width: 17em; */
-    min-width: 17em;
+	width: 17em;
 	padding: .2em .2em 0;
 	display: none;
 }

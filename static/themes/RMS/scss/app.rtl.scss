@@ -1,0 +1,22 @@
+@import "settings";
+
+// Override default text direction
+$global-text-direction: rtl;
+
+@import "app.scss";
+
+// Patches for right-to-left support:
+
+// Drop-downs in top-bar should not overflow the left end of the screen
+// Not used by Google Apps-like theme
+/*
+.top-bar-section {
+    .right li .dropdown {
+        left: auto;
+        right: 0;
+    }
+    .left li .dropdown {
+        left: 0;
+        right: auto;
+    }
+}*/

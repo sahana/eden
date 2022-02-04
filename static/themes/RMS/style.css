@@ -3,6 +3,20 @@
     margin-left: 20px;
     margin-top: 10px;
 }
+.hp-login #auth_user_email {
+    margin-bottom: 5px;
+}
+.hp-login #auth_user_password {
+    margin-bottom: 0;
+}
+.hp-login #auth_user_remember {
+    margin-bottom: 0;
+}
+.hp-login #submit_record__row .button {
+    /* Centre the navs to the right of the login button */
+    position: relative;
+    top: 0.5rem;
+}
 /* Top Navigation Bar */
 .hd {
     display: inline-block;

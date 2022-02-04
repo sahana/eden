@@ -6743,8 +6743,7 @@ def hrm_compose():
 
     response = current.response
     representation = s3_get_extension()
-    response.headers["Content-Type"] = \
-        response.s3.content_type.get(representation, "text/html")
+    response.headers["Content-Type"] = CONTENT_TYPES.get(representation, "text/html")
     response.view = "msg/compose.html"
 
     return output

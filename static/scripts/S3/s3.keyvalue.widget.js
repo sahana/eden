@@ -15,7 +15,7 @@
         $(this).hide();
         key_label = ' ' + key_label + ': ';
         value_label = ' ' + value_label + ': ';
-        $more = $('<a>+</a>').css('cursor', 'pointer').click(cleanup);
+        $more = $('<a>+</a>').css('cursor', 'pointer').on('click', cleanup);
 
         // handler util
         function cleanup() {
@@ -37,7 +37,7 @@
             $item.append(key_label, $key, value_label, $value, ' ', $more);
             $list.append($item);
 
-            $key.focus();
+            $key.trigger('focus');
             $self.html(JSON.stringify(kvs));
         }
 

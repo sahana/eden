@@ -52,7 +52,7 @@ from gluon.storage import Storage
 from gluon.validators import IS_IN_SET, IS_EMPTY_OR
 
 from .s3query import FS
-from .s3rest import S3Method
+from .s3rest import CONTENT_TYPES, S3Method
 from .s3utils import s3_flatlist, s3_has_foreign_key, s3_str, S3MarkupStripper, s3_represent_value
 from .s3xml import S3XMLFormat
 from .s3validators import IS_NUMBER, JSONERRORS
@@ -291,8 +291,8 @@ class S3Report(S3Method):
         s3 = response.s3
 
         # Set response headers
-        response.headers["Content-Type"] = s3.content_type.get("geojson",
-                                                               "application/json")
+        response.headers["Content-Type"] = CONTENT_TYPES.get("geojson",
+                                                             "application/json")
         if not resource.count():
             # No Data
             return json.dumps({})
@@ -2860,6 +2860,7 @@ class S3PivotTable:
                     return s3_represent_value(rfield.field,
                                               value,
                                               strip_markup = True,
+                                              non_xml_output = True,
                                               )
             elif rfield.virtual:
 

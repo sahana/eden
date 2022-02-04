@@ -7,7 +7,7 @@ $(document).ready(function() {
     var field = $('select[name="sub_dissemination_dissemination"]'),
         level = field.val();
 
-    field.change(function() {
+    field.on('change', function() {
         if (confirm('Are you sure you want to change the dissemination level?')) {
             // OK
             level = field.val();

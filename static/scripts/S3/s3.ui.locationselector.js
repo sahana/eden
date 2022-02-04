@@ -996,8 +996,8 @@
                     // Show a button to allow the user to do a new automatic Geocode
                     $(selector + '_geocode button').removeClass('hide')
                                                    .show()
-                                                   .unbind(ns)
-                                                   .bind('click' + ns, function() {
+                                                   .off(ns)
+                                                   .on('click' + ns, function() {
                         $(this).hide();
                         self._geocode();
                     });
@@ -1400,8 +1400,8 @@
             var selector = '#' + fieldname;
 
             // Change click-event and label of map icon
-            $(selector + '_map_icon').unbind(ns)
-                                     .bind('click' + ns, function() {
+            $(selector + '_map_icon').off(ns)
+                                     .on('click' + ns, function() {
                 self._hideMap();
             });
             $(selector + '_map_icon span').html(i18n.hide_map);
@@ -1575,8 +1575,8 @@
 
             // Update the click-event handler of the map icon
             var self = this;
-            $(selector + '_map_icon').unbind(ns)
-                                     .bind('click' + ns, function(e) {
+            $(selector + '_map_icon').off(ns)
+                                     .on('click' + ns, function(e) {
                 self._showMap(e);
             });
 
@@ -1874,32 +1874,32 @@
 
             var selector = '#' + fieldname;
 
-            $(selector + '_L0').bind('change' + ns, function() {
+            $(selector + '_L0').on('change' + ns, function() {
                 self._removeErrors(this);
                 self.lxSelect(0);
             });
-            $(selector + '_L1').bind('change' + ns, function() {
+            $(selector + '_L1').on('change' + ns, function() {
                 self._removeErrors(this);
                 self.lxSelect(1);
             });
-            $(selector + '_L2').bind('change' + ns, function() {
+            $(selector + '_L2').on('change' + ns, function() {
                 self._removeErrors(this);
                 self.lxSelect(2);
             });
-            $(selector + '_L3').bind('change' + ns, function() {
+            $(selector + '_L3').on('change' + ns, function() {
                 self._removeErrors(this);
                 self.lxSelect(3);
             });
-            $(selector + '_L4').bind('change' + ns, function() {
+            $(selector + '_L4').on('change' + ns, function() {
                 self._removeErrors(this);
                 self.lxSelect(4);
             });
-            $(selector + '_L5').bind('change' + ns, function() {
+            $(selector + '_L5').on('change' + ns, function() {
                 self._removeErrors(this);
                 self.lxSelect(5);
             });
 
-            $(selector + '_address').bind('change' + ns, function() {
+            $(selector + '_address').on('change' + ns, function() {
                 self._removeErrors(this);
                 if (self.useGeocoder) {
                     // geocodeDecision includes collectData
@@ -1909,7 +1909,7 @@
                     self._collectData();
                 }
             });
-            $(selector + '_postcode').bind('change' + ns, function() {
+            $(selector + '_postcode').on('change' + ns, function() {
                 self._removeErrors(this);
                 if (self.useGeocoder) {
                     // geocodeDecision includes collectData
@@ -1921,7 +1921,7 @@
                     self._collectData();
                 }
             });
-            $(selector + '_postcode_to_address').bind('click' + ns, function() {
+            $(selector + '_postcode_to_address').on('click' + ns, function() {
                 // Show fields to do manual entry
                 $(selector + '_address__row').removeClass('hide').show();
                 $(selector + '_address__row1').removeClass('hide').show();
@@ -1954,10 +1954,10 @@
                 $(this).hide();
             });
             $(selector + '_lat,' +
-              selector + '_lon').bind('change' + ns, function() {
+              selector + '_lon').on('change' + ns, function() {
                 self._latlonInput();
             });
-            $(selector + '_latlon_toggle').bind('click' + ns, function() {
+            $(selector + '_latlon_toggle').on('click' + ns, function() {
                 var mode = $(this).data('mode') || self.options.latlonMode,
                     label;
                 if (mode == 'dms') {
@@ -1976,7 +1976,7 @@
             if (fieldname.substring(0, 4) == 'sub_') {
                 // Inline form
                 var inlineForm = this.input.closest('.inline-form');
-                inlineForm.bind('validate' + ns + this.id, function(e) {
+                inlineForm.on('validate' + ns + this.id, function(e) {
                     if (!self._validate()) {
                         e.preventDefault();
                     }
@@ -1984,10 +1984,10 @@
             } else {
                 // Regular form field
                 var form = this.input.closest('form');
-                form.bind('submit' + ns + this.id, function(e) {
+                form.on('submit' + ns + this.id, function(e) {
                     e.preventDefault();
                     if (self._validate()) {
-                        form.unbind(ns + self.id).submit();
+                        form.off(ns + self.id).trigger('submit');
                     }
                 });
             }
@@ -2013,10 +2013,10 @@
               selector + '_postcode,' +
               selector + '_postcode_to_address,' +
               selector + '_map_icon,' +
-              selector + '_latlon_toggle').unbind(ns);
+              selector + '_latlon_toggle').off(ns);
 
-            this.input.next('.error_wrapper').unbind(ns);
-            this.input.closest('form').unbind(ns + this.id);
+            this.input.next('.error_wrapper').off(ns);
+            this.input.closest('form').off(ns + this.id);
 
             return true;
         }
@@ -2462,7 +2462,7 @@
             var self = this,
                 ns = this.eventNamespace;
 
-            this.dmsInput.find('input').bind('change' + ns, function() {
+            this.dmsInput.find('input').on('change' + ns, function() {
                 var value = self._validateDMS();
                 if (value !== null) {
                     $(self.element).val(value).change();
@@ -2471,7 +2471,7 @@
                 }
             });
 
-            this.decimalInput.bind('change' + ns, function() {
+            this.decimalInput.on('change' + ns, function() {
                 var value = self._validateDecimal();
                 if (value !== null) {
                     $(self.element).val(value).change();
@@ -2481,7 +2481,7 @@
                 }
             });
 
-            $(this.element).bind('setvalue' + ns, function() {
+            $(this.element).on('setvalue' + ns, function() {
                 self.refresh();
             });
 
@@ -2496,9 +2496,9 @@
             var ns = this.eventNamespace;
 
             if (this.input) {
-                this.input.find('input').unbind(ns);
+                this.input.find('input').off(ns);
             }
-            $(this.element).unbind(ns);
+            $(this.element).off(ns);
 
             return true;
         }

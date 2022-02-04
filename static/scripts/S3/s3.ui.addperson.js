@@ -1336,7 +1336,7 @@
             });
 
             // Filter Autocomplete-URL when selected organisation changes
-            $(selector + '_organisation_id').change(function() {
+            $(selector + '_organisation_id').on('change', function() {
                 self.acURL = updateURLQuery(self.acURL, {
                     '~.organisation_id': $(this).val()
                 });
