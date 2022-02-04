@@ -40,6 +40,9 @@ class S3MainMenuLayout(S3NavigationItem):
             Custom Layout Method
 
             Replicate Google Suite's look and feel
+
+            Uses Foundation's tooltip component:
+                https://get.foundation/sites/docs/tooltip.html
         """
 
         T = current.T
@@ -52,9 +55,6 @@ class S3MainMenuLayout(S3NavigationItem):
         # Inject JavaScript
         s3 = current.response.s3
         s3.scripts.append("/%s/static/themes/RMS/js/nav.js" % request.application)
-        # Use tooltip-f class to avoid clash with widgets.css
-        # Remove nub
-        s3.js_foundation = '''{tooltip:{tooltip_class:'.tooltip-f',tip_template:function(selector,content){var tooltipClass='';if(!$('div[data-selector="'+selector+'"]').hasClass('hd')){tooltipClass=' tooltip-m'};return '<span data-selector="'+selector+'" class="'+Foundation.libs.tooltip.settings.tooltip_class.substring(1)+tooltipClass+'">'+content+'</span>'}}}'''
 
         settings = ""
 
@@ -87,6 +87,8 @@ class S3MainMenuLayout(S3NavigationItem):
                                         _title = T("Main menu"),
                                         )
                 side_menu_control["_data-tooltip"] = ""
+                # Use tooltip-f class to avoid clash with widgets.css
+                side_menu_control["_data-tooltip-class"] = "tooltip-f"
                 side_menu_control["_aria-haspopup"] = "true"
 
             # Module Logo
@@ -153,6 +155,8 @@ class S3MainMenuLayout(S3NavigationItem):
                                   _title = module_name,
                                   )
                 module_logo["_data-tooltip"] = ""
+                # Use tooltip-f class to avoid clash with widgets.css
+                module_logo["_data-tooltip-class"] = "tooltip-f"
                 module_logo["_aria-haspopup"] = "true"
             else:
                 module_logo = ""
@@ -172,6 +176,8 @@ class S3MainMenuLayout(S3NavigationItem):
                        _title = T("RMS modules"),
                        )
             apps["_data-tooltip"] = ""
+            # Use tooltip-f class to avoid clash with widgets.css
+            apps["_data-tooltip-class"] = "tooltip-f"
             apps["_aria-haspopup"] = "true"
 
             iframe = DIV(IFRAME(_role = "presentation",
@@ -242,6 +248,8 @@ class S3MainMenuLayout(S3NavigationItem):
                                _title = T("Settings"),
                                )
                 settings["_data-tooltip"] = ""
+                # Use tooltip-f class to avoid clash with widgets.css
+                settings["_data-tooltip-class"] = "tooltip-f"
                 settings["_aria-haspopup"] = "true"
 
         # Help Menu
@@ -268,6 +276,8 @@ class S3MainMenuLayout(S3NavigationItem):
                       _title = T("Support"),
                       )
         support["_data-tooltip"] = ""
+        # Use tooltip-f class to avoid clash with widgets.css
+        support["_data-tooltip-class"] = "tooltip-f"
         support["_aria-haspopup"] = "true"
 
         # Logo
@@ -368,6 +378,8 @@ class S3MainMenuLayout(S3NavigationItem):
                            _title = T("RMS Account"),
                            )
         user_profile["_data-tooltip"] = ""
+        # Use tooltip-f class to avoid clash with widgets.css
+        user_profile["_data-tooltip-class"] = "tooltip-f"
         user_profile["_aria-haspopup"] = "true"
 
         # Overall menu

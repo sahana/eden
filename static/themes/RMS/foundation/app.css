@@ -2963,6 +2963,124 @@ a.button:hover, a.button:focus {
   color: #fefefe;
 }
 
+/* line 153, ../../foundation/scss/components/_tooltip.scss */
+.has-tip {
+  position: relative;
+  display: inline-block;
+  border-bottom: dotted 1px #8a8a8a;
+  font-weight: bold;
+  cursor: help;
+}
+
+/* line 157, ../../foundation/scss/components/_tooltip.scss */
+.tooltip {
+  position: absolute;
+  top: calc(100% + 0.6495rem);
+  z-index: 1200;
+  max-width: 10rem;
+  padding: 0.75rem;
+  border-radius: 0;
+  background-color: #0a0a0a;
+  font-size: 80%;
+  color: #fefefe;
+}
+/* line 75, ../../foundation/scss/components/_tooltip.scss */
+.tooltip::before {
+  position: absolute;
+}
+/* line 80, ../../foundation/scss/components/_tooltip.scss */
+.tooltip.bottom::before {
+  display: block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0.75rem;
+  content: '';
+  border-top-width: 0;
+  border-color: transparent transparent #0a0a0a;
+  bottom: 100%;
+}
+/* line 85, ../../foundation/scss/components/_tooltip.scss */
+.tooltip.bottom.align-center::before {
+  left: 50%;
+  transform: translateX(-50%);
+}
+/* line 92, ../../foundation/scss/components/_tooltip.scss */
+.tooltip.top::before {
+  display: block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0.75rem;
+  content: '';
+  border-bottom-width: 0;
+  border-color: #0a0a0a transparent transparent;
+  top: 100%;
+  bottom: auto;
+}
+/* line 98, ../../foundation/scss/components/_tooltip.scss */
+.tooltip.top.align-center::before {
+  left: 50%;
+  transform: translateX(-50%);
+}
+/* line 105, ../../foundation/scss/components/_tooltip.scss */
+.tooltip.left::before {
+  display: block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0.75rem;
+  content: '';
+  border-right-width: 0;
+  border-color: transparent transparent transparent #0a0a0a;
+  left: 100%;
+}
+/* line 110, ../../foundation/scss/components/_tooltip.scss */
+.tooltip.left.align-center::before {
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-50%);
+}
+/* line 118, ../../foundation/scss/components/_tooltip.scss */
+.tooltip.right::before {
+  display: block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0.75rem;
+  content: '';
+  border-left-width: 0;
+  border-color: transparent #0a0a0a transparent transparent;
+  right: 100%;
+  left: auto;
+}
+/* line 124, ../../foundation/scss/components/_tooltip.scss */
+.tooltip.right.align-center::before {
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-50%);
+}
+/* line 131, ../../foundation/scss/components/_tooltip.scss */
+.tooltip.align-top::before {
+  bottom: auto;
+  top: 10%;
+}
+/* line 136, ../../foundation/scss/components/_tooltip.scss */
+.tooltip.align-bottom::before {
+  bottom: 10%;
+  top: auto;
+}
+/* line 141, ../../foundation/scss/components/_tooltip.scss */
+.tooltip.align-left::before {
+  left: 10%;
+  right: auto;
+}
+/* line 146, ../../foundation/scss/components/_tooltip.scss */
+.tooltip.align-right::before {
+  left: auto;
+  right: 10%;
+}
+
 /* line 388, ../../foundation/scss/components/_menu.scss */
 .menu {
   padding: 0;
