@@ -163,51 +163,6 @@ body.rtl .username i.icon, body.rtl .username i.fa {
 }
 
 /* Footer */
-/* line 177, ../scss/theme/_page.scss */
-#footer {
-  background: transparent;
-  padding-top: 20px;
-  border-top: 1px solid #F0F0F0;
-  margin-top: 20px;
-  margin-bottom: 1rem;
-}
-
-/* line 187, ../scss/theme/_page.scss */
-#poweredby {
-  margin-right: 0.5rem;
-  text-align: right;
-}
-/* line 190, ../scss/theme/_page.scss */
-#poweredby a {
-  color: #999;
-  text-decoration: none;
-  font-size: 0.8rem;
-  margin-left: 0.2rem;
-}
-
-/* line 198, ../scss/theme/_page.scss */
-body.rtl #poweredby {
-  text-align: left;
-}
-
-/* line 204, ../scss/theme/_page.scss */
-.sub-nav.about-menu {
-  color: #999;
-  text-align: left;
-  margin-left: 0;
-  margin-right: 0;
-}
-/* line 206, ../scss/theme/_page.scss */
-.sub-nav.about-menu a {
-  color: #999;
-}
-
-/* line 214, ../scss/theme/_page.scss */
-body.rtl .about-menu {
-  text-align: right;
-}
-
-/* Footer */
 /* line 2, ../scss/theme/_footer.scss */
 #footer {
   background: transparent;
@@ -217,12 +172,12 @@ body.rtl .about-menu {
   margin-bottom: 1rem;
 }
 
-/* line 43, ../scss/theme/_footer.scss */
+/* line 12, ../scss/theme/_footer.scss */
 #poweredby {
   margin-right: 0.5rem;
   text-align: right;
 }
-/* line 46, ../scss/theme/_footer.scss */
+/* line 15, ../scss/theme/_footer.scss */
 #poweredby a {
   color: #999;
   text-decoration: none;
@@ -230,7 +185,7 @@ body.rtl .about-menu {
   margin-left: 0.2rem;
 }
 
-/* line 54, ../scss/theme/_footer.scss */
+/* line 23, ../scss/theme/_footer.scss */
 body.rtl #poweredby {
   text-align: left;
 }

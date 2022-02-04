@@ -12,7 +12,7 @@
 # Import paths:
 add_import_path "."
 add_import_path "../../default/scss"
-add_import_path "../../foundation/scss/components"
+add_import_path "../../foundation/scss"
 
 # Paths:
 http_path = "/"
