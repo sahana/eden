@@ -19,12 +19,14 @@
 }
 /* Top Navigation Bar */
 .hd {
-    display: inline-block;
+    border: 0;
     border-radius: 100%;
+    /*
+    display: inline-block;
     padding-top: 12px;
     padding-left: 12px;
     height: 48px;
-    width: 48px;
+    width: 48px;*/
 }
 .hd:hover {
     background-color: #f0f0f0;
@@ -34,15 +36,18 @@
 }
 /* Current Module Logo in top-nav */
 .hdm {
+    border: 0;
+    margin-top: -8px;
+    /*
     display: inline-block;
     height: 48px;
     width: 48px;
-    margin-left: 5px;
-}
+    margin-left: 5px;*/
+}/*
 .hi {
     margin-top: -12px;
     margin-left: -6px;
-}
+}*/
 /* Apps Frame */
 .apps-frame {
     overflow: hidden;
@@ -56,22 +61,29 @@
     max-height: calc(-65px + 100vh);
     z-index: 991;
 }
+/* NS Logo */
 .hdl {
+    margin-top: 2px;
+    /*
     display: inline-block;
     height: 48px;
     width: 60px;
-    margin-left: 4px;
+    margin-left: 4px;*/
 }
 /* Profile button in top-nav */
 .hdp {
+    border: 0;
+    margin-top: -10px;
+    /*
     display: inline-block;
     height: 48px;
-    width: 48px;
+    width: 48px;*/
 }
 .hip {
     border-radius: 100%;
+    /*
     margin-top: -12px;
-    margin-left: 6px;
+    margin-left: 6px;*/
 }
 /* User Menu */
 #user-menu {
@@ -89,7 +101,15 @@
 #user-menu ul {
     list-style: none;
     margin: 0;
+    min-width: 150px;
     padding: 5px;
+}
+#user-menu a {
+    color: #006a71;
+    font-size: 1rem;
+    font-weight: normal;
+    line-height: 1.6;
+    padding: 0;
 }
 /* Tooltips */
 .tooltip-f {

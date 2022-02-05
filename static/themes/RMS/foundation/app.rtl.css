@@ -703,7 +703,7 @@ h6, .h6 {
   font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
   font-style: normal;
   font-weight: normal;
-  color: #222;
+  color: #006a71;
   text-rendering: optimizeLegibility;
 }
 /* line 293, ../../foundation/scss/typography/_base.scss */
@@ -3812,6 +3812,97 @@ a.button:hover, a.button:focus {
     display: none;
   }
 }
+/* line 122, ../../foundation/scss/components/_top-bar.scss */
+.top-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.1rem;
+  flex-wrap: wrap;
+}
+/* line 47, ../../foundation/scss/components/_top-bar.scss */
+.top-bar,
+.top-bar ul {
+  background-color: #fefefe;
+}
+/* line 54, ../../foundation/scss/components/_top-bar.scss */
+.top-bar ul ul {
+  background-color: #777879;
+}
+/* line 60, ../../foundation/scss/components/_top-bar.scss */
+.top-bar input {
+  max-width: 200px;
+  margin-right: 1rem;
+}
+/* line 66, ../../foundation/scss/components/_top-bar.scss */
+.top-bar .input-group-field {
+  width: 100%;
+  margin-right: 0;
+}
+/* line 71, ../../foundation/scss/components/_top-bar.scss */
+.top-bar input.button {
+  width: auto;
+}
+/* line 82, ../../foundation/scss/components/_top-bar.scss */
+.top-bar .top-bar-left,
+.top-bar .top-bar-right {
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+@media print, screen and (min-width: 40em) {
+  /* line 122, ../../foundation/scss/components/_top-bar.scss */
+  .top-bar {
+    flex-wrap: nowrap;
+  }
+  /* line 102, ../../foundation/scss/components/_top-bar.scss */
+  .top-bar .top-bar-left {
+    flex: 1 1 auto;
+    margin-right: auto;
+  }
+  /* line 107, ../../foundation/scss/components/_top-bar.scss */
+  .top-bar .top-bar-right {
+    flex: 0 1 auto;
+    margin-left: auto;
+  }
+}
+@media print, screen and (max-width: 63.99875em) {
+  /* line 135, ../../foundation/scss/components/_top-bar.scss */
+  .top-bar.stacked-for-medium {
+    flex-wrap: wrap;
+  }
+  /* line 82, ../../foundation/scss/components/_top-bar.scss */
+  .top-bar.stacked-for-medium .top-bar-left,
+  .top-bar.stacked-for-medium .top-bar-right {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+@media print, screen and (max-width: 74.99875em) {
+  /* line 135, ../../foundation/scss/components/_top-bar.scss */
+  .top-bar.stacked-for-large {
+    flex-wrap: wrap;
+  }
+  /* line 82, ../../foundation/scss/components/_top-bar.scss */
+  .top-bar.stacked-for-large .top-bar-left,
+  .top-bar.stacked-for-large .top-bar-right {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+/* line 146, ../../foundation/scss/components/_top-bar.scss */
+.top-bar-title {
+  flex: 0 0 auto;
+  margin: 0.5rem 1rem 0.5rem 0;
+}
+
+/* line 151, ../../foundation/scss/components/_top-bar.scss */
+.top-bar-left,
+.top-bar-right {
+  flex: 0 0 auto;
+}
+
 /* line 10, ../../foundation/scss/components/_float.scss */
 .float-left {
   float: left !important;

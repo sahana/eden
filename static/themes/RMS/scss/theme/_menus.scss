@@ -6,6 +6,19 @@
 // ============================================================================
 // STYLES
 
+/* Top (Modules) Menu) */
+.top-bar {
+    // Overr-ride base Foundation, to allow the style in style.css to come through
+    .menu .active > a {
+        color: inherit;
+        background: inherit;
+        border-radius: 100%;
+    }
+    ul ul {
+        background-color: inherit;
+    }
+}
+
 /* Side (Options) Menu) */
 aside.columns {
     font-size: .875rem;

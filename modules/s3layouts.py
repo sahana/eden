@@ -47,7 +47,7 @@ from gluon import current, URL, \
                   A, DIV, H3, IMG, INPUT, LABEL, LI, SPAN, TAG, UL
 
 from s3 import S3NavigationItem, S3CRUD, ICON
-from s3theme import NAV, SECTION
+from s3theme import NAV
 
 # =============================================================================
 class S3MainMenuDefaultLayout(S3NavigationItem):

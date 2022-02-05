@@ -52,7 +52,7 @@
 //@include foundation-reveal;
 //@include foundation-sticky;
 //@include foundation-title-bar;
-//@include foundation-top-bar; // Not used by Google Apps-like theme
+@include foundation-top-bar; // Now also used by Google Apps-like theme
 
 // Helpers
 @include foundation-float-classes;

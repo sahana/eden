@@ -3,7 +3,7 @@
 from gluon import *
 #from gluon.storage import Storage
 from s3 import *
-#from s3theme import NAV, SECTION
+from s3theme import NAV
 
 THEME = "RMS"
 
@@ -41,7 +41,11 @@ class S3MainMenuLayout(S3NavigationItem):
 
             Replicate Google Suite's look and feel
 
-            Uses Foundation's tooltip component:
+            Classes use Foundation's Top-Bar Component, which wraps
+                        Foundation's Menu component
+                https://get.foundation/sites/docs/menu.html
+                https://get.foundation/sites/docs/top-bar.html
+            Also uses Foundation's Tooltip component:
                 https://get.foundation/sites/docs/tooltip.html
         """
 
@@ -383,25 +387,26 @@ class S3MainMenuLayout(S3NavigationItem):
         user_profile["_aria-haspopup"] = "true"
 
         # Overall menu
-        divs = [DIV(side_menu_control,
-                    module_logo,
-                    _class = "large-2 medium-3 small-4 columns",
-                    ),
-                DIV(DIV(support,
-                        settings,
-                        apps,
-                        DIV(logo,
-                            _class = "hdl",
-                            ),
-                        user_profile,
-                        iframe,
-                        _class = "fright",
-                        ),
-                    _class = "large-4 medium-6 small-8 columns",
-                    ),
-                ]
-
-        return TAG[""](*divs)
+        return NAV(DIV(UL(side_menu_control,
+                          module_logo,
+                          _class = "menu",
+                          ),
+                       _class = "top-bar-left",
+                       ),
+                   DIV(UL(support,
+                          settings,
+                          apps,
+                          DIV(logo,
+                              _class = "hdl",
+                              ),
+                          user_profile,
+                          iframe,
+                          _class = "menu",
+                          ),
+                       _class = "top-bar-right",
+                       ),
+                   _class = "top-bar",
+                   )
 
 # =============================================================================
 class S3AboutMenuLayout(S3NavigationItem):

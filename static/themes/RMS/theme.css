@@ -1,23 +1,23 @@
 /* Throbber style */
-/* line 31, ../../default/scss/theme/_page.scss */
+/* line 31, ../scss/theme/_page.scss */
 .inline-throbber {
   background-image: url(../../img/sunflower_fade_indicator.gif);
 }
 
-/* line 34, ../../default/scss/theme/_page.scss */
+/* line 34, ../scss/theme/_page.scss */
 .throbber,
 .layer_throbber,
 .map_loader {
   background-image: url(../../img/sunflower_spin_throbber.gif);
 }
 
-/* line 39, ../../default/scss/theme/_page.scss */
+/* line 39, ../scss/theme/_page.scss */
 .loading {
   background: url(../../img/sunflower_spin_throbber.gif) center no-repeat !important;
 }
 
 /* Inline Sahana logo */
-/* line 45, ../../default/scss/theme/_page.scss */
+/* line 45, ../scss/theme/_page.scss */
 .sahana-logo {
   background: url(../../img/S3menu_logo.png) left top no-repeat;
   text-shadow: none;
@@ -30,7 +30,7 @@
 }
 
 /* Alerts */
-/* line 57, ../../default/scss/theme/_page.scss */
+/* line 57, ../scss/theme/_page.scss */
 .alert.alert-error,
 .alert.alert-info,
 .alert.alert-warning,
@@ -48,7 +48,7 @@
 }
 
 /* Red indicators */
-/* line 74, ../../default/scss/theme/_page.scss */
+/* line 74, ../scss/theme/_page.scss */
 .error,
 .expired,
 .req,
@@ -57,46 +57,46 @@
   font-weight: bold;
 }
 
-/* line 81, ../../default/scss/theme/_page.scss */
+/* line 81, ../scss/theme/_page.scss */
 .req_key {
   font-size: 0.75rem;
 }
 
 /* Amber indicator */
-/* line 86, ../../default/scss/theme/_page.scss */
+/* line 86, ../scss/theme/_page.scss */
 .expiring {
   color: #ffae00;
   font-weight: bold;
 }
 
 /* Logged-in User Indicators */
-/* line 92, ../../default/scss/theme/_page.scss */
+/* line 92, ../scss/theme/_page.scss */
 .username {
   color: #666666;
   padding: 0.5rem 0;
   padding-right: 0.5rem;
   font-size: 0.7rem;
 }
-/* line 97, ../../default/scss/theme/_page.scss */
+/* line 97, ../scss/theme/_page.scss */
 .username i.icon, .username i.fa {
   padding-left: 0.2rem;
   padding-right: 0;
 }
 
-/* line 103, ../../default/scss/theme/_page.scss */
+/* line 103, ../scss/theme/_page.scss */
 body.rtl .username {
   padding-left: 0.5rem;
   padding-right: 0;
   float: left;
 }
-/* line 106, ../../default/scss/theme/_page.scss */
+/* line 106, ../scss/theme/_page.scss */
 body.rtl .username i.icon, body.rtl .username i.fa {
   padding-left: 0;
   padding-right: 0.2rem;
 }
 
 /* Page Sections */
-/* line 115, ../../default/scss/theme/_page.scss */
+/* line 115, ../scss/theme/_page.scss */
 .item-container form,
 .form-container form,
 #datalist-filter-form,
@@ -107,56 +107,52 @@ body.rtl .username i.icon, body.rtl .username i.fa {
   border: 1px solid #E0E0E0;
 }
 
-/* line 124, ../../default/scss/theme/_page.scss */
+/* line 124, ../scss/theme/_page.scss */
 .widget-container #list-btn-add {
   margin-bottom: 0;
   position: relative;
   top: 1.0rem;
 }
 
-/* line 129, ../../default/scss/theme/_page.scss */
+/* line 129, ../scss/theme/_page.scss */
 #component {
   float: none;
 }
 
-/* line 132, ../../default/scss/theme/_page.scss */
+/* line 132, ../scss/theme/_page.scss */
 .map_home {
   margin: 0;
   margin-top: 0.5rem;
 }
 
 /* Global Main Content Styles */
-/* line 140, ../../default/scss/theme/_page.scss */
+/* line 140, ../scss/theme/_page.scss */
 #content a.help:link {
   color: #fff;
   text-decoration: none;
   margin-right: 10px;
 }
-/* line 145, ../../default/scss/theme/_page.scss */
+/* line 145, ../scss/theme/_page.scss */
 #content a.help:hover {
   background-color: #336699;
   text-decoration: underline;
 }
-/* line 149, ../../default/scss/theme/_page.scss */
+/* line 149, ../scss/theme/_page.scss */
 #content a.help:visited {
   font-weight: normal;
   color: #666;
 }
-/* line 154, ../../default/scss/theme/_page.scss */
+/* line 154, ../scss/theme/_page.scss */
 #content h1,
 #content h2 {
   font-size: 1.3em;
   font-weight: bolder;
-  background-color: #F7F8F9;
-  padding: 0.35rem;
 }
-/* line 163, ../../default/scss/theme/_page.scss */
+/* line 163, ../scss/theme/_page.scss */
 #content h2 {
   margin-top: 10px;
-  font-size: 1.0rem;
-  padding-left: 0.7rem;
 }
-/* line 170, ../../default/scss/theme/_page.scss */
+/* line 170, ../scss/theme/_page.scss */
 #content h3 {
   font-size: 1.1em;
   padding-bottom: 5px;
@@ -906,48 +902,60 @@ body.rtl .action-lnk:first-child {
   content: "";
 }
 
+/* Top (Modules) Menu) */
+/* line 12, ../scss/theme/_menus.scss */
+.top-bar .menu .active > a {
+  color: inherit;
+  background: inherit;
+  border-radius: 100%;
+}
+/* line 17, ../scss/theme/_menus.scss */
+.top-bar ul ul {
+  background-color: inherit;
+}
+
 /* Side (Options) Menu) */
-/* line 10, ../scss/theme/_menus.scss */
+/* line 23, ../scss/theme/_menus.scss */
 aside.columns {
   font-size: .875rem;
   padding-left: 0.7em;
   padding-right: 0.6rem;
 }
-/* line 14, ../scss/theme/_menus.scss */
+/* line 27, ../scss/theme/_menus.scss */
 aside.columns a {
   background: #f3f3f3;
   color: #666;
 }
-/* line 18, ../scss/theme/_menus.scss */
+/* line 31, ../scss/theme/_menus.scss */
 aside.columns a:hover {
   color: #2ba6cb;
   background: #e0e0e0;
 }
-/* line 22, ../scss/theme/_menus.scss */
+/* line 35, ../scss/theme/_menus.scss */
 aside.columns li.heading {
   margin-top: .125rem;
   font-weight: 700;
   text-transform: uppercase;
 }
-/* line 27, ../scss/theme/_menus.scss */
+/* line 40, ../scss/theme/_menus.scss */
 aside.columns li.heading:not(:first-child) {
   border-top: 1px solid #eaeaea;
 }
-/* line 30, ../scss/theme/_menus.scss */
+/* line 43, ../scss/theme/_menus.scss */
 aside.columns .menu .active > a {
   color: #444;
   background: #e0e1e2;
 }
-/* line 34, ../scss/theme/_menus.scss */
+/* line 47, ../scss/theme/_menus.scss */
 aside.columns .menu .active > a:hover {
   color: #2ba6cb;
   background: #e0e0e0;
 }
-/* line 38, ../scss/theme/_menus.scss */
+/* line 51, ../scss/theme/_menus.scss */
 aside.columns .menu.nested {
   margin-left: 1.25rem;
 }
-/* line 41, ../scss/theme/_menus.scss */
+/* line 54, ../scss/theme/_menus.scss */
 aside.columns nav {
   background: #f3f3f3;
   margin-top: 10px;
