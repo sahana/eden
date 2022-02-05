@@ -11,6 +11,7 @@
 
 # Import paths:
 add_import_path "."
+add_import_path "../../CCC/scss"
 add_import_path "../../default/scss"
 add_import_path "../../foundation/scss"
 

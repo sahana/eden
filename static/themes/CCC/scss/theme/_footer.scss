@@ -1,0 +1,70 @@
+/* Footer */
+
+$action_btn_fgcolor_debug: #ffffff;
+$action_btn_bgcolor_debug: #dddddd;
+$action_btn_fgcolor_debug_hover: #ffffff;
+$action_btn_bgcolor_debug_hover: #a0a0a0;
+
+$footer_fgcolor: #767676; // Contrast of 4.5: 1 for AA accessibility (https://webaim.org/resources/contrastchecker/)
+
+#footer {
+    //background: $footer_bgcolor;
+    text-align: right;
+    padding-top: 20px;
+    border-top: 4px solid #902283;
+    margin-top: 20px;
+    margin-bottom: 1rem;
+
+    // Bottom menu
+    .menu {
+        li {
+            font-size: .875rem;
+            font-weight: normal;
+            a {
+                color: #999;
+                display: inline-block;
+                padding: .0625rem .1875rem;
+                text-decoration: none;
+            }
+            a:hover {
+                color: #737373;
+            }
+        }
+        li:before {
+            content: "|";
+            margin: 0 .75rem;
+        }
+        li:first-child:before {
+            content: "";
+            margin: 0;
+        }
+    }
+
+    // Debug buttons in footer - use action-button styles
+    button.btn {
+        @include tiny_button_style();
+        margin-left: 2px;
+        margin-right: 2px;
+        color: $action_btn_fgcolor_debug;
+        background: $action_btn_bgcolor_debug;
+    }
+    button.btn:hover {
+        color: $action_btn_fgcolor_debug_hover;
+        background: $action_btn_bgcolor_debug_hover;
+    }
+}
+
+@font-face {
+    /* https://www.download-free-fonts.com/details/88194/century-schoolbook-bold-italic */
+    font-family: "font88194";
+    src: url("century-schoolbook-grassetto-corsivo.woff") format("woff");
+    font-weight: normal;
+    font-style: normal;
+}
+
+#strapline {
+    text-align: right;
+    font-family: "font88194";
+    font-size: 1.1rem;
+    color: $DarkPurple;
+}

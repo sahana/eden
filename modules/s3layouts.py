@@ -26,8 +26,9 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 
-    @todo: - complete layout implementations
-           - render "selected" (flag in item)
+    TODO:
+        - complete layout implementations
+        - render "selected" (flag in item)
 """
 
 __all__ = ("S3MainMenuDefaultLayout",

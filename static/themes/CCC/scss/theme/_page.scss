@@ -11,7 +11,7 @@ $alert_border_color: #b2b2b2 !default;
 $alert_box_shadow_color: #aaaaa7 !default;
 
 // Render page titles with background color
-$title_background: true !default;
+$title_background: false !default;
 $title_bgcolor: #F7F8F9 !default;
 
 // Throbber style [sunflower|simple]
@@ -39,18 +39,6 @@ $footer_top_margin: 20px !default;
     .loading {
       background: url(../../img/sunflower_spin_throbber.gif) center no-repeat !important;
     }
-}
-
-/* Inline Sahana logo */
-.sahana-logo {
-  background: url(../../img/S3menu_logo.png) left top no-repeat;
-  text-shadow: none;
-  padding: 0;
-  margin-left: 5px;
-  margin-top: 10px;
-  width: 35px;
-  height: 28px;
-  display: inline-block;
 }
 
 /* Alerts */
@@ -82,20 +70,27 @@ $footer_top_margin: 20px !default;
     font-size: 0.75rem;
 }
 
+/* Amber indicator */
+.expiring {
+    color: $warning-color;
+    font-weight: bold;
+}
+
 /* Logged-in User Indicators */
 .username {
     color: #666666;
-    padding: 1.2rem 0 0.5rem;
-    padding-right: 0.5rem;
+    padding: 0.5rem 0;
+    //padding-right: 0.5rem;
     font-size: 0.7rem;
     i.icon, i.fa {
         padding-left: 0.2rem;
         padding-right: 0;
     }
 }
+/*
 body.rtl {
     .username {
-        padding-left: 0.5rem;
+        //padding-left: 0.5rem;
         padding-right: 0;
         i.icon, i.fa {
             padding-left: 0;
@@ -103,16 +98,17 @@ body.rtl {
         }
         float: left;
     }
-}
+}*/
 
 /* Page Sections */
+.item-container form,
 .form-container form,
 #datalist-filter-form,
 #datatable-filter-form,
 #summary-filter-form,
 #summary-sections,
 .thumbnail {
-    border: 1px solid #CCC;
+    border: 1px solid #E0E0E0;
 }
 .widget-container #list-btn-add {
     margin-bottom: 0;
@@ -126,15 +122,9 @@ body.rtl {
     margin: 0;
     margin-top: 0.5rem;
 }
-.row.main-navigation {
-    background-color: $topbar-bg-color;
-}
 
 /* Global Main Content Styles */
-main.main {
-    min-height: 90%;
-}
-#content, .main-content {
+#content {
     a.help {
         &:link {
             color: #fff;
@@ -162,80 +152,13 @@ main.main {
     h2 {
         margin-top: 10px;
         @if $title_background {
+            font-size: 1.0rem;
             padding-left: 0.7rem;
         }
     }
     h3 {
         font-size: 1.1em;
         padding-bottom: 5px;
-    }
-}
-
-/* Footer */
-#footer {
-    background: $footer_bgcolor;
-    padding-top: 20px;
-    @if $footer_min_height {
-        min-height: $footer_min_height;
-    }
-    border-top: 4px solid $primary-color;
-    margin-top: $footer_top_margin;
-    margin-bottom: 1rem;
-}
-#poweredby {
-    margin-right: 0.5rem;
-    text-align: right;
-    a {
-        color: $footer_fgcolor;
-        text-decoration: none;
-        font-size: 0.8rem;
-        margin-left: 0.2rem;
-    }
-}
-body.rtl {
-    #poweredby {
-        text-align: left;
-    }
-}
-// Carlisle & CVS logos include no padding of their own, so add in via CSS to stop them from standing out from the rest so much
-@media #{$small-up} {
-    .padc {
-        padding: 2px 5px 6px;
-    }
-    .padcvs {
-        padding: 2px 6px 15px;
-    }
-}
-@media #{$medium-up} {
-    .padc {
-        padding: 5px 10px 12px;
-    }
-    .padcvs {
-        padding: 5px 12px 30px;
-    }
-}
-@media #{$large-up} {
-    .padc {
-        padding: 10px 20px 25px;
-    }
-    .padcvs {
-        padding: 10px 25px 75px;
-    }
-}
-
-// About Menu (in footer)
-.sub-nav.about-menu {
-    color: $footer_fgcolor;
-    a {
-        color: $footer_fgcolor;
-    }
-    text-align: left;
-    margin-left: 0;
-    margin-right: 0;
-}
-body.rtl {
-    .about-menu {
-        text-align: right;
     }
 }
 
