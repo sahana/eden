@@ -2964,64 +2964,6 @@ a.button:hover, a.button:focus {
   color: #fefefe;
 }
 
-/* line 93, ../../foundation/scss/components/_callout.scss */
-.callout {
-  position: relative;
-  margin: 0 0 1rem 0;
-  padding: 1rem;
-  border: 1px solid rgba(10, 10, 10, 0.25);
-  border-radius: 5px;
-  background-color: white;
-  color: #0a0a0a;
-}
-/* line 59, ../../foundation/scss/components/_callout.scss */
-.callout > :first-child {
-  margin-top: 0;
-}
-/* line 63, ../../foundation/scss/components/_callout.scss */
-.callout > :last-child {
-  margin-bottom: 0;
-}
-/* line 97, ../../foundation/scss/components/_callout.scss */
-.callout.primary {
-  background-color: #f5d7f2;
-  color: #0a0a0a;
-}
-/* line 97, ../../foundation/scss/components/_callout.scss */
-.callout.secondary {
-  background-color: #c7fffd;
-  color: #0a0a0a;
-}
-/* line 97, ../../foundation/scss/components/_callout.scss */
-.callout.success {
-  background-color: #e1faea;
-  color: #0a0a0a;
-}
-/* line 97, ../../foundation/scss/components/_callout.scss */
-.callout.warning {
-  background-color: #fff3d9;
-  color: #0a0a0a;
-}
-/* line 97, ../../foundation/scss/components/_callout.scss */
-.callout.alert {
-  background-color: #f9d5da;
-  color: #0a0a0a;
-}
-/* line 103, ../../foundation/scss/components/_callout.scss */
-.callout.small {
-  padding-top: 0.5rem;
-  padding-right: 0.5rem;
-  padding-bottom: 0.5rem;
-  padding-left: 0.5rem;
-}
-/* line 103, ../../foundation/scss/components/_callout.scss */
-.callout.large {
-  padding-top: 3rem;
-  padding-right: 3rem;
-  padding-bottom: 3rem;
-  padding-left: 3rem;
-}
-
 /* line 71, ../../foundation/scss/components/_dropdown.scss */
 .dropdown-pane {
   position: absolute;

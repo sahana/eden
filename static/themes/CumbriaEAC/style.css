@@ -6,7 +6,24 @@ div.subheading {
     padding-bottom: 5px;
 }
 
-/* Accessibility for Keyboard Users */
+#login_next .anonymize-btn {
+    /*font-size: 1rem;
+    padding: 1rem 2rem 1.0625rem 2rem;*/
+    font-size: 0.8125rem;
+    padding: 0.875rem 1.75rem 0.9375rem 1.75rem;
+}
+
+.menu-box {
+    border: 0
+}
+
+.streetview_edit {
+    margin-left: 8px !important;
+    padding: 4px !important;
+}
+
+
+/* Accessibility for Keyboard Users now handled by Foundation with support from what-input
 button:focus-visible,
 .button:focus-visible,
 .sub-nav li a:focus-visible,
@@ -35,19 +52,4 @@ textarea:focus-visible {
     background-color: #d1e6f1;
     color: #000;
 }
-
-#login_next .anonymize-btn {
-    /*font-size: 1rem;
-    padding: 1rem 2rem 1.0625rem 2rem;*/
-    font-size: 0.8125rem;
-    padding: 0.875rem 1.75rem 0.9375rem 1.75rem;
-}
-
-.menu-box {
-    border: 0
-}
-
-.streetview_edit {
-    margin-left: 8px !important;
-    padding: 4px !important;
-}
+*/

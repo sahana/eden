@@ -22,6 +22,7 @@ def config(settings):
     settings.base.prepopulate_demo += ("CumbriaEAC/Demo",)
 
     # Theme (folder to use for views/layout.html)
+    # Theme is identical to CCC, other than layout.html/footer.html/no callouts in Foundation build
     settings.base.theme = "CumbriaEAC"
     # Custom Logo
     #settings.ui.menu_logo = "/%s/static/themes/CumbriaEAC/img/logo.png" % current.request.application
