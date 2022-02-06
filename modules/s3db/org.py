@@ -5132,7 +5132,7 @@ class OfficeModel(S3Model):
         is_admin = auth.s3_has_role(ADMIN)
         root_org = auth.root_org()
         if is_admin:
-            filter_opts = ()
+            filter_opts = None
         elif root_org:
             filter_opts = (root_org, None)
         else:
