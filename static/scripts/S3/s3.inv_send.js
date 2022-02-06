@@ -40,14 +40,16 @@ $(document).ready(function() {
             });
         };
 
-        if (req_id) {
+        if (req_id && req_id.length > 0) {
             // Initial setting - coming from 'Fulfil Request' button
             lookupSites(req_id);
         }
 
         reqField.on('change', function() {
             req_id = reqField.val();
-            lookupSites(req_id);
+            if (req_id && req_id.length > 0) {
+                lookupSites(req_id);
+            }
         });
     }
 

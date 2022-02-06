@@ -3,7 +3,7 @@
 */
 
 $(document).ready(function() {
-    $('#req_req_is_template').change(function() {
+    $('#req_req_is_template').on('change', function() {
         if ($('#req_req_is_template').is(':checked')) {
             $('#req_req_date__row1').hide();
             $('#req_req_date__row').hide();
