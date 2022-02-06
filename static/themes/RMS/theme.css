@@ -53,7 +53,7 @@
 .expired,
 .req,
 .req_key {
-  color: #c60f13;
+  color: #d92c20;
   font-weight: bold;
 }
 
@@ -652,7 +652,7 @@ div.tabs {
   padding: 0;
   line-height: 1.3rem;
   text-align: left;
-  border-bottom: 1px solid #2ba6cb;
+  border-bottom: 1px solid #006a71;
 }
 /* line 82, ../../default/scss/theme/_rheader.scss */
 div.tabs span {
@@ -680,7 +680,7 @@ div.tabs span.tab_here {
   margin: 0.2rem 0.35rem 0 0;
   padding: 0.1rem 0.4rem 0.12rem;
   background: #ffffff;
-  border-color: #2ba6cb;
+  border-color: #006a71;
   border-style: solid;
   border-width: 0.125rem 2px 0.0625rem 3px;
   border-bottom-style: solid;
@@ -703,15 +703,15 @@ div.tabs span.tab_last, div.tabs span.tab_other {
   font-size: 0.9rem;
   margin: 0.35rem 0.2rem 0 0;
   padding: 0.1rem 0.3rem 0;
-  background-color: #2ba6cb;
-  border-color: #2ba6cb;
+  background-color: #006a71;
+  border-color: #006a71;
   border-width: 0.0625rem 1px 0.0625rem 2px;
   border-style: solid;
 }
 /* line 147, ../../default/scss/theme/_rheader.scss */
 div.tabs span.tab_last:hover, div.tabs span.tab_other:hover {
-  background-color: #258dad;
-  border-color: #258dad;
+  background-color: #005a60;
+  border-color: #005a60;
 }
 /* line 151, ../../default/scss/theme/_rheader.scss */
 div.tabs span.tab_last a, div.tabs span.tab_other a {
@@ -774,13 +774,13 @@ button.small,
 /* line 80, ../scss/theme/_buttons.scss */
 .action-btn,
 .selected-action {
-  background-color: #2ba6cb;
+  background-color: #006a71;
   color: #ffffff !important;
 }
 /* line 84, ../scss/theme/_buttons.scss */
 .action-btn:hover,
 .selected-action:hover {
-  background-color: #258dad;
+  background-color: #005a60;
   color: #ffffff !important;
 }
 
@@ -788,13 +788,13 @@ button.small,
 /* line 91, ../scss/theme/_buttons.scss */
 .delete-btn-ajax,
 .delete-btn {
-  background-color: #c60f13;
+  background-color: #d92c20;
   color: #ffffff !important;
 }
 /* line 95, ../scss/theme/_buttons.scss */
 .delete-btn-ajax:hover,
 .delete-btn:hover {
-  background-color: #9e0c0f !important;
+  background-color: #ae231a !important;
   color: #ffffff !important;
 }
 
@@ -807,7 +807,7 @@ button.small,
 /* line 105, ../scss/theme/_buttons.scss */
 .cancel-form-btn:hover {
   color: white;
-  background-color: #2ba6cb;
+  background-color: #006a71;
 }
 
 /* Full screen map button */
@@ -928,7 +928,7 @@ aside.columns a {
 }
 /* line 31, ../scss/theme/_menus.scss */
 aside.columns a:hover {
-  color: #2ba6cb;
+  color: #006a71;
   background: #e0e0e0;
 }
 /* line 35, ../scss/theme/_menus.scss */
@@ -948,7 +948,7 @@ aside.columns .menu .active > a {
 }
 /* line 47, ../scss/theme/_menus.scss */
 aside.columns .menu .active > a:hover {
-  color: #2ba6cb;
+  color: #006a71;
   background: #e0e0e0;
 }
 /* line 51, ../scss/theme/_menus.scss */
@@ -1051,12 +1051,12 @@ table.dataTable .group .group-expand {
 /* line 107, ../../default/scss/theme/_tables.scss */
 table.dataTable.dtr-inline.collapsed tbody td:first-child::before, table.dataTable.dtr-inline.collapsed tbody th:first-child::before {
   top: 6px;
-  background-color: #2ba6cb;
+  background-color: #006a71;
 }
 /* line 112, ../../default/scss/theme/_tables.scss */
 table.dataTable.dtr-inline.collapsed tbody tr.parent td:first-child::before, table.dataTable.dtr-inline.collapsed tbody tr.parent th:first-child::before {
   top: 6px;
-  background-color: #c60f13;
+  background-color: #d92c20;
 }
 
 /* line 119, ../../default/scss/theme/_tables.scss */
@@ -1607,11 +1607,11 @@ form.anonymize-form,
 
 /* line 316, ../../default/scss/theme/_widgets.scss */
 .anonymize-btn {
-  background-color: #c60f13;
+  background-color: #d92c20;
 }
 /* line 318, ../../default/scss/theme/_widgets.scss */
 .anonymize-btn:hover {
-  background-color: #9e0c0f;
+  background-color: #ae231a;
 }
 
 /* line 322, ../../default/scss/theme/_widgets.scss */
@@ -1629,7 +1629,7 @@ form.anonymize-form,
 .rm-form .rm-assign .action-lnk,
 .rm-form .rm-rules .action-lnk {
   display: inline-block;
-  color: #2ba6cb;
+  color: #006a71;
   font-style: normal;
 }
 /* line 338, ../../default/scss/theme/_widgets.scss */

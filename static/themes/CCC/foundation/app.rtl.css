@@ -275,14 +275,14 @@ img {
 textarea {
   height: auto;
   min-height: 50px;
-  border-radius: 5px;
+  border-radius: 0;
 }
 
 /* line 205, ../../foundation/scss/_global.scss */
 select {
   box-sizing: border-box;
   width: 100%;
-  border-radius: 5px;
+  border-radius: 0;
 }
 
 /* line 215, ../../foundation/scss/_global.scss */
@@ -300,7 +300,7 @@ button {
   padding: 0;
   appearance: none;
   border: 0;
-  border-radius: 5px;
+  border-radius: 0;
   background: transparent;
   line-height: 1;
   cursor: auto;
@@ -345,7 +345,7 @@ textarea {
   margin: 0 0 1rem;
   padding: 0.5rem;
   border: 1px solid #cacaca;
-  border-radius: 5px;
+  border-radius: 0;
   background-color: #fefefe;
   box-shadow: inset 0 1px 2px rgba(10, 10, 10, 0.1);
   font-family: inherit;
@@ -387,7 +387,7 @@ textarea[readonly] {
 [type='submit'],
 [type='button'] {
   appearance: none;
-  border-radius: 5px;
+  border-radius: 0;
 }
 
 /* line 158, ../../foundation/scss/forms/_text.scss */
@@ -466,11 +466,11 @@ label.middle {
 }
 /* line 37, ../../foundation/scss/forms/_input-group.scss */
 .input-group > :first-child, .input-group > :first-child.input-group-button > * {
-  border-radius: 5px 0 0 5px;
+  border-radius: 0 0 0 0;
 }
 /* line 43, ../../foundation/scss/forms/_input-group.scss */
 .input-group > :last-child, .input-group > :last-child.input-group-button > * {
-  border-radius: 0 5px 5px 0;
+  border-radius: 0 0 0 0;
 }
 
 /* line 49, ../../foundation/scss/forms/_input-group.scss */
@@ -563,7 +563,7 @@ select {
   padding: 0.5rem;
   appearance: none;
   border: 1px solid #cacaca;
-  border-radius: 5px;
+  border-radius: 0;
   background-color: #fefefe;
   font-family: inherit;
   font-size: 0.875rem;
@@ -896,7 +896,6 @@ kbd {
   background-color: #e6e6e6;
   font-family: Consolas, "Liberation Mono", Courier, monospace;
   color: #0a0a0a;
-  border-radius: 5px;
 }
 
 /* line 134, ../../foundation/scss/typography/_helpers.scss */
@@ -2630,7 +2629,7 @@ code, .code-inline {
   margin: 0 0 1rem 0;
   padding: 0.85em 1em;
   border: 1px solid transparent;
-  border-radius: 5px;
+  border-radius: 0;
   transition: background-color 0.25s ease-out, color 0.25s ease-out;
   font-family: inherit;
   font-size: 0.9rem;
@@ -2930,7 +2929,7 @@ a.button:hover, a.button:focus {
 .label {
   display: inline-block;
   padding: 0.33333rem 0.5rem;
-  border-radius: 5px;
+  border-radius: 0;
   font-size: 0.8rem;
   line-height: 1;
   white-space: nowrap;
@@ -3031,7 +3030,7 @@ a.button:hover, a.button:focus {
   padding: 1rem;
   visibility: hidden;
   border: 1px solid #cacaca;
-  border-radius: 5px;
+  border-radius: 0;
   background-color: #fefefe;
   font-size: 1rem;
 }
