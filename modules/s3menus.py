@@ -164,34 +164,7 @@ class S3MainMenu(object):
         menu_help = MM("Help", c="default", f="help", **attr)(
             MM("Contact us", f="contact"),
             MM("About", f="about")
-        )
-
-        #if current.deployment_settings.get_base_guided_tour():
-        #    # Load the guided tour configuration from the database
-        #    table = current.s3db.tour_config
-        #    logged_in = current.auth.is_logged_in()
-        #    if logged_in:
-        #        query = (table.deleted == False) &\
-        #                (table.role != "")
-        #    else:
-        #        query = (table.deleted == False) &\
-        #                (table.role == "")
-        #    tours = current.db(query).select(table.id,
-        #                                     table.name,
-        #                                     table.controller,
-        #                                     table.function,
-        #                                     table.role,
-        #                                     )
-        #    if len(tours) > 0:
-        #        menu_help.append(SEP())
-        #    for row in tours:
-        #        menu_help.append(MM(row.name,
-        #                            c = row.controller,
-        #                            f = row.function,
-        #                            vars = {"tour": row.id},
-        #                            restrict = row.role
-        #                            )
-        #                         )
+            )
 
         return menu_help
 
@@ -1814,21 +1787,6 @@ class S3OptionsMenu(object):
 
         # Use admin menu
         return self.admin()
-
-    # -------------------------------------------------------------------------
-    #@staticmethod
-    #def tour():
-    #    """ Guided Tour """
-
-    #    ADMIN = current.session.s3.system_roles.ADMIN
-
-    #    return M(c="tour")(
-    #                M("Configuration", f="config", restrict=[ADMIN])(
-    #                    M("Import", m="import", restrict=[ADMIN]),
-    #                    ),
-    #                M("Detail", f="details", restrict=[ADMIN]),
-    #                M("User", f="user", restrict=[ADMIN]),
-    #            )
 
     # -------------------------------------------------------------------------
     @staticmethod

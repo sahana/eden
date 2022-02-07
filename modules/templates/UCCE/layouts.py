@@ -1,72 +1,27 @@
 # -*- coding: utf-8 -*-
 
-from gluon import current, A, DIV, FORM, OPTION, SELECT, TAG
+__all__ = ("S3OptionsMenuLayout",
+           )
+
+from gluon import current, A, LI, SPAN, UL
 from s3 import ICON, S3NavigationItem
-#from s3theme import NAV
-
-# =============================================================================
-class S3LanguageMenuLayout(S3NavigationItem):
-
-    @staticmethod
-    def layout(item):
-        """ Language menu layout
-
-            options for each entry:
-                - lang_code: the language code
-                - lang_name: the language name
-            option for the menu
-                - current_language: code of the current language
-        """
-
-        if item.enabled:
-            if item.components:
-                # The language menu itself
-                current_language = current.T.accepted_language
-                items = item.render_components()
-                select = SELECT(items,
-                                value = current_language,
-                                _name = "_language",
-                                # @ToDo T:
-                                _title = "Language Selection",
-                                _onchange = "S3.reloadWithQueryStringVars({'_language':$(this).val()});",
-                                )
-                form = FORM(select,
-                            _class = "language-selector",
-                            _name = "_language",
-                            _action = "",
-                            _method = "get",
-                            )
-                return form
-            else:
-                # A language entry
-                return OPTION(item.opts.lang_name,
-                              _value = item.opts.lang_code,
-                              )
-        else:
-            return None
-
-    # -------------------------------------------------------------------------
-    def check_enabled(self):
-        """ Check whether the language menu is enabled """
-
-        if current.deployment_settings.get_L10n_display_toolbar():
-            return True
-        else:
-            return False
-
-# -----------------------------------------------------------------------------
-# Shortcut
-ML = S3LanguageMenuLayout
+from s3theme import NAV
 
 # =============================================================================
 class S3OptionsMenuLayout(S3NavigationItem):
     """
-        Side Menu Layout
+        Controller Options Menu Layout
+        - version with support for Icons
+        - currently assumes all entries have icons
+        - currently assumes no nested menus
+
+        Classes use Foundation's Menu component
+            https://get.foundation/sites/docs/menu.html
     """
 
     @staticmethod
     def layout(item):
-        """ Custom Layout Method """
+        """ Layout Method (Item Renderer) """
 
         # Manage flags: hide any disabled/unauthorized items
         if not item.authorized:
@@ -77,13 +32,7 @@ class S3OptionsMenuLayout(S3NavigationItem):
             visible = True
 
         if enabled and visible:
-            if item.parent is None:
-                # Main menu
-                items = item.render_components()
-                return DIV(items, _id="main-sub-menu", _class="icon-bar vertical three-up")
-
-            else:   
-                # Menu item
+            if item.parent is not None:
                 if item.enabled and item.authorized:
 
                     attr = {"_id": item.attr._id}
@@ -92,21 +41,58 @@ class S3OptionsMenuLayout(S3NavigationItem):
                     else:
                         attr["_href"] = item.url()
 
+                    #if item.components:
+                    #    # Submenu
+                    #    items = item.render_components()
+
+                    #    # Hide submenus which have no active links
+                    #    if not items and not item.link:
+                    #        return None
+
+                    #    _class = ""
+                    #    if item.parent.parent is None and item.selected:
+                    #        _class = "active"
+
+                    #    section = [LI(A(ICON(item.opts.icon),
+                    #                    " ",
+                    #                    SPAN(item.label),
+                    #                    **attr
+                    #                    ),
+                    #                  _class = "heading %s" % _class,
+                    #                  ),
+                    #               ]
+
+                    #    if items:
+                    #        section.append(UL(items,
+                    #                          _class = "menu vertical nested", # https://get.foundation/sites/docs/menu.html
+                    #                          ))
+                    #    return section
+
+                    #else:
+                    # Submenu item
+                    #if item.parent.parent is None:
+                    #    _class = "heading"
                     if item.selected:
-                        attr["_class"] = "active item"
+                        _class = "active"
                     else:
-                        attr["_class"] = "item"
+                        _class = ""
 
-                    icon = item.opts.icon
-                    if icon:
-                        icon = ICON(icon)
-                    else:
-                        icon = ""
+                    return LI(A(ICON(item.opts.icon),
+                                " ",
+                                SPAN(item.label),
+                                **attr
+                                ),
+                              _class = _class,
+                              )
+            else:
+                # Main menu
+                items = item.render_components()
+                return NAV(UL(items,
+                              _id = "main-sub-menu",
+                              _class = "menu vertical icons icon-top", # https://get.foundation/sites/docs/menu.html
+                              ),
+                           )
 
-                    return A(icon,
-                             TAG["label"](item.label),
-                             **attr
-                             )
         else:
             return None
 

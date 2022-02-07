@@ -19,48 +19,19 @@ a.no-link:hover label {
   color: #00AAA0; /* $persian-green */
 }
 
-/* Top Bar */
-.top-bar {
-  margin-top: 10px;
-}
-.top-bar .title-area {
-  margin-left: 15px;
-}
-/*.top-bar .dropdown {
-  border-radius: 10px;
-  clip-path: ellipse(50% 50% at 50% 50%);
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
-}
-nav.top-bar section.top-bar-section ul.dropdown li:last-child a {
-  border-bottom-right-radius: 10px;
-  border-bottom-left-radius: 10px;
-}*/
-.top-bar-section ul.dropdown li >  a:not(.button) {
-  /* We don't use label elements in our dropdowns */
-  font-size: 0.85rem;
-  font-weight: bold;
-  /*padding-top: 0;
-  padding-bottom: 0; */
-}
-
-/* Side Bar */
-.icon-bar .ucce {
-  font-size: 32px;
-}
-
 /* Homepage */
-.homepage h1 {
+#content .homepage h1 {
+  background-color: white;
   font-size: 2.5em;
   font-weight: bold;
 }
-.homepage h2 {
+#content .homepage h2 {
+  background-color: white;
   font-size: 1.75em;
   font-weight: bold;
 }
-.panel {
-  box-shadow: 1px 1px #EEEEEE;
-  border-radius: 10px;
+.callout {
+  box-shadow: 1px 1px #eee;
 }
 
 /* Datalists */
@@ -69,6 +40,8 @@ div.dl {
 }
 .search-wrapper {
   position: relative;
+  margin-left: 5px;
+  margin-right: 5px;
 }
 .search-icon {
   /*font-size: 24px;*/
@@ -210,27 +183,21 @@ label.inline-ucce {
 }
 
 /* Template Editor */
-.survey-item {
-  float: none;
-  border-radius: 0 0 10px 10px;
-  box-shadow: 2px 2px #EEEEEE;
+#question-bar .columns {
+    padding-left: .625rem;
+    padding-right: .625rem;
 }
 
-#survey-droppable {
-  border: 1px solid #AFAEAE;
-  height: 400px;
-  left: 100%;
-  right: 100%;
-  text-align: center;
-  border-radius: 10px;
-  box-shadow: 2px 2px #EEEEEE;
+#question-bar .has-tip {
+    border: 0;
+    cursor: help;
 }
 
-#survey-droppable > span {
-  color: #AFAEAE;
-  position: relative;
-  display: inline-block;
-  top: 50%;
+.preview-empty {
+  background-color: #eee;
+  border: 1px dotted #999;
+  height: 80px;
+  width: 80px;
 }
 
 .section-break {
@@ -266,11 +233,37 @@ label.inline-ucce {
   margin-left: 15px;
 }
 
-.preview-empty {
-  background-color: #eee;
-  border: 1px dotted #999;
-  height: 80px;
-  width: 80px;
+.survey-item {
+  float: none;
+  border-radius: 0 0 10px 10px;
+  box-shadow: 2px 2px #EEEEEE;
+}
+
+#survey-droppable {
+  border: 1px solid #AFAEAE;
+  height: 400px;
+  left: 100%;
+  right: 100%;
+  text-align: center;
+  border-radius: 10px;
+  box-shadow: 2px 2px #EEEEEE;
+}
+
+#survey-droppable > span {
+  color: #AFAEAE;
+  position: relative;
+  display: inline-block;
+  top: 50%;
+}
+
+.tabs {
+    border: 0;
+}
+
+.tabs-title > a {
+    font-weight: bold;
+    line-height: 1.85rem;
+    margin-top: -0.175rem;
 }
 
 #content h2.fleft {
@@ -357,6 +350,7 @@ a.no-link label {
 }
 
 /* Switch Backported from Foundation 6 instead of using the Foundation 5 version */
+/* - could now be redone using the proper Foundation 6 component */
 .switch {
   height: 2rem;
   position: relative;

@@ -1,6 +1,10 @@
+@import "settings";
+
 // THEME MODULES
 @import "theme/base";       // required
+@import "theme/config";
 @import "theme/page";
+@import "theme/footer";
 @import "theme/forms";
 @import "theme/rheader";
 @import "theme/buttons";
@@ -9,5 +13,5 @@
 @import "theme/datalists";
 @import "theme/profile";
 @import "theme/widgets";
-@import "theme/misc";
+//@import "theme/wizard";
 @import "theme/cards";

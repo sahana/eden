@@ -4,7 +4,7 @@
 
 var s3_register_validation = function() {
     // Hide password verification field until password changed
-    $('input[name="password"]').keyup(function() {
+    $('input[name="password"]').on('keyup', function() {
         $('#auth_user_password_two__row, #auth_user_password_two__row1').removeClass('hide').show();
         $('#password_two').prop('disabled', false);
     });
@@ -30,7 +30,7 @@ var s3_register_validation = function() {
 
     if (undefined != S3.whitelists) {
         // Check for Whitelists
-        $('.auth_register #auth_user_email').blur(function() {
+        $('.auth_register #auth_user_email').on('blur', function() {
             var field = $('#auth_user_organisation_id');
             if (!field.val()) {
                 // If no value yet exists then set from whitelist

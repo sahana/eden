@@ -908,8 +908,8 @@ aside.columns {
 }
 /* line 43, ../scss/theme/_menus.scss */
 aside.columns a {
-  background: #d7d8d9;
   color: #444;
+  background: #d7d8d9;
 }
 /* line 47, ../scss/theme/_menus.scss */
 aside.columns a:hover {

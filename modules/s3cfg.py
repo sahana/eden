@@ -1089,10 +1089,6 @@ class S3Config(Storage):
         """For demo sites, which additional options to add to the list """
         return self.base.get("prepopulate_demo", 0)
 
-    def get_base_guided_tour(self):
-        """ Whether the guided tours are enabled """
-        return self.base.get("guided_tour", self.has_module("tour"))
-
     def get_base_public_url(self):
         """
             The Public URL for the site - for use in email links, etc

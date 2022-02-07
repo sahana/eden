@@ -428,7 +428,7 @@ class S3BreadcrumbsLayout(S3NavigationItem):
 # =============================================================================
 class S3HomepageMenuLayout(S3NavigationItem):
     """
-        Layout for homepage menus
+        Layout for menus on default homepage
     """
 
     @staticmethod
@@ -464,7 +464,7 @@ class S3HomepageMenuLayout(S3NavigationItem):
                 title = H3(item.label) if item.label else ""
                 menu = DIV(title,
                            DIV(TAG[""](components),
-                               _class = "icon-bar four-up",
+                               _class = "menu icons",
                                ),
                            _id = item.attr._id,
                            _class = item.attr._class,
@@ -483,9 +483,12 @@ class S3HomepageMenuLayout(S3NavigationItem):
 
                 icon = item.opts.icon
                 if icon:
-                    label = LABEL(ICON(icon), item.label)
+                    label = TAG[""](ICON(icon),
+                                    " ",
+                                    SPAN(item.label),
+                                    )
                 else:
-                    label = LABEL(item.label)
+                    label = item.label
                 return A(label,
                          _class = _class,
                          _href = item.url(),

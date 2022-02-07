@@ -27,7 +27,7 @@
 // Basic components
 //@include foundation-badge;
 //@include foundation-breadcrumbs;
-//@include foundation-callout;
+@include foundation-callout;
 //@include foundation-card;
 @include foundation-dropdown;
 //@include foundation-pagination;
@@ -38,11 +38,11 @@
 //@include foundation-media-object;
 //@include foundation-orbit;
 //@include foundation-responsive-embed;
-//@include foundation-tabs;
+@include foundation-tabs;
 //@include foundation-thumbnail;
 // Menu-based containers
 @include foundation-menu;
-@include foundation-menu-icon; // For default homepage
+@include foundation-menu-icon;
 //@include foundation-accordion-menu;
 //@include foundation-drilldown-menu;
 @include foundation-dropdown-menu;

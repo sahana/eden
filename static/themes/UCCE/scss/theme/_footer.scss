@@ -1,0 +1,11 @@
+/* Footer */
+#footer {
+    background: $footer_bgcolor;
+    padding-top: 20px;
+    @if $footer_min_height {
+        min-height: $footer_min_height;
+    }
+    border-top: 1px solid #F0F0F0;
+    margin-top: $footer_top_margin;
+    margin-bottom: 1rem;
+}

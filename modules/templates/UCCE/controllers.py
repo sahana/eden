@@ -2299,6 +2299,8 @@ class dc_TargetReportFilters(S3Method):
 class dc_TemplateEditor(S3Method):
     """
         Survey Template Editor
+        - uses s3.ui.template.js
+        - relies on Foundation (for Magellan, Tabs and Tooltips)
     """
 
     # -------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 /*
  * Survey Editor Widget
+ * relies on Foundation (for Magellan, Tabs and Tooltips)
  */
 import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Static, Stroke, Style, VectorLayer, VectorSource } from './ol.dc_editor.min.js';
 
@@ -264,7 +265,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             if (!l10n) {
                 translationHidden = ' hide';
             }
-            var translationTitle = '<li class="tab-title l10n' + translationHidden + '"><a href="#translation-' + position + '">Translation</a></li>';
+            var translationTitle = '<li class="tabs-title l10n' + translationHidden + '"><a href="#translation-' + position + '">Translation</a></li>';
 
             if (type == 'instructions') {
                 idHtml = 'instructions-' + position;
@@ -302,14 +303,14 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
 
             // <a><i class="ucce ucce-duplicate"> </i></a> Hidden until wired-up
             question = '<div class="thumbnail dl-item survey-item" id="' + idHtml + '" data-page="' + page + '"' + dataHtml + '>' + 
-                       '<div class="card-header"><ul class="tabs fleft" data-tab><li class="tab-title active"><a href="#edit-' + position + '">Edit</a></li><li class="tab-title"><a href="#logic-' + position + '">Display logic</a></li> ' + translationTitle + '</ul>' +
+                       '<div class="card-header"><ul class="tabs fleft" data-tabs id="tabs-' + position + '"><li class="tabs-title is-active"><a href="#edit-' + position + '">Edit</a></li><li class="tabs-title"><a href="#logic-' + position + '">Display logic</a></li> ' + translationTitle + '</ul>' +
                        '<div class="edit-bar fright"><a><i class="ucce ucce-delete"> </i></a><div class="fright"><div class="move-up"><i class="ucce ucce-up"> </i></div><div class="move-down"><i class="ucce ucce-down"> </i></div></div></div>' + 
                        '</div>' + 
-                       '<div class="tabs-content">';
+                       '<div class="tabs-content" data-tabs-content="tabs-' + position + '">';
 
             // We need to reload this when Logic tab selected anyway, so don't bother loading now
             //optionsHtml = this.logicOptionsHtml(questionID, position);
-            logicTab = '<div class="media content" id="logic-' + position + '">' + 
+            logicTab = '<div class="media tabs-panel" id="logic-' + position + '">' + 
                         '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Only display question if...</h2></div></div>' +
                         '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><select id="logic-select-' + position + '"></select></div></div>' +
                         '<div class="row" id="logic-response-row-' + position + '">' +
@@ -336,11 +337,11 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             sayTextL10n = thisLayout.say.l10n[l10n];
                         }
                     }
-                    editTab = '<div class="media content active" id="edit-' + position + '">' +
+                    editTab = '<div class="media tabs-panel is-active" id="edit-' + position + '">' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Data collector instructions</h2></div></div>' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>What data collector should do</label><textarea id="do-' + position + '" type="text" size=100 placeholder="Type what data collector should do">' + doText + '</textarea><label>What data collector should say</label><textarea id="say-' + position + '" type="text" size=100 placeholder="Type what data collector should say">' + sayText + '</textarea></div></div>' +
                               '</div>';
-                    translationTab = '<div class="media content" id="translation-' + position + '">' +
+                    translationTab = '<div class="media tabs-panel" id="translation-' + position + '">' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Data collector instructions</h2></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>What data collector should do</label><div class="translate-from"></div><textarea id="do-l10n-' + position + '" type="text" size=100 placeholder="Type translation...">' + doTextL10n + '</textarea><label>What data collector should say</label><div class="translate-from"></div><textarea id="say-l10n-' + position + '" type="text" size=100 placeholder="Type translation...">' + sayTextL10n + '</textarea></div></div>' + 
                                      '</div>';
@@ -355,12 +356,12 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             nameL10n = thisQuestion.name_l10n || '';
                         }
                     }
-                    editTab = '<div class="media content active" id="edit-' + position + '">' +
+                    editTab = '<div class="media tabs-panel is-active" id="edit-' + position + '">' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Text box</h2></div></div>' + 
                                '<div class="row"><div class="columns medium-1"><label id="qlabel-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><input id="name-' + questionID + '" type="text" size=100 placeholder="type question" value="' + name + '"></div></div>' +
                                mandatory + imageHtml +
                               '</div>';
-                    translationTab = '<div class="media content" id="translation-' + position + '">' +
+                    translationTab = '<div class="media tabs-panel" id="translation-' + position + '">' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Text box</h2></div></div>' +
                                       '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
@@ -384,7 +385,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             max = isIntInRange.max || '';
                         }
                     }
-                    editTab = '<div class="media content active" id="edit-' + position + '">' + 
+                    editTab = '<div class="media tabs-panel is-active" id="edit-' + position + '">' + 
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Number question</h2></div></div>' +
                                '<div class="row"><div class="columns medium-1"><label id="qlabel-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div></div>' +
                                mandatory + imageHtml +
@@ -392,7 +393,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>Restrict input to:</label></div></div>' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><form id="answer-' + questionID + '"><label class="fleft">Minimum:</label><input id="min-' + questionID + '" name="min" type="number" value="' + min + '" class="fleft"><label class="fleft">Maximum:</label><input id="max-' + questionID + '" name="max" type="number" value="' + max + '" class="fleft"></form></div></div>' +
                               '</div>';
-                    translationTab = '<div class="media content" id="translation-' + position + '">' +
+                    translationTab = '<div class="media tabs-panel" id="translation-' + position + '">' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Number question</h2></div></div>' +
                                       '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
@@ -489,7 +490,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                        '</div></div></div>';
                         choicesL10n = newChoiceL10n + otherL10nRow;
                     }
-                    editTab = '<div class="media content active" id="edit-' + position + '">' +
+                    editTab = '<div class="media tabs-panel is-active" id="edit-' + position + '">' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Multiple choice question</h2></div></div>' +
                                '<div class="row"><div class="columns medium-1"><label id="qlabel-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div></div>' +
                                mandatory + imageHtml +
@@ -502,7 +503,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label class="fleft">Maximum No. of responses:</label><i class="ucce ucce-minus"> </i> <span id="multiple-count-' + questionID + '">' + multiple + '</span> <i class="ucce ucce-plus"> </i></div></div>' +
                               '</div>';
                     
-                    translationTab = '<div class="media content" id="translation-' + position + '">' +
+                    translationTab = '<div class="media tabs-panel" id="translation-' + position + '">' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="fleft">Multiple choice question</h2></div></div>' +
                                       '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
@@ -543,7 +544,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         }
                     }
                     var scaleOptions = scales.join();
-                    editTab = '<div class="media content active" id="edit-' + position + '">' +
+                    editTab = '<div class="media tabs-panel is-active" id="edit-' + position + '">' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Likert-scale</h2></div></div>' +
                                '<div class="row"><div class="columns medium-1"><label id="qlabel-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div></div>' +
                                mandatory + imageHtml +
@@ -551,7 +552,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><label>Choices</label><select id="scale-' + questionID + '"><option value="">Please choose scale</option>' + scaleOptions + '</select></div></div>' +
                                '<div class="row"><div class="columns medium-1"></div><div id="display-' + questionID + '" class="columns medium-11">' + displayOptions + '</div></div>' +
                               '</div>';
-                    translationTab = '<div class="media content" id="translation-' + position + '">' +
+                    translationTab = '<div class="media tabs-panel" id="translation-' + position + '">' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Likert-scale</h2></div></div>' +
                                       '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
@@ -597,7 +598,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         numClicks = thisQuestion.settings.numClicks || 1
                     }
                     //<span id="preview-' + questionID + '" class="preview-empty fleft"></span>
-                    editTab = '<div class="media content active" id="edit-' + position + '">' +
+                    editTab = '<div class="media tabs-panel is-active" id="edit-' + position + '">' +
                                '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Heatmap</h2></div></div>' +
                                '<div class="row"><div class="columns medium-1"><label id="qlabel-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><input id="name-' + questionID + '"type="text" size=100 placeholder="type question" value="' + name + '"></div></div>' +
                                mandatory +
@@ -613,7 +614,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                  '<div class="row"><h3>Tap regions:</h3></div>' +
                                  choices +
                                '</div></div></div>';
-                    translationTab = '<div class="media content" id="translation-' + position + '">' +
+                    translationTab = '<div class="media tabs-panel" id="translation-' + position + '">' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><h2 class="left">Heatmap</h2></div></div>' +
                                       '<div class="row"><div class="columns medium-1"><label id="qlabel-l10n-' + questionID + '" class="fright">Q' + questionNumber + '</label></div><div class="columns medium-11"><div id="name-l10n-from-' + questionID + '" class="translate-from"></div></div></div>' +
                                       '<div class="row"><div class="columns medium-1"></div><div class="columns medium-11"><input id="name-l10n-' + questionID + '" type="text" size=100 placeholder="type translated question" value="' + nameL10n + '"></div></div>' +
@@ -1505,8 +1506,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
             }
 
             // Run Foundation JS on new Item
-            //- needed for Tabs to work at all & allows us to add callback
-            $item.foundation('tab', 'reflow');
+            //$item.foundation('tab', 'reflow');
+            $item.foundation(); 
         },
 
         /**
@@ -2645,7 +2646,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         $('#logic-term-2-' + currentPosition).attr('id', 'logic-term-2-' + newPosition);
                         $('#translation-' + currentPosition).attr('id', 'translation-' + newPosition);
                         // Update links to Tabs
-                        $currentItem.find('li.tab-title > a').each(function() {
+                        $currentItem.find('li.tabs-title > a').each(function() {
                             var $this = $(this);
                             oldHref = $this.attr('href');
                             newHref = oldHref.split('-')[0];
@@ -2744,7 +2745,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         $('#logic-term-2-' + currentPosition).attr('id', 'logic-term-2-' + newPosition);
                         $('#translation-' + currentPosition).attr('id', 'translation-' + newPosition);
                         // Update links to Tabs
-                        $currentItem.find('li.tab-title > a').each(function() {
+                        $currentItem.find('li.tabs-title > a').each(function() {
                             var $this = $(this);
                             oldHref = $this.attr('href');
                             newHref = oldHref.split('-')[0];
@@ -2773,7 +2774,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                         $('#logic-term-2-' + 'interim').attr('id', 'logic-term-2-' + currentPosition);
                         $('#translation-' + 'interim').attr('id', 'translation-' + currentPosition);
                         // Update links to Tabs
-                        $swapItem.find('li.tab-title > a').each(function() {
+                        $swapItem.find('li.tabs-title > a').each(function() {
                             var $this = $(this);
                             oldHref = $this.attr('href');
                             newHref = oldHref.split('-')[0];
@@ -2957,7 +2958,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             $('#translation-' + oldPosition).attr('id', 'translation-' + thisNewPosition);
 
                             // Update links to Tabs
-                            $thisItem.find('li.tab-title > a').each(function() {
+                            $thisItem.find('li.tabs-title > a').each(function() {
                                 var $this = $(this);
                                 oldHref = $this.attr('href');
                                 newHref = oldHref.split('-')[0];
@@ -3116,7 +3117,7 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                             $('#translation-' + oldPosition).attr('id', 'translation-' + thisNewPosition);
 
                             // Update links to Tabs
-                            $thisItem.find('li.tab-title > a').each(function() {
+                            $thisItem.find('li.tabs-title > a').each(function() {
                                 var $this = $(this);
                                 oldHref = $this.attr('href');
                                 newHref = oldHref.split('-')[0];
@@ -3636,66 +3637,66 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                 surveyName = $('#survey-name');
 
             // Foundation Tabs
-            $(document).foundation({
-                tab: {
-                    callback : function (tab) {
-                        var tabText = tab.text();
-                        if (tabText == 'Display logic') {
-                            // Update list of Questions to select from
-                            var currentPosition = parseInt(tab.children().first().attr('href').split('-')[1]),
-                                logicSelect = $('#logic-select-' + currentPosition),
-                                parts = tab.closest('.survey-item').attr('id').split('-'),
-                                type = parts[0];
-                            if (type == 'instructions') {
-                                logicSelect.html(self.logicOptionsHtml(null, currentPosition));
-                            } else {
-                                var questionID = parts[1];
-                                logicSelect.html(self.logicOptionsHtml(questionID, currentPosition));
-                            }
-                            self.logicSelected(logicSelect, currentPosition);
-                        } else if (tabText == 'Translation') {
-                            // Copy original language to 'translate-from' div
-                            var currentPosition = parseInt(tab.children().first().attr('href').split('-')[1]),
-                                parts = tab.closest('.survey-item').attr('id').split('-'),
-                                type = parts[0];
-                            if (type == 'instructions') {
-                                $('#do-l10n-' + currentPosition).prev().html($('#do-' + currentPosition).val());
-                                $('#say-l10n-' + currentPosition).prev().html($('#say-' + currentPosition).val());
-                            } else {
-                                var questionID = parts[1],
-                                    thisQuestion = self.data.questions[questionID];
-                                $('#name-l10n-from-' + questionID).html($('#name-' + questionID).val());
+            $(document).on('change.zf.tabs', function (event, tab) {
+                if (!tab) {
+                    // This is a field inside the tab changing: ignore!
+                    return;
+                }
+                var tabText = tab.text();
+                if (tabText == 'Display logic') {
+                    // Update list of Questions to select from
+                    var currentPosition = parseInt(tab.children().first().attr('href').split('-')[1]),
+                        logicSelect = $('#logic-select-' + currentPosition),
+                        parts = tab.closest('.survey-item').attr('id').split('-'),
+                        type = parts[0];
+                    if (type == 'instructions') {
+                        logicSelect.html(self.logicOptionsHtml(null, currentPosition));
+                    } else {
+                        var questionID = parts[1];
+                        logicSelect.html(self.logicOptionsHtml(questionID, currentPosition));
+                    }
+                    self.logicSelected(logicSelect, currentPosition);
+                } else if (tabText == 'Translation') {
+                    // Copy original language to 'translate-from' div
+                    var currentPosition = parseInt(tab.children().first().attr('href').split('-')[1]),
+                        parts = tab.closest('.survey-item').attr('id').split('-'),
+                        type = parts[0];
+                    if (type == 'instructions') {
+                        $('#do-l10n-' + currentPosition).prev().html($('#do-' + currentPosition).val());
+                        $('#say-l10n-' + currentPosition).prev().html($('#say-' + currentPosition).val());
+                    } else {
+                        var questionID = parts[1],
+                            thisQuestion = self.data.questions[questionID];
+                        $('#name-l10n-from-' + questionID).html($('#name-' + questionID).val());
 
-                                type = typesToText[thisQuestion.type];
-                                switch(type) {
+                        type = typesToText[thisQuestion.type];
+                        switch(type) {
 
-                                    case 'text':
-                                        // Nothing needed here
-                                        break;
-                                    case 'number':
-                                        // Nothing needed here
-                                        break;
-                                    case 'multichoice':
-                                        // Options
-                                        $('.choice-' + questionID).each(function(index) {
-                                            $('#choice-from-' + questionID + '-' + index).html($(this).val());
-                                        });
-                                        // Other option
-                                        $('#other-l10n-from-' + questionID).html($('#other-label-' + questionID).val());
-                                        break;
-                                    case 'likert':
-                                        // Nothing needed here
-                                        // - if we assume that Scale Options are translated centrally
-                                        break;
-                                    case 'heatmap':
-                                        // Options
-                                        $('.choice-' + questionID).each(function(index) {
-                                            $('#choice-from-' + questionID + '-' + index).html($(this).val());
-                                        });
-                                        break;
+                            case 'text':
+                                // Nothing needed here
+                                break;
+                            case 'number':
+                                // Nothing needed here
+                                break;
+                            case 'multichoice':
+                                // Options
+                                $('.choice-' + questionID).each(function(index) {
+                                    $('#choice-from-' + questionID + '-' + index).html($(this).val());
+                                });
+                                // Other option
+                                $('#other-l10n-from-' + questionID).html($('#other-label-' + questionID).val());
+                                break;
+                            case 'likert':
+                                // Nothing needed here
+                                // - if we assume that Scale Options are translated centrally
+                                break;
+                            case 'heatmap':
+                                // Options
+                                $('.choice-' + questionID).each(function(index) {
+                                    $('#choice-from-' + questionID + '-' + index).html($(this).val());
+                                });
+                                break;
 
-                                }
-                            }
                         }
                     }
                 }
@@ -3746,7 +3747,8 @@ import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Stat
                                 $('li.l10n').removeClass('hide')
                                             .show();
                                 // Re-apply events
-                                $(document).foundation('tab', 'reflow');
+                                //$(document).foundation('tab', 'reflow');
+                                $('.tabs').foundation();
                                 // Enable Upload/Download
                                 $('div[data-magellan-expedition="fixed"] #upload-translation').prop('disabled', false)
                                                                                               .parent().parent().parent().removeClass('hide').show();

@@ -7,6 +7,7 @@ __all__ = ("S3AboutMenuLayout",
            "S3PersonalMenuLayout",
            "MP",
            )
+
 from gluon import A, DIV, LABEL, LI, UL
 from s3 import S3NavigationItem, ICON
 from s3layouts import S3MainMenuDefaultLayout

@@ -241,14 +241,15 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     set_handler("xform", S3XForms)
     set_handler("wizard", S3Wizard)
 
-    # Don't load S3PDF unless needed (very slow import with Reportlab)
     method = r.method
-    if method == "import" and r.representation == "pdf":
-        from s3.s3pdf import S3PDF
-        set_handler("import", S3PDF(),
-                    http = ("GET", "POST"),
-                    representation = "pdf"
-                    )
+
+    # Don't load S3PDF unless needed (very slow import with Reportlab)
+    #if method == "import" and r.representation == "pdf":
+    #    from s3.s3pdf import S3PDF
+    #    set_handler("import", S3PDF(),
+    #                http = ("GET", "POST"),
+    #                representation = "pdf"
+    #                )
 
     # Plugin OrgRoleManager when appropriate
     S3OrgRoleManager.set_method(r)
@@ -351,9 +352,6 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
 
     elif method not in s3.action_methods:
         s3.actions = None
-
-    #if get_vars.tour:
-    #    output = s3db.tour_builder(output)
 
     return output
 

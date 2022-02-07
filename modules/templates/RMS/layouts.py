@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
 
+__all__ = ("S3MainMenuLayout",
+           "MM",
+           "S3AboutMenuLayout",
+           "MA",
+           "S3OrgMenuLayout",
+           "OM",
+           )
+
 from gluon import *
 #from gluon.storage import Storage
 from s3 import *
@@ -407,6 +415,10 @@ class S3MainMenuLayout(S3NavigationItem):
                        ),
                    _class = "top-bar",
                    )
+
+# -----------------------------------------------------------------------------
+# Shortcut
+MM = S3MainMenuLayout
 
 # =============================================================================
 class S3AboutMenuLayout(S3NavigationItem):

@@ -156,10 +156,6 @@ def config(settings):
         #    access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
         #    module_type = None  # This item is handled separately for the menu
         #)),
-        #("tour", Storage(
-        #    name_nice = T("Guided Tour Functionality"),
-        #    module_type = None,
-        #)),
         #("translate", Storage(
         #    name_nice = T("Translation Functionality"),
         #    #description = "Selective translation of strings based on module.",
@@ -472,7 +468,7 @@ def config(settings):
 
         s3db = current.s3db
         table = s3db.dc_question
-        table.field_type.represent = Ss3_options_represent(type_opts)
+        table.field_type.represent = s3_options_represent(type_opts)
         table.field_type.requires = IS_IN_SET(type_opts)
         table.require_not_empty.comment = None
 

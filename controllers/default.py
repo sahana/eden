@@ -206,9 +206,9 @@ def index():
                                       _class = "menu-box"
                                       )
 
-            s3.jquery_ready.append('''$('#manage-facility-select').change(function(){
+            s3.jquery_ready.append('''$('#manage-facility-select').on('change',function(){
  $('#manage-facility-btn').attr('href',S3.Ap.concat('/default/site/',$('#manage-facility-select').val()))})
-$('#manage-facility-btn').click(function(){
+$('#manage-facility-btn').on('click',function(){
 if (($('#manage-facility-btn').attr('href').toString())===S3.Ap.concat('/default/site/None'))
 {$("#manage-facility-box").append("<div class='alert alert-error'>%s</div>")
 return false}})''' % (T("Please Select a Facility")))
@@ -303,9 +303,6 @@ $('#login-btn').click(function(){
               "r": None, # Required for dataTable to work
               "datatable_ajax_source": datatable_ajax_source,
               }
-
-    #if get_vars.tour:
-    #    output = s3db.tour_builder(output)
 
     return output
 
