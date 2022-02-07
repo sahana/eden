@@ -94,7 +94,6 @@ s3.scripts = []
 s3.scripts_modules = []
 s3.js_global = []
 s3.jquery_ready = []
-#s3.js_foundation = None
 
 # -----------------------------------------------------------------------------
 # Languages
@@ -260,10 +259,6 @@ session.warning = []
 #MAP_ADMIN = system_roles.MAP_ADMIN
 #ORG_ADMIN = system_roles.ORG_ADMIN
 #ORG_GROUP_ADMIN = system_roles.ORG_GROUP_ADMIN
-
-if debug:
-    # Add the developer toolbar from modules/s3/s3utils.py
-    s3.toolbar = s3base.s3_dev_toolbar
 
 # -----------------------------------------------------------------------------
 # CRUD

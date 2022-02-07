@@ -70,10 +70,10 @@ $global-font-size: 100%;
 $global-width: rem-calc(1600);
 $global-lineheight: 1.5;
 
-// Custom Colours
+// Default Eden Colours
 $blood: #c60f13;
 $charcoal: #555555;
-//$ghost: #FAFAFA;
+//$ghost: #fafafa;
 $lightblue: #2ba6cb;
 $oil: #333333;
 //$steel: #666666;
@@ -87,7 +87,7 @@ $foundation-palette: (
   success: #3adb76,
   warning: #ffae00,
   //alert: #cc4b37,
-  alert: $blood, // $alert-color: $blood;
+  alert: $blood,
 );
 $light-gray: #e6e6e6;
 $medium-gray: #cacaca;
