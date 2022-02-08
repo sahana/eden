@@ -183,6 +183,37 @@ label.inline-ucce {
 }
 
 /* Template Editor */
+.button.defining {
+    /* Add Region should have hover colour until polygon defined */
+    background-color: #00AAA0; /* $persian-green */
+}
+
+#content h2.fleft {
+  padding-left: 0;
+}
+
+.heatmap,
+.heatmap > .preview-empty {
+  height: 480px;
+  width: 480px;
+  /*margin-left: -5px;*/
+}
+.heatmap {
+  margin-top: -10px;
+  margin-bottom: -40px;
+}
+
+.move-down {
+  margin-top: -3px;
+}
+
+.preview-empty {
+  background-color: #eee;
+  border: 1px dotted #999;
+  height: 80px;
+  width: 80px;
+}
+
 #question-bar .columns {
     padding-left: .625rem;
     padding-right: .625rem;
@@ -193,11 +224,10 @@ label.inline-ucce {
     cursor: help;
 }
 
-.preview-empty {
-  background-color: #eee;
-  border: 1px dotted #999;
-  height: 80px;
-  width: 80px;
+#question-bar h2 {
+  background-color: #00AAA0; /* $persian-green */
+  color: white;
+  text-align: center;
 }
 
 .section-break {
@@ -236,21 +266,21 @@ label.inline-ucce {
 .survey-item {
   float: none;
   border-radius: 0 0 10px 10px;
-  box-shadow: 2px 2px #EEEEEE;
+  box-shadow: 2px 2px #eee;
 }
 
 #survey-droppable {
-  border: 1px solid #AFAEAE;
+  border: 1px solid #afaeae;
   height: 400px;
   left: 100%;
   right: 100%;
   text-align: center;
   border-radius: 10px;
-  box-shadow: 2px 2px #EEEEEE;
+  box-shadow: 2px 2px #eee;
 }
 
 #survey-droppable > span {
-  color: #AFAEAE;
+  color: #afaeae;
   position: relative;
   display: inline-block;
   top: 50%;
@@ -266,50 +296,15 @@ label.inline-ucce {
     margin-top: -0.175rem;
 }
 
-#content h2.fleft {
-  padding-left: 0;
-}
-
 .translate-from {
   background-color: #ddd;
   white-space: pre-line;
-}
-
-.heatmap,
-.heatmap > .preview-empty {
-  height: 480px;
-  width: 480px;
-  /*margin-left: -5px;*/
-}
-.heatmap {
-  margin-top: -10px;
-  margin-bottom: -40px;
-}
-
-/*
-.move-up {
-  margin-top: -6px;
-}*/
-
-.move-down {
-  margin-top: -3px;
 }
 
 .ucce-down-alt,
 .ucce-up-alt,
 .ucce-delete-page {
   color: #535353;
-}
-
-.button.defining {
-    /* Add Region should have hover colour until polygon defined */
-    background-color: #00AAA0; /* $persian-green */
-}
-
-#question-bar h2 {
-  background-color: #00AAA0; /* $persian-green */
-  color: white;
-  text-align: center;
 }
 
 .ucce-survey-export,
@@ -320,23 +315,6 @@ label.inline-ucce {
 }
 .ucce-survey-import + span:hover {
   color: #00AAA0; /* $persian-green */
-}
-
-/* For Magellan */
-#question-bar {
-  padding: 0 !important;
-  left: auto !important;
-}
-.magellan-scrollnav {
-  margin-left: 1.35rem;
-  width: 33%;
-}
-[data-magellan-expedition] {
-  width: 280px;
-  min-width: 0;
-}
-[data-magellan-expedition-clone] {
-  display: none;
 }
 
 /* Upload/Download */

@@ -1,6 +1,6 @@
 /*
  * Survey Editor Widget
- * relies on Foundation (for Magellan, Tabs and Tooltips)
+ * relies on Foundation (for Tabs)
  */
 import { Map, View, Draw, Fill, GeoJSON, getCenter, ImageLayer, Projection, Static, Stroke, Style, VectorLayer, VectorSource } from './ol.dc_editor.min.js';
 

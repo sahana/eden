@@ -3822,6 +3822,44 @@ a.button:hover, a.button:focus {
   display: block;
 }
 
+/* line 6, ../../foundation/scss/components/_sticky.scss */
+.sticky-container {
+  position: relative;
+}
+
+/* line 10, ../../foundation/scss/components/_sticky.scss */
+.sticky {
+  position: relative;
+  z-index: 0;
+  transform: translate3d(0, 0, 0);
+}
+
+/* line 16, ../../foundation/scss/components/_sticky.scss */
+.sticky.is-stuck {
+  position: fixed;
+  z-index: 5;
+  width: 100%;
+}
+/* line 21, ../../foundation/scss/components/_sticky.scss */
+.sticky.is-stuck.is-at-top {
+  top: 0;
+}
+/* line 25, ../../foundation/scss/components/_sticky.scss */
+.sticky.is-stuck.is-at-bottom {
+  bottom: 0;
+}
+
+/* line 30, ../../foundation/scss/components/_sticky.scss */
+.sticky.is-anchored {
+  position: relative;
+  right: auto;
+  left: auto;
+}
+/* line 35, ../../foundation/scss/components/_sticky.scss */
+.sticky.is-anchored.is-at-bottom {
+  bottom: 0;
+}
+
 /* line 122, ../../foundation/scss/components/_top-bar.scss */
 .top-bar {
   display: flex;

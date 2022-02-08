@@ -2300,7 +2300,7 @@ class dc_TemplateEditor(S3Method):
     """
         Survey Template Editor
         - uses s3.ui.template.js
-        - relies on Foundation (for Magellan, Tabs and Tooltips)
+        - relies on Foundation (for Sticky, Tabs and Tooltips)
     """
 
     # -------------------------------------------------------------------------
@@ -2587,11 +2587,12 @@ class dc_TemplateEditor(S3Method):
                                   _class = "row%s" % hidden,
                                   ),
                               _id = "question-bar",
+                              _class = "sticky",
                               )
-                toolbar["_data-magellan-expedition"] = "fixed"
-                toolbar = DIV(toolbar,
-                              _class = "magellan-scrollnav",
-                              )
+                toolbar["_data-sticky"] = ""
+                toolbar["_data-top-anchor"] = "content:top"
+                toolbar = DIV(toolbar)
+                toolbar["_data-sticky-container"] = ""
 
                 hidden_input = INPUT(_type = "hidden",
                                      _id = "survey-layout",
