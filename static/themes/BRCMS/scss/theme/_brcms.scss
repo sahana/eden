@@ -220,7 +220,6 @@ body.rtl {
 }
 
 /* Response Theme Selector */
-#dvr_response_action_response_theme_ids__row,
 #sub-defaultresponse_action {
     .ui-multiselect.ui-widget {
         width: 28rem!important;
@@ -231,8 +230,7 @@ body.rtl {
     max-width: 100%;
 }
 
-.br-assistance-measure-theme,
-.dvr-response-action-theme {
+.br-assistance-measure-theme {
     font-size: 0.8rem;
     h6 {
         font-size: 0.9rem;

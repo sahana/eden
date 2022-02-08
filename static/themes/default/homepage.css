@@ -28,6 +28,10 @@
     margin-top: 0.75rem;
 }
 
+.menu.icons i {
+    margin-right: 10px;
+}
+
 #facility-box {
     width: auto;
     float: right;
