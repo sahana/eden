@@ -1681,7 +1681,6 @@ def vol_person_controller():
                                               future_months = -144,
                                               )
                 table.pe_label.readable = table.pe_label.writable = False
-                table.missing.readable = table.missing.writable = False
                 table.age_group.readable = table.age_group.writable = False
 
                 s3db.pr_person_details.occupation.label = T("Normal Job")

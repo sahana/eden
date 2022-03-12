@@ -734,7 +734,7 @@ class PersonEntityModel(S3Model):
             db(query).update(**data)
 
             # Clear descendant paths
-            current.s3db.pr_rebuild_path(pe_id, clear=True)
+            pr_rebuild_path(pe_id, clear=True)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -764,7 +764,7 @@ class PersonEntityModel(S3Model):
             pe_id = deleted_fk.get("pe_id")
 
         if pe_id:
-            current.s3db.pr_rebuild_path(pe_id, clear=True)
+            pr_rebuild_path(pe_id, clear=True)
 
 # =============================================================================
 class PersonModel(S3Model):
@@ -10282,11 +10282,13 @@ def pr_role_rebuild_path(role_id, skip=None, clear=False):
                                 ).first()
     if not role:
         return None
-    pe_id = role.pe_id
 
     if role_id in skip:
         return role.path
+
     skip.add(role_id)
+
+    pe_id = role.pe_id
 
     if role.role_type != OU:
         path = None
