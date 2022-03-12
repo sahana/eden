@@ -24,7 +24,7 @@ function s3_debug(message, value) {
 {{if s3.cdn:}}{{# For Sites Hosted on the Public Internet, using a CDN should provide better performance}}
  <script src="//ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 {{else:}}
- <script src="/{{=appname}}/static/scripts/jquery-3.3.2.min.js"></script>
+ <script src="/{{=appname}}/static/scripts/jquery-3.6.0.min.js"></script>
 {{pass}}
 {{# Built by /static/scripts/tools/build.sahana.py }}
 <script src="/{{=appname}}/static/scripts/S3/S3.min.js"></script>
