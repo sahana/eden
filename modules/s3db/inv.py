@@ -9290,7 +9290,7 @@ def inv_recv_controller():
         if record:
             status = record.status
 
-        export_formats = settings.ui.export_formats
+        export_formats = settings.get_ui_export_formats()
         if "pdf" in export_formats:
             # Use 'form' instead of standard PDF exporter
             export_formats = list(export_formats)
@@ -14606,7 +14606,7 @@ def inv_send_controller():
     def prep(r):
         send_req = settings.get_inv_send_req()
 
-        export_formats = settings.ui.export_formats
+        export_formats = settings.get_ui_export_formats()
         if "pdf" in export_formats:
             # Use 'form' instead of standard PDF exporter
             export_formats = list(export_formats)
