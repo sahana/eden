@@ -992,7 +992,7 @@ class OrganisationBranchModel(S3Model):
                 record_ids = (organisation_id, branch_id)
 
                 # Inherit Org Types
-                ltable = db.org_organisation_organisation_type
+                ltable = s3db.org_organisation_organisation_type
                 rows = db(ltable.organisation_id.belongs(record_ids)).select(ltable.organisation_id,
                                                                              ltable.organisation_type_id,
                                                                              )
