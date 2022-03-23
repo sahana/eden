@@ -9850,7 +9850,7 @@ class S3Map(S3Method):
         if r.http == "GET":
             representation = r.representation
             if representation == "html":
-                output = self.page(r, **attr)
+                return self.page(r, **attr)
             else:
                 r.error(415, current.ERROR.BAD_FORMAT)
         else:
