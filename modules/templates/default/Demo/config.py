@@ -74,6 +74,7 @@ def config(settings):
         ("th", "Thai"),
         ("tl", "Tagalog"), # Philippines
         ("tr", "Turkish"),
+        ("ua", "Ukrainian"),
         ("ur", "Urdu"), # Pakistan
         ("vi", "Vietnamese"),
         ("zh-cn", "Chinese (Simplified)"), # Mainland China
