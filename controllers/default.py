@@ -1653,25 +1653,20 @@ def _register_validation(form):
 
     form_vars = form.vars
 
-    # Mobile Phone
+    # Mobile/Home Phone Numbers
     mobile = form_vars.get("mobile")
-    if mobile:
-        import re
-        from s3 import SINGLE_PHONE_NUMBER_PATTERN
-        regex = re.compile(SINGLE_PHONE_NUMBER_PATTERN)
-        if not regex.match(mobile):
-            form.errors.mobile = T("Invalid phone number")
-    elif settings.get_auth_registration_mobile_phone_mandatory():
-        form.errors.mobile = T("Phone number is required")
-
-    # Home Phone
     home = form_vars.get("home")
-    if home:
+    if home or mobile:
         import re
         from s3 import SINGLE_PHONE_NUMBER_PATTERN
         regex = re.compile(SINGLE_PHONE_NUMBER_PATTERN)
-        if not regex.match(home):
+        if mobile and not regex.match(mobile):
+            form.errors.mobile = T("Invalid phone number")
+        if home and not regex.match(home):
             form.errors.home = T("Invalid phone number")
+            
+    if not mobile and settings.get_auth_registration_mobile_phone_mandatory():
+        form.errors.mobile = T("Phone number is required")
 
     org = settings.get_auth_registration_organisation_default()
     if org:
