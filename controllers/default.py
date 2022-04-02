@@ -1657,6 +1657,7 @@ def _register_validation(form):
     mobile = form_vars.get("mobile")
     if mobile:
         import re
+        from s3 import SINGLE_PHONE_NUMBER_PATTERN
         regex = re.compile(SINGLE_PHONE_NUMBER_PATTERN)
         if not regex.match(mobile):
             form.errors.mobile = T("Invalid phone number")
@@ -1667,6 +1668,7 @@ def _register_validation(form):
     home = form_vars.get("home")
     if home:
         import re
+        from s3 import SINGLE_PHONE_NUMBER_PATTERN
         regex = re.compile(SINGLE_PHONE_NUMBER_PATTERN)
         if not regex.match(home):
             form.errors.home = T("Invalid phone number")
