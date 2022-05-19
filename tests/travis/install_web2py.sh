@@ -19,7 +19,7 @@ WEB2PY_COMMIT=31905858b
 
 # Clone web2py under build home (usually /home/travis/build)
 cd ../..
-git clone --recursive git://github.com/web2py/web2py.git
+git clone --recursive https://github.com/web2py/web2py.git
 
 # Reset to target version
 cd web2py
