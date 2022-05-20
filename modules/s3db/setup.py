@@ -3662,7 +3662,7 @@ def setup_instance_deploy(deployment_id, instance_id, folder):
     parts = deployment.repo_url.split("/")
     repo_owner = parts[3]
     repo = parts[4]
-    repo_url = "git://github.com/%s/%s.git" % (repo_owner, repo)
+    repo_url = "https://github.com/%s/%s.git" % (repo_owner, repo)
     template_manual = deployment.template_manual
     if template_manual:
         # Use this list
