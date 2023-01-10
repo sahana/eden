@@ -564,6 +564,9 @@ class HumanName(object):
                 except IndexError:
                     pass
 
+        # Warning: Collection length comparison should be meaningful.
+        # The length of a collection is always greater than or equal to zero.
+        # So testing that a length is less than zero is always false.
         if len(self) < 0:
             log.info("Unparsable: \"{}\" ".format(self.original))
         else:
