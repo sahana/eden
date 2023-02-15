@@ -7,7 +7,7 @@ from gluon.storage import Storage
 
 def config(settings):
     """
-        Settings for the SITAP deployhment in Turkey:
+        Settings for the SITAP deployment in Turkey:
         http://sahana.org.tr
     """
 
@@ -17,10 +17,10 @@ def config(settings):
     #settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
-    settings.base.prepopulate += ("historic/Turkey", "default/users", "historic/Turkey/Demo")
+    settings.base.prepopulate += ("Turkey", "default/users", "Turkey/Demo")
 
     # Theme (folder to use for views/layout.html)
-    #settings.base.theme = "historic.Turkey"
+    #settings.base.theme = "Turkey"
 
     # Authentication settings
     # Should users be allowed to register themselves?
@@ -37,7 +37,7 @@ def config(settings):
     # Restrict the Location Selector to just certain countries
     # NB This can also be over-ridden for specific contexts later
     # e.g. Activities filtered to those of parent Project
-    #settings.gis.countries = ("TR",)
+    settings.gis.countries = ("TR",)
     # Uncomment to display the Map Legend as a floating DIV
     settings.gis.legend = "float"
     # Uncomment to Disable the Postcode selector in the LocationSelector
@@ -336,12 +336,12 @@ def config(settings):
             restricted = True,
             module_type = 2,
         )),
-        #("cms", Storage(
-        #    name_nice = T("Content Management"),
-        #    #description = "Content Management System",
-        #    restricted = True,
-        #    module_type = 10,
-        #)),
+        ("cms", Storage(
+            name_nice = T("Content Management"),
+            #description = "Content Management System",
+            restricted = True,
+            module_type = 10,
+        )),
         ("doc", Storage(
             name_nice = T("Documents"),
             #description = "A library of digital resources, such as photos, documents and reports",
@@ -404,22 +404,11 @@ def config(settings):
             restricted = True,
             module_type = 10
         )),
-        #("dvr", Storage(
-        #   name_nice = T("Disaster Victim Registry"),
-        #   #description = "Allow affected individuals & households to register to receive compensation and distributions",
-        #   restricted = True,
-        #   module_type = 10,
-        #)),
         ("event", Storage(
             name_nice = T("Events"),
             #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
             restricted = True,
             module_type = 10,
-        )),
-        ("tr", Storage(
-           name_nice = "Turkish Extensions",
-           restricted = True,
-           module_type = None,
         )),
         ("transport", Storage(
            name_nice = T("Transport"),

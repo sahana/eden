@@ -6095,7 +6095,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     if warning:
                         current.session.warning = warning
 
-                gis_feature_type = shape.type
+                gis_feature_type = shape.geom_type
                 if gis_feature_type == "Point":
                     form_vars.gis_feature_type = 1
                 elif gis_feature_type == "LineString":
