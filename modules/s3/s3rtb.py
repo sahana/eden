@@ -199,6 +199,7 @@ class S3ResourceTree:
                     self.nodes.extend(nodes)
 
             dependencies = self.pending_dependencies
+            depth -= 1
 
         # Export identities of remaining dependencies, so references
         # can be resolved
