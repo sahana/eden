@@ -94,14 +94,14 @@ class DiseaseDataModel(S3Model):
                      self.super_link("doc_id", "doc_entity"),
                      # @ToDo: Labels for i18n
                      Field("name",
-                           requires = IS_NOT_EMPTY()
+                           requires = IS_NOT_EMPTY(), label = T("Name")
                            ),
-                     Field("short_name"),
-                     Field("acronym"),
+                     Field("short_name", label = T("Short Name")),
+                     Field("acronym", label = T("Acronym")),
                      Field("code",
                            label = T("ICD-10-CM Code"),
                            ),
-                     Field("description", "text"),
+                     Field("description", "text", label = T("Description")),
                      Field("trace_period", "integer",
                            label = T("Trace Period before Symptom Debut (days)"),
                            ),
