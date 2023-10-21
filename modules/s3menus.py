@@ -1413,7 +1413,8 @@ class S3OptionsMenu(object):
     def msg(self):
         """ MSG / Messaging """
 
-        ADMIN = current.session.s3.system_roles.ADMIN
+        ADMIN = current.session.s3.system_roles.ADMIN 
+        settings = current.deployment_settings 
 
         if current.request.function in ("sms_outbound_gateway",
                                         "email_channel",
@@ -1426,7 +1427,8 @@ class S3OptionsMenu(object):
                                         ):
             return self.admin()
 
-        settings_messaging = self.settings_messaging()
+        settings_messaging = self.settings_messaging() 
+        cap_module_enable = settings.has_module("cap") 
 
         return M(c="msg")(
                     M("Compose", f="compose"),
@@ -1452,7 +1454,8 @@ class S3OptionsMenu(object):
                        M("Results", f="twitter_result"),
                        # @ToDo KeyGraph Results
                     ),
-                    M("Administration", restrict=[ADMIN])(settings_messaging)
+                    M("Administration", restrict=[ADMIN])(settings_messaging),
+                    M("Back to CAP", check=cap_module_enable, c="cap")
                 )
 
     # -------------------------------------------------------------------------
