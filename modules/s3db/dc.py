@@ -2316,7 +2316,7 @@ class dc_TargetXLS(S3Method):
         response = current.response
         from gluon.contenttype import contenttype
         response.headers["Content-Type"] = contenttype(".xls")
-        disposition = "attachment; filename=\"%s\"" % filename
+        disposition = "attachment; filename=\"%s\"" % filename.encode("utf-8").decode("latin-1")
         response.headers["Content-disposition"] = disposition
 
         return output.read()

@@ -525,7 +525,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
 
         # Response headers
         filename = "%s_%s.xls" % (request.env.server_name, title)
-        disposition = "attachment; filename=\"%s\"" % filename
+        disposition = "attachment; filename=\"%s\"" % filename.encode("utf-8").decode("latin-1")
         response = current.response
         response.headers["Content-Type"] = contenttype(".xls")
         response.headers["Content-disposition"] = disposition

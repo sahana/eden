@@ -10,6 +10,7 @@
 '2 different options are provided here currently:': 'يوجد خياران مختلفان متوفرين هنا حاليا:',
 '3W Report': 'تقرير',
 '4-7 days': '7-4 أيام',
+'Search by Skills': 'Hi!',
 '8-14 days': '14-8 يوم',
 '_NUM_ duplicates found': 'وجدت مكررة _NUM_',
 'A brief description of the group (optional)': 'وصف موجز للمجموعة (اختياري)',
