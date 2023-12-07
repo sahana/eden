@@ -1,0 +1,4 @@
+Name,Module,Resource,Body
+About,default,about,"<h2>About</h2>"
+Help,default,help,"<h2>Help</h2><a href='http://eden.sahanafoundation.org/wiki/UserGuidelines' target='_blank'>User & Administration Guide</a> - online version"
+CMS Module Index,cms,,"<h2>Content Management System</h2><p>This module allows the editing of page content using a web browser.</p><p>Posts can be either full pages, embedded within other pages or part of a series (for use as news items or blog posts)</p>"

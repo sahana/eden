@@ -1,0 +1,4 @@
+First Name,Last Name,Email,Password,Role,Organisation
+Admin,Admin,admin@hims.com,123456,ADMIN,
+User,User,user@hims.com,123456,,
+Super,Super,super@hims.com,123456,ADMIN,
