@@ -14,7 +14,7 @@
 """
 
 # Remove this line when you have edited this file sufficiently to proceed to the web interface
-FINISHED_EDITING_CONFIG_FILE = False
+# FINISHED_EDITING_CONFIG_FILE = True
 
 # Select the Template
 # - which Modules are enabled
@@ -44,7 +44,7 @@ settings.base.template = "default"
 # Uncomment to use a different pool size
 #settings.database.pool_size = 30
 # Do we have a spatial DB available? (currently supports PostGIS. Spatialite to come.)
-#settings.gis.spatialdb = True
+settings.gis.spatialdb = True
 
 # Base settings
 settings.base.system_name = T("Kerala Rescue - Shelter Management")
@@ -68,8 +68,8 @@ settings.base.debug = False
 # Uncomment this to prevent automated test runs from remote
 # settings.base.allow_testing = False
 
-# Configure the log level ("DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"), None = turn off logging (default)
-#settings.log.level = "ERROR" # DEBUG set automatically when base.debug is True
+# Configure the log level ("DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"), None = turn off logging
+#settings.log.level = "WARNING"
 # Uncomment to prevent writing log messages to the console (sys.stderr)
 #settings.log.console = False
 # Configure a log file (file name)
@@ -85,11 +85,7 @@ settings.base.debug = False
 
 # This setting should be changed _before_ registering the 1st user
 # - should happen automatically if installing using supported scripts
-settings.auth.hmac_key = "akeytochange"
-
-# If using Masterkey Authentication, then set this to a deployment-specific 32 char string:
-#settings.auth.masterkey_app_key = "randomstringrandomstringrandomstring"
-
+settings.auth.hmac_key = "c740c573-a8ed-4ca6-beef-160e79008b72"
 # Minimum Password Length
 #settings.auth.password_min_length = 8
 
@@ -110,24 +106,40 @@ settings.auth.hmac_key = "akeytochange"
 # Daily Limit on Sending of emails
 #settings.mail.limit = 1000
 
+# Frontpage settings
+# RSS feeds
+settings.frontpage.rss = [
+    {"title": "Eden",
+     # Trac timeline
+     "url": "http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss"
+    },
+    {"title": "Twitter",
+     # @SahanaFOSS
+     #"url": "https://search.twitter.com/search.rss?q=from%3ASahanaFOSS" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
+     "url": "http://www.rssitfor.me/getrss?name=@SahanaFOSS"
+     # Hashtag
+     #url: "http://search.twitter.com/search.atom?q=%23eqnz" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
+     #url: "http://api2.socialmention.com/search?q=%23eqnz&t=all&f=rss"
+    }
+]
+
 # Uncomment to restrict to specific country/countries
-#settings.gis.countries= ("LK",)
+settings.gis.countries= ("US",)
+
+# Uncomment to enable a guided tour
+#settings.base.guided_tour = True
 
 # Bing API Key (for Map layers)
 # http://www.microsoft.com/maps/create-a-bing-maps-key.aspx
 #settings.gis.api_bing = ""
-# GetAddress API Key (for GetAddress.io Postcode to Address lookup)
-#settings.gis.api_getaddress = ""
 # Google API Key (for Google Maps Layers)
 #settings.gis.api_google = ""
-# OpenWeatherMap API Key (for OpenWeatherMap Layers)
-#settings.gis.api_openweathermap = ""
+# Yahoo API Key (for Geocoder)
+#settings.gis.api_yahoo = ""
 
 # GeoNames username
 #settings.gis.geonames_username = ""
 
-# Fill this in to get a Facebook Pixel for your site
-#settings.base.facebook_pixel_id = ""
 # Fill this in to get Google Analytics for your site
 #settings.base.google_analytics_tracking_id = ""
 
@@ -200,8 +212,10 @@ settings.auth.hmac_key = "akeytochange"
 # See http://alerting.worldweather.org/ for oid
 # Country root oid. The oid for the organisation includes this base
 #settings.cap.identifier_oid = "2.49.0.0.608.0"
-# Set the period (in days) after which alert info segments expire (default=2)
-#settings.cap.info_effective_period = 2
+# Change this for the offset period in days that the alert will be effective for
+# Expire Date = Effective Date + expire_offset
+# Default is 2 days
+#settings.cap.expire_offset = 2
 
 # =============================================================================
 # Import the settings from the Template
@@ -214,7 +228,6 @@ settings.import_template()
 #
 
 # e.g.
-#settings.security.self_registration = True
 #settings.base.system_name = T("Sahana TEST")
 #settings.base.prepopulate = ("MY_TEMPLATE_ONLY")
 #settings.base.prepopulate += ("default", "default/users")
@@ -244,3 +257,9 @@ settings.import_template()
 VERSION = 1
 
 # END =========================================================================
+
+# KeralaRelief Customizations ===============================
+# Disabled modules ==========================================
+settings.modules.pop("gis", None)
+settings.modules.pop("event", None)
+settings.modules.pop("survey", None)
