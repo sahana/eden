@@ -1,0 +1,137 @@
+{{extend "layout.html"}}
+
+<link rel = "stylesheet" href ="{{=URL('static','styles/dashboard.css')}}">
+
+<header id="main_title">
+	Dashboard
+</header>
+
+<div class="box1" >
+	<header class="inner_title">
+	
+		Volunteer Contact List
+	</header>
+<table class="table" cellspacing = "0">
+	<thead>
+		<tr>
+			<th> Name </th>
+			<th> Email </th>
+			
+		</tr>
+	</thead>
+	
+	<tbody>
+{{for i in c :}}
+	<tr>
+		<td>{{=i.split('#')[0]}} </td>
+		<td>{{=i.split('#')[1]}}</td>
+	</tr>
+{{pass}}	
+
+	</tbody>
+</table>
+</div>
+
+
+<div class="box2">
+	
+	<header class="inner_title">
+	
+		Requested items with priority
+	</header>
+<table class="table" cellspacing = "0">
+	<thead>
+		<tr>
+			<th> Date Requested </th>
+			<th> Requester </th>
+			<th> Request Type </th>
+		</tr>
+	</thead>
+	
+	<tbody>
+{{for i in reqs :}}
+	<tr {{="id =i"+str(i[1])}}>
+		<td>{{=i[0]}} </td>
+		<td>{{=i[2]}}</td>
+		<td>{{=i[3]}}</td>
+	</tr>
+{{pass}}	
+
+	</tbody>
+</table>
+</div>
+
+
+<div class="box3" >
+	<header class="inner_title">
+	
+		Current Project List
+	</header>
+<table class="table" cellspacing = "0">
+	<thead>
+		<tr>
+			<th> Name </th>
+			<th> status </th>
+			<th> Organisation </th>
+			
+		</tr>
+	</thead>
+	
+	<tbody>
+{{for i in projs :}}
+	<tr>
+		<td>{{=i[0]}} </td>
+		<td>{{=i[1]}}</td>
+		<td>{{=i[2]}}</td>
+	</tr>
+{{pass}}	
+
+	</tbody>
+</table>
+</div>
+
+
+
+
+<div class="box4">
+	<header class="inner_title">
+	
+		Volunteer sex distribution
+	</header>	
+{{=img}}	
+</div>
+
+
+
+
+<div class="box5" >
+	<header class="inner_title">
+	
+		Recent Events List
+	</header>
+<table class="table" cellspacing = "0">
+	<thead>
+		<tr>
+			<th> Event Name </th>
+			<th> Zero Hour </th>
+			
+			
+		</tr>
+	</thead>
+	
+	<tbody>
+{{for i in events :}}
+	<tr>
+		<td>{{=i[0]}} </td>
+		<td>{{=i[1]}}</td>
+		
+	</tr>
+{{pass}}	
+
+	</tbody>
+</table>
+</div>
+
+
+
+
