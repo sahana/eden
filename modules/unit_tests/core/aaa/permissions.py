@@ -8,7 +8,7 @@ import re
 
 from gluon import *
 from gluon.storage import Storage
-from core import S3Permission, s3_meta_fields
+from core import S3Permission, MetaFields
 
 from unit_tests import run_suite
 
@@ -291,7 +291,7 @@ class HasPermissionTests(unittest.TestCase):
         tablename = "org_permission_test"
         db.define_table(tablename,
                         Field("name"),
-                        *s3_meta_fields())
+                        *MetaFields())
 
         # Create test roles and ACLs
         auth = current.auth
@@ -856,7 +856,7 @@ class AccessibleQueryTests(unittest.TestCase):
         tablename = "org_permission_test"
         db.define_table(tablename,
                         Field("name"),
-                        *s3_meta_fields())
+                        *MetaFields())
 
         # Create test roles and ACLs
         auth = current.auth

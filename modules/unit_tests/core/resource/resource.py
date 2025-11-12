@@ -168,7 +168,7 @@ class ResourceAxisFilterTests(unittest.TestCase):
         db.define_table(tablename,
                         Field("facility_type_id",
                               "list:reference org_facility_type"),
-                        *s3_meta_fields())
+                        *MetaFields())
         table = db[tablename]
 
         try:
@@ -310,7 +310,7 @@ class ResourceExportTests(unittest.TestCase):
         db = current.db
         db.define_table("exporter_test",
                         Field("name"),
-                        *s3_meta_fields())
+                        *MetaFields())
         db.commit()
 
     @classmethod
@@ -633,7 +633,7 @@ class ResourceImportTests(unittest.TestCase):
         # Define test table
         db.define_table("importer_test",
                         Field("name"),
-                        *s3_meta_fields())
+                        *MetaFields())
         db.commit()
 
     @classmethod
@@ -1607,7 +1607,7 @@ class MergeUniqueFieldTest(unittest.TestCase):
 
         current.db.define_table(cls.tablename,
                                 Field("name", length=64, unique=True),
-                                *s3_meta_fields())
+                                *MetaFields())
 
     @classmethod
     def tearDownClass(cls):
@@ -1688,7 +1688,7 @@ class MergeReferenceListsTest(unittest.TestCase):
         db.define_table(tablename,
                         Field("facility_type_id",
                               "list:reference org_facility_type"),
-                        *s3_meta_fields())
+                        *MetaFields())
 
         xmlstr = """
 <s3xml>

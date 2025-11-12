@@ -119,8 +119,8 @@ class DynamicTableModel:
                 fields.append(field)
 
         # Automatically add standard meta-fields
-        from .fields import s3_meta_fields
-        fields.extend(s3_meta_fields())
+        from .fields import MetaFields
+        fields.extend(MetaFields())
 
         # Define the table
         if fields:

@@ -8,7 +8,7 @@ import re
 
 from gluon import *
 from gluon.storage import Storage
-from core import S3Permission, s3_meta_fields
+from core import S3Permission, MetaFields
 
 from unit_tests import run_suite
 
@@ -415,7 +415,7 @@ class RecordOwnershipTests(unittest.TestCase):
         tablename = "ownership_test_table"
         current.db.define_table(tablename,
                                 Field("name"),
-                                *s3_meta_fields())
+                                *MetaFields())
 
     @classmethod
     def tearDownClass(cls):

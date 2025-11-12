@@ -319,7 +319,7 @@ class ExtractLazyFKRepresentationTests(unittest.TestCase):
                               "reference org_organisation"),
                         Field("facility_type_id",
                               "list:reference org_facility_type"),
-                        *s3_meta_fields())
+                        *MetaFields())
 
     # -------------------------------------------------------------------------
     def setUp(self):
@@ -911,7 +911,7 @@ class ExportLazyFKRepresentationTests(unittest.TestCase):
                               "reference org_organisation"),
                         Field("facility_type_id",
                               "list:reference org_facility_type"),
-                        *s3_meta_fields())
+                        *MetaFields())
 
         current.auth.override = True
 

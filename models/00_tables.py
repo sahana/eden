@@ -79,6 +79,6 @@ s3db.configure("auth_membership",
 
 # -----------------------------------------------------------------------------
 # Make available for controllers
-from core import FieldTemplate, CommentsField, s3_meta_fields
+from core import FieldTemplate, CommentsField, MetaFields
 
 # END =========================================================================

@@ -2712,7 +2712,7 @@ class AIRegexTests(unittest.TestCase):
         db = current.db
 
         # Define test table
-        db.define_table("airegex_test", Field("name"), *s3_meta_fields())
+        db.define_table("airegex_test", Field("name"), *MetaFields())
 
         # Import sample records
         samples = (

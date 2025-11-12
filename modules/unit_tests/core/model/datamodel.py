@@ -10,7 +10,7 @@ from gluon import current, IS_EMPTY_OR, IS_FLOAT_IN_RANGE, IS_INT_IN_RANGE, IS_I
 from gluon.languages import lazyT
 from gluon.storage import Storage
 
-from core import s3_meta_fields, DYNAMIC_PREFIX, IS_NOT_ONE_OF, IS_ONE_OF, IS_UTC_DATE, IS_UTC_DATETIME
+from core import MetaFields, DYNAMIC_PREFIX, IS_NOT_ONE_OF, IS_ONE_OF, IS_UTC_DATE, IS_UTC_DATETIME
 from core.model.dynamic import DynamicTableModel
 
 from unit_tests import run_suite

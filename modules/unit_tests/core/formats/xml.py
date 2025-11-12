@@ -12,7 +12,7 @@ from lxml import etree
 
 from gluon import *
 
-from core import S3Hierarchy, s3_meta_fields, S3Represent, S3RepresentLazy, S3XMLFormat, IS_ONE_OF
+from core import S3Hierarchy, MetaFields, S3Represent, S3RepresentLazy, S3XMLFormat, IS_ONE_OF
 
 from unit_tests import run_suite
 

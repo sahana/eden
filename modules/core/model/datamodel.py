@@ -468,7 +468,7 @@ class DataModel:
             table = getattr(db, tablename)
         else:
             if meta:
-                fields = fields + MetaFields.all_meta_fields()
+                fields = fields + MetaFields()
             table = db.define_table(tablename, *fields, **args)
         return table
 

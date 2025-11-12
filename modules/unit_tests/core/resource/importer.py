@@ -11,7 +11,7 @@ from gluon import *
 from gluon.storage import Storage
 from lxml import etree
 
-from core import S3Duplicate, ImportItem, ImportJob, s3_meta_fields
+from core import S3Duplicate, ImportItem, ImportJob, MetaFields
 from core.resource.importer import ObjectReferences
 
 from unit_tests import run_suite
@@ -380,7 +380,7 @@ class DuplicateDetectionTests(unittest.TestCase):
         db.define_table("dedup_test",
                         Field("name"),
                         Field("secondary"),
-                        *s3_meta_fields())
+                        *MetaFields())
 
         # Create sample records
         samples = (
@@ -929,10 +929,10 @@ class ObjectReferencesImportTests(unittest.TestCase):
         # Define tables for test
         db.define_table("ort_master",
                         Field("jsontest", "json"),
-                        *s3_meta_fields())
+                        *MetaFields())
         db.define_table("ort_referenced",
                         Field("name"),
-                        *s3_meta_fields())
+                        *MetaFields())
 
         # Enable feature
         current.s3db.configure("ort_master",
@@ -1058,15 +1058,15 @@ class UIDCollisionHandlingTests(unittest.TestCase):
         # Define tables for test
         db.define_table("tuid_type_1",
                         Field("name"),
-                        *s3_meta_fields())
+                        *MetaFields())
         db.define_table("tuid_type_2",
                         Field("name"),
-                        *s3_meta_fields())
+                        *MetaFields())
         db.define_table("tuid_master",
                         Field("name"),
                         Field("type1_id", "reference tuid_type_1"),
                         Field("type2_id", "reference tuid_type_2"),
-                        *s3_meta_fields())
+                        *MetaFields())
 
     @classmethod
     def tearDownClass(cls):

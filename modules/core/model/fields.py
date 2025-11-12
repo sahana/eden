@@ -34,7 +34,6 @@ __all__ = ("CommentsField",
            "FieldTemplate",
            "MetaFields",
            "s3_fieldmethod",
-           "s3_meta_fields",
            "s3_role_required",
            "s3_roles_permitted",
            "META_FIELD_NAMES",
@@ -240,7 +239,31 @@ META_FIELD_NAMES = ("uuid",
 
 # -----------------------------------------------------------------------------
 class MetaFields:
-    """ Class to standardize meta-fields """
+    """ Pseudoclass to standardize meta-fields """
+
+    # -------------------------------------------------------------------------
+    def __new__(cls, *args, **kwargs):
+        """
+            Returns a tuple of meta-fields
+
+            For use in table definitions:
+                db.define_table(..., *MetaFields())
+        """
+
+        return (cls.uuid(),
+                cls.mci(),
+                cls.deleted(),
+                cls.deleted_fk(),
+                cls.deleted_rb(),
+                cls.created_on(),
+                cls.created_by(),
+                cls.modified_on(),
+                cls.modified_by(),
+                cls.approved_by(),
+                cls.owned_by_user(),
+                cls.owned_by_group(),
+                cls.realm_entity(),
+                )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -442,31 +465,6 @@ class MetaFields:
 
     # -------------------------------------------------------------------------
     @classmethod
-    def all_meta_fields(cls):
-        """
-            Standard meta fields for all tables
-
-            Returns:
-                list of Fields
-        """
-
-        return (cls.uuid(),
-                cls.mci(),
-                cls.deleted(),
-                cls.deleted_fk(),
-                cls.deleted_rb(),
-                cls.created_on(),
-                cls.created_by(),
-                cls.modified_on(),
-                cls.modified_by(),
-                cls.approved_by(),
-                cls.owned_by_user(),
-                cls.owned_by_group(),
-                cls.realm_entity(),
-                )
-
-    # -------------------------------------------------------------------------
-    @classmethod
     def sync_meta_fields(cls):
         """
             Meta-fields required for sync
@@ -540,17 +538,6 @@ class MetaFields:
         """
 
         return current.auth.user_represent
-
-# -----------------------------------------------------------------------------
-def s3_meta_fields():
-    """
-        Shortcut commonly used in table definitions: *s3_meta_fields()
-
-        Returns:
-            tuple of Field instances
-    """
-
-    return MetaFields.all_meta_fields()
 
 # =============================================================================
 # Reusable roles fields
