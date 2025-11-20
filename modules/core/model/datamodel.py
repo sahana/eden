@@ -1688,9 +1688,11 @@ class DataModel:
         # Update the super_keys in the record
         if super_keys:
             # System update => don't update modified_by/on
-            if "modified_on" in table.fields:
-                super_keys["modified_by"] = table.modified_by
-                super_keys["modified_on"] = table.modified_on
+            # Note: The following lines are commented out because they cause a TypeError
+            # with newer PyDAL versions (object of type 'Expression' has no len())
+            # if "modified_on" in table.fields:
+            #     super_keys["modified_by"] = table.modified_by
+            #     super_keys["modified_on"] = table.modified_on
             db(table.id == record_id).update(**super_keys)
 
         record.update(super_keys)

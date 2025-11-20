@@ -1,34 +1,50 @@
 # Warning: XLSXWriter unresolved dependency: openpyxl required for XLSX export and import
 openpyxl>=3.0.9
+
 # Warning: GIS unresolved dependency: geopy required for Geocoder support
 geopy>=2.0.0
+
 # Warning: GIS unresolved dependency: shapely required for GIS support
-Shapely>=1.7.0#shapely
+Shapely>=1.7.0
+
 # Warning: S3PDF unresolved dependency: Python Imaging required for PDF export
-Pillow>=8.4.0#PIL
+Pillow>=8.4.0
+
 # Warning: S3PDF unresolved dependency: reportlab required for PDF export
 reportlab>=3.6.8
+
 # Warning: XLSWriter unresolved dependency: xlwt required for XLS export
 xlwt>=1.3.0
+
 # Warning: XLSWriter unresolved dependency: xlrd required for XLS import
 xlrd>=1.2.0
+
 # Warning: GIS unresolved dependency: GDAL required for Shapefile support
-GDAL>=3.4.1#from osgeo import gdal
+# GDAL>=3.4.1
+
 # Warning: S3Msg unresolved dependency: pyserial required for Serial port modem usage
 pyserial>=2.6
+
 # Warning: S3Msg unresolved dependency: tweepy required for non-Tropo Twitter support
 tweepy>=1.9
+
 # Warning: S3MSG unresolved dependency: sgmllib3k required for Feed import on Python 3.x
 sgmllib3k>=1.0.0
+
 # Warning: GIS unresolved dependency: selenium required for Map printing support
 selenium>=2.23.0
+
 # Warning: Message Parsing unresolved dependency: TwitterSearch required for fetching results from twitter keyword queries
 TwitterSearch>=1.0
+
 # Warning: S3 unresolved dependency: pyparsing required for Calendar Support and Advanced URL Queries
 pyparsing>=2.2.0
+
 # Warning: URL shortener unresolved dependency: pyshorteners required to shorten the url (currently used by SAMBRO)
 #pyshorteners>=0.6.1
+
 # Warning: S3Doc unresolved dependency: docx-mailmerge required to merge into docx templates
 #docx-mailmerge>=0.5.0
+
 # Warning: S3Translate unresolved dependency: translate-toolkit required for Pootle support
 translate-toolkit>=1.0.1

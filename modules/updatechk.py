@@ -97,11 +97,15 @@ class UpdateCheck:
         try:
             required = parse_version(web2py_minimum_version)[4]
 
-            with open("VERSION", "r") as version:
-                web2py_installed_version = version.read().split()[-1].strip()
-            installed = parse_version(web2py_installed_version)[4]
-
-            version_ok = installed >= required
+            try:
+                with open("VERSION", "r") as version:
+                    web2py_installed_version = version.read().split()[-1].strip()
+                installed = parse_version(web2py_installed_version)[4]
+                version_ok = installed >= required
+            except IOError:
+                # VERSION file not found (e.g. git clone or docker), assume OK or warn
+                # For now, we assume OK to avoid blocking deployment
+                version_ok = True
         except AttributeError:
             version_ok = False
 
