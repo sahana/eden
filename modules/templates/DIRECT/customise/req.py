@@ -137,4 +137,69 @@ def req_need_controller(**attr):
 
     return attr
 
+# -----------------------------------------------------------------------------
+def req_need_service_controller(**attr):
+
+    T = current.T
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def prep(r):
+        # Call standard prep
+        result = standard_prep(r) if callable(standard_prep) else True
+
+        resource = r.resource
+        if not r.component:
+
+            from s3db.req import need_priority_opts, req_status_opts
+
+            # Filters
+            filter_widgets = [TextFilter(["details",
+                                          ],
+                                         label = T("Search"),
+                                         ),
+                               OptionsFilter("priority",
+                                             options = OrderedDict(need_priority_opts()),
+                                             sort = False,
+                                             cols = 4,
+                                             ),
+                               DateFilter("need_id$date",
+                                          hide_time = True,
+                                          hidden = True,
+                                          ),
+                               OptionsFilter("need_id$site_type_id",
+                                             label = T("Site Type"),
+                                             options = lambda: get_filter_options("req_need_site_type"),
+                                             hidden = True,
+                                             ),
+                               LocationFilter("need_id$location_id",
+                                              label = T("Location"),
+                                              levels = ["L2", "L3"],
+                                             hidden = True,
+                                              ),
+                               OptionsFilter("service_id",
+                                             options = lambda: get_filter_options("org_service"),
+                                             hidden = True,
+                                             ),
+                               OptionsFilter("status",
+                                             options = OrderedDict(req_status_opts()),
+                                             sort = False,
+                                             cols = 3,
+                                             hidden = True,
+                                             ),
+                              ]
+
+            # Reconfigure resource
+            resource.configure(filter_widgets = filter_widgets,
+                               )
+
+        return result
+    s3.prep = prep
+
+    from ..rheaders import req_rheader
+    attr["rheader"] = req_rheader
+
+    return attr
+
 # END =========================================================================

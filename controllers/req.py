@@ -44,9 +44,22 @@ def need_service():
     """ Services Needed: CRUD Controller """
 
     def prep(r):
-        r.resource.configure(insertable=False,
-                             deletable=False,
-                             )
+
+        if not r.component:
+            # Include need assessment details as context in this perspective
+            list_fields = ["priority",
+                           "need_id$date",
+                           "need_id$location_id",
+                           "service_id",
+                           "details",
+                           "status",
+                           "need_id",
+                           ]
+
+            r.resource.configure(list_fields = list_fields,
+                                 insertable = False,
+                                 deletable = False,
+                                 )
         return True
     s3.prep = prep
 

@@ -618,6 +618,8 @@ class RequestNeedsServiceModel(DataModel):
                           self.req_need_id(
                               empty = False,
                               writable = False,
+                              # TODO alternative representation of need_id to include
+                              #      location name + type as well as title
                               ),
                           # TODO date field
                           # TODO location_id
@@ -642,13 +644,8 @@ class RequestNeedsServiceModel(DataModel):
                           CommentsField(),
                           )
 
-        # List fields
-        # TODO alternative representation of need_id to include
-        #      location name + type as well as title
+        # List fields (for needs assessment tab)
         list_fields = ["priority",
-                       "need_id$date",
-                       "need_id",
-                       "need_id$location_id",
                        "service_id",
                        "details",
                        "status",
