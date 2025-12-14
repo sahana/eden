@@ -77,7 +77,9 @@ def vehicle():
                               tooltip=T("Only Items whose Category are of type 'Vehicle' will be seen in the dropdown."))
 
     # Use this controller for options.json rather than looking for one called 'asset'
-    table.organisation_id.comment[0].vars = dict(parent="vehicle")
+    # Safely update comment vars if comment exists and is indexable
+    if table.organisation_id.comment and hasattr(table.organisation_id.comment, '__getitem__'):
+        table.organisation_id.comment[0].vars = dict(parent="vehicle")
 
     # Only select from vehicles
     field.widget = None # We want a simple dropdown
