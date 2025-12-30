@@ -56,7 +56,8 @@ try:
                                    PageTemplate, \
                                    Paragraph, \
                                    Spacer, \
-                                   Table
+                                   Table, \
+                                   LayoutError
     from reportlab.platypus.frames import Frame
     reportLabImported = True
 except ImportError:
@@ -1453,15 +1454,27 @@ class PDFTable:
             style = self.table_style(start_row, num_rows, len(col_widths) - 1)
             (part, style) = main_doc.addCellStyling(part, style)
 
-            p = Table(part,
-                      repeatRows = 1,
-                      style = style,
-                      hAlign = "LEFT",
-                      colWidths = col_widths,
-                      rowHeights = row_heights,
-                      emptyTableAction = "indicate",
-                      )
-            tables.append(p)
+            try:
+                p = Table(part,
+                          repeatRows=1,
+                          style= style,
+                          hAlign= "LEFT",
+                          colWidths= col_widths,
+                          rowHeights= row_heights,
+                          emptyTableAction= "indicate",
+                          )
+                tables.append(p)
+            except LayoutError:
+                # Fallback: let ReportLab auto-calculate row heights
+                p = Table(part,
+                          repeatRows= 1,
+                          style= style,
+                          hAlign= "LEFT",
+                          colWidths= col_widths,
+                          emptyTableAction= "indicate",
+                          )
+                tables.append(p)
+
 
             # Add a page break, except for the last part
             next_part = current_part + 1
