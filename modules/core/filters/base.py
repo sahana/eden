@@ -759,7 +759,8 @@ class FilterForm:
 
         # Current user
         auth = current.auth
-        pe_id = auth.user.pe_id if auth.s3_logged_in() else None
+        user = auth.user
+        pe_id = user.pe_id if user and auth.s3_logged_in() else None
         if not pe_id:
             return None
 
