@@ -633,6 +633,9 @@ class XLSXPivotTableWriter:
             book.add_named_style(style)
 
         sheet = book.active
+        sheet_title = fact_label or title or s3_str(T("Report"))
+        sheet_title = re.sub(r'[:\\/?*\[\]]', "", sheet_title)
+        sheet.title = sheet_title[:31]
         write = self.write
 
         # Write header
