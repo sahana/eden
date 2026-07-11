@@ -1791,6 +1791,14 @@ class S3Config(Storage):
         """
         return self.gis.get("save", True)
 
+    def get_gis_map_viewing_client(self):
+        """
+            Map viewing client implementation:
+                - "legacy" : OpenLayers 2 MAP widget (default)
+                - "map2"   : OpenLayers 6 MAP2 widget (WIP)
+        """
+        return self.gis.get("map_viewing_client", "legacy")
+
     def get_gis_scaleline(self):
         """
             Should the Map display a ScaleLine control?

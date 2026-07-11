@@ -116,6 +116,8 @@ settings.auth.hmac_key = "akeytochange"
 
 # Uncomment to restrict to specific country/countries
 #settings.gis.countries= ("LK",)
+# Map viewing client: "legacy" (OpenLayers 2) or "map2" (OpenLayers 6 WIP)
+#settings.gis.map_viewing_client = "map2"
 
 # Bing API Key (for Map layers)
 # http://www.microsoft.com/maps/create-a-bing-maps-key.aspx

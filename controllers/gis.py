@@ -83,6 +83,11 @@ def map_viewing_client():
         UI for a user to view the overall Maps with associated Features
     """
 
+    if settings.get_gis_map_viewing_client() == "map2":
+        from core.gis.base import MAP2
+        response.title = T("Map Viewing Client")
+        return {"map": MAP2(catalogue_layers = True)}
+
     # Read user request
     print_mode = get_vars.get("print", None)
     if print_mode:
