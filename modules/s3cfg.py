@@ -605,12 +605,35 @@ class S3Config(Storage):
             return lock_timeout
         return None
 
+    def get_auth_max_failed_logins_hard(self):
+        """
+            Maximum failed login attempts before hard lock (ADMIN unlock only)
+            - defaults to get_auth_max_failed_logins() + HARD_LOCK_EXTRA_ATTEMPTS
+        """
+        hard = self.auth.get("max_failed_logins_hard", None)
+        if isinstance(hard, int) and hard > 0:
+            return hard
+        soft = self.get_auth_max_failed_logins()
+        if soft:
+            from core.aaa.lock import HARD_LOCK_EXTRA_ATTEMPTS
+            return soft + HARD_LOCK_EXTRA_ATTEMPTS
+        return None
+
     def get_auth_email_unlock(self):
         """
-            Allow locked users to unlock their account via email
-            verification (link + activation code)
+            Allow preliminarily locked users to unlock via email verification
+            (actual availability also requires a configured mail server)
         """
         return self.auth.get("email_unlock", True)
+
+    def get_auth_unlock_token_timeout(self):
+        """
+            Seconds until an unlock token expires
+        """
+        timeout = self.auth.get("unlock_token_timeout", 3600)
+        if isinstance(timeout, int) and timeout > 0:
+            return timeout
+        return 3600
 
     def get_auth_verify_unlock_next(self):
         """

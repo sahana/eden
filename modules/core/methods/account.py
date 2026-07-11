@@ -112,6 +112,7 @@ class ManageUserAccount(CRUDMethod):
         # Enable/unlock user account
         user.update_record(registration_key = None,
                            failed_attempts = 0,
+                           locked = False,
                            locked_until = None,
                            )
 

@@ -83,11 +83,15 @@ settings.base.debug = False
 
 # Authentication settings
 # Maxmimum number of failed login attempts before an account is locked
-#settings.auth.max_login_attempts = 3
+#settings.auth.max_failed_logins = 3
+# Hard lock threshold (defaults to max_failed_logins + 5)
+#settings.auth.max_failed_logins_hard = 8
 # Timeout (seconds) for locking an account after max failed logins
 #settings.auth.failed_login_lock_timeout = 300
-# Allow locked users to unlock via email link + code (requires mail server)
+# Allow preliminarily locked users to unlock via email (requires mail server + verified email)
 #settings.auth.email_unlock = True
+# Unlock token expiry (seconds)
+#settings.auth.unlock_token_timeout = 3600
 
 # This setting should be changed _before_ registering the 1st user
 # - should happen automatically if installing using supported scripts
