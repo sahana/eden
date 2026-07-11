@@ -4982,6 +4982,13 @@ class S3Config(Storage):
         """
         return self.org.get("office_code_unique", False)
 
+    def get_org_office_type_global_only(self):
+        """
+            Use only global office types (organisation_id IS NULL)
+            instead of organisation-scoped types
+        """
+        return self.org.get("office_type_global_only", False)
+
     def get_org_facility_code_unique(self):
         """
             Whether Facility code is unique

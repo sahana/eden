@@ -5022,7 +5022,9 @@ class OrgOfficeModel(DataModel):
         ADMIN = current.session.s3.system_roles.ADMIN
         is_admin = auth.s3_has_role(ADMIN)
         root_org = auth.root_org()
-        if is_admin:
+        if settings.get_org_office_type_global_only():
+            filter_opts = (None,)
+        elif is_admin:
             filter_opts = None
         elif root_org:
             filter_opts = (root_org, None)
@@ -5064,6 +5066,24 @@ class OrgOfficeModel(DataModel):
             msg_list_empty = T("No Office Types currently registered"))
 
         represent = S3Represent(lookup=tablename, translate=True)
+        office_type_comment = TAG[""](
+            PopupLink(c = "org",
+                      f = "office_type",
+                      label = ADD_OFFICE_TYPE,
+                      title = T("Office Type"),
+                      tooltip = T("If you don't see the Type in the list, you can add a new one by clicking link 'Create Office Type'."),
+                      ),
+            SCRIPT(
+'''$.filterOptionsS3({
+ 'trigger':'organisation_id',
+ 'target':'office_type_id',
+ 'lookupPrefix':'org',
+ 'lookupResource':'office_type',
+ 'lookupField':'organisation_id',
+ 'optional':true
+})'''
+            ),
+            )
         office_type_id = FieldTemplate("office_type_id", "reference %s" % tablename,
                                        label = T("Office Type"),
                                        ondelete = "SET NULL",
@@ -5076,12 +5096,7 @@ class OrgOfficeModel(DataModel):
                                                               filter_opts=filter_opts,
                                                               )),
                                        sortby = "name",
-                                       comment = PopupLink(c = "org",
-                                                           f = "office_type",
-                                                           label = ADD_OFFICE_TYPE,
-                                                           title = T("Office Type"),
-                                                           tooltip = T("If you don't see the Type in the list, you can add a new one by clicking link 'Create Office Type'."),
-                                                           ),
+                                       comment = office_type_comment,
                                        )
 
         configure(tablename,
