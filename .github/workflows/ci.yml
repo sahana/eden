@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    name: Unit tests (${{ matrix.db }})
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        db: [sqlite3]
+        # mysql and postgres+postgis can be added once service containers
+        # are wired up (mirrors legacy .travis.yml matrix)
+
+    env:
+      DB: ${{ matrix.db }}
+
+    steps:
+      - name: Checkout Eden
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: tests/travis/generated_requirements.txt
+
+      - name: Install system packages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y build-essential
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install -U pip
+          pip install python-dateutil shapely lxml psycopg2-binary requests
+          python tests/travis/generate_requirements_file.py tests/travis requirements.txt tests/travis/requirements.txt
+          pip install -r tests/travis/generated_requirements.txt
+
+      - name: Install web2py
+        run: |
+          chmod +x tests/travis/*.sh
+          tests/travis/install_web2py.sh
+
+      - name: Install Eden
+        run: tests/travis/install_eden.sh
+
+      - name: Configure database
+        working-directory: ../../web2py
+        run: ./applications/eden/tests/travis/configure_db.sh
+
+      - name: Bootstrap Eden database
+        working-directory: ../../web2py
+        run: python web2py.py -S eden -M -R applications/eden/static/scripts/tools/noop.py
+
+      - name: Run unit test suite
+        working-directory: ../../web2py
+        run: python web2py.py -S eden -M -R applications/eden/modules/unit_tests/suite.py
