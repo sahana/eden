@@ -605,6 +605,19 @@ class S3Config(Storage):
             return lock_timeout
         return None
 
+    def get_auth_email_unlock(self):
+        """
+            Allow locked users to unlock their account via email
+            verification (link + activation code)
+        """
+        return self.auth.get("email_unlock", True)
+
+    def get_auth_verify_unlock_next(self):
+        """
+            Redirect target after a successful email unlock
+        """
+        return self.auth.get("verify_unlock_next", URL(c="default", f="user", args="login"))
+
     def get_auth_password_changes(self):
         """
             Are password changes allowed?

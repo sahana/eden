@@ -68,6 +68,7 @@ class AuthS3(AccountLockingMixin, Auth):
             - register
             - email_reset_password
             - verify_email
+            - verify_unlock
             - profile
             - has_membership
             - requires_membership
@@ -210,6 +211,15 @@ Thank you"""
 """Your account on %(system_name)s has been unlocked.
  - You can now log in again.
  Thank you"""
+        messages.unlock_email_subject = "%(system_name)s - Unlock Account"
+        messages.unlock_email = \
+"""Your account on %(system_name)s has been locked due to excessive failed login attempts.
+
+To unlock your account, open this link:
+%(url)s
+
+Your unlock code is: %(code)s"""
+        messages.user_unlocked_log = "User %%(%s)s unlocked via email verification" % settings.login_userfield
 
         # Log messages
         messages.user_disabled_log = "User %(user_id)s disabled"
@@ -1835,6 +1845,80 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
 
             redirect(next)
 
+        return form
+
+    # -------------------------------------------------------------------------
+    def verify_unlock(self, next=DEFAULT, log=DEFAULT):
+        """
+            Form to unlock a locked account using the code sent by email
+        """
+
+        T = current.T
+
+        request = current.request
+        response = current.response
+        session = current.session
+
+        settings = current.deployment_settings
+
+        from .lock import LOCKED
+
+        if request.env.request_method == "POST":
+            key = request.post_vars.registration_key
+        elif len(request.args) > 1:
+            key = request.args[-1]
+        else:
+            key = None
+        if not key:
+            session.error = T("Missing unlock key")
+            redirect(URL(c="default", f="index"))
+
+        formfields = [Field("activation_code",
+                            label = T("Please enter your Unlock Code"),
+                            requires = IS_NOT_EMPTY(),
+                            ),
+                      ]
+
+        response.form_label_separator = ""
+        form = SQLFORM.factory(table_name = "auth_user",
+                               record = None,
+                               hidden = {"_next": request.vars._next,
+                                         "registration_key": key,
+                                         },
+                               separator = ":",
+                               showid = False,
+                               submit_button = T("Submit"),
+                               formstyle = settings.get_ui_formstyle(),
+                               *formfields)
+
+        if form.accepts(request.vars,
+                        session,
+                        formname = "unlock_confirm",
+                        ):
+
+            auth_settings = self.settings
+            code = form.vars.activation_code
+
+            utable = auth_settings.table_user
+            query = (utable.reset_password_key == self.keyhash(key, code)) & \
+                    (utable.registration_key == LOCKED)
+            user = current.db(query).select(limitby=(0, 1)).first()
+            if not user:
+                session.error = T("Unlock verification failed")
+                redirect(settings.get_auth_verify_unlock_next())
+
+            if log == DEFAULT:
+                log = self.messages.user_unlocked_log
+            if next == DEFAULT:
+                next = settings.get_auth_verify_unlock_next()
+
+            self.unlock_user(user, log=log, notify=True)
+            user.update_record(reset_password_key = "")
+
+            session.confirmation = T("Your account has been unlocked. You can now log in.")
+            redirect(next)
+
+        response.title = T("Unlock Account")
         return form
 
     # -------------------------------------------------------------------------

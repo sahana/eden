@@ -86,6 +86,8 @@ settings.base.debug = False
 #settings.auth.max_login_attempts = 3
 # Timeout (seconds) for locking an account after max failed logins
 #settings.auth.failed_login_lock_timeout = 300
+# Allow locked users to unlock via email link + code (requires mail server)
+#settings.auth.email_unlock = True
 
 # This setting should be changed _before_ registering the 1st user
 # - should happen automatically if installing using supported scripts
