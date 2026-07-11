@@ -145,8 +145,6 @@ class InvWarehouseModel(DataModel):
         # ---------------------------------------------------------------------
         # Warehouse Types
         #
-        # org_dependent_wh_types = settings.get_inv_org_dependent_warehouse_types()
-
         tablename = "inv_warehouse_type"
         define_table(tablename,
                      Field("name", length=128, notnull=True,
@@ -182,8 +180,6 @@ class InvWarehouseModel(DataModel):
                                           requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "inv_warehouse_type.id",
                                                                   represent,
-                                                                  #filterby="organisation_id",
-                                                                  #filter_opts=filter_opts if org_dependent_wh_types else None,
                                                                   sort=True
                                                                   )),
                                           sortby = "name",
@@ -197,16 +193,8 @@ class InvWarehouseModel(DataModel):
 
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("name",),
-                                            # secondary = ("organisation_id",) if org_dependent_wh_types else None,
                                             ),
                   )
-
-        # Tags as component of Warehouse Types
-        #self.add_components(tablename,
-        #                    inv_warehouse_type_tag={"name": "tag",
-        #                                            "joinby": "warehouse_type_id",
-        #                                            }
-        #                    )
 
         # ---------------------------------------------------------------------
         # Warehouses
