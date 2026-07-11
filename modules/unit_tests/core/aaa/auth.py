@@ -2540,6 +2540,195 @@ class LinkToPersonTests(unittest.TestCase):
         assertTrue(person2.id in person_ids)
 
 # =============================================================================
+class AccountLockingTests(unittest.TestCase):
+    """ Two-tier account locking and email unlock tests """
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        auth = current.auth
+        auth.override = True
+        auth.s3_impersonate(None)
+
+        settings = current.deployment_settings
+        auth_settings = settings.auth
+
+        self.saved_auth = Storage(max_failed_logins = auth_settings.get("max_failed_logins"),
+                                  max_failed_logins_hard = auth_settings.get("max_failed_logins_hard"),
+                                  email_unlock = auth_settings.get("email_unlock", True),
+                                  unlock_token_timeout = auth_settings.get("unlock_token_timeout"),
+                                  )
+
+        auth_settings.max_failed_logins = 3
+        auth_settings.max_failed_logins_hard = 6
+        auth_settings.email_unlock = True
+        auth_settings.unlock_token_timeout = 3600
+
+        utable = auth.settings.table_user
+        self.utable = utable
+        self.test_email = "locktest@example.com"
+        self.test_password = "LockTest99"
+
+        db = current.db
+        db(utable.email == self.test_email).delete()
+
+        user_id = utable.insert(first_name = "Lock",
+                                last_name = "Test",
+                                email = self.test_email,
+                                password = self.test_password,
+                                email_verified = True,
+                                registration_key = None,
+                                failed_attempts = 0,
+                                locked = False,
+                                )
+        self.assertTrue(user_id is not None)
+        self.user_id = user_id
+
+        auth.override = False
+
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        settings = current.deployment_settings
+        auth_settings = settings.auth
+
+        auth_settings.max_failed_logins = self.saved_auth.max_failed_logins
+        auth_settings.max_failed_logins_hard = self.saved_auth.max_failed_logins_hard
+        auth_settings.email_unlock = self.saved_auth.email_unlock
+        auth_settings.unlock_token_timeout = self.saved_auth.unlock_token_timeout
+
+        current.auth.s3_impersonate(None)
+        current.db(self.utable.email == self.test_email).delete()
+        current.db.rollback()
+
+    # -------------------------------------------------------------------------
+    def _user(self):
+        """ Reload the test user record """
+
+        return current.db(self.utable.id == self.user_id).select().first()
+
+    # -------------------------------------------------------------------------
+    def _fail_login(self, count=1):
+        """ Simulate failed login attempts """
+
+        auth = current.auth
+        for _ in range(count):
+            auth.handle_failed_login(user=self._user())
+
+    # -------------------------------------------------------------------------
+    def testPreliminaryLockAfterThreshold(self):
+        """ Failed attempts at soft threshold preliminarily lock the account """
+
+        self._fail_login(3)
+        user = self._user()
+        auth = current.auth
+
+        self.assertTrue(user.locked)
+        self.assertTrue(auth.is_user_preliminarily_locked(user))
+        self.assertFalse(auth.is_user_hard_locked(user))
+
+    # -------------------------------------------------------------------------
+    def testHardLockAfterSecondThreshold(self):
+        """ Failed attempts at hard threshold require ADMIN unlock """
+
+        self._fail_login(6)
+        user = self._user()
+        auth = current.auth
+
+        self.assertTrue(auth.is_user_hard_locked(user))
+        self.assertTrue(auth.is_user_locked(user))
+
+    # -------------------------------------------------------------------------
+    def testUnlockUserClearsFlags(self):
+        """ unlock_user resets lock state and failed attempt counter """
+
+        self._fail_login(3)
+        auth = current.auth
+        user = self._user()
+
+        auth.unlock_user(user, log=None, notify=False)
+        user = self._user()
+
+        self.assertFalse(user.locked)
+        self.assertFalse(user.registration_key)
+        self.assertEqual(user.failed_attempts, 0)
+
+    # -------------------------------------------------------------------------
+    def testCanSendUnlockEmailRequiresVerifiedEmail(self):
+        """ Unlock email requires a previously verified email address """
+
+        auth = current.auth
+        user = self._user()
+
+        user.update_record(email_verified = False)
+        self.assertFalse(auth.can_send_unlock_email(self._user()))
+
+        user.update_record(email_verified = True)
+        # Mail server may be absent in test env; verified email is necessary
+        # but not sufficient when mailer is not configured
+        if auth.settings.mailer and auth.settings.mailer.settings.server:
+            self.assertTrue(auth.can_send_unlock_email(self._user()))
+
+    # -------------------------------------------------------------------------
+    def testFailedLoginInvalidatesUnlockToken(self):
+        """ Further failed attempts invalidate a pending unlock token """
+
+        user = self._user()
+        user.update_record(reset_password_key = "1234567890:deadbeef")
+
+        self._fail_login(1)
+        user = self._user()
+
+        self.assertEqual(user.reset_password_key, "")
+
+    # -------------------------------------------------------------------------
+    def testCorrectPasswordWhilePrelimLockedDoesNotLogin(self):
+        """ Correct password on prelim lock does not authenticate the user """
+
+        self._fail_login(3)
+        auth = current.auth
+
+        result = auth.login_bare(self.test_email, self.test_password)
+
+        self.assertFalse(result)
+        self.assertFalse(auth.s3_logged_in())
+        self.assertTrue(auth.is_user_preliminarily_locked(self._user()))
+
+    # -------------------------------------------------------------------------
+    def testVerifyUnlockTokenExpiry(self):
+        """ Expired unlock tokens are rejected """
+
+        import time
+        auth = current.auth
+
+        key = "test-unlock-key"
+        code = "ABC123"
+        expired = "%d:%s" % (int(time.time()) - 7200, auth.keyhash(key, code))
+        user = self._user()
+        user.update_record(reset_password_key = expired,
+                           locked = True,
+                           )
+
+        self.assertFalse(auth.verify_unlock_token(user, key, code))
+
+    # -------------------------------------------------------------------------
+    def testVerifyUnlockTokenValid(self):
+        """ Valid unlock tokens are accepted """
+
+        import time
+        auth = current.auth
+
+        key = "test-unlock-key"
+        code = "ABC123"
+        token = "%d:%s" % (int(time.time()), auth.keyhash(key, code))
+        user = self._user()
+        user.update_record(reset_password_key = token,
+                           locked = True,
+                           )
+
+        self.assertTrue(auth.verify_unlock_token(user, key, code))
+
+# =============================================================================
 if __name__ == "__main__":
 
     run_suite(
@@ -2551,6 +2740,7 @@ if __name__ == "__main__":
         RecordApprovalTests,
         RealmEntityTests,
         LinkToPersonTests,
+        AccountLockingTests,
         )
 
 # END ========================================================================
