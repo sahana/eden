@@ -1110,6 +1110,10 @@ def user():
         title = response.title = T("Confirm Registration")
         form = auth.verify_email()
 
+    elif arg == "verify_unlock":
+        title = response.title = T("Unlock Account")
+        form = auth.verify_unlock()
+
     else:
         # logout or other function
         title = ""

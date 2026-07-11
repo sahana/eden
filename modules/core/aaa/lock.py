@@ -27,7 +27,8 @@
 
 import datetime
 
-from gluon import current
+from gluon import current, URL
+from uuid import uuid4
 
 LOCKED = "failed"
 
@@ -194,9 +195,25 @@ class AccountLockingMixin:
 
         messages = self.messages
         system_name = current.deployment_settings.get_system_name()
+        settings = current.deployment_settings
 
         subject = messages.locked_email_subject % {"system_name": system_name}
         message = messages.locked_email % {"system_name": system_name}
+
+        if settings.get_auth_email_unlock():
+            key = str(uuid4())
+            code = uuid4().hex[-6:].upper()
+            user.update_record(reset_password_key = self.keyhash(key, code))
+            url = URL(c = "default",
+                      f = "user",
+                      args = ["verify_unlock", key],
+                      scheme = True)
+            subject = messages.unlock_email_subject % {"system_name": system_name}
+            message = messages.unlock_email % {"system_name": system_name,
+                                               "url": url,
+                                               "code": code,
+                                               }
+
         return bool(mailer.send(to = user.email,
                                 subject = subject,
                                 message = message,
