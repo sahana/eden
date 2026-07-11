@@ -213,13 +213,16 @@ Thank you"""
  Thank you"""
         messages.unlock_email_subject = "%(system_name)s - Unlock Account"
         messages.unlock_email = \
-"""Your account on %(system_name)s has been locked due to excessive failed login attempts.
+"""Your account on %(system_name)s has been temporarily locked due to excessive failed login attempts.
 
 To unlock your account, open this link:
 %(url)s
 
 Your unlock code is: %(code)s"""
+        messages.unlock_email_sent = \
+"""Your password was correct. Please check your email for instructions to unlock your account."""
         messages.user_unlocked_log = "User %%(%s)s unlocked via email verification" % settings.login_userfield
+        messages.user_prelim_locked_log = "User %%(%s)s preliminarily locked" % settings.login_userfield
 
         # Log messages
         messages.user_disabled_log = "User %(user_id)s disabled"
@@ -324,6 +327,9 @@ Your unlock code is: %(code)s"""
                       default="",
                       readable=False, writable=False),
                 Field("locked", "boolean",
+                      default=False,
+                      readable=False, writable=False),
+                Field("email_verified", "boolean",
                       default=False,
                       readable=False, writable=False),
                 Field("failed_attempts", "integer",
@@ -540,9 +546,18 @@ Your unlock code is: %(code)s"""
         query = (utable[userfield] == username)
         user = current.db(query).select(limitby=(0, 1)).first()
 
+        if user:
+            if self.is_user_hard_locked(user):
+                self.handle_failed_login(user=user)
+                return False
+
         if user and not user.registration_key:
             password = utable[passfield].validate(password)[0]
             if user[passfield] == password:
+                if self.is_user_preliminarily_locked(user):
+                    if self.handle_correct_password_while_locked(user):
+                        current.session.information = self.messages.unlock_email_sent
+                    return False
                 user = Storage(filter_fields(utable, user, allow_id=True))
                 current.session.auth = Storage(user = user,
                                                last_visit = current.request.now,
@@ -749,9 +764,8 @@ Your unlock code is: %(code)s"""
                     # User in db
                     existing = temp_user = user
 
-                    # Check if login is permitted
-                    if self.is_user_locked(temp_user):
-                        # Account is locked due to too many failed login attempts
+                    # Hard-locked accounts cannot attempt login
+                    if self.is_user_hard_locked(temp_user):
                         self.handle_failed_login(user=temp_user)
                         response.error = messages.login_attempts_exceeded
                         response.error_code = 423
@@ -863,6 +877,21 @@ Your unlock code is: %(code)s"""
 
         # Process authenticated users
         if user:
+            # Preliminary lock: correct password triggers unlock email, not login
+            if self.is_user_preliminarily_locked(user):
+                if self.handle_correct_password_while_locked(user):
+                    session.information = messages.unlock_email_sent
+                else:
+                    response.error = messages.login_attempts_exceeded
+                    response.error_code = 423
+                if inline:
+                    next_url = URL(args=request.args,
+                                   vars=request.get_vars)
+                else:
+                    next_url = self.url(args=request.args,
+                                        vars=request.get_vars)
+                redirect(next_url)
+
             user = Storage(filter_fields(utable, user, allow_id=True))
             self.login_user(user)
         if log and self.user:
@@ -1829,6 +1858,10 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
                 session.error = T("Registration not found")
                 redirect(auth_settings.verify_email_next)
 
+            # Email address confirmed by activation code
+            current.db(utable.id == user.id).update(email_verified=True)
+            user.email_verified = True
+
             if log == DEFAULT:
                 log = self.messages.verify_email_log
             if next == DEFAULT:
@@ -1897,12 +1930,14 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
 
             auth_settings = self.settings
             code = form.vars.activation_code
+            stored_hash = self.keyhash(key, code)
 
             utable = auth_settings.table_user
-            query = (utable.reset_password_key == self.keyhash(key, code)) & \
-                    (utable.registration_key == LOCKED)
+            query = (utable.locked == True) & \
+                    (utable.registration_key != LOCKED) & \
+                    (utable.reset_password_key.like("%%:%s" % stored_hash))
             user = current.db(query).select(limitby=(0, 1)).first()
-            if not user:
+            if not user or not self.verify_unlock_token(user, key, code):
                 session.error = T("Unlock verification failed")
                 redirect(settings.get_auth_verify_unlock_next())
 
@@ -1912,7 +1947,6 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
                 next = settings.get_auth_verify_unlock_next()
 
             self.unlock_user(user, log=log, notify=True)
-            user.update_record(reset_password_key = "")
 
             session.confirmation = T("Your account has been unlocked. You can now log in.")
             redirect(next)
@@ -3034,7 +3068,9 @@ Please go to %(url)s to approve this user."""
             return
 
         # Allow them to login (enable the account)
-        db(utable.id == user_id).update(registration_key="")
+        db(utable.id == user_id).update(registration_key="",
+                                        email_verified=True,
+                                        )
 
         # Approve User's Organisation (if they created a new one during registration)
         if organisation_id and \
