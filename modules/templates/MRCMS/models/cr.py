@@ -158,6 +158,8 @@ class CRShelterNoteModel(DataModel):
         self.configure(tablename,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
+                       pdf_format = "list",
+                       pdf_fields = list_fields,
                        onaccept = self.shelter_note_onaccept,
                        orderby = "%s.date desc" % tablename,
                        super_entity = "doc_entity",
