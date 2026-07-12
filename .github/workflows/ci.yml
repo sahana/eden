@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    name: Unit tests (sqlite3, web2py 3.3.3)
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout Eden
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install -U pip
+          pip install -r requirements.txt
+          pip install shapely reportlab xlrd xlwt openpyxl geopy pyparsing
+
+      - name: Install web2py 3.3.3
+        run: |
+          git clone --depth 1 --branch v3.3.3 https://github.com/web2py/web2py.git ../web2py
+          cd ../web2py
+          git submodule update --init --recursive
+
+      - name: Link Eden into web2py
+        run: |
+          ln -s "$GITHUB_WORKSPACE" ../web2py/applications/eden
+          cp modules/templates/000_config.py models/000_config.py
+
+      - name: Bootstrap Eden database
+        working-directory: ../web2py
+        run: python web2py.py -S eden -M -R applications/eden/static/scripts/tools/noop.py
+
+      - name: Run unit test suite
+        working-directory: ../web2py
+        run: python web2py.py -S eden -M -R applications/eden/modules/unit_tests/suite.py
