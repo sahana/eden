@@ -1,0 +1,111 @@
+.dsform-values-area {
+    display: flex;
+}
+
+.dsform-category-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border-bottom: none;
+    background-color: #FFEDCB;
+    border: 1px solid #FFD7A3;
+}
+
+.dsform-category {
+    background-color: #f7f7f7;
+}
+
+#dsform-collection .dsform-category-header {
+    justify-content: space-between;
+}
+
+#dsForm {
+    display: none;
+}
+
+#dsForm ul {
+    list-style: none;
+    /* padding-left: 0; */
+    /*margin-left: 0;*/
+}
+
+.dsform-items-group-content {
+    margin-left: 0;
+}
+
+#dsform-collection {
+    border-right: 1px solid #e0e0e0;
+}
+
+#dsform-collection .dsform-button-remove {
+    display: none;
+}
+
+#dsform-items-selected .dsform-button-add {
+    display: none;
+}
+
+#dsform-measurement {
+    display: flex;
+    margin: 10px 0;
+    border: 1px solid #e0e0e0;
+}
+
+#dsform-measurement > * {
+    margin: 0;
+    padding: 10px;
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+}
+
+#dsform-collection, .measurement {
+    min-width: 200px;
+}
+
+.dsform-collection-item-group {
+    background-color: #f7f7f7;
+    border: 1px solid #e0e0e0;
+    padding: 10px;
+}
+
+.measurement {
+    padding: 10px;
+}
+
+#dsform-collection .measurement {
+    display: none;
+}
+
+.measurement-unit {
+    margin-left: 10px;
+}
+
+.measurement-input {
+    display: inline-flex;
+}
+
+.measurement-input-abnormal {
+    border: 1px solid red !important;
+    background-color: #ffb7b7;
+}
+
+.measurement-input-switch {
+    border-radius: 0;
+    border: none;
+    border-left: 1px solid grey;
+    width: 25px;
+    height:100%;
+    border: 1px solid #cacaca;
+    border-radius: 0;
+    cursor: pointer;
+}
+
+.measurement-input-switch:first-child {
+    border-left: none;
+}
+
+.measurement-input-switch-active {
+    background-color: #e0e0e0;
+}
