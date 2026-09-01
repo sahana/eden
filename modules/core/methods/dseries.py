@@ -40,6 +40,7 @@ from .crud import BasicCRUD
 
 # =============================================================================
 class DataSeriesCRUD(BasicCRUD):
+    # TODO docstring
 
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
@@ -50,8 +51,6 @@ class DataSeriesCRUD(BasicCRUD):
                 r: the CRUDRequest instance
                 attr: controller attributes
         """
-
-        # TODO implement
 
         output = {}
         if r.http == "GET":
@@ -94,6 +93,8 @@ class DataSeriesCRUD(BasicCRUD):
 
     # -------------------------------------------------------------------------
     def create(self, r, **attr):
+        # TODO docstring
+
         return DIV(BUTTON('Test',
                           _class='tiny primary button action-btn'
                           ),
@@ -103,6 +104,7 @@ class DataSeriesCRUD(BasicCRUD):
 
     # -------------------------------------------------------------------------
     def extract(self, r):
+        # TODO docstring
 
         resource = self.resource
 
@@ -117,7 +119,6 @@ class DataSeriesTable:
     def __init__(self, data=None):
         # TODO docstring
 
-        # TODO implement
         self.data = data if data else {}
 
     # -------------------------------------------------------------------------

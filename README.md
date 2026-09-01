@@ -12,6 +12,7 @@ Sahana Eden is for application developers and service providers.
 The developer handbook is included in the repository, or you can
 read it on [ReadTheDocs](https://eden-asp.readthedocs.io).
 
-Documentation about the project, including how to contribute, can be found on our [wiki](https://eden.sahanafoundation.org).
+Documentation about the project, including how to contribute, can
+be found on our [wiki](https://eden.sahanafoundation.org).
 
 You can also ask questions on our [mailing list](https://groups.google.com/g/eden-asp).
