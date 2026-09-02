@@ -3292,20 +3292,11 @@ class RiskClass:
             self.vitals.update_record(risk_class=risk)
 
 # =============================================================================
-class AnalysisDataSeries:
+class AnalysisDataSeries(DataSeries):
     """ Data series handler for analysis results """
 
-    # TODO formalize API with base class DataSeries in dseries.py
     # TODO extend with form data lookup
     # TODO extend with form data validation + processing
-
-    # -------------------------------------------------------------------------
-    def __init__(self, resource):
-        # TODO docstring
-
-        if resource.tablename != "med_analysis":
-            raise RuntimeError
-        self.resource = resource
 
     # -------------------------------------------------------------------------
     def results(self, start=0, limit=None):
@@ -4673,7 +4664,7 @@ def med_rheader(r, tabs=None):
                         # Vaccinations [viewing]
                         # Medication [viewing]
                         (T("Vital Signs"), "vitals", {"_class": "emphasis"}),
-                        (T("Parameters"), "analysis", {"_class": "emphasis"}, "results"), # TESTING
+                        # (T("Parameters"), "analysis", {"_class": "emphasis"}, "results"), # TESTING
                         (T("Status"), "status", {"_class": "emphasis"}),
                         (T("Treatment"), "treatment", {"_class": "emphasis"}),
                         (T("Epicrisis"), "epicrisis"),
