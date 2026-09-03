@@ -11,6 +11,25 @@
     "use strict";
     var dsFormID = 0;
 
+    function FilterResult() {
+        this.hasDirectMatch = false;
+        this.items = [];
+
+        this.hasMatch = function() {
+            return this.hasDirectMatch || this._hasItemMatch();
+        }
+
+        this._hasItemMatch = function() {
+            for (const item of this.items) {
+                if (item.hasMatch()) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
     /**
      * dsTable
      */
@@ -115,7 +134,7 @@
             this._bindEvents();
         },
 
-        _addItem: function(category, item, group) {
+        _addItem: function(parameterGroup, item, group) {
             $('#dsform-items-selected').append(item);
 
             const children = group.children();
@@ -123,14 +142,16 @@
             if (children.length == 0) {
                 group.parent().hide();
 
-                for (const parameter of category.find('.dsform-parameter')) {
-                    if ($(parameter).is(':visible')) {
+                for (const sample of parameterGroup.find('.dsform-sample')) {
+                    if ($(sample).is(':visible')) {
                         return;
                     }
                 }
 
-                category.hide();
+                parameterGroup.hide();
             }
+
+            this._filterParameters();
         },
 
         _addGroupItems: function(group) {
@@ -139,16 +160,16 @@
             }
         },
 
-        _removeItem: function(category, item, items) {
+        _removeItem: function(item, items) {
             let itemBefore = undefined;
-            const title = item.find('.dsform-category-title')
+            const title = item.find('.dsform-parameter-title')
                 .text()
                 .toLowerCase();
 
             items.children().each(
                 (_index, element) => {
                     const titleChild = $(element)
-                        .find('.dsform-category-title')
+                        .find('.dsform-parameter-title')
                         .text()
                         .toLowerCase();
 
@@ -165,10 +186,105 @@
                 item.insertBefore(itemBefore);
             }
 
-            item.parent().parent().show();
-
-            category.show();
+            this._filterParameters();
         },
+
+        _filter: function(prompt) {
+
+        },
+
+        _renderInputHeader: function() {
+
+        },
+
+        _filterParameters: function() {
+            const prompt = $('#filter').val();
+            const tags = prompt.toLowerCase().split(' ');
+
+            const groupResults = [];
+
+            $('#dsform-collection').find('.dsform-parameter-group').each(
+                (_index, group) => {
+                    const $samples = $(group).find('.dsform-sample');
+                    const result = new FilterResult();
+                    result.hasDirectMatch = false;
+
+                    $samples.each(
+                        (_index, parameter) => {
+                            const $parameters = $(parameter).find('.dsform-parameter');
+
+                            const parameterResult = new FilterResult();
+                            parameterResult.hasDirectMatch = $parameters.length > 0 
+                                ? (result.hasDirectMatch || this._hasMatch(tags, [$(parameter).attr('data-filter-prompt').toLowerCase()]))
+                                : false;
+
+                            $parameters.each(
+                                (_index, item) => {
+                                    const itemResult = new FilterResult();
+                                    itemResult.hasDirectMatch = parameterResult.hasDirectMatch || this._hasMatch(tags, [$(item).attr('data-filter-prompt').toLowerCase()]);
+
+                                    parameterResult.items.push(itemResult);
+                                }
+                            );
+
+                            result.items.push(parameterResult);
+                        }
+                    );
+
+                    groupResults.push(result);
+                }
+            );
+
+            $('#dsform-collection').find('.dsform-parameter-group').each(
+                (groupIndex, group) => {
+                    if (prompt !== '' && !groupResults[groupIndex].hasMatch()) {
+                        $(group).hide();
+
+                        return true;
+                    }
+
+                    $(group).show();
+
+                    $(group).find('.dsform-sample').each(
+                        (parameterIndex, parameter) => {
+                            if (prompt !== '' && !groupResults[groupIndex].items[parameterIndex].hasMatch()) {
+                                $(parameter).hide();
+
+                                return true;
+                            }
+
+                            $(parameter).show()
+
+                            $(parameter).find('.dsform-parameter').each(
+                                (itemIndex, item) => {
+                                    if (prompt !== '' && !groupResults[groupIndex].items[parameterIndex].items[itemIndex].hasMatch()) {
+                                        $(item).hide();
+
+                                        return true;
+                                    }
+
+                                    $(item).show();
+                                }
+                            );
+                        }
+                    );
+                }
+            );
+        },
+     
+        _hasMatch: function(tags, haystacks) {
+            for (const tag of tags) {
+                for (const haystack of haystacks) {
+                    if (haystack.includes(tag)) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        },
+
+
 
         _renderForm: function(data) {
             const $el = $(this.element);
@@ -190,87 +306,96 @@
             measurements.show();
         },
 
-        _renderTests: function(container) {
-            const tests = [];
+        _renderParameterGroups: function(container) {
+            const parameterGroups = [];
 
             for (const test of self.data.tests) {
                 const testElement = $('<div class="dsform-parameter-group">');
+                testElement.attr('data-filter-prompt', test.title.toLowerCase());
+
                 const testTitle = $('<label class="dsform-parameter-group-title">').text(test.title);
                 testElement.append(testTitle);
 
                 for (const group of test.groups) {
-                    const groupElement = this._renderParameterGroup(testElement, group.title, group.parameters);
+                    const groupElement = this._renderSample(testElement, group.title, group.parameters);
 
                     testElement.append(groupElement);
                 }
 
-                tests.push(testElement);
+                parameterGroups.push(testElement);
             }
 
-            return tests;
+            return parameterGroups;
         },
 
         _renderSearchBar: function() {
-            const bar = $('<input type="search" placeholder="Filtern">');
+            const bar = $('<input type="search" id="filter" placeholder="Filtern">');
+            bar.on(
+                'input',
+                () => {
+                    this._filterParameters();
+                }
+            );
 
             return bar;
         },
 
-        _renderParameterGroup: function(category, title, parameters) {
-            const group = $('<div class="dsform-parameter">');
+        _renderSample: function(parameterGroup, title, parameters) {
+            const sample = $('<div class="dsform-sample">');
+            sample.attr('data-filter-prompt', title.toLowerCase());
 
-            const header = $('<div class="dsform-parameter-header">');
+            const header = $('<div class="dsform-sample-header">');
 
-            const groupTitle = $('<label class="dsform-parameter-title">').text(title);
-            const button = $('<input type="button">');
-            button.attr('value', '>');
-            button.on(
+            const sampleTitle = $('<label class="dsform-sample-title">').text(title);
+            const buttonAddSample = $('<input type="button">');
+            buttonAddSample.attr('value', '>');
+            buttonAddSample.on(
                 'click',
                 () => {
-                    this._addGroupItems(group);
+                    this._addGroupItems(sample);
                 }
             );
 
-            header.append(groupTitle);
-            header.append(button);
+            header.append(sampleTitle);
+            header.append(buttonAddSample);
 
-            const groupContent = $('<ul class="dsform-items-group-content">');
-            groupContent.hide();
+            const parameterContainer = $('<ul class="dsform-parameters">');
+            parameterContainer.hide();
 
             for (const parameter of parameters) {
                 const parameterElement = this._renderParameter(
                     parameter,
-                    () => {this._addItem(category, parameterElement, groupContent)},
-                    () => {this._removeItem(category, parameterElement, groupContent)},
+                    () => {this._addItem(parameterGroup, parameterElement, parameterContainer)},
+                    () => {this._removeItem(parameterElement, parameterContainer)},
                 );
 
-                groupContent.append(parameterElement);
+                parameterContainer.append(parameterElement);
             }
 
-            groupTitle.on(
+            sampleTitle.on(
                 'click',
                 () => {
-                    groupContent.slideToggle();
+                    parameterContainer.slideToggle();
                 }
             );
 
-            group.append(header);
-            group.append(groupContent);
+            sample.append(header);
+            sample.append(parameterContainer);
 
-            return group;
+            return sample;
         },
 
         _renderLeftColumn: function(data) {
+            const element = $('<div id="dsform-collection">');
             const searchBar = this._renderSearchBar();
 
-            const parameterGroups = $('<div id="dsform-collection">');
-            parameterGroups.append(searchBar);
+            element.append(searchBar);
 
-            for (const test of this._renderTests(parameterGroups)) {
-                parameterGroups.append(test);
+            for (const parameterGroup of this._renderParameterGroups(element)) {
+                element.append(parameterGroup);
             }
 
-            return parameterGroups;
+            return element;
         },
 
         _renderSelection: function() {
@@ -280,8 +405,8 @@
         },
 
         _renderParameter: function(parameter, onadd, onremove) {
-            const parameterElement = $('<li>');
-            parameterElement.addClass('dsform-category');
+            const parameterElement = $('<li class="dsform-parameter">');
+            parameterElement.attr('data-filter-prompt', parameter.title.toLowerCase());
 
             const header = this._renderHeader(parameter.title, onadd, onremove);
             const body = this._renderBody(parameter.id, parameter.unit);
@@ -305,7 +430,7 @@
 
         _renderHeader: function(title, onadd, onremove) {
             const header = $('<div>');
-            header.addClass('dsform-category-header');
+            header.addClass('dsform-parameter-header');
 
             const buttonRemove = this._renderButton('<', 'dsform-button-remove')
                 .on('click', onremove);
@@ -313,7 +438,7 @@
             const buttonAdd = this._renderButton('>', 'dsform-button-add')
                 .on('click', onadd);
 
-            const spanTitle = $('<span class="dsform-category-title">').html(title);
+            const spanTitle = $('<span class="dsform-parameter-title">').html(title);
 
             buttonRemove.appendTo(header);
             spanTitle.appendTo(header);

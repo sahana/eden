@@ -2,7 +2,7 @@
     display: flex;
 }
 
-.dsform-category-header {
+.dsform-parameter-header {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -12,12 +12,13 @@
     border: 1px solid #FFD7A3;
 }
 
-.dsform-category {
+.dsform-parameter {
     background-color: #f7f7f7;
     margin: 5px 0;
 }
 
-.dsform-parameter-title {
+/* */
+.dsform-sample-title {
     display: inline;
     margin-right: 10px;
 }
@@ -26,13 +27,13 @@
     font-weight: bold;
 }
 
-.dsform-parameter {
+.dsform-sample {
     background-color: #f7f7f7;
     padding: 10px;
     border: 1px solid #e0e0e0;
 }
 
-#dsform-collection .dsform-category-header {
+#dsform-collection .dsform-parameter-header {
     justify-content: space-between;
 }
 
@@ -44,7 +45,7 @@
     list-style: none;
 }
 
-.dsform-items-group-content {
+.dsform-parameters {
     margin: 0;
 }
 
@@ -150,7 +151,7 @@
     background-color: #a1a1a1;
 }
 
-.dsform-parameter-header {
+.dsform-sample-header {
     display: flex;
     justify-content: space-between;
 }
