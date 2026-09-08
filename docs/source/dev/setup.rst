@@ -80,7 +80,7 @@ all submodules) to the supported stable version (currently 3.3.3):
 .. code-block:: bash
 
    cd ~/web2py
-   git reset --hard a729b84
+   git reset --hard 9005306
    git submodule update --init --recursive
 
 .. note::
