@@ -12,7 +12,6 @@
 #
 import os
 import sys
-from sphinx_treeview.decorator import DecoratorType
 
 sys.path.insert(0, os.path.abspath('../../../web2py'))
 sys.path.insert(0, os.path.abspath('../../modules'))
