@@ -3320,22 +3320,30 @@ class AnalysisDataSeries(DataSeries):
 
         resource = self.resource
 
-        # Get all relevant rows
-        # TODO filter out records marked as invalid
-        # TODO apply pagination
-        rows = resource.select(["id", "date"],
-                               orderby = "date desc",
-                               as_rows = True,
-                               )
-        analysis_ids = {row.id for row in rows}
+        # Filter out invalid analyses
+        resource.add_filter(FS("invalid") == False)
 
-        # Represent the dates
-        dates = [[row.id,
-                  row.date.isoformat(),
-                  row.date.isoformat(), # TODO localized representation
-                  ] for row in rows]
+        # Select all relevant records
+        records = resource.select(["id", "date", "invalid"],
+                                  start = start,
+                                  limit = limit,
+                                  orderby = "date desc",
+                                  represent = True,
+                                  raw_data = True,
+                                  ).rows
 
-        # Lookup groups, series and values
+        # Build date/time slots
+        analysis_ids, dates = set(), []
+        for record in records:
+            raw = record._row
+            record_id = raw["med_analysis.id"]
+            analysis_ids.add(record_id)
+            dates.append((record_id,
+                          raw["med_analysis.date"].isoformat(),
+                          record["med_analysis.date"],
+                          ))
+
+        # Lookup groups, series and values for the slots
         series, groups = self.get_series(analysis_ids)
         values = self.get_values(analysis_ids)
 
