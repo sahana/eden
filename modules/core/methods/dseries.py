@@ -29,6 +29,7 @@
 """
 
 __all__ = ("DataSeriesCRUD",
+           "DataSeries",
            "DataSeriesTable",
            )
 
@@ -40,7 +41,7 @@ from .crud import BasicCRUD
 
 # =============================================================================
 class DataSeriesCRUD(BasicCRUD):
-    # TODO docstring
+    """ CRUD for data series """
 
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
@@ -53,6 +54,10 @@ class DataSeriesCRUD(BasicCRUD):
         """
 
         output = {}
+
+        # TODO JSON endpoint for pagination
+        # TODO GET-action to read parameter details
+        # TODO POST-action to submit new results
         if r.http == "GET":
             output = self.select(r, **attr)
         else:
@@ -93,18 +98,43 @@ class DataSeriesCRUD(BasicCRUD):
 
     # -------------------------------------------------------------------------
     def create(self, r, **attr):
-        # TODO docstring
+        """
+            Generates a form to enter results for a specific date/time
+            slot (typically "now") in a data series.
 
-        return DIV(BUTTON('Test',
-                          _class='tiny primary button action-btn'
-                          ),
-                    FORM(_id = 'test'),
-                    _class="ds-crud",
-                    )
+            Args:
+                r: the CRUDRequest
+                attr: additional controller arguments
+
+            Returns:
+                a DIV containing a hidden form and a button to
+                reveal/activate it, to be included in the data
+                series view
+        """
+
+        return "" # Hide until ready
+
+        #return DIV(BUTTON('Test',
+        #                  _class='tiny primary button action-btn'
+        #                  ),
+        #            FORM(_id = 'test'),
+        #            _class="ds-crud",
+        #            )
 
     # -------------------------------------------------------------------------
+    # Utility functions
+    #
     def extract(self, r):
-        # TODO docstring
+        """
+            Extract the results using the configured model-specific data
+            series handler (DataSeries subclass)
+
+            Args:
+                r: the CRUDRequest
+
+            Returns:
+                a JSON-serializable dict, see DataSeries.results
+        """
 
         resource = self.resource
 
@@ -113,17 +143,71 @@ class DataSeriesCRUD(BasicCRUD):
         return reader(resource).results() if reader else {}
 
 # =============================================================================
+class DataSeries:
+    """ Data Series Handler (base class) """
+
+    def __init__(self, resource):
+        """
+            Args:
+                resource: the context CRUDResource
+        """
+
+        self.resource = resource
+
+    # -------------------------------------------------------------------------
+    def results(self, start=0, limit=None):
+        """
+            Extracts results from context resource and generates the
+            JSON output for the client-side table renderer; to be
+            implemented by model-specific subclasses, which are then
+            configured as "data_series" parameter for the respective
+            context table
+
+            Args:
+                start: the start index of the page
+                limit: the number of records in the page
+
+            Returns:
+                a JSON-serializable dict like:
+                {"d": [[id, iso_date, title], ...],                           // dates
+                 "g": [[id, title], ...]                                      // groups
+                 "s": [[id, group-id, title, full-name, range, unit], ...]    // series
+                 "v": {slot-id:                                               // values
+                        {series-id: [value, status, reason, out-of-range], ...}
+                       },
+                 }
+        """
+
+        raise NotImplementedError
+
+# =============================================================================
 class DataSeriesTable:
     """ Helper to configure and render the data series table """
 
     def __init__(self, data=None):
-        # TODO docstring
+        """
+            Args:
+                data: the results as JSON-serializable dict, see
+                      DataSeries.results for data format details
+        """
 
         self.data = data if data else {}
 
     # -------------------------------------------------------------------------
     def html(self, widget_id):
-        # TODO docstring
+        """
+            Produces a TABLE of data series, with one series per row
+            along a date/time axis (=columns)
+
+            Args:
+                widget_id: the DOM node ID to use for the TABLE
+
+            Returns:
+                a double-scrollable DIV containing the (empty) table as
+                well as a hidden input with the initial JSON data; also
+                injects the necessary JS to render the data and interact
+                with the table
+        """
 
         widget = DIV(TABLE(_class = "dstable-table",
                            _id = widget_id,
