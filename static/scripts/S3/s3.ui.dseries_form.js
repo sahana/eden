@@ -22,10 +22,16 @@
             this._samples = [];
         }
 
+        /**
+         * @returns {Group}
+         */
         clone() {
             return new Group(this.id, this.name);
         }
 
+        /**
+         * @returns {boolean}
+         */
         isEmpty() {
             for (const sample of this._samples) {
                 if (!sample.isEmpty()) {
@@ -36,6 +42,9 @@
             return true;
         }
 
+        /**
+         * @returns {HTMLDivElement}
+         */
         getHtml() {
             const $groupElement = $('<div class="dsform-parameter-group">');
 
@@ -61,6 +70,7 @@
         /**
          * @param {number} id
          * @param {string} name
+         * @param {boolean} isFolded
          */
         constructor(id, name, isFolded=true) {
             this.id = id;
@@ -70,14 +80,23 @@
             this.container = undefined;
         }
 
+        /**
+         * @returns {Sample}
+         */
         clone() {
             return new Sample(this.id, this.name, this.isFolded);
         }
 
+        /**
+         * @returns {boolean}
+         */
         isEmpty() {
             return this._parameters.length === 0;
         }
 
+        /**
+         * @returns {HTMLDivElement}
+         */
         getHtml() {
             const sample = $('<div class="dsform-sample">');
             const header = $('<div class="dsform-sample-header">');
@@ -171,6 +190,9 @@
             this.isSelected = selected;
         }
 
+        /**
+         * @returns {HTMLLIElement}
+         */
         getHtml() {
             const parameterElement = $('<li class="dsform-parameter">');
 
@@ -192,6 +214,9 @@
             window.dispatchEvent(new Event('dsform-update'));
         }
 
+        /**
+         * @returns {HTMLDivElement}
+         */
         _renderHeader() {
             const header = $('<div>');
             header.addClass('dsform-parameter-header');
@@ -217,6 +242,9 @@
             return header;
         }
 
+        /**
+         * @returns {HTMLDivElement}
+         */
         _renderBody() {
             const body = $('<div class="measurement">');
 
@@ -308,7 +336,7 @@
     }
 
     /**
-     * dsTable
+     * dsForm
      */
     $.widget('s3.dsForm', {
 
