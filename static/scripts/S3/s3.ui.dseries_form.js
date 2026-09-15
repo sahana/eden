@@ -11,22 +11,299 @@
     "use strict";
     var dsFormID = 0;
 
-    function FilterResult() {
-        this.hasDirectMatch = false;
-        this.items = [];
-
-        this.hasMatch = function() {
-            return this.hasDirectMatch || this._hasItemMatch();
+    class Group {
+        /**
+         * @param {number} id
+         * @param {string} name
+         */
+        constructor(id, name) {
+            this.id = id;
+            this.name = name;
+            this._samples = [];
         }
 
-        this._hasItemMatch = function() {
-            for (const item of this.items) {
-                if (item.hasMatch()) {
-                    return true;
+        clone() {
+            return new Group(this.id, this.name);
+        }
+
+        isEmpty() {
+            for (const sample of this._samples) {
+                if (!sample.isEmpty()) {
+                    return false;
                 }
             }
 
-            return false;
+            return true;
+        }
+
+        getHtml() {
+            const $groupElement = $('<div class="dsform-parameter-group">');
+
+            const $groupTitle =  $('<label class="dsform-parameter-group-title">').text(this.name);
+            $groupElement.append($groupTitle);
+
+            for (const sample of this._samples) {
+                $groupElement.append(sample.getHtml());
+            }
+
+            return $groupElement;
+        }
+
+        /**
+         * @param {Sample} sample
+         */
+        addSample(sample) {
+            this._samples.push(sample);
+        }
+    }
+
+    class Sample {
+        /**
+         * @param {number} id
+         * @param {string} name
+         */
+        constructor(id, name, isFolded=true) {
+            this.id = id;
+            this.name = name;
+            this.isFolded = isFolded;
+            this._parameters = [];
+            this.container = undefined;
+        }
+
+        clone() {
+            return new Sample(this.id, this.name, this.isFolded);
+        }
+
+        isEmpty() {
+            return this._parameters.length === 0;
+        }
+
+        getHtml() {
+            const sample = $('<div class="dsform-sample">');
+            const header = $('<div class="dsform-sample-header">');
+
+            const sampleTitle = $('<label class="dsform-sample-title">').text(this.name);
+            const buttonAddSample = $('<input type="button">');
+            buttonAddSample.attr('value', '>');
+            $(buttonAddSample).on(
+                'click',
+                () => {
+                    for (const parameter of this._parameters) {
+                        parameter.setSelected(true);
+                    }
+                }
+            );
+
+            header.append(sampleTitle);
+            header.append(buttonAddSample);
+
+            this.container = $('<ul class="dsform-parameters">');
+
+            if (this.isFolded) {
+                this.container.hide();
+            }
+
+            $(sampleTitle).on(
+                'click',
+                _ => this.toggle()
+            );
+
+            $(this._parameters).each(
+                (_index, parameter) => {
+                    if (parameter.isSelected) {
+                        return true;
+                    }
+
+                    this.container.append(parameter.getHtml());
+                }
+            );
+
+            sample.append(header);
+            sample.append(this.container);
+
+            return sample;
+        }
+
+        /**
+         * @param {Parameter} parameter 
+         */
+        addParameter(parameter) {
+            this._parameters.push(parameter);
+        }
+
+        toggle() {
+            if (this.isFolded) {
+                this.unfold();
+            } else {
+                this.fold();
+            }
+        }
+
+        fold() {
+            this.isFolded = true;
+
+            $(this.container).slideUp();
+        }
+
+        unfold() {
+            this.isFolded = false;
+
+            $(this.container).slideDown();
+        }
+    }
+
+    class Parameter {
+        /**
+         * @param {object} data
+         * @param {number} data.id
+         * @param {string} data.name
+         * @param {string} data.unit
+         * @param {number} data.group
+         * @param {number} data.sample
+         * @param {boolean} [selected=false] 
+         */
+        constructor(data, selected = false) {
+            this.id = data.id;
+            this.name = data.name;
+            this.unit = data.unit;
+            this.group = data.group;
+            this.sample = data.sample;
+            this.isSelected = selected;
+        }
+
+        getHtml() {
+            const parameterElement = $('<li class="dsform-parameter">');
+
+            const header = this._renderHeader(data);
+            const body = this._renderBody(data);
+        
+            parameterElement.append(header);
+            parameterElement.append(body);
+
+            return parameterElement;
+        }
+
+        /**
+         * @param {boolean} isSelected 
+         */
+        setSelected(isSelected) {
+            this.isSelected = isSelected;
+
+            window.dispatchEvent(new Event('dsform-update'));
+        }
+
+        _renderHeader() {
+            const header = $('<div>');
+            header.addClass('dsform-parameter-header');
+
+            const buttonRemove = this._renderButton('<', 'dsform-button-remove');
+            $(buttonRemove).on(
+                'click',
+                _ => this.setSelected(false)
+            );
+
+            const buttonAdd = this._renderButton('>', 'dsform-button-add');
+            $(buttonAdd).on(
+                'click',
+                _ => this.setSelected(true)
+            );
+
+            const spanTitle = $('<span class="dsform-parameter-title">').html(this.name);
+
+            buttonRemove.appendTo(header);
+            spanTitle.appendTo(header);
+            buttonAdd.appendTo(header);
+
+            return header;
+        }
+
+        _renderBody() {
+            const body = $('<div class="measurement">');
+
+            const measurementInput = $('<div class="measurement-input">');
+
+            const elementId = $('<input type="hidden">');
+            elementId.attr('value', this.id);
+            measurementInput.append(elementId);
+
+            const isAbnormal = $('<input type="hidden" value="0">');
+            measurementInput.append(isAbnormal);
+
+            const unitText = $('<span class="measurement-unit">');
+            $(unitText).text(this.unit);
+
+            const value = $('<input class="measurement-value" type="number">');
+            value.attr('style', 'width: auto !important;');
+            measurementInput.append(value);
+
+            const inputButtons = this._renderInputButtons(value, isAbnormal);
+            measurementInput.append(inputButtons);
+
+            body.append(measurementInput);
+            body.append(unitText);
+
+            return body;
+        }
+
+        /**
+         * @param {HTMLInputElement} input
+         * @param {boolean} isAbnormal
+         * 
+         * @returns {HTMLDivElement}
+         */
+        _renderInputButtons(input, isAbnormal) {
+            const container = $('<div class="measurement-input-buttons">');
+
+            const switchText = $('<button class="measurement-input-switch measurement-input-switch-text">T</button>');
+            switchText.on(
+                'click',
+                (event) => {
+                    event.preventDefault();
+
+                    switchText.toggleClass('dsform-switch-on');
+
+                    if (input.attr('type') === 'text') {
+                        input.attr('type', 'number');
+                    } else {
+                        input.attr('type', 'text');
+                    }
+                }
+            );
+
+            const switchAbnormal = $('<button class="measurement-input-switch measurement-input-switch-abnormal">!</button>');
+            switchAbnormal.on(
+                'click',
+                (event) => {
+                    event.preventDefault();
+
+                    switchAbnormal.toggleClass('dsform-switch-on');
+
+                    isAbnormal.attr('value', isAbnormal.attr('value') === "0" ? "1" : "0");
+                    input.toggleClass('measurement-input-abnormal');
+                }
+            )
+
+            container.append(switchText);
+            container.append(switchAbnormal);
+
+            return container;
+        }
+
+        /**
+         * @param {string} title 
+         * @param {string} className
+         * 
+         * @returns {HTMLInputElement}
+         */
+        _renderButton(title, className) {
+            const button = $('<input>');
+            button.addClass(className);
+            button.addClass('action-btn');
+
+            button.attr('type', 'button');
+            button.attr('value', title);
+
+            return button;
         }
     }
 
@@ -64,53 +341,39 @@
             self = this;
 
             const $el = $(this.element),
-                  widgetID = $el.attr('id'),
-                  dataInput = $('#' + widgetID + '-data');
+                  widgetID = $el.attr('id');
+
+            window.addEventListener(
+                'dsform-update',
+                () => {
+                    this._updateParameterSection();
+                    this._updateParameterSelection();
+                }
+            );
 
             // Read+parse initial data
-            self.data = {
-                tests: [
-                    {
-                        title: 'Drogentests',
-                        groups: [
-                            {
-                                title: 'Haarprobe (Drogentests)',
-                                parameters: [
-                                    {id: 0, title: 'H-Heroin', unit: 'He/H'},
-                                    {id: 1, title: 'H-Kokain', unit: 'Nasen'},
-                                    {id: 2, title: 'H-LSD', unit: 'mg'},
-                                ],
-                            },
-                            {
-                                title: 'Urinprobe (Drogentests)',
-                                parameters: [
-                                    {id: 3, title: 'U-Heroin', unit: 'ml'},
-                                    {id: 4, title: 'U-Kokain', unit: 'mg'},
-                                    {id: 5, title: 'U-LSD', unit: '€'},
-                                ],
-                            },
-                        ]
-                    },
-                    {
-                        title: 'Schwangerschaftstests',
-                        groups: [
-                            {
-                                title: 'Urinprobe (Schwangerschaftstests)',
-                                parameters: [
-                                    {id: 6, title: 'U-hCG', unit: 'IE/l'},
-                                ],
-                            },
-                        ]
-                    }
-                ]
+            self.rawData = {
+                parameters: [
+                    {group: 0, sample: 0, id: 0, name: 'H-Heroin', unit: 'He/H'},
+                    {group: 0, sample: 0, id: 1, name: 'H-Kokain', unit: 'Nasen'},
+                    {group: 0, sample: 0, id: 2, name: 'H-LSD', unit: 'mg'},
+                    {group: 0, sample: 1, id: 3, name: 'U-Heroin', unit: 'ml'},
+                    {group: 0, sample: 1, id: 4, name: 'U-Kokain', unit: 'mg'},
+                    {group: 0, sample: 1, id: 5, name: 'U-LSD', unit: '€'},
+                    {group: 1, sample: 2, id: 6, name: 'U-hCG', unit: 'IE/l'},
+                ],
+                groups: [
+                    {id: 0, name: 'Drogentests'},
+                    {id: 1, name: 'Schwangerschaftstests'},
+                ],
+                samples: [
+                    {id: 0, name: 'Haarprobe (Drogentests)'},
+                    {id: 1, name: 'Urinprobe (Drogentests)'},
+                    {id: 2, name: 'Urinprobe (Schwangerschaftstests)'},
+                ],
             };
-            if (dataInput.length) {
-                try {
-                    self.data = JSON.parse(dataInput.val());
-                } catch(e) {
-                    // pass
-                }
-            }
+
+            this.data = this._loadData();
 
             this.refresh();
         },
@@ -129,165 +392,53 @@
         refresh: function() {
             this._unbindEvents();
 
-            this._renderForm(self.data);
+            this._renderForm();
 
             this._bindEvents();
         },
 
-        _addItem: function(parameterGroup, item, group) {
-            $('#dsform-items-selected').append(item);
+        _renderFormRow: function(title, type) {
+            const $row = $('<div class="form-row row">');
 
-            const children = group.children();
+            const $label = $('<label>');
+            $label.text(title);
 
-            if (children.length == 0) {
-                group.parent().hide();
+            const $input = $('<input>');
+            $input.attr('type', type);
 
-                for (const sample of parameterGroup.find('.dsform-sample')) {
-                    if ($(sample).is(':visible')) {
-                        return;
-                    }
-                }
+            $row.append($label);
+            $row.append($input);
 
-                parameterGroup.hide();
-            }
-
-            this._filterParameters();
-        },
-
-        _addGroupItems: function(group) {
-            for (const button of group.find('.dsform-button-add')) {
-                button.click();
-            }
-        },
-
-        _removeItem: function(item, items) {
-            let itemBefore = undefined;
-            const title = item.find('.dsform-parameter-title')
-                .text()
-                .toLowerCase();
-
-            items.children().each(
-                (_index, element) => {
-                    const titleChild = $(element)
-                        .find('.dsform-parameter-title')
-                        .text()
-                        .toLowerCase();
-
-                    if (title < titleChild) {
-                        itemBefore = element;
-                        return false;
-                    }
-                }
-            );
-
-            if (itemBefore === undefined) {
-                items.append(item);
-            } else {
-                item.insertBefore(itemBefore);
-            }
-
-            this._filterParameters();
-        },
-
-        _filter: function(prompt) {
-
+            return $row;
         },
 
         _renderInputHeader: function() {
+            const $header = $('<div>');
 
-        },
+            const $datetime = $('<input type="datetime-local">');
 
-        _filterParameters: function() {
-            const prompt = $('#filter').val();
-            const tags = prompt.toLowerCase().split(' ');
+            const $status = $('<select>');
 
-            const groupResults = [];
+            $.each(
+                ['Pending', 'Preliminary', 'Final'],
+                (_index, stat) => {
+                    const $option = $('<option>');
+                    $option.text(stat);
 
-            $('#dsform-collection').find('.dsform-parameter-group').each(
-                (_index, group) => {
-                    const $samples = $(group).find('.dsform-sample');
-                    const result = new FilterResult();
-                    result.hasDirectMatch = false;
-
-                    $samples.each(
-                        (_index, parameter) => {
-                            const $parameters = $(parameter).find('.dsform-parameter');
-
-                            const parameterResult = new FilterResult();
-                            parameterResult.hasDirectMatch = $parameters.length > 0 
-                                ? (result.hasDirectMatch || this._hasMatch(tags, [$(parameter).attr('data-filter-prompt').toLowerCase()]))
-                                : false;
-
-                            $parameters.each(
-                                (_index, item) => {
-                                    const itemResult = new FilterResult();
-                                    itemResult.hasDirectMatch = parameterResult.hasDirectMatch || this._hasMatch(tags, [$(item).attr('data-filter-prompt').toLowerCase()]);
-
-                                    parameterResult.items.push(itemResult);
-                                }
-                            );
-
-                            result.items.push(parameterResult);
-                        }
-                    );
-
-                    groupResults.push(result);
+                    $status.append($option);
                 }
             );
 
-            $('#dsform-collection').find('.dsform-parameter-group').each(
-                (groupIndex, group) => {
-                    if (prompt !== '' && !groupResults[groupIndex].hasMatch()) {
-                        $(group).hide();
+            $header.append($datetime);
+            $header.append($status);
 
-                        return true;
-                    }
-
-                    $(group).show();
-
-                    $(group).find('.dsform-sample').each(
-                        (parameterIndex, parameter) => {
-                            if (prompt !== '' && !groupResults[groupIndex].items[parameterIndex].hasMatch()) {
-                                $(parameter).hide();
-
-                                return true;
-                            }
-
-                            $(parameter).show()
-
-                            $(parameter).find('.dsform-parameter').each(
-                                (itemIndex, item) => {
-                                    if (prompt !== '' && !groupResults[groupIndex].items[parameterIndex].items[itemIndex].hasMatch()) {
-                                        $(item).hide();
-
-                                        return true;
-                                    }
-
-                                    $(item).show();
-                                }
-                            );
-                        }
-                    );
-                }
-            );
+            return $header;
         },
      
-        _hasMatch: function(tags, haystacks) {
-            for (const tag of tags) {
-                for (const haystack of haystacks) {
-                    if (haystack.includes(tag)) {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        },
-
-
-
-        _renderForm: function(data) {
+        _renderForm: function() {
             const $el = $(this.element);
+
+            const $header = this._renderInputHeader();
 
             const parameterGroups = this._renderLeftColumn();
             const selection = this._renderSelection();
@@ -299,101 +450,185 @@
                 .append(selection);
 
             $el.empty()
+                .append($header)
                 .append(measurements);
+
+            this._updateParameterSection();
+            this._updateParameterSelection();
 
             parameterGroups.show();
             selection.show();
             measurements.show();
         },
 
-        _renderParameterGroups: function(container) {
-            const parameterGroups = [];
-
-            for (const test of self.data.tests) {
-                const testElement = $('<div class="dsform-parameter-group">');
-                testElement.attr('data-filter-prompt', test.title.toLowerCase());
-
-                const testTitle = $('<label class="dsform-parameter-group-title">').text(test.title);
-                testElement.append(testTitle);
-
-                for (const group of test.groups) {
-                    const groupElement = this._renderSample(testElement, group.title, group.parameters);
-
-                    testElement.append(groupElement);
-                }
-
-                parameterGroups.push(testElement);
-            }
-
-            return parameterGroups;
-        },
-
-        _renderSearchBar: function() {
+        _renderSearchBar: function(parameterContainer) {
             const bar = $('<input type="search" id="filter" placeholder="Filtern">');
             bar.on(
                 'input',
-                () => {
-                    this._filterParameters();
-                }
+                _ => this._updateParameterSection(parameterContainer, $(bar).val().split(' '))
             );
 
             return bar;
         },
 
-        _renderSample: function(parameterGroup, title, parameters) {
-            const sample = $('<div class="dsform-sample">');
-            sample.attr('data-filter-prompt', title.toLowerCase());
+        _loadData: function() {
+            const groups = [];
+            const samples = [];
 
-            const header = $('<div class="dsform-sample-header">');
-
-            const sampleTitle = $('<label class="dsform-sample-title">').text(title);
-            const buttonAddSample = $('<input type="button">');
-            buttonAddSample.attr('value', '>');
-            buttonAddSample.on(
-                'click',
-                () => {
-                    this._addGroupItems(sample);
+            for (const parameter of this.rawData.parameters) {
+                if (!groups.hasOwnProperty(parameter.group)) {
+                    const groupName = this.rawData.groups.find(sample => sample.id === parameter.group).name;
+                    groups[parameter.group] = new Group(parameter.group, groupName);
                 }
-            );
 
-            header.append(sampleTitle);
-            header.append(buttonAddSample);
+                if (!samples.hasOwnProperty(parameter.sample)) {
+                    const sampleName = this.rawData.samples.find(sample => sample.id === parameter.sample).name;
+                    const sample = new Sample(parameter.sample, sampleName);
 
-            const parameterContainer = $('<ul class="dsform-parameters">');
-            parameterContainer.hide();
+                    samples[parameter.sample] = sample;
+                    groups[parameter.group].addSample(sample);
+                }
 
-            for (const parameter of parameters) {
-                const parameterElement = this._renderParameter(
-                    parameter,
-                    () => {this._addItem(parameterGroup, parameterElement, parameterContainer)},
-                    () => {this._removeItem(parameterElement, parameterContainer)},
-                );
-
-                parameterContainer.append(parameterElement);
+                samples[parameter.sample].addParameter(new Parameter(parameter));
             }
-
-            sampleTitle.on(
-                'click',
-                () => {
-                    parameterContainer.slideToggle();
-                }
-            );
-
-            sample.append(header);
-            sample.append(parameterContainer);
-
-            return sample;
+            
+            return groups;
         },
 
-        _renderLeftColumn: function(data) {
+        _updateParameterSection: function() {
+            const groups = this._filterData();
+
+            const container = $('#dsform-parameter-container');
+            container.empty();
+
+            for (const group of groups) {
+                container.append(group.getHtml());
+            }
+        },
+
+        _updateParameterSelection: function() {
+            const selection = $('#dsform-items-selected');
+            selection.empty();
+
+            for (const group of this.data) {
+                for (const sample of group._samples) {
+                    for (const parameter of sample._parameters) {
+                        if (!parameter.isSelected) {
+                            continue;
+                        }
+
+                        selection.append(parameter.getHtml());
+                    }
+                }
+            }
+        },
+
+        _filterEmptySamples(data) {
+            const groupsFiltered = [];
+
+            for (const group of data) {
+                const samplesFiltered = [];
+
+                for (const sample of group._samples) {
+                    if (sample._parameters.filter(parameter => !parameter.isSelected).length > 0) {
+                        const clone = sample.clone();
+                        clone._parameters = sample._parameters;
+
+                        samplesFiltered.push(clone);
+                    }
+                }
+
+                if (samplesFiltered.length === 0) {
+                    continue;
+                }
+
+                const clone = group.clone();
+                clone._samples = samplesFiltered;
+
+                groupsFiltered.push(clone);
+            }
+
+            return groupsFiltered;
+        },
+
+        /**
+         * @returns {array<Group>}
+         */
+        _filterData: function() {
+            const filterInput = $('#filter').val();
+
+            const prompts = filterInput.split(' ');
+            const hasPrompts = prompts.length > 0 && prompts[0].trim() !== '';
+
+            const groupsFiltered = [];
+
+            for (const group of this.data) {
+                const hasGroupMatch = !hasPrompts || this._hasMatch(prompts, group.name);
+
+                const samplesFiltered = [];
+
+                for (const sample of group._samples) {
+                    const hasSampleMatch = !hasPrompts || this._hasMatch(prompts, sample.name);
+
+                    if ((hasGroupMatch || hasSampleMatch) && sample._parameters.filter(parameter => !parameter.isSelected).length > 0) {
+                        samplesFiltered.push(sample);
+
+                        continue;
+                    }
+
+                    const parametersFiltered = sample._parameters.filter(
+                        parameter => !parameter.isSelected && (!hasPrompts || this._hasMatch(prompts, parameter.name))
+                    );
+
+                    if (parametersFiltered.length > 0) {
+                        const clone = sample.clone();
+                        clone._parameters = parametersFiltered;
+
+                        samplesFiltered.push(clone);
+                    }
+                }
+
+                if (samplesFiltered.length === 0) {
+                    continue;
+                }
+
+                const clone = new Group(group.id, group.name);
+                clone._samples = samplesFiltered;
+
+                groupsFiltered.push(clone);
+            }
+
+            return groupsFiltered;
+        },
+
+        /**
+         * @param {array<string>} prompts
+         * @param {string} haystack
+         * 
+         * @returns {boolean}
+         */
+        _hasMatch: function(prompts, haystack) {
+            for (const prompt of prompts) {
+                if (prompt.trim() === '') {
+                    continue;
+                }
+
+                if (haystack.toLowerCase().includes(prompt.toLowerCase())) {
+                    return true;
+                }
+            }
+
+            return false;
+        },
+
+        _renderLeftColumn: function() {
             const element = $('<div id="dsform-collection">');
-            const searchBar = this._renderSearchBar();
+
+            const parameterContainer = $('<div id="dsform-parameter-container">');
+            const searchBar = this._renderSearchBar(parameterContainer);
 
             element.append(searchBar);
-
-            for (const parameterGroup of this._renderParameterGroups(element)) {
-                element.append(parameterGroup);
-            }
+            element.append(parameterContainer);
 
             return element;
         },
@@ -402,115 +637,6 @@
             const selection = $('<ul id="dsform-items-selected">');
 
             return selection;
-        },
-
-        _renderParameter: function(parameter, onadd, onremove) {
-            const parameterElement = $('<li class="dsform-parameter">');
-            parameterElement.attr('data-filter-prompt', parameter.title.toLowerCase());
-
-            const header = this._renderHeader(parameter.title, onadd, onremove);
-            const body = this._renderBody(parameter.id, parameter.unit);
-        
-            parameterElement.append(header);
-            parameterElement.append(body);
-
-            return parameterElement;
-        },
-
-        _renderButton: function(title, className) {
-            const button = $('<input>');
-            button.addClass(className);
-            button.addClass('action-btn');
-
-            button.attr('type', 'button');
-            button.attr('value', title);
-
-            return button;
-        },
-
-        _renderHeader: function(title, onadd, onremove) {
-            const header = $('<div>');
-            header.addClass('dsform-parameter-header');
-
-            const buttonRemove = this._renderButton('<', 'dsform-button-remove')
-                .on('click', onremove);
-
-            const buttonAdd = this._renderButton('>', 'dsform-button-add')
-                .on('click', onadd);
-
-            const spanTitle = $('<span class="dsform-parameter-title">').html(title);
-
-            buttonRemove.appendTo(header);
-            spanTitle.appendTo(header);
-            buttonAdd.appendTo(header);
-
-            return header;
-        },
-
-        _renderBody: function(id, unit) {
-            const body = $('<div class="measurement">');
-
-            const measurementInput = $('<div class="measurement-input">');
-
-            const elementId = $('<input type="hidden">');
-            elementId.attr('value', id);
-            measurementInput.append(elementId);
-
-            const isAbnormal = $('<input type="hidden" value="0">');
-            measurementInput.append(isAbnormal);
-
-            const unitText = $('<span class="measurement-unit">');
-            $(unitText).text(unit);
-
-            const value = $('<input class="measurement-value" type="number">');
-            value.attr('style', 'width: auto !important;');
-            measurementInput.append(value);
-
-            const inputButtons = this._renderInputButtons(value, isAbnormal);
-            measurementInput.append(inputButtons);
-
-            body.append(measurementInput);
-            body.append(unitText);
-
-            return body;
-        },
-
-        _renderInputButtons: function(input, isAbnormal) {
-            const container = $('<div class="measurement-input-buttons">');
-
-            const switchText = $('<button class="measurement-input-switch measurement-input-switch-text">T</button>');
-            switchText.on(
-                'click',
-                (event) => {
-                    event.preventDefault();
-
-                    switchText.toggleClass('dsform-switch-on');
-
-                    if (input.attr('type') === 'text') {
-                        input.attr('type', 'number');
-                    } else {
-                        input.attr('type', 'text');
-                    }
-                }
-            );
-
-            const switchAbnormal = $('<button class="measurement-input-switch measurement-input-switch-abnormal">!</button>');
-            switchAbnormal.on(
-                'click',
-                (event) => {
-                    event.preventDefault();
-
-                    switchAbnormal.toggleClass('dsform-switch-on');
-
-                    isAbnormal.attr('value', isAbnormal.attr('value') === "0" ? "1" : "0");
-                    input.toggleClass('measurement-input-abnormal');
-                }
-            )
-
-            container.append(switchText);
-            container.append(switchAbnormal);
-
-            return container;
         },
 
         _initializeButton: function() {

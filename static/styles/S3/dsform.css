@@ -155,3 +155,9 @@
     display: flex;
     justify-content: space-between;
 }
+
+#dsform-parameter-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
