@@ -897,7 +897,6 @@ class S3Msg:
                    bcc = None,
                    reply_to = None,
                    sender = None,
-                   encoding = "utf-8",
                    from_address = None,
                    ):
         """
@@ -952,7 +951,6 @@ class S3Msg:
                                    bcc = bcc,
                                    reply_to = reply_to,
                                    sender = sender,
-                                   encoding = encoding,
                                    # e.g. Return-Receipt-To:<user@domain>
                                    headers = {},
                                    from_address = from_address,

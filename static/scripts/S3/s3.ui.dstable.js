@@ -106,8 +106,6 @@
 
         _renderBody: function(data) {
 
-            // TODO re-implement for new data structure
-
             const body = $('<tbody>').hide();
 
             const groups = data.g || [],
@@ -141,8 +139,6 @@
 
             const slots = data.d || [],
                   values = data.v;
-
-            // TODO render series header
 
             var row = $('<tr>'),
                 label = $('<div class="dstable-param">').text(series[2] || '??'),

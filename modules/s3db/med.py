@@ -3292,20 +3292,11 @@ class RiskClass:
             self.vitals.update_record(risk_class=risk)
 
 # =============================================================================
-class AnalysisDataSeries:
+class AnalysisDataSeries(DataSeries):
     """ Data series handler for analysis results """
 
-    # TODO formalize API with base class DataSeries in dseries.py
     # TODO extend with form data lookup
     # TODO extend with form data validation + processing
-
-    # -------------------------------------------------------------------------
-    def __init__(self, resource):
-        # TODO docstring
-
-        if resource.tablename != "med_analysis":
-            raise RuntimeError
-        self.resource = resource
 
     # -------------------------------------------------------------------------
     def results(self, start=0, limit=None):
@@ -3329,24 +3320,32 @@ class AnalysisDataSeries:
 
         resource = self.resource
 
-        # Get all relevant rows
-        # TODO filter out records marked as invalid
-        # TODO apply pagination
-        rows = resource.select(["id", "date"],
-                               orderby = "date desc",
-                               as_rows = True,
-                               )
-        analysis_ids = {row.id for row in rows}
+        # Filter out invalid analyses
+        resource.add_filter(FS("invalid") == False)
 
-        # Represent the dates
-        dates = [[row.id,
-                  row.date.isoformat(),
-                  row.date.isoformat(), # TODO localized representation
-                  ] for row in rows]
+        # Select all relevant records
+        records = resource.select(["id", "date", "invalid"],
+                                  start = start,
+                                  limit = limit,
+                                  orderby = "date desc",
+                                  represent = True,
+                                  raw_data = True,
+                                  ).rows
 
-        # Lookup groups, series and values
-        series, groups = self.get_series(analysis_ids)
-        values = self.get_values(analysis_ids)
+        # Build date/time slots
+        analysis_ids, dates = set(), []
+        for record in records:
+            raw = record._row
+            record_id = raw["med_analysis.id"]
+            analysis_ids.add(record_id)
+            dates.append((record_id,
+                          raw["med_analysis.date"].isoformat(),
+                          record["med_analysis.date"],
+                          ))
+
+        # Lookup groups, series and values for the slots
+        parameters, series, groups = self.get_series(analysis_ids)
+        values = self.get_values(analysis_ids, parameters)
 
         return {"d": dates, "g": groups, "s": series, "v": values}
 
@@ -3383,9 +3382,11 @@ class AnalysisDataSeries:
                                 ptable.parameter_group_id,
                                 ptable.qualitative,
                                 ptable.values_normal,
+                                ptable.precsn,
                                 ptable.um,
                                 orderby = (ptable.sample_type_id, ptable.name),
                                 )
+        parameters = {row.id: row for row in rows}
 
         # Represent as series
         series, group_ids = [], set()
@@ -3410,16 +3411,19 @@ class AnalysisDataSeries:
         rows = db(query).select(gtable.id, gtable.name, orderby=gtable.name)
         groups = [[row.id, row.name] for row in rows]
 
-        return series, groups
+        return parameters, series, groups
 
     # -------------------------------------------------------------------------
     @classmethod
-    def get_values(cls, analysis_ids):
+    def get_values(cls, analysis_ids, parameters):
         """
             Get all analysis results
 
             Args:
                 analysis_ids: the med_analysis record IDs
+                parameters: details of the parameters used in these analysis,
+                            as dict {id: Row}, must contain qualitative-flag
+                            and precsn
             Returns:
                 a dict {analysis-id:
                          {parameter-id: [value, status, reason, out-of-range],
@@ -3430,6 +3434,7 @@ class AnalysisDataSeries:
         db = current.db
         s3db = current.s3db
 
+        # Use numeric representations of statuses
         statuses = {"PENDING": 0,
                     "PRELIMINARY": 1,
                     "FINAL": 2,
@@ -3442,10 +3447,12 @@ class AnalysisDataSeries:
         rows = db(query).select(table.analysis_id,
                                 table.parameter_id,
                                 table.result,
+                                table.result_numeric,
                                 table.status,
                                 table.status_reason,
                                 table.abnormal,
                                 )
+
         results = {}
         for row in rows:
             analysis_id = row.analysis_id
@@ -3455,23 +3462,32 @@ class AnalysisDataSeries:
                 result = results[analysis_id] = {}
 
             parameter_id = row.parameter_id
-            if not parameter_id:
-                continue
+            parameter = parameters.get(parameter_id)
 
             status = statuses.get(row.status)
             if status is None:
                 continue
 
-            # TODO use result_numeric with parameter precision
-            #      for quantitative parameters, if available
-            value = "***" if status == 3 else \
-                    "---" if status == 0 else str(row.result)
+            value = str(row.result)
+
+            # Representations of pending, failed and numeric values
+            if status == 3:
+                value = "***" # Failed
+            elif status == 0:
+                value = "---" # Pending
+            elif parameter and not parameter.qualitative and row.result_numeric is not None:
+                # Represent quantitative value as float with fixed precision
+                value = IS_FLOAT_AMOUNT.represent(row.result_numeric,
+                                                  parameter.precsn or 0,
+                                                  True,
+                                                  )
 
             result[parameter_id] = [value,
                                     status,
                                     row.status_reason or "",
                                     int(row.abnormal),
                                     ]
+
         return results
 
     # -------------------------------------------------------------------------
@@ -4673,7 +4689,7 @@ def med_rheader(r, tabs=None):
                         # Vaccinations [viewing]
                         # Medication [viewing]
                         (T("Vital Signs"), "vitals", {"_class": "emphasis"}),
-                        (T("Parameters"), "analysis", {"_class": "emphasis"}, "results"), # TESTING
+                        # (T("Parameters"), "analysis", {"_class": "emphasis"}, "results"), # TESTING
                         (T("Status"), "status", {"_class": "emphasis"}),
                         (T("Treatment"), "treatment", {"_class": "emphasis"}),
                         (T("Epicrisis"), "epicrisis"),

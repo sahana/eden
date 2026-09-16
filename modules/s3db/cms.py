@@ -1354,7 +1354,11 @@ class CMSNewsletterModel(DataModel):
                            readable = False,
                            writable = False,
                            ),
-                     Field.Method("read_status", self.newsletter_read_status),
+                     s3_fieldmethod("read_status",
+                                    self.newsletter_read_status,
+                                    represent = lambda v, row=None: \
+                                                "-" if v is None else v if hasattr(v, "xml") else s3_str(v),
+                                    ),
                      CommentsField(),
                      )
 

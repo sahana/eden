@@ -12,7 +12,7 @@ from gluon.storage import Storage
 from templates.RLPPTM.rlpgeonames import rlp_GeoNames
 
 # Default/lead organisation
-MFFKI = "Ministerium für Familie, Frauen, Kultur und Integration"
+MDI = "Ministerium des Innern, für Integration und Verkehr"
 
 # Org Groups
 DISTRICTS = "Kreisverwaltung"
@@ -276,7 +276,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     # ORG Settings
     #
-    settings.org.default_organisation = MFFKI
+    settings.org.default_organisation = MDI
 
     settings.org.sector = True
     settings.org.sector_rheader = False
