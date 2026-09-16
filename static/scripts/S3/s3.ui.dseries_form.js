@@ -551,43 +551,13 @@
             }
         },
 
-        _filterEmptySamples(data) {
-            const groupsFiltered = [];
-
-            for (const group of data) {
-                const samplesFiltered = [];
-
-                for (const sample of group._samples) {
-                    if (sample._parameters.filter(parameter => !parameter.isSelected).length > 0) {
-                        const clone = sample.clone();
-                        clone._parameters = sample._parameters;
-
-                        samplesFiltered.push(clone);
-                    }
-                }
-
-                if (samplesFiltered.length === 0) {
-                    continue;
-                }
-
-                const clone = group.clone();
-                clone._samples = samplesFiltered;
-
-                groupsFiltered.push(clone);
-            }
-
-            return groupsFiltered;
-        },
-
         /**
          * @returns {array<Group>}
          */
         _filterData: function() {
-            const filterInput = $('#filter').val();
-
-            const prompts = filterInput.split(' ');
+            const filterInput = $('#filter').val().trim();
+            const prompts = filterInput.split(' ').filter(Boolean);
             const hasPrompts = prompts.length > 0 && prompts[0].trim() !== '';
-
             const groupsFiltered = [];
 
             for (const group of this.data) {
@@ -597,15 +567,20 @@
 
                 for (const sample of group._samples) {
                     const hasSampleMatch = !hasPrompts || this._hasMatch(prompts, sample.name);
+                    const parametersUnselected = sample._parameters.filter(parameter => !parameter.isSelected);
 
-                    if ((hasGroupMatch || hasSampleMatch) && sample._parameters.filter(parameter => !parameter.isSelected).length > 0) {
+                    if (parametersUnselected.length === 0) {
+                        continue;
+                    }
+
+                    if ((hasGroupMatch || hasSampleMatch) && parametersUnselected.length > 0) {
                         samplesFiltered.push(sample);
 
                         continue;
                     }
 
-                    const parametersFiltered = sample._parameters.filter(
-                        parameter => !parameter.isSelected && (!hasPrompts || this._hasMatch(prompts, parameter.name))
+                    const parametersFiltered = parametersUnselected.filter(
+                        parameter => !hasPrompts || this._hasMatch(prompts, parameter.name)
                     );
 
                     if (parametersFiltered.length > 0) {
