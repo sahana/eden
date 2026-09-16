@@ -425,25 +425,29 @@
             this._bindEvents();
         },
 
-        _renderFormRow: function(title, type) {
+        _renderFormRow: function(title, input) {
             const $row = $('<div class="form-row row">');
 
             const $label = $('<label>');
             $label.text(title);
 
-            const $input = $('<input>');
-            $input.attr('type', type);
+            const container = $('<div class="small-12 columns">');
+            container.append($label);
+            container.append(input);
 
-            $row.append($label);
-            $row.append($input);
+            $row.append(container);
 
             return $row;
         },
 
         _renderInputHeader: function() {
-            const $header = $('<div>');
+            const header = $('<div id="dsform-header">');
+
+            const title = $('<div class="subheading">');
+            title.text('Messung');
 
             const $datetime = $('<input type="datetime-local">');
+            $datetime.val(new Date().toISOString().match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/));
 
             const $status = $('<select>');
 
@@ -457,16 +461,18 @@
                 }
             );
 
-            $header.append($datetime);
-            $header.append($status);
+            const invalid = $('<input type="checkbox">');
 
-            return $header;
+            header.append(title);
+            header.append(this._renderFormRow('Zeitpunkt', $datetime));
+            header.append(this._renderFormRow('Status', $status));
+            header.append(this._renderFormRow('Ungültig', invalid));
+
+            return header;
         },
      
-        _renderForm: function() {
-            const $el = $(this.element);
-
-            const $header = this._renderInputHeader();
+        _renderBody: function() {
+            const element = $('<div id="dsform-body">');
 
             const parameterGroups = this._renderLeftColumn();
             const selection = this._renderSelection();
@@ -477,16 +483,35 @@
                 .append(parameterGroups)
                 .append(selection);
 
-            $el.empty()
-                .append($header)
-                .append(measurements);
+            const subheading = $('<div class="subheading">');
+            subheading.text('Messwerte');
 
-            this._updateParameterSection();
-            this._updateParameterSelection();
+            const buttonSubmit = $('<input class="primary button small btn">');
+            buttonSubmit.val('Speichern');
+
+            element.append(subheading)
+                .append(this._renderFormRow('', measurements))
+                .append(this._renderFormRow('', buttonSubmit));
 
             parameterGroups.show();
             selection.show();
             measurements.show();
+
+            return element;
+        },
+
+        _renderForm: function() {
+            const $el = $(this.element);
+
+            const $header = this._renderInputHeader();
+            const body = this._renderBody();
+
+            $el.empty()
+                .append($header)
+                .append(body);
+
+            this._updateParameterSection();
+            this._updateParameterSelection();
         },
 
         _renderSearchBar: function(parameterContainer) {

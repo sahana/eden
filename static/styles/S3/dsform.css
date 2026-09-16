@@ -161,3 +161,7 @@
     flex-direction: column;
     gap: 10px;
 }
+
+#dsform-body {
+    margin-top: 20px;
+}
