@@ -35,7 +35,7 @@ __all__ = ("DataSeriesCRUD",
 
 import json
 
-from gluon import current, INPUT, DIV, TABLE, FORM, BUTTON, H2, UL, LABEL
+from gluon import current, INPUT, DIV, TABLE, FORM, BUTTON
 
 from .crud import BasicCRUD
 
@@ -88,7 +88,6 @@ class DataSeriesCRUD(BasicCRUD):
         # Instantiate Widget
         widget = DataSeriesTable(data=data)
         output["items"] = widget.html(widget_id=widget_id)
-        # output["addtitle"] = "Hello there"
         output["form"] = self.create(r, **attr)
 
         # View
@@ -254,17 +253,12 @@ class DataSeriesTable:
 class DataSeriesForm:
     def html(self, widget_id):
         widget = DIV(
-            BUTTON('Neue Messung',
+            BUTTON('Add measurement',
                 _id="dsform-button",
                 _class='tiny primary button action-btn'
             ),
             FORM(
-                DIV(
-                    H2('Messung'),
-                    LABEL('Zeitpunkt'),
-                    INPUT(_type='datetime-local'),
-                    _id = "header",
-                ),
+                DIV(_id = "dsform-header"),
                 DIV(_id = widget_id + '-body'),
                 _id = widget_id,
             ),
@@ -293,9 +287,9 @@ class DataSeriesForm:
 
         # Inject static script
         if s3.debug:
-            script = "/%s/static/scripts/S3/s3.ui.dseries_form.js" % appname
+            script = "/%s/static/scripts/S3/s3.ui.dsform.js" % appname
         else:
-            script = "/%s/static/scripts/S3/s3.ui.dseries_form.min.js" % appname
+            script = "/%s/static/scripts/S3/s3.ui.dsform.min.js" % appname
         if script not in scripts:
             scripts.append(script)
 

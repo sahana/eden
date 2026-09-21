@@ -379,25 +379,25 @@
                 }
             );
 
-            // Read+parse initial data
+            // TODO: Get the data from endpoint
             self.rawData = {
                 parameters: [
-                    {group: 0, sample: 0, id: 0, name: 'H-Heroin', unit: 'He/H'},
-                    {group: 0, sample: 0, id: 1, name: 'H-Kokain', unit: 'Nasen'},
-                    {group: 0, sample: 0, id: 2, name: 'H-LSD', unit: 'mg'},
-                    {group: 0, sample: 1, id: 3, name: 'U-Heroin', unit: 'ml'},
-                    {group: 0, sample: 1, id: 4, name: 'U-Kokain', unit: 'mg'},
-                    {group: 0, sample: 1, id: 5, name: 'U-LSD', unit: '€'},
+                    {group: 0, sample: 0, id: 0, name: 'H-THC-COOH', unit: 'µg/l'},
+                    {group: 0, sample: 0, id: 1, name: 'H-Benzoylecgonine', unit: 'µg/l'},
+                    {group: 0, sample: 0, id: 2, name: 'H-Amphetamine', unit: 'µg/l'},
+                    {group: 0, sample: 1, id: 3, name: 'U-THC-COOH', unit: 'µg/l'},
+                    {group: 0, sample: 1, id: 4, name: 'U-Benzoylecgonine', unit: 'µg/l'},
+                    {group: 0, sample: 1, id: 5, name: 'U-Amphetamine', unit: 'µg/l'},
                     {group: 1, sample: 2, id: 6, name: 'U-hCG', unit: 'IE/l'},
                 ],
                 groups: [
-                    {id: 0, name: 'Drogentests'},
-                    {id: 1, name: 'Schwangerschaftstests'},
+                    {id: 0, name: 'Drug tests'},
+                    {id: 1, name: 'Pregnancy tests'},
                 ],
                 samples: [
-                    {id: 0, name: 'Haarprobe (Drogentests)'},
-                    {id: 1, name: 'Urinprobe (Drogentests)'},
-                    {id: 2, name: 'Urinprobe (Schwangerschaftstests)'},
+                    {id: 0, name: 'Hair sample (Drug test)'},
+                    {id: 1, name: 'Urine sample (Drug test)'},
+                    {id: 2, name: 'Urine sample (Pregnancy test)'},
                 ],
             };
 
@@ -444,7 +444,7 @@
             const header = $('<div id="dsform-header">');
 
             const title = $('<div class="subheading">');
-            title.text('Messung');
+            title.text('Measurement');
 
             const $datetime = $('<input type="datetime-local">');
             $datetime.val(new Date().toISOString().match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/));
@@ -464,9 +464,9 @@
             const invalid = $('<input type="checkbox">');
 
             header.append(title);
-            header.append(this._renderFormRow('Zeitpunkt', $datetime));
+            header.append(this._renderFormRow('Date/Time', $datetime));
             header.append(this._renderFormRow('Status', $status));
-            header.append(this._renderFormRow('Ungültig', invalid));
+            header.append(this._renderFormRow('Invalid', invalid));
 
             return header;
         },
@@ -484,10 +484,10 @@
                 .append(selection);
 
             const subheading = $('<div class="subheading">');
-            subheading.text('Messwerte');
+            subheading.text('Parameters');
 
             const buttonSubmit = $('<input class="primary button small btn">');
-            buttonSubmit.val('Speichern');
+            buttonSubmit.val('Save');
 
             element.append(subheading)
                 .append(this._renderFormRow('', measurements))
@@ -515,7 +515,7 @@
         },
 
         _renderSearchBar: function(parameterContainer) {
-            const bar = $('<input type="search" id="filter" placeholder="Filtern">');
+            const bar = $('<input type="search" id="filter" placeholder="Search">');
             bar.on(
                 'input',
                 _ => this._updateParameterSection(parameterContainer, $(bar).val().split(' '))
