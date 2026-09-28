@@ -944,8 +944,8 @@ class S3Msg:
                 attachment.replace_header("Content-Disposition", header)
 
         result = current.mail.send(to,
-                                   subject = subject,
-                                   message = message,
+                                   subject = str(subject),
+                                   message = str(message),
                                    attachments = attachments,
                                    cc = cc,
                                    bcc = bcc,

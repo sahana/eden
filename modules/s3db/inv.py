@@ -153,8 +153,10 @@ class InvWarehouseModel(DataModel):
                            label = T("Name"),
                            requires = [IS_NOT_EMPTY(),
                                        IS_LENGTH(128),
-                                       IS_NOT_ONE_OF(db, "%s.name" % tablename,),
-                                      ],
+                                       IS_NOT_ONE_OF(db, "%s.name" % tablename,
+                                                     skip_imports = True,
+                                                     ),
+                                       ],
                            ),
                      CommentsField(),
                      )

@@ -92,7 +92,7 @@ class AccountLockingMixin:
                 # Check directly in database since user is not logged in yet
                 db = current.db
                 ADMIN = self.get_system_roles().ADMIN
-             
+
 
                 mtable = db.auth_membership
                 query = (mtable.user_id == user.id) & \
@@ -198,8 +198,8 @@ class AccountLockingMixin:
         subject = messages.locked_email_subject % {"system_name": system_name}
         message = messages.locked_email % {"system_name": system_name}
         return bool(mailer.send(to = user.email,
-                                subject = subject,
-                                message = message,
+                                subject = str(subject),
+                                message = str(message),
                                 ))
 
     # -------------------------------------------------------------------------
@@ -225,8 +225,8 @@ class AccountLockingMixin:
         subject = messages.unlocked_email_subject % {"system_name": system_name}
         message = messages.unlocked_email % {"system_name": system_name}
         return bool(mailer.send(to = user.email,
-                                subject = subject,
-                                message = message,
+                                subject = str(subject),
+                                message = str(message),
                                 ))
 
 # END =========================================================================

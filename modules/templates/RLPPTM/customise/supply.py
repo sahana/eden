@@ -21,11 +21,6 @@ def supply_item_resource(r, tablename):
               "kit",
               "model",
               "year",
-              "weight",
-              "length",
-              "width",
-              "height",
-              "volume",
               )
     for fn in unused:
         field = table[fn]

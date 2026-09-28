@@ -1630,8 +1630,8 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
                 if not settings.mailer or \
                    not settings.mailer.settings.server or \
                    not settings.mailer.send(to = form.vars.email,
-                                            subject = messages.verify_email_subject % system,
-                                            message = messages.verify_email % system,
+                                            subject = str(messages.verify_email_subject % system),
+                                            message = str(messages.verify_email % system),
                                             ):
                     current.response.error = messages.email_verification_failed
                     return form
@@ -1692,8 +1692,8 @@ $('form.auth_consent').submit(S3ClearNavigateAwayConfirm);''')
 
         message = self.messages.reset_password % {"url": reset_password_url}
         if mailer.send(to = user.email,
-                       subject = self.messages.reset_password_subject,
-                       message = message):
+                       subject = str(self.messages.reset_password_subject),
+                       message = str(message)):
             user.update_record(reset_password_key = reset_password_key)
             return True
 
@@ -3574,7 +3574,7 @@ Please go to %(url)s to approve this user."""
             if customise:
                 request = CRUDRequest("hrm", "human_resource",
                                       current.request,
-                                      args = [str(hr_id)] if accepted=="update" else None,
+                                      args = [str(hr_id)] if accepted=="update" else [],
                                       )
                 customise(request, htablename)
             s3db.onaccept(htablename, record, method=accepted)

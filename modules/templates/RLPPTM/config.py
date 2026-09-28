@@ -387,6 +387,11 @@ def config(settings):
     settings.customise_supply_item_controller = supply_item_controller
     settings.supply.shipping_code = shipping_code
 
+    settings.L10n.units_of_measure = {"btl": T("Bottle##unit"),
+                                      "pkt": T("Packet##unit"),
+                                      "pc": T("piece##unit"),
+                                      }
+
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py

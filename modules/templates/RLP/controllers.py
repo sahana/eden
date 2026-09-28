@@ -492,8 +492,8 @@ class register(CustomController):
                 if not auth_settings.mailer or \
                    not auth_settings.mailer.settings.server or \
                    not auth_settings.mailer.send(to = form.vars.email,
-                                                 subject = auth_messages.verify_email_subject % system,
-                                                 message = auth_messages.verify_email % system,
+                                                 subject = str(auth_messages.verify_email_subject % system),
+                                                 message = str(auth_messages.verify_email % system),
                                                  ):
                     response.error = auth_messages.email_verification_failed
 
