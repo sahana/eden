@@ -5,22 +5,22 @@
 .dsform-parameter-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px;
+    gap: 10pt;
+    padding: 10pt;
     border-bottom: none;
     background-color: #FFEDCB;
-    border: 1px solid #FFD7A3;
+    border: 1pt solid #FFD7A3;
 }
 
 .dsform-parameter {
     background-color: #f7f7f7;
-    margin: 5px 0;
+    margin: 5pt 0;
 }
 
 /* */
 .dsform-sample-title {
     display: inline;
-    margin-right: 10px;
+    margin-right: 10pt;
 }
 
 .dsform-parameter-group-title {
@@ -29,19 +29,19 @@
 
 .dsform-sample {
     background-color: #f7f7f7;
-    padding: 10px;
-    border: 1px solid #e0e0e0;
+    padding: 10pt;
+    border: 1pt solid #e0e0e0;
 }
 
-#dsform-collection .dsform-parameter-header {
+.dsform-collection .dsform-parameter-header {
     justify-content: space-between;
 }
 
-#dsForm {
+#ds-form {
     display: none;
 }
 
-#dsForm ul {
+#ds-form ul {
     list-style: none;
 }
 
@@ -49,18 +49,18 @@
     margin: 0;
 }
 
-#dsform-collection {
+.dsform-collection {
     padding: 0;
 }
 
-#dsform-collection .dsform-button-remove {
+.dsform-collection .dsform-button-remove {
     display: none;
 }
 
 #dsform-items-selected {
-    border: 1px solid #e0e0e0;
-    padding: 10px;
-    min-width: 400px;
+    border: 1pt solid #e0e0e0;
+    padding: 10pt;
+    min-width: 400pt;
 }
 
 #dsform-items-selected .dsform-button-add {
@@ -69,20 +69,20 @@
 
 #dsform-measurement {
     display: flex;
-    margin: 10px 0;
-    gap: 10px;
+    margin: 10pt 0;
+    gap: 10pt;
 }
 
 #dsform-measurement > * {
     margin: 0;
-    /*padding: 10px;*/
+    /*padding: 10pt;*/
     display: flex;
-    gap: 10px;
+    gap: 10pt;
     flex-direction: column;
 }
 
-#dsform-collection, .measurement {
-    min-width: 200px;
+.dsform-collection, .measurement {
+    min-width: 200pt;
 }
 
 .dsform-parameter-group {
@@ -90,19 +90,19 @@
     border: none;
     display: flex;
     flex-flow: column;
-    gap: 5px;
+    gap: 5pt;
 }
 
 .measurement {
-    padding: 10px;
+    padding: 10pt;
 }
 
-#dsform-collection .measurement {
+.dsform-collection .measurement {
     display: none;
 }
 
 .measurement-unit {
-    margin-left: 10px;
+    margin-left: 10pt;
 }
 
 .measurement-input {
@@ -110,17 +110,17 @@
 }
 
 .measurement-input-abnormal {
-    border: 1px solid red !important;
+    border: 1pt solid red !important;
     background-color: #ffb7b7;
 }
 
 .measurement-input-switch {
     border-radius: 0;
     border: none;
-    border-left: 1px solid grey;
-    width: 25px;
+    border-left: 1pt solid grey;
+    width: 25pt;
     height:100%;
-    border: 1px solid #cacaca;
+    border: 1pt solid #cacaca;
     border-radius: 0;
     cursor: pointer;
 }
@@ -143,7 +143,7 @@
 }
 
 .measurement-input-abnormal {
-    border: 1px solid red !important;
+    border: 1pt solid red !important;
     background-color: #ffb7b7;
 }
 
@@ -159,9 +159,9 @@
 #dsform-parameter-container {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 10pt;
 }
 
 #dsform-body {
-    margin-top: 20px;
+    margin-top: 20pt;
 }

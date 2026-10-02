@@ -188,6 +188,7 @@
             this.group = data.group;
             this.sample = data.sample;
             this.isSelected = selected;
+            this.onUpdate = () => {};
         }
 
         /**
@@ -196,8 +197,8 @@
         getHtml() {
             const parameterElement = $('<li class="dsform-parameter">');
 
-            const header = this._renderHeader(data);
-            const body = this._renderBody(data);
+            const header = this._renderHeader();
+            const body = this._renderBody();
         
             parameterElement.append(header);
             parameterElement.append(body);
@@ -211,7 +212,7 @@
         setSelected(isSelected) {
             this.isSelected = isSelected;
 
-            window.dispatchEvent(new Event('dsform-update'));
+            this.onUpdate();
         }
 
         /**
@@ -309,7 +310,7 @@
                     isAbnormal.attr('value', isAbnormal.attr('value') === "0" ? "1" : "0");
                     input.toggleClass('measurement-input-abnormal');
                 }
-            )
+            );
 
             container.append(switchText);
             container.append(switchAbnormal);
@@ -357,7 +358,6 @@
             dsFormID += 1;
 
             this.eventNamespace = '.dsForm';
-            this.selections;
 
             this._initializeButton();
         },
@@ -366,21 +366,8 @@
          * Update the widget options
          */
         _init: function() {
-            self = this;
-
-            const $el = $(this.element),
-                  widgetID = $el.attr('id');
-
-            window.addEventListener(
-                'dsform-update',
-                () => {
-                    this._updateParameterSection();
-                    this._updateParameterSelection();
-                }
-            );
-
             // TODO: Get the data from endpoint
-            self.rawData = {
+            this.rawData = {
                 parameters: [
                     {group: 0, sample: 0, id: 0, name: 'H-THC-COOH', unit: 'µg/l'},
                     {group: 0, sample: 0, id: 1, name: 'H-Benzoylecgonine', unit: 'µg/l'},
@@ -410,6 +397,7 @@
          * Remove generated elements & reset other changes
          */
         _destroy: function() {
+            $.cleanData(this.element);
 
             $.Widget.prototype.destroy.call(this);
         },
@@ -510,15 +498,15 @@
                 .append($header)
                 .append(body);
 
-            this._updateParameterSection();
-            this._updateParameterSelection();
+            this.updateParameterSection();
+            this.updateParameterSelection();
         },
 
         _renderSearchBar: function(parameterContainer) {
             const bar = $('<input type="search" id="filter" placeholder="Search">');
             bar.on(
                 'input',
-                _ => this._updateParameterSection(parameterContainer, $(bar).val().split(' '))
+                _ => this.updateParameterSection()
             );
 
             return bar;
@@ -542,13 +530,19 @@
                     groups[parameter.group].addSample(sample);
                 }
 
-                samples[parameter.sample].addParameter(new Parameter(parameter));
+                const parameterInstance = new Parameter(parameter);
+                parameterInstance.onUpdate = () => {
+                    this.updateParameterSection();
+                    this.updateParameterSelection();
+                };
+
+                samples[parameter.sample].addParameter(parameterInstance);
             }
             
             return groups;
         },
 
-        _updateParameterSection: function() {
+        updateParameterSection: function() {
             const groups = this._filterData();
 
             const container = $('#dsform-parameter-container');
@@ -559,7 +553,7 @@
             }
         },
 
-        _updateParameterSelection: function() {
+        updateParameterSelection: function() {
             const selection = $('#dsform-items-selected');
             selection.empty();
 
@@ -650,7 +644,7 @@
         },
 
         _renderLeftColumn: function() {
-            const element = $('<div id="dsform-collection">');
+            const element = $('<div class="dsform-collection">');
 
             const parameterContainer = $('<div id="dsform-parameter-container">');
             const searchBar = this._renderSearchBar(parameterContainer);
@@ -673,30 +667,9 @@
                 'click',
                 () => {
                     button.hide();
-                    $('#dsForm').slideDown();
+                    $('#ds-form').slideDown();
                 }
             );
         },
-
-        /**
-         * Bind events to generated elements (after refresh)
-         */
-        _bindEvents: function() {
-            let $el = $(this.element),
-                ns = this.eventNamespace,
-                self = this;
-
-            return true;
-        },
-
-        /**
-         * Unbind events (before refresh)
-         */
-        _unbindEvents: function() {
-            let $el = $(this.element),
-                ns = this.eventNamespace;
-
-            return true;
-        }
     });
 })(jQuery);

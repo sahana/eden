@@ -110,7 +110,7 @@ class DataSeriesCRUD(BasicCRUD):
                 reveal/activate it, to be included in the data
                 series view
         """
-        return DataSeriesForm().html('dsForm')
+        return DataSeriesForm().html('ds-form')
 
     # -------------------------------------------------------------------------
     # Utility functions
@@ -253,7 +253,7 @@ class DataSeriesTable:
 class DataSeriesForm:
     def html(self, widget_id):
         widget = DIV(
-            BUTTON('Add measurement',
+            BUTTON(current.T('Add Results'),
                 _id="dsform-button",
                 _class='tiny primary button action-btn'
             ),
