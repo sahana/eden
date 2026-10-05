@@ -244,8 +244,8 @@ class S3Task:
             Args:
                 task: The function which should be run
                             - async if a worker is alive
-                args: The list of unnamed args to send to the function
-                vars: The list of named vars to send to the function
+                args: list of unnamed args to send to the function
+                vars: dict of named vars to send to the function
                 timeout: The length of time available for the task to complete
                             - default 300s (5 mins)
         """
@@ -279,23 +279,28 @@ class S3Task:
             tasks[task](*args, **vars)
             return None # No task ID in this case
 
-        # Queue the task (async)
         try:
             # Add the current user to the vars
             vars["user_id"] = current.auth.user.id
         except AttributeError:
             pass
+
+        # Allow application name override
+        # TODO parametrize controller name?
+        current.s3db.scheduler_task.application_name.writable = True
+
+        # Queue the task (async)
         queued = self.scheduler.queue_task(task,
-                                           pargs = args,
-                                           pvars = vars,
                                            application_name = "%s/default" % \
                                                               current.request.application,
+                                           pargs = args,
+                                           pvars = vars,
                                            function_name = task,
                                            timeout = timeout,
                                            )
 
         # Return task ID so that status can be polled
-        return queued.id
+        return queued["id"]
 
     # -------------------------------------------------------------------------
     def schedule_task(self,

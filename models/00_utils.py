@@ -17,7 +17,8 @@
 auth.s3_set_roles()
 
 # Check access to this controller
-if not auth.permission.has_permission("read"):
+# - skip for scheduler as it never runs the controller
+if not request.is_scheduler and not auth.permission.has_permission("read"):
     auth.permission.fail()
 
 # -----------------------------------------------------------------------------

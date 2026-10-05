@@ -1378,25 +1378,31 @@ def s3_qrcode_represent(value, row=None, show_value=True):
                        # it would rarely be damaged or dirty there ;)
                        error_correction = qrcode.constants.ERROR_CORRECT_L,
                        box_size = 10,
-                       border = 4,
-                       image_factory=qrcode.image.svg.SvgImage,
+                       border = 2,
+                       image_factory=qrcode.image.svg.SvgPathImage,
                        )
     qr.add_data(s3_str(value))
     qr.make(fit=True)
 
-    # Write the SVG into a buffer
-    qr_svg = qr.make_image()
+    # Generate SVG
+    qr_svg = qr.make_image(fill_color="black", back_color="white")
 
-    from io import BytesIO
-    stream = BytesIO()
-    qr_svg.save(stream)
+    # # Write the SVG into a buffer
+    # from io import BytesIO
+    # stream = BytesIO()
+    # qr_svg.save(stream)
 
-    # Generate XML string to embed
-    stream.seek(0)
-    svgxml = XML(stream.read())
+    # # Generate XML string to embed
+    # stream.seek(0)
+    # svgxml = XML(stream.read())
 
-    output = DIV(DIV(svgxml, _class="s3-qrcode-svg"),
-                 _class="s3-qrcode-display",
+    # Convert to byte-string
+    svgxml = qr_svg.to_string(encoding="utf-8")
+
+    output = DIV(DIV(XML(svgxml),
+                     _class = "s3-qrcode-svg",
+                     ),
+                 _class = "s3-qrcode-display",
                  )
     if show_value:
         output.append(DIV(s3_str(value), _class="s3-qrcode-val"))

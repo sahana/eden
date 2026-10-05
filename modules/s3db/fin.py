@@ -1346,20 +1346,22 @@ class FinVoucherModel(DataModel):
                                        enabled = True,
                                        )
             else:
+                # Allow application name override
+                ttable.application_name.writable = True
+
                 # Schedule task
                 scheduler = current.s3task.scheduler
-                application = "%s/default" % current.request.application
                 task = scheduler.queue_task("s3db_task",
+                                            application_name = "%s/default" % \
+                                                               current.request.application,
                                             pargs = ["fin_voucher_start_billing"],
                                             pvars = {"billing_id": billing.id},
-                                            application_name = application,
                                             start_time = start,
                                             stop_time = None,
                                             timeout = 1800,
                                             repeats = 1,
                                             )
-                if task:
-                    task_id = task.id
+                task_id = task["id"]
 
         elif task and task.status == "QUEUED":
             # Remove the task
