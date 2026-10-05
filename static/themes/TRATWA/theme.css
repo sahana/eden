@@ -247,42 +247,52 @@ button.toggle-text {
   content: "...";
 }
 
-/* line 95, ../../default/scss/theme/_represent.scss */
+/* line 94, ../../default/scss/theme/_represent.scss */
+.s3-qrcode-svg {
+  text-align: center;
+}
+
+/* line 97, ../../default/scss/theme/_represent.scss */
+.s3-qrcode-val {
+  padding: 2px;
+}
+
+/* line 105, ../../default/scss/theme/_represent.scss */
 .controls .bool {
   margin-left: 0.5rem;
 }
-/* line 97, ../../default/scss/theme/_represent.scss */
+/* line 107, ../../default/scss/theme/_represent.scss */
 [dir=rtl] .controls .bool {
   margin-left: 0;
   margin-right: 0.5rem;
 }
-/* line 102, ../../default/scss/theme/_represent.scss */
+/* line 112, ../../default/scss/theme/_represent.scss */
 .bool i {
   margin-right: 0.2rem;
 }
-/* line 104, ../../default/scss/theme/_represent.scss */
+/* line 114, ../../default/scss/theme/_represent.scss */
 [dir=rtl] .bool i {
   margin-right: 0;
   margin-left: 0.2rem;
 }
-/* line 109, ../../default/scss/theme/_represent.scss */
+/* line 119, ../../default/scss/theme/_represent.scss */
 .bool.bool-red {
   color: #d01717;
 }
-/* line 112, ../../default/scss/theme/_represent.scss */
+/* line 122, ../../default/scss/theme/_represent.scss */
 .bool.bool-green {
   color: #018801;
 }
-/* line 115, ../../default/scss/theme/_represent.scss */
+/* line 125, ../../default/scss/theme/_represent.scss */
 .bool.bool-blue {
   color: #1754b3;
 }
-/* line 118, ../../default/scss/theme/_represent.scss */
+/* line 128, ../../default/scss/theme/_represent.scss */
 .bool.bool-grey {
   color: #7f7f7f;
 }
 
-/* line 126, ../../default/scss/theme/_represent.scss */
+/* line 136, ../../default/scss/theme/_represent.scss */
 .prio {
   padding: 0 0.4rem;
   border: 1px solid #333;
@@ -292,153 +302,153 @@ button.toggle-text {
   white-space: pre;
 }
 
-/* line 134, ../../default/scss/theme/_represent.scss */
+/* line 144, ../../default/scss/theme/_represent.scss */
 .prio-red {
   color: #E0E0E0;
   background-color: #d10000;
 }
 
-/* line 138, ../../default/scss/theme/_represent.scss */
+/* line 148, ../../default/scss/theme/_represent.scss */
 .prio-lightred {
   background-color: #d17f7f;
 }
 
-/* line 141, ../../default/scss/theme/_represent.scss */
+/* line 151, ../../default/scss/theme/_represent.scss */
 .prio-amber {
   background-color: #ffaa00;
 }
 
-/* line 144, ../../default/scss/theme/_represent.scss */
+/* line 154, ../../default/scss/theme/_represent.scss */
 .prio-lightgreen {
   background-color: #a0d7a0;
 }
 
-/* line 147, ../../default/scss/theme/_represent.scss */
+/* line 157, ../../default/scss/theme/_represent.scss */
 .prio-green {
   color: #E0E0E0;
   background-color: #006100;
 }
 
-/* line 151, ../../default/scss/theme/_represent.scss */
+/* line 161, ../../default/scss/theme/_represent.scss */
 .prio-blue {
   color: white;
   background-color: #10427b;
 }
 
-/* line 155, ../../default/scss/theme/_represent.scss */
+/* line 165, ../../default/scss/theme/_represent.scss */
 .prio-lightblue {
   background-color: #b7ddff;
 }
 
-/* line 158, ../../default/scss/theme/_represent.scss */
+/* line 168, ../../default/scss/theme/_represent.scss */
 .prio-grey {
   background-color: silver;
 }
 
-/* line 161, ../../default/scss/theme/_represent.scss */
+/* line 171, ../../default/scss/theme/_represent.scss */
 .prio-black {
   color: #E0E0E0;
   background-color: #1f1f1f;
 }
 
-/* line 169, ../../default/scss/theme/_represent.scss */
+/* line 179, ../../default/scss/theme/_represent.scss */
 .occupancy-bar {
   border: 1px solid black;
   position: relative;
   padding: 0 2px;
   min-width: 4rem;
 }
-/* line 174, ../../default/scss/theme/_represent.scss */
+/* line 184, ../../default/scss/theme/_represent.scss */
 .occupancy-bar .occupancy {
   display: block;
   position: absolute;
   top: 0;
   left: 0;
 }
-/* line 175, ../../default/scss/theme/_represent.scss */
+/* line 185, ../../default/scss/theme/_represent.scss */
 .occupancy-bar .occupancy:before {
   content: "-";
   visibility: hidden;
 }
-/* line 183, ../../default/scss/theme/_represent.scss */
+/* line 193, ../../default/scss/theme/_represent.scss */
 .occupancy-bar .occupancy.occupancy-0 {
   width: 1%;
   background-color: rgba(0, 85, 0, 0.5);
 }
-/* line 187, ../../default/scss/theme/_represent.scss */
+/* line 197, ../../default/scss/theme/_represent.scss */
 .occupancy-bar .occupancy.occupancy-10 {
   width: 10%;
   background-color: rgba(0, 115, 0, 0.5);
 }
-/* line 191, ../../default/scss/theme/_represent.scss */
+/* line 201, ../../default/scss/theme/_represent.scss */
 .occupancy-bar .occupancy.occupancy-20 {
   width: 20%;
   background-color: rgba(0, 145, 0, 0.5);
 }
-/* line 195, ../../default/scss/theme/_represent.scss */
+/* line 205, ../../default/scss/theme/_represent.scss */
 .occupancy-bar .occupancy.occupancy-30 {
   width: 30%;
   background-color: rgba(70, 160, 0, 0.5);
 }
-/* line 199, ../../default/scss/theme/_represent.scss */
+/* line 209, ../../default/scss/theme/_represent.scss */
 .occupancy-bar .occupancy.occupancy-40 {
   width: 40%;
   background-color: rgba(100, 160, 0, 0.5);
 }
-/* line 203, ../../default/scss/theme/_represent.scss */
+/* line 213, ../../default/scss/theme/_represent.scss */
 .occupancy-bar .occupancy.occupancy-50 {
   width: 50%;
   background-color: rgba(160, 160, 0, 0.5);
 }
-/* line 207, ../../default/scss/theme/_represent.scss */
+/* line 217, ../../default/scss/theme/_represent.scss */
 .occupancy-bar .occupancy.occupancy-60 {
   width: 60%;
   background-color: rgba(175, 145, 0, 0.5);
 }
-/* line 211, ../../default/scss/theme/_represent.scss */
+/* line 221, ../../default/scss/theme/_represent.scss */
 .occupancy-bar .occupancy.occupancy-70 {
   width: 70%;
   background-color: rgba(190, 120, 0, 0.5);
 }
-/* line 215, ../../default/scss/theme/_represent.scss */
+/* line 225, ../../default/scss/theme/_represent.scss */
 .occupancy-bar .occupancy.occupancy-80 {
   width: 80%;
   background-color: rgba(205, 80, 0, 0.5);
 }
-/* line 219, ../../default/scss/theme/_represent.scss */
+/* line 229, ../../default/scss/theme/_represent.scss */
 .occupancy-bar .occupancy.occupancy-90 {
   width: 90%;
   background-color: rgba(220, 40, 0, 0.5);
 }
-/* line 223, ../../default/scss/theme/_represent.scss */
+/* line 233, ../../default/scss/theme/_represent.scss */
 .occupancy-bar .occupancy.occupancy-100 {
   width: 100%;
   background-color: rgba(235, 20, 0, 0.5);
 }
-/* line 227, ../../default/scss/theme/_represent.scss */
+/* line 237, ../../default/scss/theme/_represent.scss */
 .occupancy-bar .occupancy.occupancy-exc {
   width: 100%;
   background-color: rgba(200, 0, 0, 0.6);
 }
 
-/* line 237, ../../default/scss/theme/_represent.scss */
+/* line 247, ../../default/scss/theme/_represent.scss */
 .wh-schedule {
   list-style: none;
   white-space: pre;
   margin: 0;
   font-size: 0.7rem;
 }
-/* line 242, ../../default/scss/theme/_represent.scss */
+/* line 252, ../../default/scss/theme/_represent.scss */
 .wh-schedule .wh-dayname {
   width: 1.5rem;
   display: inline-block;
 }
-/* line 246, ../../default/scss/theme/_represent.scss */
+/* line 256, ../../default/scss/theme/_represent.scss */
 .wh-schedule .wh-dayname::after {
   content: ":";
 }
 
-/* line 254, ../../default/scss/theme/_represent.scss */
+/* line 264, ../../default/scss/theme/_represent.scss */
 .showall {
   display: none;
   position: absolute;
@@ -448,7 +458,7 @@ button.toggle-text {
   margin: 0 20px 0 -50px;
 }
 
-/* line 266, ../../default/scss/theme/_represent.scss */
+/* line 276, ../../default/scss/theme/_represent.scss */
 .newsletter-text {
   white-space: pre-line;
   background: #fcfcfc;
@@ -461,117 +471,117 @@ button.toggle-text {
   font-size: 0.85rem;
 }
 
-/* line 282, ../../default/scss/theme/_represent.scss */
+/* line 292, ../../default/scss/theme/_represent.scss */
 .file-repr i.fa {
   font-size: 1.1rem;
 }
-/* line 285, ../../default/scss/theme/_represent.scss */
+/* line 295, ../../default/scss/theme/_represent.scss */
 .file-repr .file-size {
   padding: 0 0.4rem;
   font-size: 0.7rem;
 }
 
-/* line 291, ../../default/scss/theme/_represent.scss */
+/* line 301, ../../default/scss/theme/_represent.scss */
 .img-preview {
   max-width: 120px;
   max-height: 80px;
 }
 
-/* line 299, ../../default/scss/theme/_represent.scss */
+/* line 309, ../../default/scss/theme/_represent.scss */
 .contact-repr {
   background-color: #FFF0C1;
   border: 1px solid #E0E0E0;
   padding: 0.25rem 0.5rem;
 }
-/* line 303, ../../default/scss/theme/_represent.scss */
+/* line 313, ../../default/scss/theme/_represent.scss */
 .contact-repr .contact-name {
   display: block;
   font-weight: bold;
   margin-bottom: 0.2rem;
 }
-/* line 308, ../../default/scss/theme/_represent.scss */
+/* line 318, ../../default/scss/theme/_represent.scss */
 .contact-repr .contact-info {
   white-space: nowrap;
   font-size: 0.8rem;
 }
-/* line 311, ../../default/scss/theme/_represent.scss */
+/* line 321, ../../default/scss/theme/_represent.scss */
 .contact-repr .contact-info .fa {
   padding-right: 0.4rem;
 }
 
-/* line 320, ../../default/scss/theme/_represent.scss */
+/* line 330, ../../default/scss/theme/_represent.scss */
 .workflow-options {
   white-space: pre;
 }
-/* line 322, ../../default/scss/theme/_represent.scss */
+/* line 332, ../../default/scss/theme/_represent.scss */
 .workflow-options.workflow-blue {
   color: #0563a1;
 }
-/* line 325, ../../default/scss/theme/_represent.scss */
+/* line 335, ../../default/scss/theme/_represent.scss */
 .workflow-options.workflow-grey {
   color: #555;
 }
-/* line 328, ../../default/scss/theme/_represent.scss */
+/* line 338, ../../default/scss/theme/_represent.scss */
 .workflow-options.workflow-red {
   color: #c42626;
 }
-/* line 331, ../../default/scss/theme/_represent.scss */
+/* line 341, ../../default/scss/theme/_represent.scss */
 .workflow-options.workflow-amber {
   color: #ec8d27;
 }
-/* line 334, ../../default/scss/theme/_represent.scss */
+/* line 344, ../../default/scss/theme/_represent.scss */
 .workflow-options.workflow-green {
   color: green;
 }
-/* line 337, ../../default/scss/theme/_represent.scss */
+/* line 347, ../../default/scss/theme/_represent.scss */
 .workflow-options.workflow-advice {
   border: 1px solid #c42626;
   background-color: #ffdede;
   padding: 0.3rem 0.7rem;
 }
-/* line 342, ../../default/scss/theme/_represent.scss */
+/* line 352, ../../default/scss/theme/_represent.scss */
 .workflow-options .fa {
   margin-right: 0.2rem;
 }
-/* line 344, ../../default/scss/theme/_represent.scss */
+/* line 354, ../../default/scss/theme/_represent.scss */
 [dir=rtl] .workflow-options .fa {
   margin-right: 0;
   margin-left: 0.2rem;
 }
-/* line 349, ../../default/scss/theme/_represent.scss */
+/* line 359, ../../default/scss/theme/_represent.scss */
 .controls .workflow-options {
   margin-left: 0.5rem;
 }
-/* line 351, ../../default/scss/theme/_represent.scss */
+/* line 361, ../../default/scss/theme/_represent.scss */
 [dir=rtl] .controls .workflow-options {
   margin-left: 0;
   margin-right: 0.5rem;
 }
 
-/* line 361, ../../default/scss/theme/_represent.scss */
+/* line 371, ../../default/scss/theme/_represent.scss */
 .issue-date {
   display: block;
   font-size: 0.75rem;
   color: #666;
 }
 
-/* line 366, ../../default/scss/theme/_represent.scss */
+/* line 376, ../../default/scss/theme/_represent.scss */
 .issue-full {
   border: 1px solid #ccc;
   background-color: #fdf7de;
   padding: 0.5rem 0.75rem;
 }
-/* line 370, ../../default/scss/theme/_represent.scss */
+/* line 380, ../../default/scss/theme/_represent.scss */
 .issue-full h4 {
   font-size: 1rem;
 }
-/* line 373, ../../default/scss/theme/_represent.scss */
+/* line 383, ../../default/scss/theme/_represent.scss */
 .issue-full .issue-description {
   font-size: 0.85rem;
   font-style: italic;
 }
 
-/* line 383, ../../default/scss/theme/_represent.scss */
+/* line 393, ../../default/scss/theme/_represent.scss */
 .hazard-neg, .hazard-pos {
   display: inline-block;
   width: 20px;
@@ -584,22 +594,22 @@ button.toggle-text {
   vertical-align: middle;
 }
 
-/* line 395, ../../default/scss/theme/_represent.scss */
+/* line 405, ../../default/scss/theme/_represent.scss */
 .hazard-bio.hazard-pos {
   background-image: url(../../img/hazard/bio.png);
 }
 
-/* line 398, ../../default/scss/theme/_represent.scss */
+/* line 408, ../../default/scss/theme/_represent.scss */
 .hazard-tox.hazard-pos {
   background-image: url(../../img/hazard/tox.png);
 }
 
-/* line 401, ../../default/scss/theme/_represent.scss */
+/* line 411, ../../default/scss/theme/_represent.scss */
 .hazard-rad.hazard-pos {
   background-image: url(../../img/hazard/rad.png);
 }
 
-/* line 406, ../../default/scss/theme/_represent.scss */
+/* line 416, ../../default/scss/theme/_represent.scss */
 .med-reason, .med-reason-historical {
   font-size: 0.8rem;
   padding: 0 0.5rem;
@@ -607,13 +617,13 @@ button.toggle-text {
   vertical-align: middle;
 }
 
-/* line 412, ../../default/scss/theme/_represent.scss */
+/* line 422, ../../default/scss/theme/_represent.scss */
 .med-reason-historical {
   color: #444;
   font-style: italic;
 }
 
-/* line 416, ../../default/scss/theme/_represent.scss */
+/* line 426, ../../default/scss/theme/_represent.scss */
 .med-area {
   font-size: 0.8rem;
   padding: 0.2rem 0.4rem;
@@ -623,19 +633,19 @@ button.toggle-text {
   vertical-align: middle;
 }
 
-/* line 424, ../../default/scss/theme/_represent.scss */
+/* line 434, ../../default/scss/theme/_represent.scss */
 .med-patient, .med-unregistered {
   font-size: 0.9rem;
   vertical-align: middle;
 }
 
-/* line 428, ../../default/scss/theme/_represent.scss */
+/* line 438, ../../default/scss/theme/_represent.scss */
 .med-unregistered {
   font-style: italic;
   color: grey;
 }
 
-/* line 432, ../../default/scss/theme/_represent.scss */
+/* line 442, ../../default/scss/theme/_represent.scss */
 .med-refno {
   font-size: 0.8rem;
   padding: 0.05rem 0.25rem;
@@ -650,81 +660,81 @@ button.toggle-text {
   font-weight: normal;
 }
 
-/* line 446, ../../default/scss/theme/_represent.scss */
+/* line 456, ../../default/scss/theme/_represent.scss */
 .dl .med-status-header {
   padding: 0.3rem;
   border: 1px solid #ccc;
   background-color: #7979792b;
 }
-/* line 450, ../../default/scss/theme/_represent.scss */
+/* line 460, ../../default/scss/theme/_represent.scss */
 .dl .med-status-header .meta {
   display: inline-block;
   padding: 0.1rem 0.5rem;
   vertical-align: middle;
 }
-/* line 454, ../../default/scss/theme/_represent.scss */
+/* line 464, ../../default/scss/theme/_represent.scss */
 .dl .med-status-header .meta.meta-fix {
   min-width: 27%;
   line-height: 0.9rem;
 }
-/* line 461, ../../default/scss/theme/_represent.scss */
+/* line 471, ../../default/scss/theme/_represent.scss */
 .dl .med-status-header.editable {
   background-color: #fde7bd;
 }
-/* line 462, ../../default/scss/theme/_represent.scss */
+/* line 472, ../../default/scss/theme/_represent.scss */
 .dl .med-status-header.editable .meta {
   color: #b03737;
 }
 
-/* line 471, ../../default/scss/theme/_represent.scss */
+/* line 481, ../../default/scss/theme/_represent.scss */
 .dl .med-status {
   padding: 0.7rem;
 }
-/* line 473, ../../default/scss/theme/_represent.scss */
+/* line 483, ../../default/scss/theme/_represent.scss */
 .dl .med-status.editable {
   background-color: #fff6e4;
   border: 1px solid #b03737;
 }
-/* line 477, ../../default/scss/theme/_represent.scss */
+/* line 487, ../../default/scss/theme/_represent.scss */
 .dl .med-status .dl-field-label, .dl .med-status .dl-field-value {
   display: block;
 }
-/* line 480, ../../default/scss/theme/_represent.scss */
+/* line 490, ../../default/scss/theme/_represent.scss */
 .dl .med-status .dl-field-label {
   font-size: 0.7rem;
   font-weight: bold;
 }
-/* line 484, ../../default/scss/theme/_represent.scss */
+/* line 494, ../../default/scss/theme/_represent.scss */
 .dl .med-status .dl-field-value {
   white-space: pre-wrap;
   margin-bottom: 0.5rem;
   font-weight: normal;
 }
-/* line 488, ../../default/scss/theme/_represent.scss */
+/* line 498, ../../default/scss/theme/_represent.scss */
 .dl .med-status .dl-field-value.med-preliminary {
   font-style: italic;
 }
-/* line 492, ../../default/scss/theme/_represent.scss */
+/* line 502, ../../default/scss/theme/_represent.scss */
 .dl .med-status p.pending {
   font-size: 0.7rem;
   font-style: italic;
   color: #b03737;
 }
-/* line 497, ../../default/scss/theme/_represent.scss */
+/* line 507, ../../default/scss/theme/_represent.scss */
 .dl .med-status .med-reason {
   padding: 0;
   font-weight: bold;
   font-size: 0.9rem;
 }
 
-/* line 507, ../../default/scss/theme/_represent.scss */
+/* line 517, ../../default/scss/theme/_represent.scss */
 .client-gender-age {
   font-size: 0.7rem;
   vertical-align: middle;
   color: #999;
   margin: 0 1rem;
 }
-/* line 511, ../../default/scss/theme/_represent.scss */
+/* line 521, ../../default/scss/theme/_represent.scss */
 .client-gender-age .fa {
   margin: 0 0.2rem;
 }
