@@ -1,19 +1,7 @@
 """
     Asynchronous Task Execution
-    - falls back to Synchronous if no workers are alive
 
-    To run a worker node: python web2py.py -K eden
-    or use UWSGI's 'Mule'
-    or use nssm on Win32: http://web2py.com/books/default/chapter/29/13/deployment-recipes#Using-nssm-to-run-as-a-Windows-service
-
-    NB
-        Need WEB2PY_PATH environment variable to be defined (e.g. /etc/profile)
-        Tasks need to be defined outside conditional model loads (e.g. models/tasks.py)
-        Avoid passing state into the async call as state may change before the message is executed (race condition)
-
-    Old screencast: http://www.vimeo.com/27478796
-
-    Copyright: 2011-2022 (c) Sahana Software Foundation
+    Copyright: 2011-2026 (c) Sahana Software Foundation
 
     Permission is hereby granted, free of charge, to any person
     obtaining a copy of this software and associated documentation
@@ -35,6 +23,9 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    Notes:
+        To run a worker node: python web2py.py -K eden or use UWSGI's 'Mule'
 """
 
 __all__ = ("S3Task",)
@@ -70,11 +61,10 @@ class S3Task:
             self.scheduler = Scheduler(current.db,
                                        tasks,
                                        migrate = migrate,
-                                       #use_spawn = True # Possible subprocess method with Py3
                                        )
 
     # -------------------------------------------------------------------------
-    def configure_tasktable_crud(self,
+    def configure_tasktable_crud(self, *,
                                  task = None,
                                  function = None,
                                  args = None,
@@ -238,16 +228,23 @@ class S3Task:
     # -------------------------------------------------------------------------
     def run_async(self, task, args=None, vars=None, timeout=300):
         """
-            Wrapper to call an asynchronous task.
-                - run from the main request
+            Wrapper to call an asynchronous task from the main request
 
             Args:
-                task: The function which should be run
-                            - async if a worker is alive
-                args: list of unnamed args to send to the function
-                vars: dict of named vars to send to the function
-                timeout: The length of time available for the task to complete
-                            - default 300s (5 mins)
+                task: the task name
+                      - must be registered in response.s3.tasks
+                args: list of unnamed args to send to the task
+                vars: dict of named vars to send to the task
+                timeout: length of time available for the task to complete
+                         - default 300s (5 mins)
+
+            Notes:
+                - the task will be run synchronously (inline) if no scheduler
+                  is running
+                - to retain the permissions context of the caller, the current
+                  request.controller will be the same during task execution,
+                  and the current user_id is passed to the task (if async) so
+                  that it can impersonate the current user
         """
 
         if args is None:
@@ -275,7 +272,7 @@ class S3Task:
             raise
 
         # Run synchronously if scheduler not running
-        if not self._is_alive():
+        if not self.scheduler or not self._is_alive():
             tasks[task](*args, **vars)
             return None # No task ID in this case
 
@@ -285,14 +282,8 @@ class S3Task:
         except AttributeError:
             pass
 
-        # Allow application name override
-        # TODO parametrize controller name?
-        current.s3db.scheduler_task.application_name.writable = True
-
         # Queue the task (async)
         queued = self.scheduler.queue_task(task,
-                                           application_name = "%s/default" % \
-                                                              current.request.application,
                                            pargs = args,
                                            pvars = vars,
                                            function_name = task,
@@ -303,8 +294,7 @@ class S3Task:
         return queued["id"]
 
     # -------------------------------------------------------------------------
-    def schedule_task(self,
-                      task,
+    def schedule_task(self, task, *,
                       args = None, # args to pass to the task
                       vars = None, # vars to pass to the task
                       function_name = None,
@@ -474,7 +464,7 @@ class S3Task:
                                         cache = cache,
                                         ).first()
 
-        return True if worker_alive else False
+        return bool(worker_alive)
 
     # -------------------------------------------------------------------------
     @staticmethod

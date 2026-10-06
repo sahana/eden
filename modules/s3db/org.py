@@ -4762,7 +4762,7 @@ class OrgFacilityModel(DataModel):
         """
             Produce a static GeoJSON[P] feed of Facility data
             Designed to be run on a schedule to serve a high-volume website
-            - current.task.schedule_task("s3db_task", "org_facility_geojson", period=86400, repeats=0)
+            - current.task.schedule_task("s3db_task", function_name="org_facility_geojson", period=86400, repeats=0)
         """
 
         from shapely.geometry import Point

@@ -128,7 +128,7 @@ Message CommissionRevoked,org,commission,"Für den Teststellenbetreiber {name} w
 Details siehe: {url}
 
 Beachten Sie bitte: diese Benachrichtigung wurde automatisch erstellt und dient lediglich zu Ihrer Information. Ein amtlicher Bescheid ergeht gesondert per Post.",
-Message CommissionExpired,org,commission,"Für den Teststellenbetreiber {name} ist die befristete Beauftragung am {end_date} ausgelaufen. Alle zugehörigen Teststellen wurden aus dem öffentlichen Verzeichnis entfernt.
+Message CommissionExpired,org,commission,"Für den Teststellenbetreiber {name} ist die befristete Beauftragung am {end} ausgelaufen. Alle zugehörigen Teststellen wurden aus dem öffentlichen Verzeichnis entfernt.
 
 Details siehe: {url}
 
