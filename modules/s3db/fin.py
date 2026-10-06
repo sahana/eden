@@ -1346,16 +1346,17 @@ class FinVoucherModel(DataModel):
                                        enabled = True,
                                        )
             else:
-                # Allow application name override
-                ttable.application_name.writable = True
-
                 # Schedule task
+                pvars = {"billing_id": billing.id}
+                try:
+                    pvars["user_id"] = current.auth.user.id
+                except AttributeError:
+                    pass
+
                 scheduler = current.s3task.scheduler
                 task = scheduler.queue_task("s3db_task",
-                                            application_name = "%s/default" % \
-                                                               current.request.application,
                                             pargs = ["fin_voucher_start_billing"],
-                                            pvars = {"billing_id": billing.id},
+                                            pvars = pvars,
                                             start_time = start,
                                             stop_time = None,
                                             timeout = 1800,
@@ -3743,6 +3744,8 @@ def fin_voucher_eligibility_types(program_ids, organisation_ids=None):
                                 groupby = ltable.organisation_type_id,
                                 )
         issuer_types = [row.organisation_type_id for row in rows]
+    else:
+        issuer_types = []
 
     ttable = s3db.fin_voucher_eligibility_type
     query = (ttable.program_id.belongs(program_ids)) & \
