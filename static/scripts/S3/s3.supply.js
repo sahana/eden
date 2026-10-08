@@ -8,12 +8,15 @@ S3.supply = {};
 
 // Filter Item Packs based on Items
 S3.supply.fncPrepItem = function(data) {
+    var result = '';
     for (var i = 0; i < data.length; i++) {
         if (data[i].quantity == 1) {
             return data[i].name;
+        } else {
+            result = data[i]['supply_item.um'];
         }
     }
-    return '';
+    return result;
 };
 
 S3.supply.fncRepresentItem = function(record, PrepResult) {

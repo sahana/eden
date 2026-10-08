@@ -767,10 +767,8 @@ $.filterOptionsS3({
         tablename = "supply_item_pack"
         define_table(tablename,
                      supply_item_id(empty = False),
-                     # TODO should reference another table for normalising pack names
                      Field("name", length=128,
                            notnull=True,
-                           default = "piece",
                            label = T("Name"),
                            represent = translate_represent,
                            requires = [IS_NOT_EMPTY(),

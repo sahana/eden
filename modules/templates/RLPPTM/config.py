@@ -124,6 +124,20 @@ def config(settings):
     #settings.L10n.translate_gis_location = True
     # Uncomment this to Translate Organisation Names/Acronyms
     #settings.L10n.translate_org_organisation = True
+    # Customize units of measure
+    settings.L10n.units_of_measure = {"pc": T("piece##unit"),
+                                      "pair": T("pair##unit"),
+                                      "set": T("set##unit"),
+                                      "mg": T("mg##unit"),
+                                      "g": T("g##unit"),
+                                      "kg": T("kg##unit"),
+                                      "m": T("m##unit"),
+                                      "ml": T("ml##unit"),
+                                      "L": T("L##unit"),
+                                      "btl": T("Bottle##unit"),
+                                      "pkg": T("Package##unit"),
+                                      }
+
     # Finance settings
     settings.fin.currencies = {
         "EUR" : "Euros",
@@ -386,11 +400,6 @@ def config(settings):
     settings.customise_supply_item_resource = supply_item_resource
     settings.customise_supply_item_controller = supply_item_controller
     settings.supply.shipping_code = shipping_code
-
-    settings.L10n.units_of_measure = {"btl": T("Bottle##unit"),
-                                      "pkt": T("Packet##unit"),
-                                      "pc": T("piece##unit"),
-                                      }
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
