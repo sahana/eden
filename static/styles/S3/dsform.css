@@ -1,0 +1,167 @@
+.dsform-values-area {
+    display: flex;
+}
+
+.dsform-parameter-header {
+    display: flex;
+    align-items: center;
+    gap: 10pt;
+    padding: 10pt;
+    border-bottom: none;
+    background-color: #FFEDCB;
+    border: 1pt solid #FFD7A3;
+}
+
+.dsform-parameter {
+    background-color: #f7f7f7;
+    margin: 5pt 0;
+}
+
+/* */
+.dsform-sample-title {
+    display: inline;
+    margin-right: 10pt;
+}
+
+.dsform-parameter-group-title {
+    font-weight: bold;
+}
+
+.dsform-sample {
+    background-color: #f7f7f7;
+    padding: 10pt;
+    border: 1pt solid #e0e0e0;
+}
+
+.dsform-collection .dsform-parameter-header {
+    justify-content: space-between;
+}
+
+#ds-form {
+    display: none;
+}
+
+#ds-form ul {
+    list-style: none;
+}
+
+.dsform-parameters {
+    margin: 0;
+}
+
+.dsform-collection {
+    padding: 0;
+}
+
+.dsform-collection .dsform-button-remove {
+    display: none;
+}
+
+#dsform-items-selected {
+    border: 1pt solid #e0e0e0;
+    padding: 10pt;
+    min-width: 400pt;
+}
+
+#dsform-items-selected .dsform-button-add {
+    display: none;
+}
+
+#dsform-measurement {
+    display: flex;
+    margin: 10pt 0;
+    gap: 10pt;
+}
+
+#dsform-measurement > * {
+    margin: 0;
+    /*padding: 10pt;*/
+    display: flex;
+    gap: 10pt;
+    flex-direction: column;
+}
+
+.dsform-collection, .measurement {
+    min-width: 200pt;
+}
+
+.dsform-parameter-group {
+    background-color: transparent;
+    border: none;
+    display: flex;
+    flex-flow: column;
+    gap: 5pt;
+}
+
+.measurement {
+    padding: 10pt;
+}
+
+.dsform-collection .measurement {
+    display: none;
+}
+
+.measurement-unit {
+    margin-left: 10pt;
+}
+
+.measurement-input {
+    display: inline-flex;
+}
+
+.measurement-input-abnormal {
+    border: 1pt solid red !important;
+    background-color: #ffb7b7;
+}
+
+.measurement-input-switch {
+    border-radius: 0;
+    border: none;
+    border-left: 1pt solid grey;
+    width: 25pt;
+    height:100%;
+    border: 1pt solid #cacaca;
+    border-radius: 0;
+    cursor: pointer;
+}
+
+.measurement-input-switch:first-child {
+    border-left: none;
+}
+
+.measurement-input-switch-active {
+    background-color: #e0e0e0;
+}
+
+.measurement-value {
+    width: auto !important;
+}
+
+.measurement-input-normal {
+    background-color: inherit;
+    border: inherit;
+}
+
+.measurement-input-abnormal {
+    border: 1pt solid red !important;
+    background-color: #ffb7b7;
+}
+
+.dsform-switch-on {
+    background-color: #a1a1a1;
+}
+
+.dsform-sample-header {
+    display: flex;
+    justify-content: space-between;
+}
+
+#dsform-parameter-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10pt;
+}
+
+#dsform-body {
+    margin-top: 20pt;
+}
