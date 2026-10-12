@@ -1253,7 +1253,7 @@ def req_skill():
     # Post-process
     def postp(r, output):
         if r.interactive:
-            s3.actions = [{"label": s3_str(READ),
+            s3.actions = [{"label": s3_str(messages.READ),
                            "url": URL(c = "req",
                                       f = "req",
                                       args=["req_skill", "[id]"],

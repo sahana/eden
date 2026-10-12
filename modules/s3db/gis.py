@@ -301,7 +301,7 @@ class GISLocationModel(DataModel):
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = messages.ADD_LOCATION,
+            label_create = T("Create Location"),
             title_display = T("Location Details"),
             title_list = T("Locations"),
             title_update = T("Edit Location"),

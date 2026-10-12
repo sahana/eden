@@ -97,7 +97,7 @@ def patient_rheader(r, tabs=[]):
             TR(
                 TH("%s: " % T("Patient")),
                 name,
-                TH("%s: " % COUNTRY),
+                TH("%s: " % messages.COUNTRY),
                 country),
             TR(
                 TH(),

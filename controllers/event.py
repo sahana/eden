@@ -299,7 +299,7 @@ def job_title():
 
         if r.representation in ("xlsx", "xls"):
             # Export format should match Import format
-            current.messages["NONE"] = ""
+            messages["NONE"] = ""
             #f.represent = \
             #    s3db.org_OrganisationRepresent(acronym=False,
             #                                   parent=False)

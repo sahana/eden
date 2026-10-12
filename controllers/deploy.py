@@ -590,7 +590,7 @@ def alert():
     def postp(r, output):
         if r.component:
             if r.component_name == "select":
-                s3.actions = [{"label": str(READ),
+                s3.actions = [{"label": str(messages.READ),
                                "url": URL(f="human_resource",
                                           args = ["[id]", "profile"],
                                           ),
@@ -623,11 +623,11 @@ def alert():
                     (table.message_id == None)
             rows = db(query).select(table.id)
             restrict = [str(row.id) for row in rows]
-            s3.actions = [{"label": str(READ),
+            s3.actions = [{"label": str(messages.READ),
                            "url": URL(f="alert", args="[id]"),
                            "_class": "action-btn read",
                            },
-                          {"label": str(DELETE),
+                          {"label": str(messages.DELETE),
                            "url": URL(f="alert", args=["[id]", "delete"]),
                            "restrict": restrict,
                            "_class": "delete-btn",

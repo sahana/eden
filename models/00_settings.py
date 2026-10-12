@@ -23,35 +23,29 @@ s3.download_url = "%s/default/download" % s3.base_url
 # Global variables
 #
 # Strings to i18n
+#
 # Common Labels
-#messages["BREADCRUMB"] = ">> "
 messages["UNKNOWN_OPT"] = "Unknown"
 messages["NONE"] = "-"
+messages["NOT_APPLICABLE"] = "N/A"
 messages["OBSOLETE"] = "Obsolete"
 messages["OPEN"] = settings.get_ui_label_open()
 messages["READ"] = settings.get_ui_label_read()
 messages["UPDATE"] = settings.get_ui_label_update()
 messages["DELETE"] = "Delete"
 messages["COPY"] = "Copy"
-messages["NOT_APPLICABLE"] = "N/A"
-messages["ADD_PERSON"] = "Create a Person"
-messages["ADD_LOCATION"] = "Create Location"
 messages["SELECT_LOCATION"] = "Select a location"
 messages["COUNTRY"] = "Country"
 messages["ORGANISATION"] = "Organization"
 messages["AUTOCOMPLETE_HELP"] = "Enter some characters to bring up a list of possible matches"
 
-for u in messages:
-    if isinstance(messages[u], str):
-        globals()[u] = T(messages[u])
-
 # CRUD Labels
-s3.crud_labels = Storage(OPEN = OPEN,
-                         READ = READ,
-                         UPDATE = UPDATE,
-                         DELETE = DELETE,
-                         COPY = COPY,
-                         NONE = NONE,
+s3.crud_labels = Storage(OPEN = messages.OPEN,
+                         READ = messages.READ,
+                         UPDATE = messages.UPDATE,
+                         DELETE = messages.DELETE,
+                         COPY = messages.COPY,
+                         NONE = messages.NONE,
                          )
 
 # Common Error Messages
@@ -215,7 +209,11 @@ if sender:
 # -----------------------------------------------------------------------------
 # Session
 #
-# Custom Notifications
+# Use secure session cookie over HTTPs
+if request.is_https:
+    session.secure()
+
+# Pass notifications from session to response
 response.error = session.error
 response.confirmation = session.confirmation
 response.information = session.information
@@ -224,16 +222,6 @@ session.error = []
 session.confirmation = []
 session.information = []
 session.warning = []
-
-# Shortcuts for system role IDs, see modules/s3aaa.py/AuthS3
-#system_roles = auth.get_system_roles()
-#ADMIN = system_roles.ADMIN
-#AUTHENTICATED = system_roles.AUTHENTICATED
-#ANONYMOUS = system_roles.ANONYMOUS
-#EDITOR = system_roles.EDITOR
-#MAP_ADMIN = system_roles.MAP_ADMIN
-#ORG_ADMIN = system_roles.ORG_ADMIN
-#ORG_GROUP_ADMIN = system_roles.ORG_GROUP_ADMIN
 
 if s3.debug:
     # Add the developer toolbar from core/tools

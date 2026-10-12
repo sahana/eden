@@ -92,7 +92,7 @@ def user():
     if link_user_to and len(link_user_to) > 1 and settings.get_auth_show_link():
         lappend("link_user_to")
         table.link_user_to.represent = lambda v: ", ".join([s3_str(link_user_to[opt]) for opt in v]) \
-                                                 if v else current.messages["NONE"]
+                                                 if v else messages["NONE"]
     date_represent = s3base.S3DateTime.date_represent
     table.created_on.represent = date_represent
     if UNAPPROVED:
@@ -239,7 +239,7 @@ def user():
     def postp(r, output):
         if r.interactive and isinstance(output, dict) and \
            r.method in (None, "update", "create"):
-            actions = [{"label": s3_str(UPDATE),
+            actions = [{"label": s3_str(messages.UPDATE),
                         "url": URL(c="admin", f="user",
                                    args = ["[id]", "update"],
                                    ),

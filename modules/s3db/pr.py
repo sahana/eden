@@ -869,7 +869,7 @@ class PRPersonModel(DataModel):
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = messages.ADD_PERSON,
+            label_create = T("Create Person"),
             title_display = T("Person Details"),
             title_list = T("Persons"),
             title_update = T("Edit Person Details"),
@@ -6717,7 +6717,7 @@ def pr_person_comment(title=None, comment=None, caller=None, child=None):
     return PopupLink(c = "pr",
                      f = "person",
                      vars = get_vars,
-                     title = current.messages.ADD_PERSON,
+                     title = T("Create Person"),
                      tooltip = "%s|%s" % (title, comment),
                      )
 

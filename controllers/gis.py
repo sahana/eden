@@ -641,12 +641,12 @@ def location():
         table.addr_street.readable = table.addr_street.writable = False
 
     country = FieldTemplate("country", "string", length=2,
-                            label = COUNTRY,
+                            label = messages.COUNTRY,
                             requires = IS_EMPTY_OR(IS_IN_SET_LAZY(
                                             lambda: gis.get_countries(key_type="code"),
-                                            zero = SELECT_LOCATION)),
+                                            zero = messages.SELECT_LOCATION)),
                             represent = lambda code: \
-                                            gis.get_country(code, key_type="code") or UNKNOWN_OPT,
+                                            gis.get_country(code, key_type="code") or messages.UNKNOWN_OPT,
                             )
 
     output = crud_controller(# CSV column headers, so no T()

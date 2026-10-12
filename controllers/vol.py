@@ -165,7 +165,7 @@ def job_title():
     def prep(r):
         if r.representation in ("xlsx", "xls"):
             # Export format should match Import format
-            current.messages["NONE"] = ""
+            messages["NONE"] = ""
             table = s3db.hrm_job_title
             table.organisation_id.represent = \
                 s3db.org_OrganisationRepresent(acronym = False,

@@ -129,10 +129,10 @@ def person():
     def postp(r, output):
         if r.interactive:
             if not r.component:
-                label = READ
+                label = messages.READ
                 linkto = URL(f="person", args=("[id]", "note"))
             else:
-                label = UPDATE
+                label = messages.UPDATE
                 linkto = s3base.BasicCRUD._linkto(r)("[id]")
             s3.actions = [action(label, linkto)]
             if not r.component:
