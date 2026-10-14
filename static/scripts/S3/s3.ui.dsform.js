@@ -406,11 +406,7 @@
          * Redraw contents
          */
         refresh: function() {
-            this._unbindEvents();
-
             this._renderForm();
-
-            this._bindEvents();
         },
 
         _renderFormRow: function(title, input) {
