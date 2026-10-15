@@ -1,23 +1,15 @@
 # =============================================================================
 #   Common Utilities run most requests
 # =============================================================================
-
-# -----------------------------------------------------------------------------
-# Special local requests (e.g. from scheduler)
-#
-#if request.is_local:
-#    # This is a request made from the local server
-#    pass
-
-# -----------------------------------------------------------------------------
-# Check Permissions & fail as early as we can
 #
 # Set user roles
-# - requires access to tables
-auth.s3_set_roles()
+auth.s3_set_roles(login_alt=True)
 
-# Check access to this controller
-# - skip for scheduler as it never runs the controller
+# Check session restrictions
+# TODO
+
+# Check access to the target controller
+# - skip for scheduler as it never actually runs the controller
 if not request.is_scheduler and not auth.permission.has_permission("read"):
     auth.permission.fail()
 
