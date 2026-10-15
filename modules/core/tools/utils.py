@@ -42,6 +42,7 @@ __all__ = ("JSONSEPARATORS",
            "deduplicate_links",
            "s3_addrow",
            "s3_dev_toolbar",
+           "remove_old_sessions",
            "s3_flatlist",
            "datahash",
            "luminance",
@@ -64,8 +65,10 @@ __all__ = ("JSONSEPARATORS",
            )
 
 import copy
+import datetime
 import os
 import platform
+import time
 import sys
 
 from html.parser import HTMLParser
@@ -74,6 +77,7 @@ from urllib import parse as urlparse
 from gluon import current, redirect, HTTP, URL, \
                   A, BEAUTIFY, CODE, DIV, PRE, SPAN, TABLE, TAG, TR, TD, \
                   IS_EMPTY_OR, IS_NOT_IN_DB
+from gluon.settings import global_settings
 from gluon.tools import addrow
 
 from s3dal import Expression, Field, Row, S3DAL
@@ -502,6 +506,63 @@ def s3_represent_value(field,
     #    pass
 
     return text
+
+# =============================================================================
+def remove_old_sessions(ttl=7):
+    """
+        Clean up old sessions
+
+        Args:
+            ttl: time-to-live for unused sessions (days)
+    """
+
+    request = current.request
+
+    now = datetime.datetime.utcnow()
+    earliest = now - datetime.timedelta(days=ttl)
+
+    if current.deployment_settings.get_base_session_memcache():
+        # TODO
+        pass
+
+    elif current.deployment_settings.get_base_session_db():
+        tablename = f"web2py_session_{request.application}"
+        table = current.s3db.table(tablename)
+        if table:
+            query = (table.locked == False) & \
+                    (table.modified_datetime < earliest)
+            current.db(query).delete()
+
+    else:
+        path_join = os.path.join
+        folder = path_join(global_settings.applications_parent, request.folder, "sessions")
+
+        earliest_u = time.mktime(earliest.timetuple())
+
+        stat = os.stat
+        listdir = os.listdir
+        rm = os.remove
+        rmdir = os.rmdir
+
+        for path, sub, files in os.walk(folder, topdown=False):
+
+            # Remove all session files with mtime before earliest
+            for filename in files:
+                filepath = path_join(path, filename)
+                if stat(filepath).st_mtime < earliest_u:
+                    try:
+                        rm(filepath)
+                    except Exception: # (OSError, FileNotFoundError):
+                        pass
+
+            # Remove empty subfolders
+            for dirname in sub:
+                dirpath = path_join(path, dirname)
+                if not listdir(dirpath):
+                    try:
+                        rmdir(dirpath)
+                    except Exception: # (OSError, FileNotFoundError):
+                        pass
 
 # =============================================================================
 def s3_dev_toolbar():

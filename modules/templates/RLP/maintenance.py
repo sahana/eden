@@ -5,11 +5,8 @@
 """
 
 import datetime
-import os
-import time
 
 from gluon import current
-from gluon.settings import global_settings
 
 # =============================================================================
 class Daily():
@@ -34,57 +31,11 @@ class Daily():
         db(table.timestmp < week_past).delete()
 
         # Cleanup Sessions
-        self.cleanup_sessions(ttl=1)
+        from core.tools.utils import remove_old_sessions
+        remove_old_sessions(ttl=1)
 
         # Cleanup unverified accounts
         self.cleanup_unverified_accounts()
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def cleanup_sessions(ttl=7):
-        """
-            Clean up old sessions
-
-            Args:
-                ttl: time-to-live for unused sessions (days)
-        """
-
-        request = current.request
-
-        path_join = os.path.join
-        folder = path_join(global_settings.applications_parent,
-                           request.folder,
-                           "sessions",
-                           )
-
-        now = datetime.datetime.utcnow()
-        earliest = now - datetime.timedelta(days=ttl)
-        earliest_u = time.mktime(earliest.timetuple())
-
-        stat = os.stat
-        listdir = os.listdir
-        rm = os.remove
-        rmdir = os.rmdir
-
-        for path, sub, files in os.walk(folder, topdown=False):
-
-            # Remove all session files with mtime before earliest
-            for filename in files:
-                filepath = path_join(path, filename)
-                if stat(filepath).st_mtime < earliest_u:
-                    try:
-                        rm(filepath)
-                    except Exception: # (OSError, FileNotFoundError):
-                        pass
-
-            # Remove empty subfolders
-            for dirname in sub:
-                dirpath = path_join(path, dirname)
-                if not listdir(dirpath):
-                    try:
-                        rmdir(dirpath)
-                    except Exception: # (OSError, FileNotFoundError):
-                        pass
 
     # -------------------------------------------------------------------------
     @staticmethod
