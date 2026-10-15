@@ -19,12 +19,16 @@
   {{try:}}{{form=form}}{{except:}}{{form=None}}{{pass}}
   {{if form:}}
   <div class='row'>
+
    <div class="small-12 columns">
     {{try:}}{{=H3(addtitle)}}{{except:}}{{pass}}
     {{try:}}{{=addheader}}{{except:}}{{pass}}
     {{include "key.html"}}
     <div class='form-container'>
-     {{try:}}{{=form}}{{except:}}{{pass}}
+    {{try:}}
+      <link href="/{{=appname}}/static/styles/S3/dsform.css" rel="stylesheet" type="text/css" />
+      {{=form}}
+    {{except:}}{{pass}}
     </div>
    </div>
   </div>

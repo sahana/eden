@@ -88,7 +88,6 @@ class DataSeriesCRUD(BasicCRUD):
         # Instantiate Widget
         widget = DataSeriesTable(data=data)
         output["items"] = widget.html(widget_id=widget_id)
-
         output["form"] = self.create(r, **attr)
 
         # View
@@ -111,15 +110,7 @@ class DataSeriesCRUD(BasicCRUD):
                 reveal/activate it, to be included in the data
                 series view
         """
-
-        return "" # Hide until ready
-
-        #return DIV(BUTTON('Test',
-        #                  _class='tiny primary button action-btn'
-        #                  ),
-        #            FORM(_id = 'test'),
-        #            _class="ds-crud",
-        #            )
+        return DataSeriesForm().html('ds-form')
 
     # -------------------------------------------------------------------------
     # Utility functions
@@ -253,6 +244,57 @@ class DataSeriesTable:
 
         # Script to instantiate the widget
         script = """$("#%(widget_id)s").dsTable(%(options)s)""" % \
+                    {"widget_id": widget_id,
+                     "options": json.dumps(options),
+                     }
+        s3.jquery_ready.append(script)
+
+# =====================================
+class DataSeriesForm:
+    def html(self, widget_id):
+        widget = DIV(
+            BUTTON(current.T('Add Results'),
+                _id="dsform-button",
+                _class='tiny primary button action-btn'
+            ),
+            FORM(
+                DIV(_id = "dsform-header"),
+                DIV(_id = widget_id + '-body'),
+                _id = widget_id,
+            ),
+            _class="ds-crud",
+        )
+
+        self.inject_script(widget_id, {})
+
+        return widget
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inject_script(widget_id, options):
+        """
+            Inject the necessary JavaScript
+
+            Args:
+                widget_id: the container's DOM ID
+                options: widget options (JSON-serializable dict)
+        """
+
+        s3 = current.response.s3
+        scripts = s3.scripts
+
+        appname = current.request.application
+
+        # Inject static script
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.ui.dsform.js" % appname
+        else:
+            script = "/%s/static/scripts/S3/s3.ui.dsform.min.js" % appname
+        if script not in scripts:
+            scripts.append(script)
+
+        # Script to instantiate the widget
+        script = """$("#%(widget_id)s").dsForm(%(options)s)""" % \
                     {"widget_id": widget_id,
                      "options": json.dumps(options),
                      }
