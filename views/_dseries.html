@@ -62,3 +62,22 @@
   {{=XML(s3.rfooter)}}
  </div>
 </div>{{pass}}
+
+<script>
+  //<![CDATA[]
+  for (const button of $('.ds-add-button')) {
+    $(button)
+      .off('dsForm')
+      .on(
+        'click',
+        () => {
+          $(button).hide();
+
+          for (const form of $(button).siblings('.ds-form')) {
+            $(form).slideDown();
+          }
+        }
+      );
+  }
+  //]]>
+</script>
