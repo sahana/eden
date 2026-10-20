@@ -45,14 +45,14 @@
         /**
          * @returns {HTMLDivElement}
          */
-        getHtml() {
+        getHtml(namespace) {
             const $groupElement = $('<div class="dsform-parameter-group">');
 
             const $groupTitle =  $('<label class="dsform-parameter-group-title">').text(this.name);
             $groupElement.append($groupTitle);
 
             for (const sample of this._samples) {
-                $groupElement.append(sample.getHtml());
+                $groupElement.append(sample.getHtml(namespace));
             }
 
             return $groupElement;
@@ -97,15 +97,14 @@
         /**
          * @returns {HTMLDivElement}
          */
-        getHtml() {
+        getHtml(namespace) {
             const sample = $('<div class="dsform-sample">');
             const header = $('<div class="dsform-sample-header">');
-
             const sampleTitle = $('<label class="dsform-sample-title">').text(this.name);
             const buttonAddSample = $('<input type="button">');
             buttonAddSample.attr('value', '>');
             $(buttonAddSample).on(
-                'click',
+                'click' + namespace,
                 () => {
                     for (const parameter of this._parameters) {
                         parameter.setSelected(true);
@@ -123,7 +122,7 @@
             }
 
             $(sampleTitle).on(
-                'click',
+                'click' + namespace,
                 _ => this.toggle()
             );
 
@@ -133,7 +132,7 @@
                         return true;
                     }
 
-                    this.container.append(parameter.getHtml());
+                    this.container.append(parameter.getHtml(namespace));
                 }
             );
 
@@ -194,11 +193,11 @@
         /**
          * @returns {HTMLLIElement}
          */
-        getHtml() {
+        getHtml(namespace) {
             const parameterElement = $('<li class="dsform-parameter">');
 
-            const header = this._renderHeader();
-            const body = this._renderBody();
+            const header = this._renderHeader(namespace);
+            const body = this._renderBody(namespace);
         
             parameterElement.append(header);
             parameterElement.append(body);
@@ -218,19 +217,19 @@
         /**
          * @returns {HTMLDivElement}
          */
-        _renderHeader() {
+        _renderHeader(namespace) {
             const header = $('<div>');
             header.addClass('dsform-parameter-header');
 
             const buttonRemove = this._renderButton('<', 'dsform-button-remove');
             $(buttonRemove).on(
-                'click',
+                'click' + namespace,
                 _ => this.setSelected(false)
             );
 
             const buttonAdd = this._renderButton('>', 'dsform-button-add');
             $(buttonAdd).on(
-                'click',
+                'click' + namespace,
                 _ => this.setSelected(true)
             );
 
@@ -246,7 +245,7 @@
         /**
          * @returns {HTMLDivElement}
          */
-        _renderBody() {
+        _renderBody(namespace) {
             const body = $('<div class="measurement">');
 
             const measurementInput = $('<div class="measurement-input">');
@@ -265,7 +264,7 @@
             value.attr('style', 'width: auto !important;');
             measurementInput.append(value);
 
-            const inputButtons = this._renderInputButtons(value, isAbnormal);
+            const inputButtons = this._renderInputButtons(value, isAbnormal, namespace);
             measurementInput.append(inputButtons);
 
             body.append(measurementInput);
@@ -280,12 +279,12 @@
          * 
          * @returns {HTMLDivElement}
          */
-        _renderInputButtons(input, isAbnormal) {
+        _renderInputButtons(input, isAbnormal, namespace) {
             const container = $('<div class="measurement-input-buttons">');
 
             const switchText = $('<button class="measurement-input-switch measurement-input-switch-text">T</button>');
             switchText.on(
-                'click',
+                'click' + namespace,
                 (event) => {
                     event.preventDefault();
 
@@ -301,7 +300,7 @@
 
             const switchAbnormal = $('<button class="measurement-input-switch measurement-input-switch-abnormal">!</button>');
             switchAbnormal.on(
-                'click',
+                'click' + namespace,
                 (event) => {
                     event.preventDefault();
 
@@ -358,8 +357,6 @@
             dsFormID += 1;
 
             this.eventNamespace = '.dsForm';
-
-            this._initializeButton();
         },
 
         /**
@@ -545,7 +542,7 @@
             container.empty();
 
             for (const group of groups) {
-                container.append(group.getHtml());
+                container.append(group.getHtml(this.eventNamespace));
             }
         },
 
@@ -560,7 +557,7 @@
                             continue;
                         }
 
-                        selection.append(parameter.getHtml());
+                        selection.append(parameter.getHtml(this.eventNamespace));
                     }
                 }
             }
@@ -655,17 +652,6 @@
             const selection = $('<ul id="dsform-items-selected">');
 
             return selection;
-        },
-
-        _initializeButton: function() {
-            const button = $('#dsform-button');
-            button.on(
-                'click',
-                () => {
-                    button.hide();
-                    $('#ds-form').slideDown();
-                }
-            );
         },
     });
 })(jQuery);

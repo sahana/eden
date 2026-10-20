@@ -88,7 +88,11 @@ class DataSeriesCRUD(BasicCRUD):
         # Instantiate Widget
         widget = DataSeriesTable(data=data)
         output["items"] = widget.html(widget_id=widget_id)
-        output["form"] = self.create(r, **attr)
+        output["form"] = DIV(
+            self.create(r, **attr),
+            self.add_button(r, **attr),
+            _class="ds-add",
+        )
 
         # View
         current.response.view = self._view(r, "dseries.html")
@@ -110,7 +114,16 @@ class DataSeriesCRUD(BasicCRUD):
                 reveal/activate it, to be included in the data
                 series view
         """
+
         return DataSeriesForm().html('ds-form')
+
+    # -------------------------------------------------------------------------
+    def add_button(self, r, **attr):
+        return BUTTON(
+            current.T("Add Result"),
+            _type="button",
+            _class="ds-add-button tiny primary button action-btn",
+        )
 
     # -------------------------------------------------------------------------
     # Utility functions
@@ -252,17 +265,11 @@ class DataSeriesTable:
 # =====================================
 class DataSeriesForm:
     def html(self, widget_id):
-        widget = DIV(
-            BUTTON(current.T('Add Results'),
-                _id="dsform-button",
-                _class='tiny primary button action-btn'
-            ),
-            FORM(
-                DIV(_id = "dsform-header"),
-                DIV(_id = widget_id + '-body'),
-                _id = widget_id,
-            ),
-            _class="ds-crud",
+        widget = FORM(
+            DIV(_id = "dsform-header"),
+            DIV(_id = widget_id + '-body'),
+            _id = widget_id,
+            _class = 'ds-form',
         )
 
         self.inject_script(widget_id, {})
