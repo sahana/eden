@@ -266,7 +266,7 @@ class DataSeriesTable:
 class DataSeriesForm:
     def html(self, widget_id):
         widget = FORM(
-            DIV(_id = "dsform-header"),
+            DIV(_id = widget_id + "-header"),
             DIV(_id = widget_id + '-body'),
             _id = widget_id,
             _class = 'ds-form',
