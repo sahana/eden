@@ -470,9 +470,29 @@
             const buttonSubmit = $('<input class="primary button small btn">');
             buttonSubmit.val('Save');
 
+            const buttonCancel = $('<input type="button" class="secondary button small btn">');
+            buttonCancel.val('Cancel');
+            buttonCancel.on(
+                'click' + this.eventNamespace,
+                (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    const form = $(event.target).closest('form');
+                    const addButton = form.next('.ds-add-button');
+
+                    form.hide();
+                    addButton.show();
+                }
+            );
+
+            const actionButtons = $('<span class="ds-action-buttons">');
+            actionButtons.append(buttonSubmit);
+            actionButtons.append(buttonCancel);
+
             element.append(subheading)
                 .append(this._renderFormRow('', measurements))
-                .append(this._renderFormRow('', buttonSubmit));
+                .append(this._renderFormRow('', actionButtons));
 
             parameterGroups.show();
             selection.show();
