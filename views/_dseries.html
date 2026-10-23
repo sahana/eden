@@ -67,9 +67,9 @@
   //<![CDATA[]
   for (const button of $('.ds-add-button')) {
     $(button)
-      .off('dsForm')
+      .off('.dsForm')
       .on(
-        'click',
+        'click.dsForm',
         () => {
           $(button).hide();
 
