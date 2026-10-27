@@ -7,7 +7,7 @@
 import datetime
 import json
 
-from gluon import current, URL, A, IS_EMPTY_OR, SPAN
+from gluon import current, URL, A, IS_EMPTY_OR
 from gluon.storage import Storage
 
 from core import AgeFilter, DateFilter, OptionsFilter, TextFilter, get_filter_options, \
@@ -431,7 +431,7 @@ def configure_case_form(resource, *,
         field.readable = field.writable = False
     field = component.table.reference
     field.label = T("Principal Ref.No.")
-    field.comment = T("Reference number to use in communication with the principal client, e.g. %(examples)s") % \
+    field.comment = T("Reference number to use in communication with the commissioning organization, e.g. %(examples)s") % \
                     {"examples": "ZAB-Nr."}
 
     # Filter flags for case organisation
@@ -884,7 +884,7 @@ def configure_case_file(r, privileged=False, administration=False):
                     action = s3db.pr_PersonSearchAutocomplete(search_fields),
                     )
 
-    from gluon import Field, IS_IN_SET, IS_NOT_EMPTY
+    from gluon import IS_IN_SET, IS_NOT_EMPTY
 
     # ID Card Export
     configure_id_cards(r, resource, administration=administration)

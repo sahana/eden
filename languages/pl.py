@@ -5149,7 +5149,7 @@
 'Redeemed##fin': 'Zrealizowane',
 'Ref.No.': 'Nr ref.',
 'Reference Document': 'Dokument referencyjny',
-'Reference number to use in communication with the principal client, e.g. %(examples)s': 'Numer referencyjny do użycia w komunikacji z głównym klientem, np. %(examples)s',
+'Reference number to use in communication with the commissioning organization, e.g. %(examples)s': 'Numer referencyjny do użycia w komunikacji z głównym klientem, np. %(examples)s',
 'Referred by': 'Odesłany przez',
 'Referred to': 'Odesłany do',
 'Refresh Rate (seconds)': 'Częstotliwość odświeżania (sekundy)',
