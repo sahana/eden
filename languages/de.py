@@ -6373,6 +6373,7 @@
 'Tamashek': 'Tuareg',
 'Target Capacity': 'Soll-Kapazität',
 'Target Demographic': 'Zielgruppe',
+'Target Demographics': 'Zielgruppen',
 'Task Description required': 'Aufgabenbeschreibung erforderlich',
 'Task Description': 'Beschreibung der Aufgabe',
 'Task Details': 'Details zur Aufgabe',

@@ -395,9 +395,9 @@ def cr_rheader(r, tabs=None):
                 tabs = [(T("Basic Details"), None, {}, "read"),
                         (T("Overview"), "overview"),
                         (T("Housing Units"), "shelter_unit"),
-                        (T("Commissions"), "shelter_commission"),
                         (T("Journal"), "shelter_note"),
                         (T("Images"), "image"),
+                        (T("Commissions"), "shelter_commission"),
                         (T("Documents"), "document"),
                         ]
 

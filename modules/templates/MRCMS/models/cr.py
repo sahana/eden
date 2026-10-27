@@ -259,7 +259,21 @@ class CRShelterCommissionModel(DataModel):
 
         demographic_represent = S3Represent(lookup=tablename)
 
-        # TODO CRUD-Strings and Controller
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Demographic"),
+            title_display = T("Demographic Details"),
+            title_list = T("Target Demographics"),
+            title_update = T("Edit Demographic"),
+            label_list_button = T("List Demographics"),
+            label_delete_button = T("Delete Demographic"),
+            msg_record_created = T("Demographic added"),
+            msg_record_modified = T("Demographic updated"),
+            msg_record_deleted = T("Demographic deleted"),
+            msg_list_empty = T("No Demographics currently defined"),
+            )
+
+        # TODO import template and prepop
 
         # ---------------------------------------------------------------------
         # Commission
@@ -373,8 +387,6 @@ class CRShelterCommissionModel(DataModel):
             msg_record_deleted = T("Commission deleted"),
             msg_list_empty = T("No Commissions currently registered"),
             )
-
-        # TODO permission rules
 
         # ---------------------------------------------------------------------
         # Commissioned Services (sectors, in this context)

@@ -292,31 +292,18 @@ class OptionsMenu(default.OptionsMenu):
                             ),
                         )
         else:
-
-            #ADMIN = current.auth.get_system_roles().ADMIN
-
             menu = M(c="cr")(
                         M("Shelter", f="shelter", args=[shelter_id], ignore_args=True)(
                             M("Overview", m="overview", args=[shelter_id]),
                             M("Housing Units", t="cr_shelter_unit", args=[shelter_id, "shelter_unit"]),
-                        ),
-                        #M("Room Inspection", f = "shelter", link=False)(
-                        #    M("Register",
-                        #      args = [shelter_id, "inspection"],
-                        #      t = "cr_shelter_inspection",
-                        #      p = "create",
-                        #      ),
-                        #    M("Overview", f = "shelter_inspection"),
-                        #    M("Defects", f = "shelter_inspection_flag"),
-                        #    ),
-                        #M("Administration",
-                        #  link = False,
-                        #  restrict = (ADMIN, "ADMIN_HEAD"),
-                        #  selectable=False,
-                        #  )(
-                        #    M("Shelter Flags", f="shelter_flag"),
-                        #    ),
-                    )
+                            ),
+                        )
+
+        ADMIN = current.auth.get_system_roles().ADMIN
+        menu = menu(
+                M("Administration", link=False, restrict=ADMIN)(
+                    M("Target Demographics", f="shelter_commission_demographic"),
+                    ))
 
         return menu
 
