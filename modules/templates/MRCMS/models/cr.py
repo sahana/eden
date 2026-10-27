@@ -38,7 +38,7 @@ from gluon.storage import Storage
 from s3dal import Field
 
 from core import CommentsField, DataModel, DateField, DateTimeField, WorkflowOptions, \
-                 IS_ONE_OF, \
+                 IS_ONE_OF, IS_NOT_ONE_OF, S3Duplicate, \
                  DateFilter, OptionsFilter, TextFilter, \
                  S3Represent, S3PriorityRepresent, CustomForm, InlineComponent, InlineLink, \
                  datahash, get_form_record_id, s3_str, s3_text_represent
@@ -251,11 +251,19 @@ class CRShelterCommissionModel(DataModel):
         tablename = "cr_shelter_commission_demographic"
         self.define_table(tablename,
                           Field("name",
-                                # TODO ensure uniqueness?
-                                requires = IS_NOT_EMPTY(),
+                                requires = [IS_NOT_EMPTY(),
+                                            IS_NOT_ONE_OF(db, "%s.name" % tablename,
+                                                          skip_imports = True,
+                                                          ),
+                                            ],
                                 ),
                           CommentsField(),
                           )
+
+        # Table configuration
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(),
+                       )
 
         demographic_represent = S3Represent(lookup=tablename)
 

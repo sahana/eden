@@ -6787,6 +6787,7 @@
 'Unapproved##actionable': 'Nicht freigegeben',
 'Understaffed': 'Unterbesetzt',
 'Unidentified': 'Nicht identifiziert',
+'Unique value required': 'Eindeutiger Wert erforderlich',
 'Unit Cost': 'Kosten für Einheit',
 'Unit Value': 'Einheitswert',
 'Unit added': 'Einheit hinzugefügt',

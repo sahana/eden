@@ -74,7 +74,7 @@ class XMLImporter:
                         sources or a list of tuples (name, source); each
                         source must be either an ElementTree or a file-like
                         object
-                str source_type: the source type (xml|json|csv|xls|xlsx)
+                source_type: the source type (xml|json|csv|xls|xlsx)
                 stylesheet: the transformation stylesheet
                 extra_data: for CSV imports, dict of extra columns to add
                             to each row
