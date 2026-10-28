@@ -257,22 +257,6 @@ class CRUDForm:
             return
         if tablename in subheadings:
             subheadings = subheadings.get(tablename)
-        if formstyle.__name__ in ("formstyle_table",
-                                  "formstyle_table_inline",
-                                  ):
-            def create_subheading(represent, tablename, f, level=""):
-                return TR(TD(represent, _colspan=3,
-                             _class="subheading",
-                             ),
-                          _class = "subheading",
-                          _id = "%s_%s__subheading%s" % (tablename, f, level),
-                          )
-        else:
-            def create_subheading(represent, tablename, f, level=""):
-                return DIV(represent,
-                           _class = "subheading",
-                           _id = "%s_%s__subheading%s" % (tablename, f, level),
-                           )
 
         form_rows = iter(form[0])
         tr = next(form_rows)
@@ -298,26 +282,12 @@ class CRUDForm:
                     f = f[:-5]
                 if f.startswith(tablename):
                     f = f[len(tablename) + 1:] # : -6
-                    # Subtable / InlineComponent
-                    if f.startswith("sub_default"):
-                        f = f[11:]
-                    elif f.startswith("sub_"):
-                        f = f[4:]
-                    # InlineLink
-                    elif f.startswith("link_default"):
-                        f = f[12:]
-                    elif f.startswith("link_"):
-                        f = f[5:]
-                # InlineComponent
-                elif f.startswith("sub_default"):
-                    f = f[11:]
-                elif f.startswith("sub_"):
-                    f = f[4:]
-                # InlineLink
-                elif f.startswith("link_default"):
-                    f = f[12:]
-                elif f.startswith("link_"):
-                    f = f[5:]
+
+                for prefix in ("sub_default", "sub_", "link_default", "link_"):
+                    if f.startswith(prefix):
+                        f = f[len(prefix):]
+                        break
+
                 headings = subheadings.get(f)
                 if not headings:
                     try:
@@ -331,7 +301,13 @@ class CRUDForm:
                     headings = [headings]
                 inserted = 0
                 for heading in headings:
-                    subheading = create_subheading(heading, tablename, f, inserted if inserted else "")
+                    subheading = CRUDForm._create_subheading(
+                        formstyle.__name__,
+                        heading,
+                        tablename,
+                        f,
+                        inserted if inserted else "",
+                    )
                     form[0].insert(i, subheading)
                     i += 1
                     inserted += 1
@@ -346,6 +322,38 @@ class CRUDForm:
                 break
             else:
                 i += 1
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _create_subheading(formstyle_name, represent, tablename, field_id, level=""):
+        """
+            Generates the HTML for the sub heading in relation to the current
+            form style name
+
+            Args:
+                formstyle_name: the name of the form style
+                represent: dictionary with the attributes
+                tablename: the table name
+                field_id: the id of the field
+                level: the level index
+        """
+
+        if formstyle_name in ("formstyle_table", "formstyle_table_inline"):
+            return TR(
+                TD(
+                    represent,
+                    _colspan=3,
+                    _class="subheading",
+                ),
+                _class = "subheading",
+                _id = "%s_%s__subheading%s" % (tablename, field_id, level),
+            )
+
+        return DIV(
+            represent,
+            _class = "subheading",
+            _id = "%s_%s__subheading%s" % (tablename, field_id, level),
+        )
 
     # -------------------------------------------------------------------------
     def _populate(self,
