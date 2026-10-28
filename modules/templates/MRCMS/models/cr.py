@@ -55,9 +55,8 @@ class CRShelterNoteModel(DataModel):
         T = current.T
 
         auth = current.auth
-        s3 = current.response.s3
 
-        crud_strings = s3.crud_strings
+        crud_strings = current.response.s3.crud_strings
 
         logged_in_person = auth.s3_logged_in_person()
 
@@ -241,9 +240,7 @@ class CRShelterCommissionModel(DataModel):
         T = current.T
         db = current.db
 
-        s3 = current.response.s3
-
-        crud_strings = s3.crud_strings
+        crud_strings = current.response.s3.crud_strings
 
         # ---------------------------------------------------------------------
         # Target Demographics
