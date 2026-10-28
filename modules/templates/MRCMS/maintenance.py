@@ -37,6 +37,9 @@ class Daily():
         # Cleanup unverified accounts
         self.cleanup_unverified_accounts()
 
+        # Expire shelter commissions
+        self.expire_shelter_commissions()
+
     # -------------------------------------------------------------------------
     @staticmethod
     def cleanup_unverified_accounts():
@@ -92,5 +95,24 @@ class Daily():
                 current.log.warning("Could not delete unverified user %s" % email)
 
             current.log.info("Deleted unverified user account %s" % email)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def expire_shelter_commissions():
+        """
+            Check for expired shelter commissions
+        """
+
+        today = datetime.datetime.utcnow().date()
+
+        table = current.s3db.cr_shelter_commission
+        query = (table.status != "REVOKED") & \
+                (table.end_date != None) & \
+                (table.end_date < today) & \
+                (table.deleted == False)
+        current.db(query).update(status = "EXPIRED",
+                                 modified_by = table.modified_by,
+                                 modified_on = table.modified_on,
+                                 )
 
 # END =========================================================================
