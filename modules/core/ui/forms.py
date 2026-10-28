@@ -327,15 +327,17 @@ class CRUDForm:
     @staticmethod
     def _create_subheading(formstyle_name, represent, tablename, field_id, level=""):
         """
-            Generates the HTML for the sub heading in relation to the current
-            form style name
+            Generates the HTML for the subheading based on the form style name
 
             Args:
-                formstyle_name: the name of the form style
-                represent: dictionary with the attributes
-                tablename: the table name
-                field_id: the id of the field
-                level: the level index
+                formstyle_name (str): the name of the form style
+                represent (dict): dictionary with the attributes
+                tablename (str): the table name
+                field_id (str): the id of the field
+                level (str|int): the level index
+
+            Returns:
+                (TR|DIV) - the HTML for the subheading
         """
 
         if formstyle_name in ("formstyle_table", "formstyle_table_inline"):
