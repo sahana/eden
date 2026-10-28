@@ -376,6 +376,7 @@ def cr_shelter_controller(**attr):
 
     # Custom components
     s3db.add_components("cr_shelter",
+                        cr_shelter_commission = "shelter_id",
                         cr_shelter_note = "shelter_id",
                         )
 

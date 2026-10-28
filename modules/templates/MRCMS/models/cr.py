@@ -1,7 +1,7 @@
 """
     MRCMS Shelter Management Extensions
 
-    Copyright: 2023 (c) AHSS
+    Copyright: 2023-2026 (c) Sahana Software Foundation
 
     Permission is hereby granted, free of charge, to any person
     obtaining a copy of this software and associated documentation
@@ -26,20 +26,22 @@
 """
 
 __all__ = ("CRShelterNoteModel",
+           "CRShelterCommissionModel",
            "cr_configure_shelter_note_form",
            )
 
 from collections import OrderedDict
 
-from gluon import current, IS_IN_SET
+from gluon import current, IS_EMPTY_OR, IS_INT_IN_RANGE, IS_IN_SET, IS_LENGTH, IS_NOT_EMPTY, UL, LI
 from gluon.storage import Storage
 
 from s3dal import Field
 
-from core import CommentsField, DataModel, DateTimeField, WorkflowOptions, \
+from core import CommentsField, DataModel, DateField, DateTimeField, WorkflowOptions, \
+                 IS_ONE_OF, IS_NOT_ONE_OF, S3Duplicate, \
                  DateFilter, OptionsFilter, TextFilter, \
-                 S3PriorityRepresent, CustomForm, InlineComponent, \
-                 datahash, get_form_record_id, s3_text_represent
+                 S3Represent, S3PriorityRepresent, CustomForm, InlineComponent, InlineLink, \
+                 datahash, get_form_record_id, s3_str, s3_text_represent
 
 # =============================================================================
 class CRShelterNoteModel(DataModel):
@@ -53,9 +55,8 @@ class CRShelterNoteModel(DataModel):
         T = current.T
 
         auth = current.auth
-        s3 = current.response.s3
 
-        crud_strings = s3.crud_strings
+        crud_strings = current.response.s3.crud_strings
 
         logged_in_person = auth.s3_logged_in_person()
 
@@ -224,6 +225,228 @@ class CRShelterNoteModel(DataModel):
                                  modified_by = table.modified_by,
                                  modified_on = table.modified_on,
                                  )
+
+# =============================================================================
+class CRShelterCommissionModel(DataModel):
+    """ Model for Shelter Commission Details """
+
+    names = ("cr_shelter_commission",
+             "cr_shelter_commission_demographic",
+             "cr_shelter_commission_sector",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        crud_strings = current.response.s3.crud_strings
+
+        # ---------------------------------------------------------------------
+        # Target Demographics
+        #
+        tablename = "cr_shelter_commission_demographic"
+        self.define_table(tablename,
+                          Field("name",
+                                requires = [IS_NOT_EMPTY(),
+                                            IS_NOT_ONE_OF(db, "%s.name" % tablename,
+                                                          skip_imports = True,
+                                                          ),
+                                            ],
+                                ),
+                          CommentsField(),
+                          )
+
+        # Table configuration
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(),
+                       )
+
+        demographic_represent = S3Represent(lookup=tablename)
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Demographic"),
+            title_display = T("Demographic Details"),
+            title_list = T("Target Demographics"),
+            title_update = T("Edit Demographic"),
+            label_list_button = T("List Demographics"),
+            label_delete_button = T("Delete Demographic"),
+            msg_record_created = T("Demographic added"),
+            msg_record_modified = T("Demographic updated"),
+            msg_record_deleted = T("Demographic deleted"),
+            msg_list_empty = T("No Demographics currently defined"),
+            )
+
+        # TODO import template and prepop
+
+        # ---------------------------------------------------------------------
+        # Commission
+        #
+        commission_status = WorkflowOptions(("CURRENT", "current", "green"),
+                                            ("SUSPENDED", "suspended", "amber"),
+                                            ("REVOKED", "revoked", "black"),
+                                            ("EXPIRED", "expired", "grey"),
+                                            selectable = ("CURRENT", "SUSPENDED", "REVOKED"),
+                                            represent = "status",
+                                            )
+        tablename = "cr_shelter_commission"
+        self.define_table(tablename,
+                          self.cr_shelter_id(),
+                          Field("principal",
+                                label = T("Commissioning Organization"),
+                                requires = [IS_NOT_EMPTY(),
+                                            IS_LENGTH(255, minsize=3),
+                                            ],
+                                represent = lambda v, row=None: v if v else "-",
+                                # TODO comment
+                                ),
+                          DateField(
+                              label = T("Start Date"),
+                              default="now",
+                              set_min = "#cr_shelter_commission_end_date",
+                              ),
+                          DateField("end_date",
+                              label = T("End Date"),
+                              default = None,
+                              set_max = "#cr_shelter_commission_date",
+                              ),
+                          Field("status",
+                                label = T("Status"),
+                                default = "CURRENT",
+                                requires = IS_IN_SET(commission_status.selectable(True),
+                                                     zero = None,
+                                                     sort = False,
+                                                     ),
+                                represent = commission_status.represent,
+                                ),
+                          Field("target_demographic", "reference cr_shelter_commission_demographic",
+                                label = T("Target Demographic"),
+                                represent = demographic_represent,
+                                requires = IS_EMPTY_OR(
+                                            IS_ONE_OF(db, "cr_shelter_commission_demographic.id",
+                                                      demographic_represent,
+                                                      )),
+                                ),
+                          Field("capacity", "integer",
+                                label = T("Target Capacity"),
+                                requires = IS_INT_IN_RANGE(minimum=1),
+                                # TODO comment
+                                ),
+                          CommentsField(),
+                          )
+
+        # Components
+        self.add_components(tablename,
+                            org_sector = {"link": "cr_shelter_commission_sector",
+                                          "joinby": "commission_id",
+                                          "key": "sector_id",
+                                          "actuate": "hide",
+                                          },
+                            )
+
+        # CRUD form
+        crud_form = CustomForm("principal",
+                               "date",
+                               "end_date",
+                               "status",
+                               "target_demographic",
+                               "capacity",
+                               InlineLink("sector",
+                                          label = T("Commissioned Services"),
+                                          field = "sector_id",
+                                          render_list = True,
+                                          ),
+                               "comments",
+                               )
+
+        # List fields
+        list_fields = ("principal",
+                       "date",
+                       "end_date",
+                       "status",
+                       "target_demographic",
+                       "capacity",
+                       (T("Commissioned Services"), "sector__link.sector_id"),
+                       "comments",
+                       )
+
+        # Table configuration
+        # TODO onvalidation/onaccept to handle dates+status
+        self.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = list_fields,
+                       orderby = "%s.date desc" % tablename,
+                       )
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Commission"),
+            title_display = T("Commission Details"),
+            title_list = T("Commissions"),
+            title_update = T("Edit Commission"),
+            label_list_button = T("List Commissions"),
+            label_delete_button = T("Delete Commission"),
+            msg_record_created = T("Commission added"),
+            msg_record_modified = T("Commission updated"),
+            msg_record_deleted = T("Commission deleted"),
+            msg_list_empty = T("No Commissions currently registered"),
+            )
+
+        # ---------------------------------------------------------------------
+        # Commissioned Services (sectors, in this context)
+        #
+        tablename = "cr_shelter_commission_sector"
+        self.define_table(tablename,
+                          Field("commission_id", "reference cr_shelter_commission",
+                                requires = IS_ONE_OF(db, "cr_shelter_commission.id"),
+                                ),
+                          self.org_sector_id(empty=False,
+                                             represent = SectorListRepresent(lookup="org_sector"),
+                                             ),
+                          )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        # return None
+
+# =============================================================================
+class SectorListRepresent(S3Represent):
+
+    always_list = True
+
+    def render_list(self, value, labels, show_link=True):
+        """
+            Renders list-type representations from bulk()-results.
+
+            Args:
+                value: the list
+                labels: the labels as returned from bulk()
+                show_link: render references as links, should
+                           be the same as used with bulk()
+        """
+
+        show_link = show_link and self.show_link
+
+        values = [v for v in value if v is not None]
+        if not values:
+            return ""
+
+        if show_link:
+            labels_ = (labels[v] if v in labels else self.default for v in values)
+        else:
+            labels_ = sorted(s3_str(labels[v]) if v in labels else self.default for v in values)
+
+        if current.auth.permission.format in ("xlsx", "xls"):
+            return ", ".join(labels_)
+            #return "\n".join(("- %s" % l) for l in labels_)
+
+        html = UL(_class="service-list")
+        for label in labels_:
+            html.append(LI(label))
+
+        return html
 
 # =============================================================================
 def cr_configure_shelter_note_form(r):

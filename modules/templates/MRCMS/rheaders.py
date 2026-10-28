@@ -397,6 +397,7 @@ def cr_rheader(r, tabs=None):
                         (T("Housing Units"), "shelter_unit"),
                         (T("Journal"), "shelter_note"),
                         (T("Images"), "image"),
+                        (T("Commissions"), "shelter_commission"),
                         (T("Documents"), "document"),
                         ]
 

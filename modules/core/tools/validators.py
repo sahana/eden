@@ -1306,7 +1306,7 @@ class IS_NOT_ONE_OF(IS_NOT_IN_DB):
     def __init__(self,
                  dbset,
                  field, *,
-                 error_message = "Value already in database or empty",
+                 error_message = "Unique value required",
                  allowed_override = None,
                  ignore_common_filters = False,
                  skip_imports = False,

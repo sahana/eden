@@ -38,6 +38,7 @@ def config(settings):
                                       ("counsel", "response_type"): ("dvr", "response_type"),
                                       ("counsel", "response_theme"): ("dvr", "response_theme"),
                                       ("counsel", "vulnerability_type"): ("dvr", "vulnerability_type"),
+                                      ("cr", "shelter_commission_demographic"): ("cr", "shelter_commission_demographic"),
                                       ("supply", "person"): ("pr", "person"),
                                       }
 
