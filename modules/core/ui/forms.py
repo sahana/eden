@@ -88,8 +88,7 @@ class CRUDForm:
 
         opts = {}
         attr = {}
-        for k in attributes:
-            value = attributes[k]
+        for k, value in attributes.items():
             if k[:1] == "_":
                 attr[k] = value
             else:
@@ -240,8 +239,8 @@ class CRUDForm:
         return buttons
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def _insert_subheadings(form, tablename, formstyle, subheadings):
+    @classmethod
+    def _insert_subheadings(cls, form, tablename, formstyle, subheadings):
         """
             Insert subheadings into forms
 
@@ -257,22 +256,8 @@ class CRUDForm:
             return
         if tablename in subheadings:
             subheadings = subheadings.get(tablename)
-        if formstyle.__name__ in ("formstyle_table",
-                                  "formstyle_table_inline",
-                                  ):
-            def create_subheading(represent, tablename, f, level=""):
-                return TR(TD(represent, _colspan=3,
-                             _class="subheading",
-                             ),
-                          _class = "subheading",
-                          _id = "%s_%s__subheading%s" % (tablename, f, level),
-                          )
-        else:
-            def create_subheading(represent, tablename, f, level=""):
-                return DIV(represent,
-                           _class = "subheading",
-                           _id = "%s_%s__subheading%s" % (tablename, f, level),
-                           )
+
+        create_subheading = cls._create_subheading(formstyle)
 
         form_rows = iter(form[0])
         tr = next(form_rows)
@@ -298,26 +283,12 @@ class CRUDForm:
                     f = f[:-5]
                 if f.startswith(tablename):
                     f = f[len(tablename) + 1:] # : -6
-                    # Subtable / InlineComponent
-                    if f.startswith("sub_default"):
-                        f = f[11:]
-                    elif f.startswith("sub_"):
-                        f = f[4:]
-                    # InlineLink
-                    elif f.startswith("link_default"):
-                        f = f[12:]
-                    elif f.startswith("link_"):
-                        f = f[5:]
-                # InlineComponent
-                elif f.startswith("sub_default"):
-                    f = f[11:]
-                elif f.startswith("sub_"):
-                    f = f[4:]
-                # InlineLink
-                elif f.startswith("link_default"):
-                    f = f[12:]
-                elif f.startswith("link_"):
-                    f = f[5:]
+
+                for prefix in ("sub_default", "sub_", "link_default", "link_"):
+                    if f.startswith(prefix):
+                        f = f[len(prefix):]
+                        break
+
                 headings = subheadings.get(f)
                 if not headings:
                     try:
@@ -329,6 +300,7 @@ class CRUDForm:
                     continue
                 if not isinstance(headings, list):
                     headings = [headings]
+
                 inserted = 0
                 for heading in headings:
                     subheading = create_subheading(heading, tablename, f, inserted if inserted else "")
@@ -346,6 +318,41 @@ class CRUDForm:
                 break
             else:
                 i += 1
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _create_subheading(formstyle):
+        """
+            Returns a subheading renderer function suitable for the formstyle.
+
+            Args:
+                (function|str) formstyle - the formstyle function or name
+
+            Returns:
+                (function): the renderer function
+        """
+
+        fs = formstyle.__name__ if callable(formstyle) else formstyle
+
+        if fs in ("formstyle_table", "formstyle_table_inline"):
+            # Table-based form layout
+            def renderer(represent, tablename, f, level=""):
+                return TR(TD(represent,
+                             _class = "subheading",
+                             _colspan = 3,
+                             ),
+                          _class = "subheading",
+                          _id = "%s_%s__subheading%s" % (tablename, f, level),
+                          )
+        else:
+            # DIV-based form layout
+            def renderer(represent, tablename, f, level=""):
+                return DIV(represent,
+                           _class = "subheading",
+                           _id = "%s_%s__subheading%s" % (tablename, f, level),
+                           )
+
+        return renderer
 
     # -------------------------------------------------------------------------
     def _populate(self,
