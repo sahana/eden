@@ -41,7 +41,7 @@ from core import CommentsField, DataModel, DateField, DateTimeField, WorkflowOpt
                  IS_ONE_OF, IS_NOT_ONE_OF, S3Duplicate, \
                  DateFilter, OptionsFilter, TextFilter, \
                  S3Represent, S3PriorityRepresent, CustomForm, InlineComponent, InlineLink, \
-                 datahash, get_form_record_id, s3_str, s3_text_represent
+                 datahash, get_form_record_id, get_form_record_data, s3_str, s3_text_represent
 
 # =============================================================================
 class CRShelterNoteModel(DataModel):
@@ -278,16 +278,15 @@ class CRShelterCommissionModel(DataModel):
             msg_list_empty = T("No Demographics currently defined"),
             )
 
-        # TODO import template and prepop
-
         # ---------------------------------------------------------------------
         # Commission
         #
-        commission_status = WorkflowOptions(("CURRENT", "current", "green"),
+        commission_status = WorkflowOptions(("PENDING", "pending", "lightgreen"),
+                                            ("CURRENT", "current", "green"),
                                             ("SUSPENDED", "suspended", "amber"),
                                             ("REVOKED", "revoked", "black"),
                                             ("EXPIRED", "expired", "grey"),
-                                            selectable = ("CURRENT", "SUSPENDED", "REVOKED"),
+                                            selectable = ("PENDING", "CURRENT", "SUSPENDED", "REVOKED"),
                                             represent = "status",
                                             )
         tablename = "cr_shelter_commission"
@@ -299,11 +298,11 @@ class CRShelterCommissionModel(DataModel):
                                             IS_LENGTH(255, minsize=3),
                                             ],
                                 represent = lambda v, row=None: v if v else "-",
-                                # TODO comment
                                 ),
                           DateField(
                               label = T("Start Date"),
                               default="now",
+                              empty = False,
                               set_min = "#cr_shelter_commission_end_date",
                               ),
                           DateField("end_date",
@@ -331,7 +330,6 @@ class CRShelterCommissionModel(DataModel):
                           Field("capacity", "integer",
                                 label = T("Target Capacity"),
                                 requires = IS_INT_IN_RANGE(minimum=1),
-                                # TODO comment
                                 ),
                           CommentsField(),
                           )
@@ -372,11 +370,12 @@ class CRShelterCommissionModel(DataModel):
                        )
 
         # Table configuration
-        # TODO onvalidation/onaccept to handle dates+status
         self.configure(tablename,
                        crud_form = crud_form,
                        list_fields = list_fields,
                        orderby = "%s.date desc" % tablename,
+                       onvalidation = self.commission_onvalidation,
+                       onaccept = self.commission_onaccept,
                        )
 
         # CRUD strings
@@ -410,6 +409,62 @@ class CRShelterCommissionModel(DataModel):
         # Pass names back to global scope (s3.*)
         #
         # return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def commission_onvalidation(form):
+        """
+            Shelter commission form validation
+            - end date must be after start date
+        """
+
+        # Get form record data
+        table = current.s3db.cr_shelter_commission
+        data = get_form_record_data(form, table, ["date", "end_date"])
+
+        start, end = data.get("date"), data.get("end_date")
+        if end and start and end < start:
+            form.errors.end_date = current.T("End date must be after start date")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def commission_onaccept(form):
+        """
+            Shelter commission post-processing
+            - Adjust status after start/end date
+        """
+
+        record_id = get_form_record_id(form)
+        if not record_id:
+            return
+
+        # Get form record data
+        table = current.s3db.cr_shelter_commission
+        data = get_form_record_data(form, table, ["date", "end_date", "status"])
+
+        start = data.get("date")
+        end = data.get("end_date")
+        today = current.request.utcnow.date()
+
+        status = data.get("status")
+        update = {}
+
+        if status != "REVOKED":
+            if end and end < today:
+                # Always expired
+                if status != "EXPIRED":
+                    update["status"] = "EXPIRED"
+            elif start > today:
+                # Always pending unless suspended
+                if status not in ("SUSPENDED", "PENDING"):
+                    update["status"] = "PENDING"
+            elif start < today and (not end or end >= today):
+                # Always current unless suspended
+                if status not in ("SUSPENDED", "CURRENT"):
+                    update["status"] = "CURRENT"
+
+        if update:
+            current.db(table.id==record_id).update(**update)
 
 # =============================================================================
 class SectorListRepresent(S3Represent):
