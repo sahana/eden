@@ -183,8 +183,8 @@ def org_organisation_controller(**attr):
 
                 groups = InlineLink("group",
                                     field = "group_id",
-                                    label = T("Organization Group"),
-                                    multiple = False,
+                                    label = T("Organization Groups"),
+                                    # multiple = False,
                                     readonly = groups_readonly,
                                     )
 

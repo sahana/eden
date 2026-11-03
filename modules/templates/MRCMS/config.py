@@ -185,6 +185,7 @@ def config(settings):
                                       "QUARTERMASTER": "ADMIN",
                                       "JANITOR": "ADMIN",
                                       "CHECKPOINT": "ADMIN",
+                                      "SHELTER_REPORTER": "ADMIN",
                                       }
 
     settings.auth.realm_entity = realm_entity
