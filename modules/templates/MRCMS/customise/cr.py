@@ -329,24 +329,27 @@ def cr_shelter_resource(r, tablename):
                    }
 
     # Table configuration
+    if current.auth.s3_has_permission("create", "cr_shelter_unit"):
+        create_next = URL(c="cr", f="shelter", args=["[id]", "shelter_unit"])
+    else:
+        create_next = None
+
     s3db.configure("cr_shelter",
                    crud_form = CustomForm(*crud_fields),
                    subheadings = subheadings,
                    realm_components = ("shelter_unit",
                                        ),
-                   create_next = URL(c ="cr",
-                                     f ="shelter",
-                                     args = ["[id]", "shelter_unit"],
-                                     ),
+                   create_next = create_next,
                    ignore_master_access = ("shelter_note",),
                    )
 
     # Shelter overview method
     from ..shelter import ShelterOverview
-    s3db.set_method("cr_shelter",
-                    method = "overview",
-                    action = ShelterOverview,
-                    )
+    if ShelterOverview.permitted():
+        s3db.set_method("cr_shelter",
+                        method = "overview",
+                        action = ShelterOverview,
+                        )
 
     from ..presence import PresenceList
     s3db.set_method("cr_shelter",
@@ -368,11 +371,12 @@ def cr_shelter_controller(**attr):
 
     rtable = s3db.cr_shelter_registration
     htable = s3db.cr_shelter_registration_history
+    utable = s3db.cr_shelter_unit
     otable = s3db.org_organisation
 
     is_admin = auth.s3_has_role("ADMIN")
     is_org_group_admin = auth.s3_has_role("ORG_GROUP_ADMIN")
-    is_shelter_admin = auth.s3_has_role("SHELTER_ADMIN")
+    is_shelter_admin = auth.s3_has_roles(("SHELTER_ADMIN", "SHELTER_REPORTER"))
 
     # Custom components
     s3db.add_components("cr_shelter",
@@ -481,8 +485,8 @@ def cr_shelter_controller(**attr):
                 # - required by site_id filterOptionsS3 lookup (e.g. act/issue)
                 list_fields.append("site_id")
 
-            # Deletability
-            if r.record and is_admin:
+            if r.record:
+                # Check whether there are any registrations or housing units
                 shelter_id = r.record.id
                 query = (rtable.shelter_id == shelter_id) | \
                         (rtable.last_shelter_id == shelter_id)
@@ -490,9 +494,23 @@ def cr_shelter_controller(**attr):
                 if not row:
                     query = (htable.shelter_id == shelter_id)
                     row = db(query).select(htable.id, limitby=(0, 1)).first()
-                deletable = not row
+                if not row:
+                    query = (utable.shelter_id == shelter_id)
+                    row = db(query).select(utable.id, limitby=(0, 1)).first()
+                empty = not row
             else:
-                deletable = is_admin
+                empty = True
+
+            # Allow deletion of empty shelters
+            deletable = empty and is_admin
+
+            # Allow direct edit of capacity/population for empty shelters
+            if empty and is_shelter_admin:
+                table = resource.table
+                for fn in ("capacity", "blocked_capacity", "population"):
+                    table[fn].writable = True
+                settings.cr.shelter_units = False
+                settings.cr.shelter_registration = False
 
             resource.configure(filter_widgets = filter_widgets,
                                list_fields = list_fields,

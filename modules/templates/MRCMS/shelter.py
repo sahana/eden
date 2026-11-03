@@ -36,6 +36,8 @@ class ShelterOverview(CRUDMethod):
 
         if not r.record:
             r.error(405, current.ERROR.BAD_METHOD)
+        if not self.permitted():
+            r.unauthorised()
 
         output = None
 
@@ -56,6 +58,21 @@ class ShelterOverview(CRUDMethod):
             r.error(405, current.ERROR.BAD_METHOD)
 
         return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def permitted():
+        """
+            Checks whether the user is permitted to use this method
+
+            Returns:
+                bool
+        """
+
+        has_permission = current.auth.s3_has_permission
+
+        return has_permission("read", "cr_shelter_registration") and \
+               has_permission("read", "cr_shelter_unit")
 
     # -------------------------------------------------------------------------
     @staticmethod

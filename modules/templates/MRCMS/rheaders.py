@@ -400,7 +400,8 @@ def cr_rheader(r, tabs=None):
                         (T("Commissions"), "shelter_commission"),
                         (T("Documents"), "document"),
                         ]
-                if current.auth.s3_has_permission("read", "cr_shelter_registration"):
+                from .shelter import ShelterOverview
+                if ShelterOverview.permitted():
                     tabs.insert(1, (T("Overview"), "overview"))
 
             rheader_fields = [["organisation_id",

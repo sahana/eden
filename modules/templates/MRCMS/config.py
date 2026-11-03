@@ -238,7 +238,6 @@ def config(settings):
     # -------------------------------------------------------------------------
     # CR Settings
     #
-    settings.cr.shelter_population_dynamic = True
     settings.cr.shelter_units = True
     settings.cr.shelter_blocked_capacity = True
 
