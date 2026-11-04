@@ -24,6 +24,12 @@ def index_alt():
     s3_redirect_default(URL(f="organisation"))
 
 # -----------------------------------------------------------------------------
+def group_type():
+    """ Organisation Group Types: CRUD Controller """
+
+    return crud_controller()
+
+# -----------------------------------------------------------------------------
 def group():
     """ RESTful CRUD controller """
 

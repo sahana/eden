@@ -25,18 +25,27 @@ def org_group_controller(**attr):
            get_role_realms("ORG_GROUP_ADMIN") is not None:
             resource.configure(insertable = False)
 
+        # Enable group types
+        table = resource.table
+        field = table.group_type_id
+        field.readable = field.writable = True
+
         if r.interactive:
             if not r.component:
                 from core import CustomForm
-                crud_form = CustomForm("name", "comments")
+                crud_form = CustomForm("name",
+                                       "group_type_id",
+                                       "comments",
+                                       )
                 resource.configure(crud_form = crud_form)
+
             elif r.component_name == "organisation":
                 r.component.configure(insertable = False,
                                       editable = False,
                                       deletable = False,
                                       )
 
-        list_fields = ["name", "comments"]
+        list_fields = ["name", "group_type_id", "comments"]
         resource.configure(list_fields = list_fields,
                            )
 
@@ -222,7 +231,7 @@ def org_organisation_controller(**attr):
 
             list_fields = ["name",
                            "acronym",
-                           (T("Organization Group"), "group__link.group_id"),
+                           (T("Organization Groups"), "group__link.group_id"),
                            (T("Type"), "organisation_type__link.organisation_type_id"),
                            (T("Sectors"), "sector__link.sector_id"),
                            (T("Email"), "email.value"),

@@ -1,11 +1,39 @@
-Name
-Bundesgeschäftsstelle (BG)
-Landesverband Baden-Württemberg
-Landesverband Bayern
-Landesverband Berlin / Brandenburg
-Landesverband Hessen / Rheinland-Pfalz / Saar
-Landesverband Niedersachsen / Bremen
-Landesverband Nord
-Landesverband Nordrhein-Westfalen
-Landesverband Sachsen
-Landesverband Sachsen Anhalt / Thüringen
+Name,Type
+Bundesgeschäftsstelle (BG),Sonstige
+Landesverband Baden-Württemberg,Landesverband
+Landesverband Bayern,Landesverband
+Landesverband Berlin / Brandenburg,Landesverband
+Landesverband Hessen / Rheinland-Pfalz / Saar,Landesverband
+Landesverband Niedersachsen / Bremen,Landesverband
+Landesverband Nord,Landesverband
+Landesverband Nordrhein-Westfalen,Landesverband
+Landesverband Sachsen,Landesverband
+Landesverband Sachsen Anhalt / Thüringen,Landesverband
+RV Bayerisch Schwaben,Regionalverband
+RV Bergstraße-Pfalz,Regionalverband
+RV Brandenburg Nord-West,Regionalverband
+RV Bremen/Verden,Regionalverband
+RV Essen,Regionalverband
+RV Harburg,Regionalverband
+RV Harz-Heide,Regionalverband
+RV Leipzig/Nordsachsen,Regionalverband
+RV Magdeburg/Börde/Harz,Regionalverband
+RV Mittelfranken,Regionalverband
+RV Münsterland/Soest,Regionalverband
+RV Niederrhein,Regionalverband
+RV Niedersachsen/Mitte,Regionalverband
+RV Nordbrandenburg,Regionalverband
+RV Oberschwaben/Bodensee,Regionalverband
+RV Oderland/Spree,Regionalverband
+RV Ostbayern,Regionalverband
+RV Potsdam/Flemming,Regionalverband
+RV Rhein-Main,Regionalverband
+RV Schleswig-Holstein Nord-West,Regionalverband
+RV Schleswig-Holstein Süd-Ost,Regionalverband
+RV Stuttgart,Regionalverband
+RV Südbrandenburg,Regionalverband
+RV Südniedersachsen,Regionalverband
+RV Weser-Ems,Regionalverband
+RV Westthüringen,Regionalverband
+RV Zwickau/Vogtland,Regionalverband
+RV Östliches Ruhrgebiet,Regionalverband

@@ -3268,7 +3268,7 @@ form.auth_login #submit_record__row {
 .filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all,
 .form-container .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
   display: block;
-  min-width: 225px;
+  min-width: 20rem;
 }
 
 /* line 66, ../../default/scss/theme/_filters.scss */
@@ -3280,7 +3280,7 @@ form.auth_login #submit_record__row {
 /* line 71, ../../default/scss/theme/_filters.scss */
 .ui-selectmenu-button,
 .ui-multiselect-menu {
-  min-width: 225px;
+  min-width: 20rem;
 }
 
 /* Don't display the default widget, only the multiselect generated widget is displayed */

@@ -60,7 +60,7 @@
 .filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all,
 .form-container .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
     display: block;
-    min-width: 225px;
+    min-width: 20rem;
 }
 
 .filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all:first-of-type,
@@ -70,7 +70,7 @@
 
 .ui-selectmenu-button,
 .ui-multiselect-menu {
-    min-width: 225px;
+    min-width: 20rem;
 }
 
 /* Don't display the default widget, only the multiselect generated widget is displayed */

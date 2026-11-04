@@ -1359,6 +1359,7 @@ class OrgOrganisationGroupModel(DataModel):
              "org_group_membership_status",
              "org_group_id",
              "org_group_represent",
+             "org_group_type",
              )
 
     def model(self):
@@ -1374,7 +1375,51 @@ class OrgOrganisationGroupModel(DataModel):
         NONE = current.messages["NONE"]
 
         # ---------------------------------------------------------------------
-        # Organization Groups
+        # Organisation Group Types
+        #
+        tablename = "org_group_type"
+        define_table(tablename,
+                     Field("name", notnull=True, unique=True, length=128,
+                           label = T("Name"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_LENGTH(128, minsize=2),
+                                       IS_NOT_ONE_OF(db, "%s.name" % tablename),
+                                       ],
+                           ),
+                     Field("code", length=16,
+                           label = T("Code"),
+                           requires = IS_EMPTY_OR([
+                                            IS_LENGTH(16, minsize=2),
+                                            IS_NOT_ONE_OF(db, "%s.code" % tablename),
+                                            ]),
+                           ),
+                     CommentsField(),
+                     )
+
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            secondary = ("code",),
+                                            ),
+                  )
+
+        group_type_represent = S3Represent(lookup=tablename)
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Group Type"),
+            title_display = T("Organization Group Type Details"),
+            title_list = T("Organization Group Types"),
+            title_update = T("Edit Group Type"),
+            label_list_button = T("List Group Types"),
+            label_delete_button = T("Delete Group Type"),
+            msg_record_created = T("Group Type added"),
+            msg_record_modified = T("Group Type updated"),
+            msg_record_deleted = T("Group Type deleted"),
+            msg_list_empty = T("No Group Types currently defined"))
+
+        # ---------------------------------------------------------------------
+        # Organisation Groups
         #
         tablename = "org_group"
         define_table(tablename,
@@ -1386,10 +1431,21 @@ class OrgOrganisationGroupModel(DataModel):
                                        IS_LENGTH(128),
                                        ],
                            ),
+                     Field("group_type_id", "reference org_group_type",
+                           label = T("Type"),
+                           represent = group_type_represent,
+                           requires = IS_EMPTY_OR(
+                                        IS_ONE_OF(db, "org_group_type.id",
+                                                  group_type_represent,
+                                                  )),
+                           # Enable in template as-required:
+                           readable = False,
+                           writable = False,
+                           ),
                      Field("mission",
                            label = T("Mission"),
                            represent = lambda v: v or NONE,
-                           # Enable as-required in Custom Forms
+                           # Enable in template as-required:
                            readable = False,
                            writable = False,
                            ),

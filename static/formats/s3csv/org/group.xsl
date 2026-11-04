@@ -7,6 +7,7 @@
 
          CSV fields:
          Name............................org_group.name
+         Type............................org_group.group_type_id (type name)
          Comments........................org_group.comments
          Country.........................org_group.location_id$L0
          L1..............................org_group.location_id$L1
@@ -31,6 +32,9 @@
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
+
+    <xsl:key name="group_types" match="row" use="col[@field='Type']"/>
+
     <xsl:key name="L1" match="row"
              use="concat(col[contains(
                              document('../labels.xml')/labels/column[@name='Country']/match/text(),
@@ -54,6 +58,11 @@
 
     <xsl:template match="/">
         <s3xml>
+            <!-- Group Types -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('group_types', col[@field='Type'])[1])]">
+                <xsl:call-template name="GroupType"/>
+            </xsl:for-each>
+
             <!-- L1 -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('L1',
                                                                    concat(col[contains(
@@ -92,10 +101,21 @@
     <xsl:template match="row">
 
         <xsl:variable name="GroupName" select="col[@field='Name']/text()"/>
+        <xsl:variable name="GroupType" select="col[@field='Type']/text()"/>
 
         <resource name="org_group">
             <data field="name"><xsl:value-of select="$GroupName"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+
+            <!-- Link to GroupType -->
+            <xsl:if test="$GroupType!=''">
+                <reference field="group_type_id" resource="org_group_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('GROUPTYPE:', $GroupType)"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
+
             <!-- Link to Location -->
             <reference field="location_id" resource="gis_location">
                 <xsl:attribute name="tuid">
@@ -392,6 +412,19 @@
                 <data field="wkt"><xsl:value-of select="col[@field='WKT']"/></data>
             </resource>
         </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="GroupType">
+
+        <xsl:variable name="TypeName" select="col[@field='Type']/text()"/>
+        <resource name="org_group_type">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('GROUPTYPE:', $TypeName)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$TypeName"/></data>
+        </resource>
 
     </xsl:template>
 
