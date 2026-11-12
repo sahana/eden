@@ -3873,7 +3873,7 @@
 'MPAV Qualification verification required': 'Nachweis MPAV-Berechtigung erforderlich',
 'MPAV Qualification verification': 'Nachweis MPAV-Berechtigung',
 'MPAV Qualification': 'MPAV-Berechtigung',
-'MTF': 'Med-Punkt',
+'MedTF': 'Med-Punkt',
 'Macedonian': 'Mazedonisch',
 'Madagascar': 'Madagaskar',
 'Madurese': 'Maduresisch',

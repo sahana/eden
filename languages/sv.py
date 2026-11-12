@@ -3930,7 +3930,7 @@
 'MPAV Qualification verification required': 'Verifiering av MPAV-kvalifikation krävs',
 'MPAV Qualification verification': 'Verifiering av MPAV-kvalifikation',
 'MPAV Qualification': 'MPAV-kvalifikation',
-'MTF': 'Sjukvårdsenhet',
+'MedTF': 'Sjukvårdsenhet',
 'Macedonian': 'Makedonska',
 'Madagascar': 'Madagaskar',
 'Madurese': 'Maduresiska',
