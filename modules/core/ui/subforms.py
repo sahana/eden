@@ -1828,47 +1828,9 @@ class InlineComponent(SubForm):
         return None
 
 # =============================================================================
-class InlineValueSet(SubForm):
+class InlineValueSet(InlineComponent):
 
-    # -------------------------------------------------------------------------
-    def __init__(self, selector, **options):
-        """
-            Args:
-                selector: the data object selector
-                options: options for the form element
-        """
-
-        super().__init__(selector, **options)
-
-        self.alias = None
-
-    # -------------------------------------------------------------------------
-    def resolve(self, resource):
-        """
-            Method to resolve this form element against the calling resource.
-            To be implemented in subclass.
-
-            Args:
-                resource: the resource
-
-            Returns:
-                a tuple (form element,
-                         original field name,
-                         Field instance for the form renderer
-                         )
-
-            Note:
-                The form element can be None for the main table, the component
-                alias for a subtable, or this form element instance for a
-                subform.
-
-                If None is returned as Field instance, this form element will
-                not be rendered at all. Besides setting readable/writable
-                in the Field instance, this can be another mechanism to
-                control access to form elements.
-        """
-
-        return None, None, None
+    prefix = "ivs"
 
     # -------------------------------------------------------------------------
     def extract(self, resource, record_id):
@@ -1886,28 +1848,17 @@ class InlineValueSet(SubForm):
                 to the specified record.
         """
 
-        return None
+        self.resource = resource
 
-    # -------------------------------------------------------------------------
-    def parse(self, value, record_id=None):
-        """
-            Validator method for the input field, used to extract the
-            data from the input field and prepare them for further
-            processing by the accept()-method. To be implemented in
-            subclass and set as requires=self.parse for the input field
-            in the resolve()-method of this form element.
+        component_name = self.selector
+        try:
+            component = resource.components[component_name]
+        except KeyError as e:
+            raise AttributeError("Undefined component") from e
 
-            Args:
-                value: the value returned from the input field
-                record_id: usused (for API compatibility with validators)
-
-            Returns:
-                tuple of (value, error) where value is the pre-processed
-                field value and error an error message in case of invalid
-                data, or None.
-        """
-
-        return (value, None)
+        # TODO Extract the currently existing sub-records for
+        #      master record_id and build the JSON for the subform
+        return '{"name":"Example"}'
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
@@ -1925,7 +1876,48 @@ class InlineValueSet(SubForm):
                 the widget for this form element as HTML helper
         """
 
-        raise NotImplementedError
+        T = current.T
+
+        # TODO allow explicit read-only option
+        #if self.options.readonly is True:
+        #    # Render read-only
+        #    return self.represent(value)
+
+        if value is None:
+            value = field.default
+        if not isinstance(value, str):
+            value = json.dumps(value, separators=JSONSEPARATORS)
+
+        # Input element attributes
+        default = {"_type": "hidden",
+                   "_value": value,
+                   "requires": lambda v: (v, None),
+                   }
+        attr = StringWidget._attributes(field, default, **attributes)
+        attr["_class"] = "%s hide" % attr["_class"]
+
+        # Input element DOM ID
+        input_id = "%s_%s" % (self.resource.tablename, field.name)
+        attr["_id"] = input_id
+
+        # Build the inline form
+        subform = DIV(INPUT(**attr),
+                      _id = self._formname(separator="-"),
+                      _field = input_id,
+                      _class = "inline-valueset",
+                      )
+
+        # Script options
+        # settings = current.deployment_settings
+        # js_opts = {"implicitCancelEdit": settings.get_ui_inline_cancel_edit(),
+        #            "confirmCancelEdit": s3_str(T("Discard changes?")),
+        #            }
+        # script = '''S3.inlineComponentsOpts=%s''' % json.dumps(js_opts)
+        # js_global = current.response.s3.js_global
+        # if script not in js_global:
+        #     js_global.append(script)
+
+        return subform
 
     # -------------------------------------------------------------------------
     def represent(self, value):
@@ -1960,6 +1952,15 @@ class InlineValueSet(SubForm):
             Returns:
                 True on success, False on error
         """
+
+        # Extract the JSON from the form data
+        value = form.vars[self._formname(separator="_")]
+
+        # Parse the JSON
+        value, error = self.parse(value)
+
+        # TODO Process the data from the form
+        pass
 
         return True
 
