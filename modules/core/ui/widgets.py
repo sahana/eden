@@ -3107,10 +3107,13 @@ class S3SelectWidget(OptionsWidget):
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attr):
 
-        if isinstance(field, Field):
-            selector = str(field).replace(".", "_")
-        else:
-            selector = field.name.replace(".", "_")
+        # Widget ID (the DOM node ID for the original SELECT)
+        selector = attr.get("_id")
+        if not selector:
+            if isinstance(field, Field):
+                selector = str(field).replace(".", "_")
+            else:
+                selector = field.name.replace(".", "_")
 
         # Widget
         _class = attr.get("_class", None)
@@ -3239,10 +3242,13 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
 
         T = current.T
 
-        if isinstance(field, Field):
-            selector = str(field).replace(".", "_")
-        else:
-            selector = field.name.replace(".", "_")
+        # Widget ID (the DOM node ID for the original SELECT)
+        selector = attr.get("_id")
+        if not selector:
+            if isinstance(field, Field):
+                selector = str(field).replace(".", "_")
+            else:
+                selector = field.name.replace(".", "_")
 
         # Widget
         _class = attr.get("_class", None)
@@ -3286,9 +3292,19 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         # Other options:
         # * Show Selected List
         if header_opt is True:
-            header = '''checkAllText:'%s',uncheckAllText:"%s"''' % \
-                     (T("Select All"),
-                      T("Clear All"))
+            header_labels = {"checkAll": T("Select All"),
+                             "uncheckAll": T("Clear All"),
+                             }
+            o, l = [], []
+            for k, v in header_labels.items():
+                o.append("%sText:'%s'" % (k, str(v)))
+                l.append("%s:{text:'%s',title:'%s'}" % (k, str(v), str(v)))
+            header = ",".join(o) + ",linkInfo:{%s}" % ",".join(l)
+
+            # header_labels = {"check_all": T("Select All"),
+            #                  "uncheck_all": T("Clear All"),
+            #                  }
+            # header = '''checkAllText:'%(check_all)s',uncheckAllText:'%(uncheck_all)s',linkInfo:{checkAll:{text:'%(check_all)s',title:'%(check_all)s'}, uncheckAll:{text:'%(uncheck_all)s',title:'%(uncheck_all)s'} }''' % header_labels
         elif header_opt is False:
             header = '''header:false'''
         else:
@@ -3646,14 +3662,15 @@ class S3HierarchyWidget(EdenFormWidget):
                 attr: additional HTML attributes for the widget
         """
 
-        if isinstance(field, Field):
-            selector = str(field).replace(".", "_")
-        else:
-            selector = field.name.replace(".", "_")
+        selector = widget_id = attr.get("_id")
+        if not selector:
+            if isinstance(field, Field):
+                selector = str(field).replace(".", "_")
+            else:
+                selector = field.name.replace(".", "_")
 
         # Widget ID
-        widget_id = attr.get("_id")
-        if widget_id == None:
+        if not widget_id:
             widget_id = attr["_id"] = "%s-hierarchy" % selector
 
         # Field name

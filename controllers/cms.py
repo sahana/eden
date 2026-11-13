@@ -1032,6 +1032,16 @@ $('#submit_record__row input').click(function(){
     return XML(output)
 
 # =============================================================================
+# Announcements
+#
+def announcement():
+    """ Homepage Announcements - CRUD Controller """
+
+    # TODO restrict to ADMINs
+
+    return crud_controller()
+
+# =============================================================================
 # Newsletters
 #
 def configure_newsletter_attachments(file_icons=False):

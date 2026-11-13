@@ -33,6 +33,7 @@ __all__ = ("CMSContentModel",
            "CMSContentTeamModel",
            "CMSContentUserModel",
            "CMSContentRoleModel",
+           "CMSAnnouncementModel",
            "CMSNewsletterModel",
            "CustomPage",
            "cms_NewsletterDetails",
@@ -1266,6 +1267,201 @@ class CMSContentRoleModel(DataModel):
         #return {}
 
 # =============================================================================
+class CMSAnnouncementModel(DataModel):
+    """ Homepage Announcements """
+
+    names = ("cms_announcement",
+             "cms_announcement_role",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        settings = current.deployment_settings
+        crud_strings = current.response.s3.crud_strings
+
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Use simple text field or richt text editor?
+        #
+        if settings.get_cms_richtext():
+            msg_represent, msg_widget = XML, s3_richtext_widget
+        else:
+            def msg_represent(value, row=None):
+                if not re.search(r"<a[^>]* href=", value):
+                    value = s3_URLise(value)
+                return XML(value)
+            msg_widget = None
+
+        # ---------------------------------------------------------------------
+        # Announcement Priorities
+        #
+        msg_prio_opts = WorkflowOptions((3, "Informational", "blue"),
+                                        (2, "Important", "amber"),
+                                        (1, "Critical", "red"),
+                                        represent = "status",
+                                        none = 3,
+                                        )
+
+        # ---------------------------------------------------------------------
+        # Announcement
+        #
+        tablename = "cms_announcement"
+        define_table(tablename,
+                     Field("title",
+                           label = T("Title"),
+                           ),
+                     Field("message", "text", notnull=True,
+                           label = T("Message"),
+                           represent = msg_represent,
+                           requires = IS_NOT_EMPTY(),
+                           widget = msg_widget,
+                           ),
+                     DateTimeField(default="now",
+                                   empty = False,
+                                   ),
+                     DateTimeField("expires_on",
+                                   label = T("Expires on"),
+                                   ),
+                     Field("priority", "integer",
+                           label = T("Priority"),
+                           default = 3,
+                           requires = IS_IN_SET(msg_prio_opts.selectable(), sort=False, zero=None),
+                           represent = msg_prio_opts.represent,
+                           ),
+                     Field("obsolete", "boolean",
+                           label = T("Obsolete"),
+                           default = False,
+                           represent = BooleanRepresent(labels = False,
+                                                        # Reverse icons semantics
+                                                        icons = (BooleanRepresent.NEG,
+                                                                 BooleanRepresent.POS,
+                                                                 ),
+                                                        flag = True,
+                                                        ),
+                           ),
+                     )
+
+        # Components
+        self.add_components(tablename,
+                            auth_group = {"name": "roles",
+                                          "link": "cms_announcement_role",
+                                          "joinby": "announcement_id",
+                                          "key": "group_id",
+                                          },
+                            )
+
+
+        # CRUD form
+        crud_form = CustomForm("priority",
+                               "title",
+                               "message",
+                               "date",
+                               "expires_on",
+                               InlineLink("roles",
+                                          label = T("Show only for"),
+                                          field = "group_id",
+                                          ),
+                               "obsolete",
+                               )
+
+        # List fields
+        list_fields = ["priority",
+                       "date",
+                       "title",
+                       "message",
+                       "expires_on",
+                       "obsolete",
+                       ]
+
+        # Filters
+        filter_widgets = [TextFilter(["title", "message"],
+                                     label = T("Search") ,
+                                     ),
+                          OptionsFilter("priority",
+                                        options = OrderedDict(reversed(msg_prio_opts.selectable())),
+                                        cols = 3,
+                                        sort = False,
+                                        hidden = True,
+                                        ),
+                          DateFilter("date",
+                                     hidden = True,
+                                     ),
+                          ]
+
+        # Table configuration
+        self.configure(tablename,
+                       crud_form = crud_form,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       orderby = f"{tablename}.priority",
+                       )
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Announcement"),
+            title_display = T("Announcement Details"),
+            title_list = T("Announcements"),
+            title_update = T("Edit Announcement"),
+            title_upload = T("Import Announcements"),
+            label_list_button = T("List Announcements"),
+            msg_record_created = T("Announcement added"),
+            msg_record_modified = T("Announcement updated"),
+            msg_record_deleted = T("Announcement deleted"),
+            msg_list_empty = T("No announcements currently available"),
+            )
+
+        # ---------------------------------------------------------------------
+        # Announcement <=> User Roles
+        #
+        group_table_name = current.auth.settings.table_group_name
+        represent_group = S3Represent(lookup = group_table_name,
+                                      fields = ["role"],
+                                      )
+        represent_ancmt = S3Represent(lookup = "cms_announcement",
+                                      fields = ["date", "title"],
+                                      )
+
+        # Roles that cannot be selected
+        # - because every logged-in user has them, so pointless as restriction
+        hidden_roles = ("ANONYMOUS", "AUTHENTICATED")
+
+        tablename = "cms_announcement_role"
+        define_table(tablename,
+                     Field("announcement_id", "reference cms_announcement",
+                           ondelete = "CASCADE",
+                           represent = represent_ancmt,
+                           requires = IS_EMPTY_OR(
+                                        IS_ONE_OF(db, "cms_post.id",
+                                                  represent_ancmt,
+                                                  )),
+                           ),
+                     Field("group_id", "reference %s" % group_table_name,
+                           label = T("Role"),
+                           ondelete = "CASCADE",
+                           represent = represent_group,
+                           requires = IS_EMPTY_OR(
+                                        IS_ONE_OF(db, "%s.id" % group_table_name,
+                                                  represent_group,
+                                                  multiple = True,
+                                                  zero = T("All"),
+                                                  filterby = "hidden",
+                                                  filter_opts = (False,),
+                                                  not_filterby = "uuid",
+                                                  not_filter_opts = hidden_roles,
+                                                  )),
+                           ),
+                     )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        #return {}
+
+# =============================================================================
 class CMSNewsletterModel(DataModel):
     """ Newsletters / Circulars """
 
@@ -2195,6 +2391,336 @@ class cms_UpdateNewsletter(CRUDMethod):
         return subject, message, attachments, from_address
 
 # =============================================================================
+class cms_Calendar(CRUDMethod):
+    """
+        Display Posts on a Calendar format
+
+       @ToDo: Customisable Date Range
+                - currently hardcoded to 1 day in past, today & 5 days ahead
+       @ToDo: Interactive version
+                - drag/drop entries
+                - edit entries
+       @ToDo: PDF/XLS representations
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Applies the method (controller entry point).
+
+            Args:
+                r: the CRUDRequest
+                attr: controller arguments
+        """
+
+        output = None
+
+        if r.name == "post":
+            if r.representation == "html":
+                output = self.html(r, **attr)
+            #elif r.representation == "pdf":
+            #    output = self.pdf(r, **attr)
+            #    return output
+            #elif r.representation in ("xlsx", "xls"):
+            #    output = self.xls(r, **attr)
+            #    return output
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _extract(days, r, **attr):
+        """
+            Extract the Data
+        """
+
+        # Respect any filters present
+        resource = r.resource
+
+        # Provide additional Filter based on days
+        resource.add_filter((FS("date") > days[0].replace(hour = 0, minute=0, second=0, microsecond=0)) & \
+                            (FS("date") < days[-1].replace(hour = 23, minute=59, second=59)))
+
+        # @ToDo: Configurable fields (location_id not always relevant, but e.g. Author may be)
+        fields = ["body",
+                  "date",
+                  "location_id",
+                  "post_module.module",
+                  "post_module.resource",
+                  "post_module.record",
+                  ]
+
+        data = resource.select(fields, represent=True, raw_data=True)
+
+        # Reformat posts into Array of rows and columns (days)
+        # Need to start with the columns as we don't yet know how many rows we need
+        cols = []
+        cappend = cols.append
+        max_rows = []
+        mappend = max_rows.append
+        # Initialise arrays
+        for _ in days:
+            cappend([])
+            mappend(0)
+
+        # Place each record into the correct day's column
+        len_days = len(days)
+        for record in data.rows:
+            date = record._row["cms_post.date"]
+            for i in range(len_days):
+                if date < days[i + 1]:
+                    cols[i].append(record)
+                    max_rows[i] += 1
+                    break
+
+        # Now convert to rows
+        rows = []
+        rappend = rows.append
+        len_rows = max(max_rows)
+        # Initialise array
+        for i in range(len_rows):
+            rappend([])
+
+        for row in rows:
+            rappend = row.append
+            for col in cols:
+                if len(col):
+                    rappend(col.pop())
+                else:
+                    rappend(Storage())
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def html(self, r, **attr):
+        """
+            HTML Representation
+        """
+
+        T = current.T
+
+        now = current.request.now
+        timedelta = datetime.timedelta
+
+        # @ToDo: Make this configurable
+        days = (now - timedelta(days = 1), # Yesterday
+                now,                       # Today
+                now + timedelta(days = 1), # Tomorrow
+                now + timedelta(days = 2),
+                now + timedelta(days = 3),
+                now + timedelta(days = 4),
+                now + timedelta(days = 5),
+                )
+
+        posts = self._extract(days, r, **attr)
+
+        item = TABLE()
+        title_row = TR()
+        rappend = title_row.append
+        for day in days:
+            rappend(TD(day.strftime("%A")))
+        item.append(title_row)
+
+        for row in posts:
+            data_row = TR()
+            rappend = data_row.append
+            row.reverse()
+            for day in days:
+                post = row.pop()
+                if post:
+                    rappend(TD(self.post_layout(post)))
+                else:
+                    rappend(TD())
+            item.append(data_row)
+
+        output = {"item": item}
+        output["title"] = T("Weekly Schedule")
+
+        # Maintain RHeader for consistency
+        if "rheader" in attr:
+            rheader = attr["rheader"](r)
+            if rheader:
+                output["rheader"] = rheader
+
+        current.response.view = "simple.html"
+        return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def post_layout(post):
+        """
+            Format a calendar entry
+        """
+
+        title = post["cms_post.body"]
+        record_id = post["cms_post_module.record"]
+        if record_id:
+            title = A(title,
+                      _href = URL(c = str(post["cms_post_module.module"]),
+                                  f = str(post["cms_post_module.resource"]), # gluon does an isinstance(str)
+                                  args = record_id,
+                                  ),
+                      _target = "_blank",
+                      )
+
+        location = post["cms_post.location_id"]
+
+        return DIV(title,
+                   BR(),
+                   location,
+                   )
+
+# =============================================================================
+class cms_TagList(CRUDMethod):
+    """
+        Return a list of available Tags
+        - suitable for use in Tag-It's AutoComplete
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Applies the method (controller entry point).
+
+            Args:
+                r: the CRUDRequest
+                attr: controller arguments
+        """
+
+        output = None
+
+        if r.representation == "json":
+            table = current.s3db.cms_tag
+            tags = current.db(table.deleted == False).select(table.name)
+            tag_list = [tag.name for tag in tags]
+            output = json.dumps(tag_list, separators=SEPARATORS)
+            current.response.headers["Content-Type"] = "application/json"
+        else:
+            r.error(415, current.ERROR.BAD_FORMAT)
+
+        return output
+
+# =============================================================================
+class S3CMS(CRUDMethod):
+    """
+        Class to generate a Rich Text widget to embed in a page
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point to apply cms method to CRUDRequests
+                - produces a full page with a Richtext widget
+
+            Args:
+                r: the CRUDRequest
+                attr: dictionary of parameters for the method handler
+
+            Returns:
+                output object to send to the view
+        """
+
+        # Not Implemented
+        r.error(405, current.ERROR.BAD_METHOD)
+
+    # -------------------------------------------------------------------------
+    def widget(self, r, method="cms", widget_id=None, visible=True, **attr):
+        """
+            Render a Rich Text widget suitable for use in a page such as
+            S3Summary
+
+            Args:
+                r: the CRUDRequest
+                method: the widget method
+                widget_id: the widget ID
+                visible: whether the widget is initially visible
+                attr: dictionary of parameters for the method handler
+
+            TODO Support comments
+        """
+
+        if not current.deployment_settings.has_module("cms"):
+            return ""
+
+        return self.resource_content(r.controller,
+                                     r.function,
+                                     r.id,
+                                     widget_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def resource_content(module,
+                         resource,
+                         record=None,
+                         widget_id=None,
+                         hide_if_empty=False):
+        """
+            Render resource-related CMS contents
+
+            Args:
+                module: the module prefix
+                resource: the resource name (without prefix)
+                record: the record ID (optional)
+                widget_id: the DOM node ID for the CMS widget
+                hide_if_empty: return an empty string when there is no
+                               contents rather than a blank DIV
+        """
+
+        db = current.db
+        table = current.s3db.cms_post
+        ltable = db.cms_post_module
+        query = (ltable.module == module) & \
+                (ltable.resource == resource) & \
+                (ltable.record == record) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        _item = db(query).select(table.id,
+                                 table.body,
+                                 limitby=(0, 1)).first()
+        # @ToDo: Replace this crude check with?
+        #if current.auth.s3_has_permission("update", r.table, record_id=r.id):
+        auth = current.auth
+        ADMIN = auth.get_system_roles().ADMIN
+        ADMIN = auth.s3_has_role(ADMIN)
+        if ADMIN:
+            url_vars = {"module": module,
+                        "resource": resource,
+                        }
+            if record:
+                url_vars["record"] = record
+            if _item:
+                item = DIV(XML(_item.body),
+                           A(current.T("Edit"),
+                             _href=URL(c="cms", f="post",
+                                       args = [_item.id, "update"],
+                                       vars = url_vars,
+                                       ),
+                             _class="action-btn cms-edit",
+                             ))
+            else:
+                item = A(current.T("Edit"),
+                         _href=URL(c="cms", f="post",
+                                   args = "create",
+                                   vars = url_vars,
+                                   ),
+                         _class="action-btn cms-edit",
+                         )
+        elif _item:
+            item = XML(_item.body)
+        else:
+            item = ""
+
+        if item != "" or not hide_if_empty:
+            output = DIV(item, _id=widget_id, _class="cms_content")
+        else:
+            output = item
+        return output
+
+# =============================================================================
 def cms_newsletter_notify(newsletter_id=None):
     """
         Async task to notify newsletter recipients
@@ -2788,122 +3314,6 @@ def cms_announcements(roles=None):
     return posts
 
 # =============================================================================
-class S3CMS(CRUDMethod):
-    """
-        Class to generate a Rich Text widget to embed in a page
-    """
-
-    # -------------------------------------------------------------------------
-    def apply_method(self, r, **attr):
-        """
-            Entry point to apply cms method to CRUDRequests
-                - produces a full page with a Richtext widget
-
-            Args:
-                r: the CRUDRequest
-                attr: dictionary of parameters for the method handler
-
-            Returns:
-                output object to send to the view
-        """
-
-        # Not Implemented
-        r.error(405, current.ERROR.BAD_METHOD)
-
-    # -------------------------------------------------------------------------
-    def widget(self, r, method="cms", widget_id=None, visible=True, **attr):
-        """
-            Render a Rich Text widget suitable for use in a page such as
-            S3Summary
-
-            Args:
-                r: the CRUDRequest
-                method: the widget method
-                widget_id: the widget ID
-                visible: whether the widget is initially visible
-                attr: dictionary of parameters for the method handler
-
-            TODO Support comments
-        """
-
-        if not current.deployment_settings.has_module("cms"):
-            return ""
-
-        return self.resource_content(r.controller,
-                                     r.function,
-                                     r.id,
-                                     widget_id)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def resource_content(module,
-                         resource,
-                         record=None,
-                         widget_id=None,
-                         hide_if_empty=False):
-        """
-            Render resource-related CMS contents
-
-            Args:
-                module: the module prefix
-                resource: the resource name (without prefix)
-                record: the record ID (optional)
-                widget_id: the DOM node ID for the CMS widget
-                hide_if_empty: return an empty string when there is no
-                               contents rather than a blank DIV
-        """
-
-        db = current.db
-        table = current.s3db.cms_post
-        ltable = db.cms_post_module
-        query = (ltable.module == module) & \
-                (ltable.resource == resource) & \
-                (ltable.record == record) & \
-                (ltable.post_id == table.id) & \
-                (table.deleted != True)
-        _item = db(query).select(table.id,
-                                 table.body,
-                                 limitby=(0, 1)).first()
-        # @ToDo: Replace this crude check with?
-        #if current.auth.s3_has_permission("update", r.table, record_id=r.id):
-        auth = current.auth
-        ADMIN = auth.get_system_roles().ADMIN
-        ADMIN = auth.s3_has_role(ADMIN)
-        if ADMIN:
-            url_vars = {"module": module,
-                        "resource": resource,
-                        }
-            if record:
-                url_vars["record"] = record
-            if _item:
-                item = DIV(XML(_item.body),
-                           A(current.T("Edit"),
-                             _href=URL(c="cms", f="post",
-                                       args = [_item.id, "update"],
-                                       vars = url_vars,
-                                       ),
-                             _class="action-btn cms-edit",
-                             ))
-            else:
-                item = A(current.T("Edit"),
-                         _href=URL(c="cms", f="post",
-                                   args = "create",
-                                   vars = url_vars,
-                                   ),
-                         _class="action-btn cms-edit",
-                         )
-        elif _item:
-            item = XML(_item.body)
-        else:
-            item = ""
-
-        if item != "" or not hide_if_empty:
-            output = DIV(item, _id=widget_id, _class="cms_content")
-        else:
-            output = item
-        return output
-
-# =============================================================================
 def cms_configure_newsfeed_post_fields():
     """
         Customize cms_post fields for the Newsfeed / Home Pages
@@ -3460,219 +3870,5 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                )
 
     return item
-
-# =============================================================================
-class cms_Calendar(CRUDMethod):
-    """
-        Display Posts on a Calendar format
-
-       @ToDo: Customisable Date Range
-                - currently hardcoded to 1 day in past, today & 5 days ahead
-       @ToDo: Interactive version
-                - drag/drop entries
-                - edit entries
-       @ToDo: PDF/XLS representations
-    """
-
-    # -------------------------------------------------------------------------
-    def apply_method(self, r, **attr):
-        """
-            Applies the method (controller entry point).
-
-            Args:
-                r: the CRUDRequest
-                attr: controller arguments
-        """
-
-        output = None
-
-        if r.name == "post":
-            if r.representation == "html":
-                output = self.html(r, **attr)
-            #elif r.representation == "pdf":
-            #    output = self.pdf(r, **attr)
-            #    return output
-            #elif r.representation in ("xlsx", "xls"):
-            #    output = self.xls(r, **attr)
-            #    return output
-            else:
-                r.error(415, current.ERROR.BAD_FORMAT)
-        else:
-            r.error(405, current.ERROR.BAD_METHOD)
-
-        return output
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _extract(days, r, **attr):
-        """
-            Extract the Data
-        """
-
-        # Respect any filters present
-        resource = r.resource
-
-        # Provide additional Filter based on days
-        resource.add_filter((FS("date") > days[0].replace(hour = 0, minute=0, second=0, microsecond=0)) & \
-                            (FS("date") < days[-1].replace(hour = 23, minute=59, second=59)))
-
-        # @ToDo: Configurable fields (location_id not always relevant, but e.g. Author may be)
-        fields = ["body",
-                  "date",
-                  "location_id",
-                  "post_module.module",
-                  "post_module.resource",
-                  "post_module.record",
-                  ]
-
-        data = resource.select(fields, represent=True, raw_data=True)
-
-        # Reformat posts into Array of rows and columns (days)
-        # Need to start with the columns as we don't yet know how many rows we need
-        cols = []
-        cappend = cols.append
-        max_rows = []
-        mappend = max_rows.append
-        # Initialise arrays
-        for _ in days:
-            cappend([])
-            mappend(0)
-
-        # Place each record into the correct day's column
-        len_days = len(days)
-        for record in data.rows:
-            date = record._row["cms_post.date"]
-            for i in range(len_days):
-                if date < days[i + 1]:
-                    cols[i].append(record)
-                    max_rows[i] += 1
-                    break
-
-        # Now convert to rows
-        rows = []
-        rappend = rows.append
-        len_rows = max(max_rows)
-        # Initialise array
-        for i in range(len_rows):
-            rappend([])
-
-        for row in rows:
-            rappend = row.append
-            for col in cols:
-                if len(col):
-                    rappend(col.pop())
-                else:
-                    rappend(Storage())
-
-        return rows
-
-    # -------------------------------------------------------------------------
-    def html(self, r, **attr):
-        """
-            HTML Representation
-        """
-
-        T = current.T
-
-        now = current.request.now
-        timedelta = datetime.timedelta
-
-        # @ToDo: Make this configurable
-        days = (now - timedelta(days = 1), # Yesterday
-                now,                       # Today
-                now + timedelta(days = 1), # Tomorrow
-                now + timedelta(days = 2),
-                now + timedelta(days = 3),
-                now + timedelta(days = 4),
-                now + timedelta(days = 5),
-                )
-
-        posts = self._extract(days, r, **attr)
-
-        item = TABLE()
-        title_row = TR()
-        rappend = title_row.append
-        for day in days:
-            rappend(TD(day.strftime("%A")))
-        item.append(title_row)
-
-        for row in posts:
-            data_row = TR()
-            rappend = data_row.append
-            row.reverse()
-            for day in days:
-                post = row.pop()
-                if post:
-                    rappend(TD(self.post_layout(post)))
-                else:
-                    rappend(TD())
-            item.append(data_row)
-
-        output = {"item": item}
-        output["title"] = T("Weekly Schedule")
-
-        # Maintain RHeader for consistency
-        if "rheader" in attr:
-            rheader = attr["rheader"](r)
-            if rheader:
-                output["rheader"] = rheader
-
-        current.response.view = "simple.html"
-        return output
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def post_layout(post):
-        """
-            Format a calendar entry
-        """
-
-        title = post["cms_post.body"]
-        record_id = post["cms_post_module.record"]
-        if record_id:
-            title = A(title,
-                      _href = URL(c = str(post["cms_post_module.module"]),
-                                  f = str(post["cms_post_module.resource"]), # gluon does an isinstance(str)
-                                  args = record_id,
-                                  ),
-                      _target = "_blank",
-                      )
-
-        location = post["cms_post.location_id"]
-
-        return DIV(title,
-                   BR(),
-                   location,
-                   )
-
-# =============================================================================
-class cms_TagList(CRUDMethod):
-    """
-        Return a list of available Tags
-        - suitable for use in Tag-It's AutoComplete
-    """
-
-    # -------------------------------------------------------------------------
-    def apply_method(self, r, **attr):
-        """
-            Applies the method (controller entry point).
-
-            Args:
-                r: the CRUDRequest
-                attr: controller arguments
-        """
-
-        output = None
-
-        if r.representation == "json":
-            table = current.s3db.cms_tag
-            tags = current.db(table.deleted == False).select(table.name)
-            tag_list = [tag.name for tag in tags]
-            output = json.dumps(tag_list, separators=SEPARATORS)
-            current.response.headers["Content-Type"] = "application/json"
-        else:
-            r.error(415, current.ERROR.BAD_FORMAT)
-
-        return output
 
 # END =========================================================================

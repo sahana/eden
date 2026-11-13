@@ -2207,7 +2207,7 @@ class InlineLink(InlineComponent):
 
         # Render the widget
         attr = dict(attributes)
-        attr["_id"] = field.name
+        attr["_id"] = "%s_%s" % (self.resource.tablename, field.name)
         if not link.table[options.field].writable:
             _class = attr.get("_class", None)
             if _class:
