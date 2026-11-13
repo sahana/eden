@@ -1356,7 +1356,7 @@ class MedParameterModel(DataModel):
         # CRUD Form (with embedded results)
         crud_form = CustomForm("date",
                                InlineComponent("analysis_result",
-                                               # TODO label
+                                               label = T("Results"),
                                                # TODO review fields
                                                fields = ["parameter_id",
                                                          "result",
@@ -1364,6 +1364,9 @@ class MedParameterModel(DataModel):
                                                          "status_reason",
                                                          ],
                                                ),
+                               # InlineValueSet("analysis_result",
+                               #                label = T("Results"),
+                               #                ),
                                "invalid",
                                "comments",
                                )

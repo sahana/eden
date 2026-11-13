@@ -28,6 +28,7 @@
 __all__ = ("SubFormLayout",
            "SubFormLayoutVertical",
            "InlineComponent",
+           "InlineValueSet",
            "InlineLink",
            )
 
@@ -1825,6 +1826,142 @@ class InlineComponent(SubForm):
                 return f
 
         return None
+
+# =============================================================================
+class InlineValueSet(SubForm):
+
+    # -------------------------------------------------------------------------
+    def __init__(self, selector, **options):
+        """
+            Args:
+                selector: the data object selector
+                options: options for the form element
+        """
+
+        super().__init__(selector, **options)
+
+        self.alias = None
+
+    # -------------------------------------------------------------------------
+    def resolve(self, resource):
+        """
+            Method to resolve this form element against the calling resource.
+            To be implemented in subclass.
+
+            Args:
+                resource: the resource
+
+            Returns:
+                a tuple (form element,
+                         original field name,
+                         Field instance for the form renderer
+                         )
+
+            Note:
+                The form element can be None for the main table, the component
+                alias for a subtable, or this form element instance for a
+                subform.
+
+                If None is returned as Field instance, this form element will
+                not be rendered at all. Besides setting readable/writable
+                in the Field instance, this can be another mechanism to
+                control access to form elements.
+        """
+
+        return None, None, None
+
+    # -------------------------------------------------------------------------
+    def extract(self, resource, record_id):
+        """
+            Initialize this form element for a particular record. This
+            method will be called by the form renderer to populate the
+            form for an existing record. To be implemented in subclass.
+
+            Args:
+                resource: the resource the record belongs to
+                record_id: the record ID
+
+            Returns:
+                the value for the input field that corresponds
+                to the specified record.
+        """
+
+        return None
+
+    # -------------------------------------------------------------------------
+    def parse(self, value, record_id=None):
+        """
+            Validator method for the input field, used to extract the
+            data from the input field and prepare them for further
+            processing by the accept()-method. To be implemented in
+            subclass and set as requires=self.parse for the input field
+            in the resolve()-method of this form element.
+
+            Args:
+                value: the value returned from the input field
+                record_id: usused (for API compatibility with validators)
+
+            Returns:
+                tuple of (value, error) where value is the pre-processed
+                field value and error an error message in case of invalid
+                data, or None.
+        """
+
+        return (value, None)
+
+    # -------------------------------------------------------------------------
+    def __call__(self, field, value, **attributes):
+        """
+            Widget renderer for the input field. To be implemented in
+            subclass (if required) and to be set as widget=self for the
+            field returned by the resolve()-method of this form element.
+
+            Args:
+                field: the input field
+                value: the value to populate the widget
+                attributes: attributes for the widget
+
+            Returns:
+                the widget for this form element as HTML helper
+        """
+
+        raise NotImplementedError
+
+    # -------------------------------------------------------------------------
+    def represent(self, value):
+        """
+            Read-only representation of this form element. This will be
+            used instead of the __call__() method when the form element
+            is to be rendered read-only.
+
+            Args:
+                value: the value as returned from extract()
+
+            Returns:
+                the read-only representation of this element as
+                string or HTML helper
+        """
+
+        return ""
+
+    # -------------------------------------------------------------------------
+    def accept(self, form, master_id=None, format=None):
+        """
+            Post-process this form element and perform the related
+            transactions. This method will be called after the main
+            form has been accepted, where the master record ID will
+            be provided.
+
+            Args:
+                form: the form
+                master_id: the master record ID
+                format: the data format extension
+
+            Returns:
+                True on success, False on error
+        """
+
+        return True
 
 # =============================================================================
 class InlineLink(InlineComponent):
