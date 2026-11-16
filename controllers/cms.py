@@ -1034,10 +1034,9 @@ $('#submit_record__row input').click(function(){
 # =============================================================================
 # Announcements
 #
+@auth.requires_membership("ADMIN")
 def announcement():
     """ Homepage Announcements - CRUD Controller """
-
-    # TODO restrict to ADMINs
 
     return crud_controller()
 
