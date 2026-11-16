@@ -269,10 +269,22 @@ class OptionsMenu(default.OptionsMenu):
     @classmethod
     def cms(cls):
 
-        if not current.auth.s3_has_role("ADMIN"):
+        f = current.request.function
+        if f in ("newsletter", "read_newsletter"):
             return cls.org()
+        elif f == "announcement" and current.auth.s3_has_role("ADMIN"):
+            return cls.admin()
 
-        return super().cms()
+        return M(c="cms")(
+                    M("Series", f="series")(
+                        M("Create", m="create"),
+                        M("View as Pages", f="blog"),
+                        ),
+                    M("Posts", f="post")(
+                        M("Create", m="create"),
+                        M("View as Pages", f="page"),
+                        ),
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -449,7 +461,7 @@ class OptionsMenu(default.OptionsMenu):
         if unread:
             inbox_label = TAG[""](inbox_label, SPAN(unread, _class="num-pending"))
         if author:
-            cms_menu = M("Newsletters", c="cms", f="read_newsletter")(
+            cms_menu = M("Newsletters", c="cms", link=False)(
                             M(inbox_label, f="read_newsletter", translate=False),
                             M("Compose and Send", f="newsletter", p="create"),
                             )

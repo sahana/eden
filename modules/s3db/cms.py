@@ -506,6 +506,7 @@ class CMSContentModel(DataModel):
                                               },
 
                        # Role-specific announcements
+                       # DEPRECATED
                        auth_group = {"name": "roles",
                                      "link": "cms_post_role",
                                      "joinby": "post_id",
@@ -1233,6 +1234,7 @@ class CMSContentRoleModel(DataModel):
         Link CMS posts to user roles
         - for role-specific announcements
     """
+    # DEPRECATED
 
     names = ("cms_post_role",
              )
@@ -1925,6 +1927,139 @@ class CustomPage(CustomController):
         self._view(current.deployment_settings.get_theme_layouts(), self.template)
 
         return output
+
+# =============================================================================
+class cms_Announcements:
+    """ Handling of homepage announcements """
+
+    def __init__(self, limit=5):
+        """
+            Args:
+                (int) limit - the maximum number of announcements to retrieve
+        """
+
+        self.limit = limit
+
+        self._records = None
+
+    # -------------------------------------------------------------------------
+    @property
+    def records(self):
+        """
+            The relevant announcement records (lazy property)
+
+            Returns:
+                Rows|None
+        """
+
+        records = self._records
+
+        if records is None:
+            roles = current.session.s3.roles
+            sr = current.auth.get_system_roles()
+            if sr.AUTHENTICATED in roles:
+                filter_roles = roles if sr.ADMIN not in roles else None
+                self._records = records = self._lookup(roles = filter_roles)
+
+        return records
+
+    # -------------------------------------------------------------------------
+    def _lookup(self, roles=None):
+        """
+            Looks up the relevant announcements
+
+            Args:
+                (list) roles - auth_group IDs to filter for
+
+            Returns:
+                Rows
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        now = current.request.utcnow
+        table = s3db.cms_announcement
+        query = (table.date <= now) & \
+                ((table.expires_on == None) | (table.expires_on > now)) & \
+                (table.obsolete == False) & \
+                (table.deleted == False)
+
+        if roles:
+            ltable = s3db.cms_announcement_role
+            left = ltable.on((ltable.announcement_id == table.id) & \
+                             (ltable.deleted == False))
+            q = query & ((ltable.id == None) | (ltable.group_id.belongs(roles)))
+            rows = db(q)._select(table.id,
+                                 cache = s3db.cache,
+                                 distinct = table.id,
+                                 left = left,
+                                 )
+            query = (table.id.belongs(rows))
+
+        limitby = (0, self.limit) if self.limit else None
+        records = db(query).select(table.title,
+                                   table.message,
+                                   table.date,
+                                   table.priority,
+                                   orderby = (table.priority, ~table.date),
+                                   limitby = limitby,
+                                   )
+        return records
+
+    # -------------------------------------------------------------------------
+    def html(self):
+        """
+            Builds the HTML to display announcements on the homepage
+
+            Returns:
+                UL|None
+        """
+
+        records = self.records
+        if records:
+            announcements = UL(_class="announcements")
+            priority_classes = {2: "announcement-important",
+                                1: "announcement-critical",
+                                }
+            priority_icons = {2: "fa-exclamation-circle",
+                              1: "fa-exclamation-triangle",
+                              }
+
+            dtrepr = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+            for record in records:
+                header = H4(record.title)
+
+                # Priority
+                priority = record.priority
+                icon_class = priority_icons.get(priority)
+                if icon_class:
+                    header = TAG[""](I(_class="fa %s announcement-icon" % icon_class),
+                                     header,
+                                     )
+                prio = priority_classes.get(priority, "")
+
+                row = LI(DIV(DIV(DIV(dtrepr(record.date),
+                                     _class = "announcement-date",
+                                     ),
+                                 _class="fright",
+                                 ),
+                             DIV(DIV(header,
+                                     _class = "announcement-header",
+                                     ),
+                                 DIV(XML(record.message),
+                                     _class = "announcement-body",
+                                     ),
+                                 _class="announcement-text",
+                                 ),
+                             _class = "announcement-box %s" % prio,
+                             ),
+                         )
+                announcements.append(row)
+        else:
+            announcements = None
+
+        return announcements
 
 # =============================================================================
 class cms_NewsletterDetails:
@@ -3276,6 +3411,7 @@ def cms_announcements(roles=None):
         Returns:
             any announcements (Rows)
     """
+    # DEPRECATED
 
     db = current.db
     s3db = current.s3db

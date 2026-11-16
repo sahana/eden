@@ -299,8 +299,8 @@ class OptionsMenu:
                         # M("Roles", f="group"),
                         # M("Membership", f="membership"),
                     ),
-                    M("CMS", c="cms", f="post")(
-                    ),
+                    M("Announcements", c="cms", f="announcement"),
+                    M("Content Management", c="cms", f="post"),
                     M("Consent Tracking", c="admin", link=False, check=consent_tracking)(
                         M("Processing Types", f="processing_type"),
                         M("Consent Options", f="consent_option"),
@@ -433,16 +433,22 @@ class OptionsMenu:
                 )
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def cms():
+    @classmethod
+    def cms(cls):
         """ CMS / Content Management System """
 
+        auth = current.auth
+
+        f = current.request.function
+        if f == "announcement" and auth.s3_has_role("ADMIN"):
+            return cls.admin()
+
         # Newsletter menu
-        author = current.auth.s3_has_permission("create",
-                                                "cms_newsletter",
-                                                c = "cms",
-                                                f = "newsletter",
-                                                )
+        author = auth.s3_has_permission("create",
+                                        "cms_newsletter",
+                                        c = "cms",
+                                        f = "newsletter",
+                                        )
 
         T = current.T
         inbox_label = T("Inbox") if author else T("Newsletters")
@@ -452,7 +458,7 @@ class OptionsMenu:
             from gluon import TAG, SPAN
             inbox_label = TAG[""](inbox_label, SPAN(unread, _class="num-pending"))
         if author:
-            cms_menu = M("Newsletters", c="cms", f="read_newsletter")(
+            cms_menu = M("Newsletters", c="cms", link=False)(
                             M(inbox_label, f="read_newsletter", translate=False),
                             M("Compose and Send", f="newsletter", p="create"),
                         )
