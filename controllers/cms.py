@@ -65,38 +65,6 @@ def series():
                 ctable.body.represent = lambda body: XML(s3base.s3_URLise(body))
                 ctable.body.widget = None
 
-            # Special-purpose series
-            if record.name == "Announcements":
-                # Homepage announcements for logged-in users
-
-                field = ctable.priority
-                field.readable = field.writable = True
-
-                from core import CustomForm, InlineLink
-
-                crud_fields = ["name",
-                               "body",
-                               "priority",
-                               "date",
-                               "expired",
-                               InlineLink("roles",
-                                          label = T("Roles"),
-                                          field = "group_id",
-                                          ),
-                               ]
-                list_fields = ["date",
-                               "priority",
-                               "name",
-                               "body",
-                               "post_role.group_id",
-                               "expired",
-                               ]
-
-                component.configure(crud_form = CustomForm(*crud_fields),
-                                    list_fields = list_fields,
-                                    orderby = "cms_post.date desc",
-                                    )
-
         return True
     s3.prep = prep
 

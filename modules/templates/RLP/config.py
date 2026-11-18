@@ -311,59 +311,31 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_cms_post_resource(r, tablename):
 
-
         s3db = current.s3db
 
-        from core import CustomForm, InlineComponent, InlineLink
+        from core import CustomForm, InlineComponent
 
-        record = r.record
-        if r.tablename == "cms_series" and \
-           record and record.name == "Announcements":
-
-            table = s3db.cms_post
-            field = table.priority
-            field.readable = field.writable = True
-
-            crud_fields = ["name",
-                           "body",
-                           "priority",
-                           "date",
-                           "expired",
-                           InlineLink("roles",
-                                      label = T("Roles"),
-                                      field = "group_id",
-                                      ),
-                           ]
-            list_fields = ["date",
-                           "priority",
-                           "name",
-                           "body",
-                           "post_role.group_id",
-                           "expired",
-                           ]
-            orderby = "cms_post.date desc"
-        else:
-            crud_fields = ["name",
-                           "body",
-                           "date",
-                           InlineComponent("document",
-                                           name = "file",
-                                           label = T("Attachments"),
-                                           fields = ["file", "comments"],
-                                           filterby = {"field": "file",
-                                                       "options": "",
-                                                       "invert": True,
-                                                       },
-                                           ),
-                           "comments",
-                           ]
-            list_fields = ["post_module.module",
-                           "post_module.resource",
-                           "name",
-                           "date",
-                           "comments",
-                           ]
-            orderby = "cms_post.name"
+        crud_fields = ["name",
+                       "body",
+                       "date",
+                       InlineComponent("document",
+                                       name = "file",
+                                       label = T("Attachments"),
+                                       fields = ["file", "comments"],
+                                       filterby = {"field": "file",
+                                                   "options": "",
+                                                   "invert": True,
+                                                   },
+                                       ),
+                       "comments",
+                       ]
+        list_fields = ["post_module.module",
+                       "post_module.resource",
+                       "name",
+                       "date",
+                       "comments",
+                       ]
+        orderby = "cms_post.name"
 
         s3db.configure("cms_post",
                        crud_form = CustomForm(*crud_fields),
