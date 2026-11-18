@@ -12,7 +12,7 @@ def index():
             }
 
 # =============================================================================
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
 def setting():
     """
         Custom page to link to those Settings which can be edited through
@@ -24,7 +24,7 @@ def setting():
 # =============================================================================
 # AAA
 # =============================================================================
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
 def role():
     """ Role Manager """
 
@@ -423,7 +423,7 @@ def group():
     return crud_controller("auth", "group")
 
 # -----------------------------------------------------------------------------
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
 def organisation():
     """
         RESTful CRUD controller
@@ -460,7 +460,7 @@ def user_create_onvalidation (form):
 # =============================================================================
 # Audit
 #
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
 def audit():
     """ Audit Logs: RESTful CRUD Controller """
 
@@ -475,7 +475,7 @@ def audit():
     return crud_controller("s3", "audit")
 
 # =============================================================================
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
 def event():
     """
         CRUD controller for Auth event log
@@ -518,7 +518,7 @@ def event():
 # =============================================================================
 # Consent Tracking
 #
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
 def processing_type():
     """ Types of Data Processing: RESTful CRUD Controller """
 
@@ -528,7 +528,7 @@ def processing_type():
                            )
 
 # -----------------------------------------------------------------------------
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
 def consent_option():
     """ Consent Options: RESTful CRUD Controller """
 
@@ -599,7 +599,13 @@ def consent_option():
                            )
 
 # =============================================================================
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
+def announcement():
+
+    return crud_controller("cms", "announcement")
+
+# =============================================================================
+@auth.requires_membership("ADMIN")
 def consent():
 
     return crud_controller("auth", "consent")
@@ -608,7 +614,7 @@ def consent():
 # Ticket viewing
 # - web2Py ticket viewer functions borrowed from admin application of web2py
 #
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
 def errors():
     """ Error ticket list """
 
@@ -629,7 +635,7 @@ def errors():
             }
 
 # -----------------------------------------------------------------------------
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
 def ticket():
     """ Ticket viewer """
 
@@ -654,7 +660,7 @@ def ticket():
 # =============================================================================
 # Create portable app
 # =============================================================================
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
 def portable():
     """ Portable app creator"""
 
@@ -826,7 +832,7 @@ def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
     return response.stream(portable_app)
 
 # =============================================================================
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
 def task():
     """
         Scheduler tasks: RESTful CRUD controller

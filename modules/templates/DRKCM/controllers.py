@@ -35,55 +35,10 @@ class index(CustomController):
         if sr.AUTHENTICATED in roles:
             # Logged-in user
             # => display announcements
-
-            from core import S3DateTime
-            dtrepr = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
-
-            filter_roles = roles if sr.ADMIN not in roles else None
-            posts = self.get_announcements(roles=filter_roles)
-
-            # Render announcements list
-            announcements = UL(_class="announcements")
-            if posts:
+            from s3db.cms import cms_Announcements
+            announcements = cms_Announcements().html()
+            if announcements:
                 announcements_title = T("Announcements")
-                priority_classes = {2: "announcement-important",
-                                    3: "announcement-critical",
-                                    }
-                priority_icons = {2: "fa-exclamation-circle",
-                                  3: "fa-exclamation-triangle",
-                                  }
-                for post in posts:
-                    # The header
-                    header = H4(post.name)
-
-                    # Priority
-                    priority = post.priority
-                    # Add icon to header?
-                    icon_class = priority_icons.get(post.priority)
-                    if icon_class:
-                        header = TAG[""](I(_class="fa %s announcement-icon" % icon_class),
-                                         header,
-                                         )
-                    # Priority class for the box
-                    prio = priority_classes.get(priority, "")
-
-                    row = LI(DIV(DIV(DIV(dtrepr(post.date),
-                                        _class = "announcement-date",
-                                        ),
-                                    _class="fright",
-                                    ),
-                                 DIV(DIV(header,
-                                         _class = "announcement-header",
-                                         ),
-                                     DIV(XML(post.body),
-                                         _class = "announcement-body",
-                                         ),
-                                     _class="announcement-text",
-                                    ),
-                                 _class = "announcement-box %s" % prio,
-                                 ),
-                             )
-                    announcements.append(row)
         else:
             # Anonymous user
             # => provide a login box

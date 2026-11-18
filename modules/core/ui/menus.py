@@ -288,6 +288,7 @@ class OptionsMenu:
         settings = current.deployment_settings
         consent_tracking = lambda i: settings.get_auth_consent_tracking()
         is_data_repository = lambda i: settings.get_sync_data_repository()
+        has_cms = lambda i: settings.has_module("cms")
 
         # NB: Do not specify a controller for the main menu to allow
         #     re-use of this menu by other controllers
@@ -299,13 +300,13 @@ class OptionsMenu:
                         # M("Roles", f="group"),
                         # M("Membership", f="membership"),
                     ),
-                    M("Announcements", c="cms", f="announcement"),
-                    M("Content Management", c="cms", f="post"),
+                    M("Announcements", c="admin", f="announcement", check=has_cms),
                     M("Consent Tracking", c="admin", link=False, check=consent_tracking)(
                         M("Processing Types", f="processing_type"),
                         M("Consent Options", f="consent_option"),
                         M("Consent##plural", f="consent"),
                         ),
+                    M("Content Management", c="cms", f="post", check=has_cms),
                     M("Database", c="appadmin", f="index")(
                         M("Raw Database access", c="appadmin", f="index")
                     ),
@@ -437,18 +438,12 @@ class OptionsMenu:
     def cms(cls):
         """ CMS / Content Management System """
 
-        auth = current.auth
-
-        f = current.request.function
-        if f == "announcement" and auth.s3_has_role("ADMIN"):
-            return cls.admin()
-
         # Newsletter menu
-        author = auth.s3_has_permission("create",
-                                        "cms_newsletter",
-                                        c = "cms",
-                                        f = "newsletter",
-                                        )
+        author = current.auth.s3_has_permission("create",
+                                                "cms_newsletter",
+                                                c = "cms",
+                                                f = "newsletter",
+                                                )
 
         T = current.T
         inbox_label = T("Inbox") if author else T("Newsletters")

@@ -45,41 +45,12 @@ class index(CustomController):
         roles = current.session.s3.roles
         sr = auth.get_system_roles()
         if sr.AUTHENTICATED in roles:
-            # Logged-in user => display announcements
-            announcements = UL(_class="announcements")
-            render_box = self.announcements_item
-
-            # Check for unread newsletters
-            unread = s3db.cms_unread_newsletters() \
-                     if sr.ORG_ADMIN in roles else False
-            if unread:
-                info = {"number": unread}
-                link = A(XML(T("There are <b>%(number)s</b> new newsletters.") % info),
-                         _href = URL(c="cms", f="read_newsletter"),
-                         _title = T("Open inbox"),
-                         )
-                nlinfo = render_box(header=link, priority="important")
-                announcements.append(nlinfo)
-
-            # CMS Announcements
-            filter_roles = roles if sr.ADMIN not in roles else None
-            posts = s3db.cms_announcements(roles=filter_roles)
-            if posts:
+            # Logged-in user
+            # => display announcements
+            from s3db.cms import cms_Announcements
+            announcements = cms_Announcements().html()
+            if announcements:
                 announcements_title = T("Announcements")
-
-                from core import S3DateTime
-                dtrepr = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
-
-                priorities = {2: "important", 3: "critical"}
-                for post in posts:
-                    header = H4(post.name)
-                    priority = post.priority
-                    box = render_box(date = dtrepr(post.date),
-                                     header = header,
-                                     body = XML(post.body),
-                                     priority = priorities.get(priority, ""),
-                                     )
-                    announcements.append(box)
         else:
             # Anonymous user
             # => provide a login box

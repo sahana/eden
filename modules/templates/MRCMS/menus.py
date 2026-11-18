@@ -56,7 +56,14 @@ class MainMenu(default.MainMenu):
             organisation_id = get_default_organisation()
 
         # Organisation menu
-        c = ("org", "hrm", "act") if is_admin else ("org", "hrm", "act", "cms")
+        request = current.request
+        is_newsletter = request.controller == "cms" and \
+                        request.function in ("newsletter", "read_newsletter")
+        is_activities = request.controller == "act" and \
+                        request.function == "activity"
+        c = ("org", "hrm", "cms") if is_newsletter else \
+            ("org", "hrm", "act") if is_activities else \
+            ("org", "hrm")
         f = ("organisation", "*")
         if organisation_id:
             org_menu = MM("Organization", c=c, f=f, args=[organisation_id], ignore_args=True)
@@ -269,11 +276,8 @@ class OptionsMenu(default.OptionsMenu):
     @classmethod
     def cms(cls):
 
-        f = current.request.function
-        if f in ("newsletter", "read_newsletter"):
+        if current.request.function in ("newsletter", "read_newsletter"):
             return cls.org()
-        elif f == "announcement" and current.auth.s3_has_role("ADMIN"):
-            return cls.admin()
 
         return M(c="cms")(
                     M("Series", f="series")(

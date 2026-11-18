@@ -42,21 +42,17 @@ class MainMenu(default.MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        auth = current.auth
-
-        has_role = auth.s3_has_role
-        has_permission = auth.s3_has_permission
-
-        is_admin = has_role("ADMIN")
-
         # Single or multiple organisations?
-        if has_permission("create", "org_organisation", c="org", f="organisation"):
+        if current.auth.s3_has_permission("create", "org_organisation", c="org", f="organisation"):
             organisation_id = None
         else:
             organisation_id = get_default_organisation()
 
         # Organisation menu
-        c = ("org", "hrm") if is_admin else ("org", "hrm", "cms")
+        request = current.request
+        is_newsletter = request.controller == "cms" and \
+                        request.function in ("newsletter", "read_newsletter")
+        c = ("org", "hrm", "cms") if is_newsletter else ("org", "hrm")
         f = ("organisation", "*")
         if organisation_id:
             org_menu = MM("Organization", c=c, f=f, args=[organisation_id], ignore_args=True)
@@ -199,10 +195,19 @@ class OptionsMenu(default.OptionsMenu):
     @classmethod
     def cms(cls):
 
-        if not current.auth.s3_has_role("ADMIN"):
+        if current.request.function in ("newsletter", "read_newsletter"):
             return cls.org()
 
-        return super().cms()
+        return M(c="cms")(
+                    M("Series", f="series")(
+                        M("Create", m="create"),
+                        M("View as Pages", f="blog"),
+                        ),
+                    M("Posts", f="post")(
+                        M("Create", m="create"),
+                        M("View as Pages", f="page"),
+                        ),
+                    )
 
     # -------------------------------------------------------------------------
     @classmethod

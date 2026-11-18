@@ -171,15 +171,25 @@ class OptionsMenu(default.OptionsMenu):
 
         if current.request.function in ("read_newsletter", "newsletter"):
             menu = M(c="cms")(
-                    M("Newsletters", c="cms", f="read_newsletter")(
+                    M("Newsletters", f="read_newsletter")(
                         M("Inbox", f="read_newsletter",
                           check = lambda this: this.following()[0].check_permission(),
                           ),
                         M("Compose and Send", f="newsletter", p="create"),
                         ),
                     )
+
         else:
-            menu = super().cms()
+            menu = M(c="cms")(
+                    M("Series", f="series")(
+                        M("Create", m="create"),
+                        M("View as Pages", f="blog"),
+                        ),
+                    M("Posts", f="post")(
+                        M("Create", m="create"),
+                        M("View as Pages", f="page"),
+                        ),
+                    )
 
         return menu
 

@@ -36,6 +36,7 @@ __all__ = ("CMSContentModel",
            "CMSAnnouncementModel",
            "CMSNewsletterModel",
            "CustomPage",
+           "cms_Announcements",
            "cms_NewsletterDetails",
            "cms_UpdateNewsletter",
            "cms_newsletter_notify",
@@ -1932,6 +1933,14 @@ class CustomPage(CustomController):
 class cms_Announcements:
     """ Handling of homepage announcements """
 
+    # CSS classes and icons for priority announcements
+    priority_classes = {2: "announcement-important",
+                        1: "announcement-critical",
+                        }
+    priority_icons = {2: "fa-exclamation-circle",
+                      1: "fa-exclamation-triangle",
+                      }
+
     def __init__(self, limit=5):
         """
             Args:
@@ -1941,6 +1950,7 @@ class cms_Announcements:
         self.limit = limit
 
         self._records = None
+        self._items = None
 
     # -------------------------------------------------------------------------
     @property
@@ -1962,6 +1972,26 @@ class cms_Announcements:
                 self._records = records = self._lookup(roles = filter_roles)
 
         return records
+
+    # -------------------------------------------------------------------------
+    @property
+    def items(self):
+        """
+            Items to render (lazy property)
+
+            Returns:
+                the items [(title, message, date, priority),...]
+        """
+
+        items = self._items
+        if items is None:
+            self._items = items = [(record.title,
+                                    record.message,
+                                    record.date,
+                                    record.priority,
+                                    ) for record in self.records
+                                   ]
+        return items
 
     # -------------------------------------------------------------------------
     def _lookup(self, roles=None):
@@ -2008,58 +2038,95 @@ class cms_Announcements:
         return records
 
     # -------------------------------------------------------------------------
+    def add(self, title=None, message=None, date=None, priority=None):
+        """
+            Adds a message to the current item list, as first item of
+            items with the same priority
+
+            Args:
+                (str|DIV) title: the item title
+                (str|DIV) message: the message body
+                (datetime) date: the time stamp
+                (int) priority: the item priority, see CMSAnnouncementModel
+        """
+
+        if priority not in (1, 2, 3):
+            priority = 3
+        new_item = (title, message, date, priority)
+
+        items = self.items
+        if not items:
+            self._items = items = [new_item]
+        else:
+            pos = None
+            for i, item in enumerate(items):
+                p = item[-1]
+                if not p or p >= priority:
+                    pos = i
+                    break
+            if not pos:
+                pos = len(items)
+            items[pos:pos] = [new_item]
+
+    # -------------------------------------------------------------------------
     def html(self):
         """
-            Builds the HTML to display announcements on the homepage
+            Builds the announcements list
 
             Returns:
-                UL|None
+                (UL|None) - the announcements list
         """
 
-        records = self.records
-        if records:
+        items = self.items
+        if items:
             announcements = UL(_class="announcements")
-            priority_classes = {2: "announcement-important",
-                                1: "announcement-critical",
-                                }
-            priority_icons = {2: "fa-exclamation-circle",
-                              1: "fa-exclamation-triangle",
-                              }
-
-            dtrepr = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
-            for record in records:
-                header = H4(record.title)
-
-                # Priority
-                priority = record.priority
-                icon_class = priority_icons.get(priority)
-                if icon_class:
-                    header = TAG[""](I(_class="fa %s announcement-icon" % icon_class),
-                                     header,
-                                     )
-                prio = priority_classes.get(priority, "")
-
-                row = LI(DIV(DIV(DIV(dtrepr(record.date),
-                                     _class = "announcement-date",
-                                     ),
-                                 _class="fright",
-                                 ),
-                             DIV(DIV(header,
-                                     _class = "announcement-header",
-                                     ),
-                                 DIV(XML(record.message),
-                                     _class = "announcement-body",
-                                     ),
-                                 _class="announcement-text",
-                                 ),
-                             _class = "announcement-box %s" % prio,
-                             ),
-                         )
-                announcements.append(row)
+            for item in items:
+                announcements.append(self.render_item(*item))
         else:
             announcements = None
-
         return announcements
+
+    # -------------------------------------------------------------------------
+    def render_item(self, title=None, message=None, date=None, priority=None):
+        """
+            Builds a list item for the announcements list
+
+            Args:
+                (str|DIV) title: the item title
+                (str|DIV) message: the message body
+                (datetime) date: the time stamp
+                (int) priority: the item priority, see CMSAnnouncementModel
+
+            Returns:
+                (LI) - a list item with the message
+        """
+
+        box = DIV(_class="announcement-box")
+        css = self.priority_classes.get(priority)
+        if css:
+            box.add_class(css)
+
+        if date:
+            dtrepr = S3DateTime.datetime_represent(date, utc=True)
+            box.append(DIV(DIV(dtrepr,
+                               _class = "announcement-date",
+                               ),
+                           _class = "fright",
+                           ))
+
+        text = DIV(_class="announcement-text")
+        if title:
+            header = H4(title)
+            icon = self.priority_icons.get(priority)
+            if icon:
+                header = TAG[""](I(_class="fa %s announcement-icon" % icon), header)
+            text.append(DIV(header, _class="announcement-header"))
+        if message:
+            text.append(DIV(XML(message), _class="announcement-body"))
+
+        box.append(text)
+
+        return LI(box)
 
 # =============================================================================
 class cms_NewsletterDetails:

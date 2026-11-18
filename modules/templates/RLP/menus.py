@@ -172,6 +172,7 @@ class OptionsMenu(default.OptionsMenu):
 
         settings = current.deployment_settings
         consent_tracking = lambda i: settings.get_auth_consent_tracking()
+        has_cms = lambda i: settings.has_module("cms")
 
         # NB: Do not specify a controller for the main menu to allow
         #     re-use of this menu by other controllers
@@ -180,17 +181,20 @@ class OptionsMenu(default.OptionsMenu):
                         M("Manage Users", f="user"),
                         M("Manage Roles", f="role"),
                     ),
+                    M("Announcements", c="admin", f="announcement", check=has_cms),
                     M("Consent Tracking", c="admin", link=False, check=consent_tracking)(
                         M("Processing Types", f="processing_type"),
                         M("Consent Options", f="consent_option"),
+                        M("Consent##plural", f="consent"),
                         ),
-                    M("CMS", c="cms", f="post"),
+                    M("Content Management", c="cms", f="post", check=has_cms),
                     M("Database", c="appadmin", f="index")(
                         M("Raw Database access", c="appadmin", f="index")
                     ),
-                    M("Scheduler", c="admin", f="task"),
+                    M("Event Log", c="admin", f="event"),
                     M("Error Tickets", c="admin", f="errors"),
-                )
+                    M("Scheduler", c="admin", f="task"),
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -368,7 +368,7 @@ def importxml(db, xmlinput):
     db[parent].import_from_csv_file(fh)
 
 # -----------------------------------------------------------------------------
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
 def post():
     """
         @todo: deprecate
@@ -455,7 +455,7 @@ def submission():
         raise HTTP(status, result)
 
 # -----------------------------------------------------------------------------
-@auth.requires_membership(2)
+@auth.requires_membership("AUTHENTICATED")
 def submission_old():
     """
         Allows for submission of xforms by ODK Collect

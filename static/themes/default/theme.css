@@ -4924,24 +4924,26 @@ h4.profile-sub-header {
 /* line 53, ../scss/theme/_homepage.scss */
 .announcements {
   margin: 0;
-  padding: 0 0 0 1rem;
+  padding: 0 1rem 0 1rem;
   border-left: 1px solid #0a5b29;
   list-style: none outside none;
+  max-height: 60vh;
+  overflow-y: scroll;
 }
-/* line 58, ../scss/theme/_homepage.scss */
+/* line 60, ../scss/theme/_homepage.scss */
 .announcements ul, .announcements ol {
   padding-left: 20px;
   list-style: none outside none;
 }
-/* line 62, ../scss/theme/_homepage.scss */
+/* line 64, ../scss/theme/_homepage.scss */
 .announcements li {
   padding: 10px 0 0;
 }
-/* line 65, ../scss/theme/_homepage.scss */
+/* line 67, ../scss/theme/_homepage.scss */
 .announcements .fright {
   float: right;
 }
-/* line 68, ../scss/theme/_homepage.scss */
+/* line 70, ../scss/theme/_homepage.scss */
 .announcements .announcement-box {
   display: block;
   background: #fff7d9;
@@ -4950,92 +4952,92 @@ h4.profile-sub-header {
   padding: 0.7rem;
   margin-bottom: 1.5rem;
 }
-/* line 76, ../scss/theme/_homepage.scss */
+/* line 78, ../scss/theme/_homepage.scss */
 .announcements .announcement-box.announcement-important .announcement-icon {
   color: #0088ca;
 }
-/* line 80, ../scss/theme/_homepage.scss */
+/* line 82, ../scss/theme/_homepage.scss */
 .announcements .announcement-box.announcement-critical {
   border: 1px solid #ca0000;
   background-color: #ffebea;
 }
-/* line 83, ../scss/theme/_homepage.scss */
+/* line 85, ../scss/theme/_homepage.scss */
 .announcements .announcement-box.announcement-critical .announcement-icon {
   color: #ca0000;
   animation: blinker 0.7s step-start 4;
 }
-/* line 89, ../scss/theme/_homepage.scss */
+/* line 91, ../scss/theme/_homepage.scss */
 .announcements .announcement-box .announcement-header .announcement-icon {
   display: inline-block;
   font-size: 1.3rem;
   padding: 0 0.7rem 0 0;
 }
-/* line 94, ../scss/theme/_homepage.scss */
+/* line 96, ../scss/theme/_homepage.scss */
 .announcements .announcement-box .announcement-header h4 {
   display: inline-block;
 }
-/* line 98, ../scss/theme/_homepage.scss */
+/* line 100, ../scss/theme/_homepage.scss */
 .announcements .announcement-box .announcement-text {
-  font-size: 0.9rem;
-  line-height: 1.3;
+  font-size: 0.8rem;
+  line-height: 1.2;
 }
-/* line 101, ../scss/theme/_homepage.scss */
+/* line 103, ../scss/theme/_homepage.scss */
 .announcements .announcement-box .announcement-text h4 {
-  font-size: 1.2rem;
+  font-size: 1.0rem;
 }
-/* line 104, ../scss/theme/_homepage.scss */
+/* line 106, ../scss/theme/_homepage.scss */
 .announcements .announcement-box .announcement-text ul {
   list-style: disc outside none;
 }
-/* line 107, ../scss/theme/_homepage.scss */
+/* line 109, ../scss/theme/_homepage.scss */
 .announcements .announcement-box .announcement-text ol {
   list-style: decimal outside none;
 }
-/* line 110, ../scss/theme/_homepage.scss */
+/* line 112, ../scss/theme/_homepage.scss */
 .announcements .announcement-box .announcement-text li {
   padding: 0;
 }
-/* line 113, ../scss/theme/_homepage.scss */
+/* line 115, ../scss/theme/_homepage.scss */
 .announcements .announcement-box .announcement-text div {
   white-space: pre-line;
 }
-/* line 116, ../scss/theme/_homepage.scss */
+/* line 118, ../scss/theme/_homepage.scss */
 .announcements .announcement-box .announcement-text .announcement-header {
   margin: 0 0 0.8rem 0;
 }
-/* line 119, ../scss/theme/_homepage.scss */
-.announcements .announcement-box .announcement-text announcement-body {
+/* line 121, ../scss/theme/_homepage.scss */
+.announcements .announcement-box .announcement-text .announcement-body {
   white-space: pre-line;
 }
-/* line 121, ../scss/theme/_homepage.scss */
-.announcements .announcement-box .announcement-text announcement-body p {
+/* line 123, ../scss/theme/_homepage.scss */
+.announcements .announcement-box .announcement-text .announcement-body p {
   margin-left: 1rem;
 }
-/* line 126, ../scss/theme/_homepage.scss */
+/* line 128, ../scss/theme/_homepage.scss */
 .announcements .announcement-box .announcement-date {
   font-size: 0.7rem;
   margin-top: 0.4rem;
 }
-/* line 131, ../scss/theme/_homepage.scss */
+/* line 133, ../scss/theme/_homepage.scss */
 [dir=rtl] .announcements {
   padding: 0 1rem 0 0;
   border-left: 0;
   border-right: 1px solid #0a5b29;
 }
-/* line 135, ../scss/theme/_homepage.scss */
+/* line 137, ../scss/theme/_homepage.scss */
 [dir=rtl] .announcements ul, [dir=rtl] .announcements ol {
   padding-left: 0;
   padding-right: 20px;
 }
-/* line 139, ../scss/theme/_homepage.scss */
+/* line 141, ../scss/theme/_homepage.scss */
 [dir=rtl] .announcements .fright {
   float: left;
 }
-/* line 144, ../scss/theme/_homepage.scss */
+/* line 146, ../scss/theme/_homepage.scss */
 [dir=rtl] .announcements .announcement-box .announcement-header .announcement-icon {
   padding: 0 0 0 0.7rem;
 }
-/* line 148, ../scss/theme/_homepage.scss */
+/* line 150, ../scss/theme/_homepage.scss */
 [dir=rtl] .announcements .announcement-box .announcement-header announcement-body p {
   margin-left: 0;
   margin-right: 1rem;

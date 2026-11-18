@@ -7,7 +7,6 @@
 from gluon import current, URL, TAG, SPAN
 from core import IS_ISO639_2_LANGUAGE_CODE
 from core.ui.layouts import MM, M, ML, MP, MA
-from s3db import auth
 
 try:
     from .layouts import OM
@@ -42,13 +41,19 @@ class MainMenu(default.MainMenu):
     def menu_modules(cls):
         """ Modules Menu """
 
+        # ORG menu to match CMS for newsletter functions only
+        request = current.request
+        is_newsletter = request.controller == "cms" and \
+                        request.function in ("newsletter", "read_newsletter")
+        org_c = ("org", "hrm", "act", "cms") if is_newsletter else ("org", "hrm", "act")
+
         menu = [MM("Needs", c="req", f="need"),
                 MM("Assets", c="asset", f="asset"),
                 MM("Inventory", c="inv", f="warehouse"),
                 MM("Shelters", c="cr", f="shelter"),
                 MM("Water Sources", c="water", f="index"),
                 MM("Beneficiaries", c="dvr", f="person"),
-                MM("Organizations", c="org", f="organisation"),
+                MM("Organizations", c=org_c, f=("organisation", "*")),
                 ]
 
         return menu
@@ -169,6 +174,8 @@ class OptionsMenu(default.OptionsMenu):
             # OrgAdmin: No Side-menu
             return None
 
+        has_cms = lambda i: current.deployment_settings.has_module("cms")
+
         # NB: Do not specify a controller for the main menu to allow
         #     re-use of this menu by other controllers
         return M()(
@@ -176,14 +183,15 @@ class OptionsMenu(default.OptionsMenu):
                         M("Manage Users", f="user"),
                         M("Manage Roles", f="role"),
                     ),
-                    M("CMS", c="cms", f="post"),
+                    M("Announcements", c="admin", f="announcement", check=has_cms),
+                    M("Content Management", c="cms", f="post", check=has_cms),
                     M("Database", c="appadmin", f="index")(
                         M("Raw Database access", c="appadmin", f="index")
                     ),
-                    M("Scheduler", c="admin", f="task"),
-                    M("Error Tickets", c="admin", f="errors"),
                     M("Event Log", c="admin", f="event"),
-                )
+                    M("Error Tickets", c="admin", f="errors"),
+                    M("Scheduler", c="admin", f="task"),
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -205,10 +213,19 @@ class OptionsMenu(default.OptionsMenu):
     @classmethod
     def cms(cls):
 
-        if not current.auth.s3_has_role("ADMIN"):
+        if current.request.function in ("newsletter", "read_newsletter"):
             return cls.org()
 
-        return super().cms()
+        return M(c="cms")(
+                    M("Series", f="series")(
+                        M("Create", m="create"),
+                        M("View as Pages", f="blog"),
+                        ),
+                    M("Posts", f="post")(
+                        M("Create", m="create"),
+                        M("View as Pages", f="page"),
+                        ),
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -347,7 +364,7 @@ class OptionsMenu(default.OptionsMenu):
         if unread:
             inbox_label = TAG[""](inbox_label, SPAN(unread, _class="num-pending"))
         if author:
-            cms_menu = M("Newsletters", c="cms", f="read_newsletter")(
+            cms_menu = M("Newsletters", c="cms", link=False)(
                             M(inbox_label, f="read_newsletter", translate=False),
                             M("Compose and Send", f="newsletter", p="create"),
                             )

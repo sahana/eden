@@ -177,6 +177,21 @@ class OptionsMenu(default.OptionsMenu):
     """ Custom Controller Menus """
 
     # -------------------------------------------------------------------------
+    @classmethod
+    def cms(cls):
+
+        return M(c="cms")(
+                    M("Series", f="series")(
+                        M("Create", m="create"),
+                        M("View as Pages", f="blog"),
+                        ),
+                    M("Posts", f="post")(
+                        M("Create", m="create"),
+                        M("View as Pages", f="page"),
+                        ),
+                    )
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def cr():
         """ CR / Shelter Registry """

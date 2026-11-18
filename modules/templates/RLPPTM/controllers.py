@@ -53,41 +53,53 @@ class index(CustomController):
         roles = current.session.s3.roles
         sr = auth.get_system_roles()
         if sr.AUTHENTICATED in roles:
-            # Logged-in user => display announcements
-            announcements = UL(_class="announcements")
-            render_box = self.announcements_item
+            # Logged-in user
+            # => display announcements
+            from s3db.cms import cms_Announcements
+            announcements = cms_Announcements()
 
-            # Check for unread newsletters
-            unread = s3db.cms_unread_newsletters() \
-                     if sr.ORG_ADMIN in roles else False
+            unread = s3db.cms_unread_newsletters() if sr.ORG_ADMIN in roles else False
             if unread:
                 info = {"number": unread}
                 link = A(XML(T("There are <b>%(number)s</b> new newsletters.") % info),
                          _href = URL(c="cms", f="read_newsletter"),
                          _title = T("Open inbox"),
                          )
-                nlinfo = render_box(header=link, priority="important")
-                announcements.append(nlinfo)
-
-            # CMS Announcements
-            filter_roles = roles if sr.ADMIN not in roles else None
-            posts = s3db.cms_announcements(roles=filter_roles)
-            if posts:
+                announcements.add(title=link, priority=2)
+                # box = DIV(DIV(DIV(I(_class = "fa fa-exclamation-circle announcement-icon"),
+                #                   link,
+                #                   _class = "announcement-header",
+                #                   ),
+                #               _class = "announcement-text",
+                #               ),
+                #           _class = "announcement-box announcement-important",
+                #           )
+                # announcements.append(box)
+            announcements = announcements.html()
+            if announcements:
                 announcements_title = T("Announcements")
 
-                from core import S3DateTime
-                dtrepr = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
-
-                priorities = {2: "important", 3: "critical"}
-                for post in posts:
-                    header = H4(post.name)
-                    priority = post.priority
-                    box = render_box(date = dtrepr(post.date),
-                                     header = header,
-                                     body = XML(post.body),
-                                     priority = priorities.get(priority, ""),
-                                     )
-                    announcements.append(box)
+            # Check for unread newsletters, add an announcement, if so
+            # TODO this will not work if there are no announcements!
+            #      so we need a custom solution here
+            #      - ideally permit a cms_Announcements instance to be
+            #        appended to like append(header=None, body=None, date=None, priority="")
+            # unread = s3db.cms_unread_newsletters() if sr.ORG_ADMIN in roles else False
+            # if unread:
+            #     info = {"number": unread}
+            #     link = A(XML(T("There are <b>%(number)s</b> new newsletters.") % info),
+            #              _href = URL(c="cms", f="read_newsletter"),
+            #              _title = T("Open inbox"),
+            #              )
+            #     box = DIV(DIV(DIV(I(_class = "fa fa-exclamation-circle announcement-icon"),
+            #                       link,
+            #                       _class = "announcement-header",
+            #                       ),
+            #                   _class = "announcement-text",
+            #                   ),
+            #               _class = "announcement-box announcement-important",
+            #               )
+            #     announcements.append(box)
         else:
             # Anonymous user
             # => provide a login box
@@ -129,41 +141,41 @@ class index(CustomController):
         return output
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def announcements_item(header=None, body=None, date=None, priority=""):
-        """
-            Layout for announcement items
-
-            Args:
-                header: the header text
-                body: the body text
-                date: the date of the entry
-                priority: priority "important"|"critical"|""
-        """
-
-        box = DIV(_class="announcement-box announcement-%s" % priority)
-
-        if date:
-            box.append(DIV(DIV(date, _class="announcement-date"),
-                           _class = "fright",
-                           ))
-
-        text = DIV(_class="announcement-text")
-        if header:
-            icons = {"important": "fa-exclamation-circle",
-                     "critical": "fa-exclamation-triangle",
-                     }
-            icon = icons.get(priority)
-            if icon:
-                header = TAG[""](I(_class="fa %s announcement-icon" % icon),
-                                 header,
-                                 )
-            text.append(DIV(header, _class="announcement-header"))
-        if body:
-            text.append(DIV(body, _class="announcement-body"))
-        box.append(text)
-
-        return LI(box)
+    # @staticmethod
+    # def render_box(header=None, body=None, date=None, priority=""):
+    #     """
+    #         Layout for announcement items
+    #
+    #         Args:
+    #             header: the header text
+    #             body: the body text
+    #             date: the date of the entry
+    #             priority: priority "important"|"critical"|""
+    #     """
+    #
+    #     box = DIV(_class="announcement-box announcement-%s" % priority)
+    #
+    #     if date:
+    #         box.append(DIV(DIV(date, _class="announcement-date"),
+    #                        _class = "fright",
+    #                        ))
+    #
+    #     text = DIV(_class="announcement-text")
+    #     if header:
+    #         icons = {"important": "fa-exclamation-circle",
+    #                  "critical": "fa-exclamation-triangle",
+    #                  }
+    #         icon = icons.get(priority)
+    #         if icon:
+    #             header = TAG[""](I(_class="fa %s announcement-icon" % icon),
+    #                              header,
+    #                              )
+    #         text.append(DIV(header, _class="announcement-header"))
+    #     if body:
+    #         text.append(DIV(body, _class="announcement-body"))
+    #     box.append(text)
+    #
+    #     return LI(box)
 
 # =============================================================================
 class privacy(CustomController):

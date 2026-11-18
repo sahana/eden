@@ -63,6 +63,12 @@ class MainMenu(default.MainMenu):
         else:
             daycare_testing = None
 
+        # ORG menu to match CMS for newsletter functions only
+        request = current.request
+        is_newsletter = request.controller == "cms" and \
+                        request.function in ("newsletter", "read_newsletter")
+        org_c = ("org", "hrm", "cms") if is_newsletter else ("org", "hrm")
+
         menu = [MM("Tests##disease", c="disease", link=False)(
                     MM("Test Results", f="case_diagnostics", restrict="TEST_PROVIDER"),
                     MM("Daily Reports", f="testing_report"),
@@ -75,10 +81,10 @@ class MainMenu(default.MainMenu):
                     MM("Deliveries", c="inv", f="recv", check=supply_requester),
                     MM("Items", c="supply", f="item", restrict="SUPPLY_COORDINATOR"),
                     ),
-                MM("Organizations", c=("org", "hrm", "cms"), link=False, restrict=("ORG_GROUP_ADMIN", "ORG_ADMIN"))(
+                MM("Organizations", c=org_c, link=False, restrict=("ORG_GROUP_ADMIN", "ORG_ADMIN"))(
                     MM("Organizations", c="org", f="organisation", vars = {"mine": 1} if not has_role("ORG_GROUP_ADMIN") else None),
                     MM("Staff", c="hrm", f="staff"),
-                    MM("Newsletters", c="cms", f="read_newsletter"),
+                    MM("Newsletters", c="cms", f="read_newsletter", selectable=is_newsletter),
                     ),
                 MM("Projects",
                    c = "project", f="project",
@@ -110,7 +116,7 @@ class MainMenu(default.MainMenu):
 
         # Link to voucher management
         if auth.s3_logged_in():
-            f = None
+            label, f = None, None
             if has_roles(("PROGRAM_MANAGER", "PROGRAM_ACCOUNTANT")):
                 label, f = "Voucher Programs", "voucher_program"
             elif has_roles(("VOUCHER_PROVIDER", "PROVIDER_ACCOUNTANT")):
@@ -226,7 +232,8 @@ class OptionsMenu(default.OptionsMenu):
     """ Custom Controller Menus """
 
     # -------------------------------------------------------------------------
-    def admin(self):
+    @staticmethod
+    def admin():
         """ ADMIN menu """
 
         if not current.auth.s3_has_role("ADMIN"):
@@ -235,6 +242,7 @@ class OptionsMenu(default.OptionsMenu):
 
         settings = current.deployment_settings
         consent_tracking = lambda i: settings.get_auth_consent_tracking()
+        has_cms = lambda i: settings.has_module("cms")
 
         # NB: Do not specify a controller for the main menu to allow
         #     re-use of this menu by other controllers
@@ -243,18 +251,19 @@ class OptionsMenu(default.OptionsMenu):
                         M("Manage Users", f="user"),
                         M("Manage Roles", f="role"),
                     ),
+                    M("Announcements", c="admin", f="announcement", check=has_cms),
                     M("Consent Tracking", c="admin", link=False, check=consent_tracking)(
                         M("Processing Types", f="processing_type"),
                         M("Consent Options", f="consent_option"),
                         M("Consent##plural", f="consent"),
                         ),
-                    M("CMS", c="cms", f="post"),
+                    M("Content Management", c="cms", f="post", check=has_cms),
                     M("Database", c="appadmin", f="index")(
                         M("Raw Database access", c="appadmin", f="index")
                     ),
-                    M("Scheduler", c="admin", f="task"),
-                    M("Error Tickets", c="admin", f="errors"),
                     M("Event Log", c="admin", f="event"),
+                    M("Error Tickets", c="admin", f="errors"),
+                    M("Scheduler", c="admin", f="task"),
                 )
 
     # -------------------------------------------------------------------------
@@ -267,10 +276,19 @@ class OptionsMenu(default.OptionsMenu):
     @classmethod
     def cms(cls):
 
-        if not current.auth.s3_has_role("ADMIN"):
+        if current.request.function in ("newsletter", "read_newsletter"):
             return cls.org()
 
-        return super().cms()
+        return M(c="cms")(
+                    M("Series", f="series")(
+                        M("Create", m="create"),
+                        M("View as Pages", f="blog"),
+                        ),
+                    M("Posts", f="post")(
+                        M("Create", m="create"),
+                        M("View as Pages", f="page"),
+                        ),
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -494,11 +512,10 @@ class OptionsMenu(default.OptionsMenu):
                 )
 
     # -------------------------------------------------------------------------
-    @classmethod
-    def supply(cls):
+    def supply(self):
         """ SUPPLY / Supply Chain Management """
 
-        return cls.req()
+        return self.req()
 
     # -------------------------------------------------------------------------
     @classmethod

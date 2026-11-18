@@ -520,7 +520,7 @@ def tropo():
         pass
 
 # =============================================================================
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
 def sms_outbound_gateway():
     """ SMS Outbound Gateway selection for the messaging framework """
 
@@ -933,7 +933,7 @@ def twilio_channel():
     return crud_controller()
 
 # -----------------------------------------------------------------------------
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
 def sms_modem_channel():
     """
         RESTful CRUD controller for modem channels
@@ -978,7 +978,7 @@ def sms_modem_channel():
     return crud_controller()
 
 #------------------------------------------------------------------------------
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
 def sms_smtp_channel():
     """
         RESTful CRUD controller for SMTP to SMS Outbound channels
@@ -1020,7 +1020,7 @@ def sms_smtp_channel():
     return crud_controller()
 
 #------------------------------------------------------------------------------
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
 def sms_webapi_channel():
     """
         RESTful CRUD controller for Web API channels
@@ -1074,7 +1074,7 @@ def sms_webapi_channel():
     return crud_controller()
 
 # -----------------------------------------------------------------------------
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
 def tropo_channel():
     """
         RESTful CRUD controller for Tropo channels
@@ -1462,7 +1462,7 @@ def process_sms_outbox():
 # =============================================================================
 # Enabled only for testing:
 #
-@auth.requires_membership(1)
+@auth.requires_membership("ADMIN")
 def tag():
     """ RESTful CRUD controller """
 
