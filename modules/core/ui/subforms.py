@@ -1850,20 +1850,20 @@ class InlineValueSet(InlineComponent):
                         {"resource": <master table name>,
                          "component": <component table name>,
                          "fields": [[<fieldname>, <label>], ...],
-                         "data": [{"_meta": {
+                         "data": {<type>:                   // the value type ID
+                                    {"_meta": {
                                         "id": <record-id>,  // the component record ID
-                                        "type": <type-id>,  // the type reference ID
                                         "changed": <bool>,  // whether the record has changed
                                         "deleted": <bool>,  // whether the record was deleted
                                         "readonly": <bool>, // whether the record is read-only
                                         },
-                                   "<fieldname>": {
+                                     "<fieldname>": {
                                         "value": <value>,   // the raw value for the field
                                         "text": <text>,     // the text representation of that value
                                         },
-                                    ...
-                                   },
-                                  ]
+                                     ...
+                                     },
+                                  }
                          }
         """
 
@@ -1899,7 +1899,7 @@ class InlineValueSet(InlineComponent):
         else:
             fields = [f.name for f in table if f.readable or f.writable]
 
-        items = []
+        items = {}
 
         if record_id:
             # Fields to extract (must include primary key and type reference)
@@ -1926,9 +1926,10 @@ class InlineValueSet(InlineComponent):
                 row = record["_row"]
                 row_id = row[str(table._id)]
 
+                value_type = row[str(table[typeref])]
+
                 # Item meta-data
                 meta = {"id": row_id,
-                        "type": row[str(table[typeref])],
                         "changed": False,
                         "deleted": False,
                         "error": None,
@@ -1961,7 +1962,7 @@ class InlineValueSet(InlineComponent):
 
                     item[fname] = {"value": value, "text": text}
 
-                items.append(item)
+                items[value_type] = item
 
         else:
             rfields = component.resolve_selectors(fields)[0]
