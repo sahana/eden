@@ -1844,8 +1844,27 @@ class InlineValueSet(InlineComponent):
                 record_id: the record ID
 
             Returns:
-                the value for the input field that corresponds
-                to the specified record.
+                (str) - the JSON value for the input field that corresponds
+                        to the specified record, JSON-format:
+
+                        {"resource": <master table name>,
+                         "component": <component table name>,
+                         "fields": [[<fieldname>, <label>], ...],
+                         "data": [{"_meta": {
+                                        "id": <record-id>,  // the component record ID
+                                        "type": <type-id>,  // the type reference ID
+                                        "changed": <bool>,  // whether the record has changed
+                                        "deleted": <bool>,  // whether the record was deleted
+                                        "readonly": <bool>, // whether the record is read-only
+                                        },
+                                   "<fieldname>": {
+                                        "value": <value>,   // the raw value for the field
+                                        "text": <text>,     // the text representation of that value
+                                        },
+                                    ...
+                                   },
+                                  ]
+                         }
         """
 
         self.resource = resource
@@ -1856,9 +1875,118 @@ class InlineValueSet(InlineComponent):
         except KeyError as e:
             raise AttributeError("Undefined component") from e
 
-        # TODO Extract the currently existing sub-records for
-        #      master record_id and build the JSON for the subform
-        return '{"name":"Example"}'
+        options = self.options
+        table = component.table
+        tablename = component.tablename
+
+        typeref = options.get("typeref")
+        if not typeref or typeref not in table:
+            raise SyntaxError("Missing or invalid type reference")
+
+        pkey = table._id.name
+
+        # Fields in the subform (beyond primary key and type reference)
+        fields_opt = options.get("fields", None)
+        labels = {}
+        if fields_opt:
+            fields = []
+            for f in fields_opt:
+                if isinstance(f, tuple):
+                    label, f = f
+                    labels[f] = label
+                if f in table.fields:
+                    fields.append(f)
+        else:
+            fields = [f.name for f in table if f.readable or f.writable]
+
+        items = []
+
+        if record_id:
+            # Fields to extract (must include primary key and type reference)
+            all_fields = fields
+            if pkey not in all_fields:
+                all_fields.append(pkey)
+            if typeref not in all_fields:
+                all_fields.append(typeref)
+
+            # Extract the data
+            data = component.select(all_fields,
+                                    start = 0,
+                                    limit = None,
+                                    represent = True,
+                                    raw_data = True,
+                                    show_links = False,
+                                    )
+            records = data["rows"]
+            rfields = data["rfields"]
+
+            # Compile the data items
+            has_permission = current.auth.s3_has_permission
+            for record in records:
+                row = record["_row"]
+                row_id = row[str(table._id)]
+
+                # Item meta-data
+                meta = {"id": row_id,
+                        "type": row[str(table[typeref])],
+                        "changed": False,
+                        "deleted": False,
+                        "error": None,
+                        "readonly": not has_permission("update", tablename, row_id),
+                        }
+
+                item = {"_meta": meta}
+
+                # Item payload data
+                for rfield in rfields:
+                    fname = rfield.fname
+                    if fname in (pkey, typeref):
+                        continue
+                    colname = rfield.colname
+                    field = rfield.field
+
+                    # Value for the editable representation
+                    widget = field.widget
+                    if isinstance(widget, LocationSelector):
+                        # Use the widget extraction/serialization method
+                        value = widget.serialize(widget.extract(row[colname]))
+                    elif hasattr(field, "formatter"):
+                        value = field.formatter(row[colname])
+                    else:
+                        # Virtual Field
+                        value = row[colname]
+
+                    # Text for the readonly representation
+                    text = s3_str(record[colname])
+
+                    item[fname] = {"value": value, "text": text}
+
+                items.append(item)
+
+        else:
+            rfields = component.resolve_selectors(fields)[0]
+
+        # Set label overrides
+        for f in rfields:
+            s = f.selector
+            if s.startswith("~."):
+                s = s[2:]
+            label = labels.get(s, None)
+            if label is not None:
+                f.label = label
+
+        # Compile (field, label) headers for subform
+        headers = [(rfield.fname, s3_str(rfield.label))
+                   for rfield in rfields if rfield.fname not in (pkey, typeref)
+                   ]
+
+        data = {"resource": resource.tablename,
+                "component": component_name,
+                "fields": headers,
+                "data": items
+                }
+
+        return json.dumps(data, separators=JSONSEPARATORS)
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
